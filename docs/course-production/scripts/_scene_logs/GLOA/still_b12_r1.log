@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b12_listed-expired.png ===
+Verified PNG, 1600 x 900, flat palette, blue corners, correct `FOR SALE` and `EXPIRED` text, same house in both panels, seller only on the right. The explicit local `gpt-image-2` CLI path was checked, but this shell still lacks `OPENAI_API_KEY` and the Python OpenAI SDK, so I used the established built-in image-generation path and normalized the final PNG locally.
+
+
+OK mGLO_LGLOA_b12_listed-expired.png

@@ -1,0 +1,196 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 402,
+   "badge": true,
+   "stickers": [
+    {
+     "text": "Step 2 \u00b7 The Fact Find",
+     "delay": 231,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson5B/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_conversation",
+   "mode": "contrast",
+   "durationInFrames": 836,
+   "stillA": "lesson5B/stills/m05_L5B_interrogation.png",
+   "stillB": "lesson5B/stills/m05_L5B_conversation.png",
+   "switchAt": 113
+  },
+  {
+   "tag": "b03_property",
+   "mode": "prop",
+   "durationInFrames": 695,
+   "stickers": [
+    {
+     "text": "Property basics",
+     "delay": 26,
+     "role": "label",
+     "topCenter": true
+    },
+    {
+     "text": "Type of property",
+     "delay": 100,
+     "role": "label",
+     "top": 250,
+     "left": 150
+    },
+    {
+     "text": "Beds / baths",
+     "delay": 285,
+     "role": "label",
+     "top": 360,
+     "left": 150
+    },
+    {
+     "text": "Condition  1\u201310",
+     "delay": 364,
+     "role": "label",
+     "top": 470,
+     "left": 150
+    },
+    {
+     "text": "Last major update",
+     "delay": 628,
+     "role": "label",
+     "top": 580,
+     "left": 150
+    }
+   ],
+   "still": "lesson5B/stills/m05_L5B_computer.png"
+  },
+  {
+   "tag": "b04_ownership",
+   "mode": "checklist",
+   "durationInFrames": 430,
+   "card": {
+    "title": "OWNERSHIP & DECISION",
+    "rows": [
+     {
+      "text": "Confirm they're the owner",
+      "delay": 13
+     },
+     {
+      "text": "Anyone else on the title?",
+      "delay": 225
+     },
+     {
+      "text": "Mortgage? Roughly what's owed",
+      "delay": 320
+     }
+    ]
+   }
+  },
+  {
+   "tag": "b05_motivation",
+   "mode": "prop",
+   "durationInFrames": 402,
+   "stickers": [
+    {
+     "text": "Motivation & timeline",
+     "delay": 23,
+     "role": "label",
+     "topCenter": true
+    },
+    {
+     "text": "Why selling now?",
+     "delay": 206,
+     "role": "label",
+     "top": 250,
+     "left": 1050
+    },
+    {
+     "text": "How long considering?",
+     "delay": 237,
+     "role": "label",
+     "top": 360,
+     "left": 1050
+    },
+    {
+     "text": "Any timeline?",
+     "delay": 52,
+     "role": "label",
+     "top": 470,
+     "left": 1050
+    }
+   ],
+   "still": "lesson5B/stills/m05_L5B_deed.png"
+  },
+  {
+   "tag": "b06_power",
+   "mode": "emphasis",
+   "durationInFrames": 708,
+   "emphasis": {
+    "main": "What would happen\nif you didn't sell?",
+    "sub": "Pain \u2192 urgency \u2192 deals",
+    "at": 216
+   }
+  },
+  {
+   "tag": "b07_energy",
+   "mode": "smile",
+   "durationInFrames": 1730,
+   "stickers": [
+    {
+     "text": "Physically smile \u2014 they hear it",
+     "delay": 945,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b08_mistakes",
+   "mode": "mistakes",
+   "durationInFrames": 2018,
+   "card": {
+    "title": "COMMON MISTAKES",
+    "rows": [
+     {
+      "text": "Rushing straight to the property",
+      "delay": 116
+     },
+     {
+      "text": "Talking too much (listen 80%)",
+      "delay": 482
+     },
+     {
+      "text": "Reading the script like a robot",
+      "delay": 823
+     },
+     {
+      "text": "Skipping the pen & paper",
+      "delay": 1205
+     },
+     {
+      "text": "Giving up after one weak reply",
+      "delay": 1499
+     }
+    ]
+   }
+  },
+  {
+   "tag": "b09_outro",
+   "mode": "hero",
+   "durationInFrames": 341,
+   "stickers": [
+    {
+     "text": "Next: your roleplay",
+     "delay": 65,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson5B/hero/hero_b09_outro.mp4"
+  }
+ ],
+ "audio": "lesson5B/master.m4a",
+ "totalFrames": 7562
+}

@@ -1,0 +1,327 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 769,
+   "badge": true,
+   "hero": "lesson3A/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_offer-core",
+   "mode": "panel",
+   "durationInFrames": 467,
+   "stickers": [
+    {
+     "text": "CASH",
+     "delay": 35,
+     "top": 110,
+     "left": 140,
+     "bg": "yellow"
+    },
+    {
+     "text": "AS-IS",
+     "delay": 65,
+     "top": 110,
+     "left": 1210,
+     "bg": "white"
+    },
+    {
+     "text": "NO REPAIRS",
+     "delay": 103,
+     "top": 360,
+     "left": 110,
+     "bg": "white"
+    },
+    {
+     "text": "NO AGENTS",
+     "delay": 148,
+     "top": 360,
+     "left": 1210,
+     "bg": "white"
+    },
+    {
+     "text": "NO COMMISSIONS",
+     "delay": 184,
+     "top": 720,
+     "left": 110,
+     "bg": "white"
+    },
+    {
+     "text": "NO WAITING",
+     "delay": 227,
+     "top": 720,
+     "left": 1180,
+     "bg": "white"
+    }
+   ],
+   "still": "lesson3A/stills/m03_L3A_family-driveway.png"
+  },
+  {
+   "tag": "b03_cash",
+   "mode": "panel",
+   "durationInFrames": 872,
+   "push": true,
+   "label": "CERTAINTY",
+   "labelDelay": 635,
+   "still": "lesson3A/stills/m03_L3A_handshake.png"
+  },
+  {
+   "tag": "b04_asis",
+   "mode": "wand",
+   "durationInFrames": 863,
+   "label": "SOLD AS-IS \u2014 ANY CONDITION",
+   "labelDelay": 85,
+   "videos": [
+    "lesson3A/anim/anim_b04_wand.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "alpha": true,
+   "transformFrame": 62,
+   "still": "lesson3A/stills/m03_L3A_rep-wand.png",
+   "house1": "lesson3A/stills/m03_L3A_house-disrepair.png",
+   "house2": "lesson3A/stills/m03_L3A_house-restored.png"
+  },
+  {
+   "tag": "b05_commissions",
+   "mode": "video",
+   "durationInFrames": 612,
+   "label": "NO COMMISSIONS",
+   "labelDelay": 167,
+   "videos": [
+    "lesson3A/anim/anim_b05_devil.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "alpha": true,
+   "still": "lesson3A/stills/m03_L3A_devil-agent.png"
+  },
+  {
+   "tag": "b06_speed",
+   "mode": "panel",
+   "durationInFrames": 588,
+   "stickers": [
+    {
+     "text": "60\u201390 DAYS",
+     "delay": 81,
+     "top": 120,
+     "left": 150,
+     "bg": "white"
+    },
+    {
+     "text": "1\u20132 WEEKS",
+     "delay": 285,
+     "top": 650,
+     "left": 1050,
+     "bg": "yellow"
+    }
+   ],
+   "still": "lesson3A/stills/m03_L3A_clock-kick.png"
+  },
+  {
+   "tag": "b07_step1",
+   "mode": "roadmap",
+   "durationInFrames": 556,
+   "step": 1,
+   "label": "1  \u00b7  WE TALK",
+   "labelDelay": 222,
+   "still": "lesson3A/stills/m03_L3A_steps-board.png"
+  },
+  {
+   "tag": "b08_step2",
+   "mode": "roadmap",
+   "durationInFrames": 529,
+   "step": 2,
+   "label": "2  \u00b7  WE LOOK",
+   "labelDelay": 37,
+   "still": "lesson3A/stills/m03_L3A_steps-board.png"
+  },
+  {
+   "tag": "b09_step3",
+   "mode": "roadmap",
+   "durationInFrames": 588,
+   "step": 3,
+   "label": "3  \u00b7  WE OFFER",
+   "labelDelay": 41,
+   "still": "lesson3A/stills/m03_L3A_steps-board.png"
+  },
+  {
+   "tag": "b10_step4",
+   "mode": "roadmap",
+   "durationInFrames": 494,
+   "step": 4,
+   "label": "4  \u00b7  WE CLOSE",
+   "labelDelay": 34,
+   "still": "lesson3A/stills/m03_L3A_steps-board.png"
+  },
+  {
+   "tag": "b11_foursteps",
+   "mode": "roadmap",
+   "durationInFrames": 348,
+   "step": 0,
+   "label": "FOUR STEPS",
+   "labelDelay": 5,
+   "still": "lesson3A/stills/m03_L3A_steps-board.png"
+  },
+  {
+   "tag": "b12_honest",
+   "mode": "video",
+   "durationInFrames": 608,
+   "label": "BELOW RETAIL \u2014 WE TAKE ON THE RISK",
+   "labelDelay": 244,
+   "videos": [
+    "lesson3A/anim/b12_shot1.mp4",
+    "lesson3A/anim/b12_shot2.mp4"
+   ],
+   "videoFrames": [
+    451,
+    151
+   ],
+   "still": "lesson3A/stills/m03_L3A_b12_tail.png"
+  },
+  {
+   "tag": "b13_whychoose",
+   "mode": "panel",
+   "durationInFrames": 874,
+   "stickers": [
+    {
+     "text": "SPEED",
+     "delay": 149,
+     "top": 410,
+     "left": 150,
+     "bg": "white"
+    },
+    {
+     "text": "SIMPLICITY",
+     "delay": 258,
+     "top": 320,
+     "left": 520,
+     "bg": "white"
+    },
+    {
+     "text": "CERTAINTY",
+     "delay": 490,
+     "top": 320,
+     "left": 900,
+     "bg": "white"
+    },
+    {
+     "text": "CONVENIENCE",
+     "delay": 688,
+     "top": 410,
+     "left": 1220,
+     "bg": "white"
+    }
+   ]
+  },
+  {
+   "tag": "b14_tradeoff",
+   "mode": "panel",
+   "durationInFrames": 1444,
+   "push": true,
+   "label": "SPEED + PEACE OF MIND",
+   "labelDelay": 682,
+   "still": "lesson3A/stills/m03_L3A_peace.png"
+  },
+  {
+   "tag": "b15_dealmath",
+   "mode": "board",
+   "durationInFrames": 987,
+   "boardLines": [
+    {
+     "text": "ARV  (fixed-up value)",
+     "delay": 328,
+     "top": 210,
+     "left": 500,
+     "size": 54
+    },
+    {
+     "text": "\u2212  Repairs",
+     "delay": 530,
+     "top": 305,
+     "left": 500,
+     "size": 54
+    },
+    {
+     "text": "\u2212  Our margin",
+     "delay": 823,
+     "top": 400,
+     "left": 500,
+     "size": 54
+    },
+    {
+     "text": "=  YOUR OFFER",
+     "delay": 272,
+     "top": 495,
+     "left": 500,
+     "size": 60
+    }
+   ],
+   "still": "lesson3A/stills/m03_L3A_whiteboard.png"
+  },
+  {
+   "tag": "b16_example",
+   "mode": "board",
+   "durationInFrames": 1167,
+   "boardLines": [
+    {
+     "text": "ARV                $200,000",
+     "delay": 119,
+     "top": 210,
+     "left": 500,
+     "size": 50
+    },
+    {
+     "text": "\u2212  Repairs         $50,000",
+     "delay": 202,
+     "top": 305,
+     "left": 500,
+     "size": 50
+    },
+    {
+     "text": "\u2212  Our costs",
+     "delay": 310,
+     "top": 400,
+     "left": 500,
+     "size": 50
+    },
+    {
+     "text": "=  $100K \u2013 $110K offer",
+     "delay": 394,
+     "top": 495,
+     "left": 500,
+     "size": 56
+    }
+   ],
+   "still": "lesson3A/stills/m03_L3A_whiteboard.png"
+  },
+  {
+   "tag": "b17_answer",
+   "mode": "hero",
+   "durationInFrames": 1112,
+   "stickers": [
+    {
+     "text": "\u201c\u2026for cash. No repairs, no commissions \u2014 close on your timeline.\u201d",
+     "delay": 358,
+     "role": "caption",
+     "bg": "white",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson3A/hero/hero_b17_answer.mov",
+   "alpha": true
+  },
+  {
+   "tag": "b18_outro",
+   "mode": "hero",
+   "durationInFrames": 1027,
+   "hero": "lesson3A/hero/hero_b18_outro.mp4"
+  }
+ ],
+ "audio": "lesson3A/master.m4a",
+ "totalFrames": 13905
+}

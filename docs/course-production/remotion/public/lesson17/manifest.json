@@ -1,0 +1,171 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 518,
+   "voFrames": 488,
+   "badge": true,
+   "hero": "lesson17/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_three_pieces",
+   "mode": "lockup",
+   "durationInFrames": 448,
+   "voFrames": 418,
+   "label": "THREE PIECES",
+   "labelDelay": 116,
+   "pills": [
+    {
+     "text": "BASE",
+     "delay": 159
+    },
+    {
+     "text": "PERFORMANCE PAY",
+     "delay": 229
+    },
+    {
+     "text": "BONUSES",
+     "delay": 334
+    }
+   ]
+  },
+  {
+   "tag": "b03_base_ramp",
+   "mode": "video",
+   "durationInFrames": 688,
+   "voFrames": 658,
+   "label": "BASE WHILE YOU RAMP",
+   "labelDelay": 60,
+   "videos": [
+    "lesson17/anim/m17_L17_b03_base_ramp_anim.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson17/stills/b03_base_ramp_tail.png"
+  },
+  {
+   "tag": "b04_your_deal",
+   "mode": "video",
+   "durationInFrames": 587,
+   "voFrames": 557,
+   "label": "THAT'S YOUR DEAL",
+   "labelDelay": 539,
+   "videos": [
+    "lesson17/anim/m17_L17_b04_your_deal_anim.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson17/stills/b04_your_deal_tail.png"
+  },
+  {
+   "tag": "b05_strong_months",
+   "mode": "video",
+   "durationInFrames": 215,
+   "voFrames": 185,
+   "label": "STRONG MONTHS SHOW UP",
+   "labelDelay": 115,
+   "still": "lesson17/stills/m17_L17_b05_strong-months.png",
+   "pushIn": true
+  },
+  {
+   "tag": "b06_real_outcomes",
+   "mode": "video",
+   "durationInFrames": 485,
+   "voFrames": 455,
+   "label": "REAL OUTCOMES COUNT",
+   "labelDelay": 150,
+   "videos": [
+    "lesson17/anim/m17_L17_b06_real_outcomes_anim.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson17/stills/b06_real_outcomes_tail.png"
+  },
+  {
+   "tag": "b07_math_direct",
+   "mode": "text",
+   "durationInFrames": 161,
+   "voFrames": 131,
+   "label": "THE MATH IS DIRECT",
+   "labelDelay": 8
+  },
+  {
+   "tag": "b08_long_tail",
+   "mode": "video",
+   "durationInFrames": 311,
+   "voFrames": 281,
+   "label": "GOOD WORK HAS A LONG TAIL",
+   "labelDelay": 48,
+   "videos": [
+    "lesson17/anim/m17_L17_b08_long_tail_anim.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson17/stills/b08_long_tail_tail.png"
+  },
+  {
+   "tag": "b09_earnings_logic",
+   "mode": "video",
+   "durationInFrames": 861,
+   "voFrames": 831,
+   "label": "THOROUGH. CONSISTENT.",
+   "labelDelay": 190,
+   "videos": [
+    "lesson17/anim/m17_L17_b09_earnings_logic_anim.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson17/stills/b09_earnings_logic_tail.png"
+  },
+  {
+   "tag": "b10_that_direct",
+   "mode": "heromid",
+   "durationInFrames": 318,
+   "voFrames": 288,
+   "label": "IT'S THAT DIRECT",
+   "labelDelay": 266,
+   "hero": "lesson17/hero/hero_b10_that_direct.mp4",
+   "heroFrames": 288,
+   "still": "lesson17/stills/b10_that_direct_tail.png"
+  },
+  {
+   "tag": "b11_your_plan",
+   "mode": "video",
+   "durationInFrames": 492,
+   "voFrames": 462,
+   "label": "YOUR OFFER LETTER OR COMP PLAN",
+   "labelDelay": 232,
+   "still": "lesson17/stills/m17_L17_b10_comp-sheet.png",
+   "pushIn": true,
+   "pin": "OFFER LETTER",
+   "pinX": 728,
+   "pinY": 272,
+   "pinDelay": 232
+  },
+  {
+   "tag": "b12_outro",
+   "mode": "hero2",
+   "durationInFrames": 345,
+   "voFrames": 345,
+   "heroTakes": [
+    "lesson17/hero/hero_b12_outro_take1.mp4",
+    "lesson17/hero/hero_b12_outro_take2.mp4"
+   ],
+   "heroTakeFrames": [
+    248,
+    97
+   ]
+  }
+ ],
+ "audio": "lesson17/master.m4a",
+ "totalFrames": 5429,
+ "script": "v3 master-texture no-numbers",
+ "board": "v5.1"
+}

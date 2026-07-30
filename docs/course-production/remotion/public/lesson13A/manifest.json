@@ -1,0 +1,395 @@
+{
+ "fps": 30,
+ "gapFrames": 30,
+ "audio": "lesson13A/master.m4a",
+ "beats": [
+  {
+   "tag": "b01_money_connection",
+   "mode": "hero",
+   "durationInFrames": 527,
+   "voFrames": 497,
+   "labels": [
+    {
+     "text": "PERFORMANCE -> PAYCHECK",
+     "delay": 117,
+     "place": "top",
+     "role": "caption"
+    },
+    {
+     "text": "NO MYSTERY",
+     "delay": 298,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "badge": true,
+   "hero": "lesson13A/hero/hero_b01_money_connection.mp4"
+  },
+  {
+   "tag": "b02_three_pieces",
+   "mode": "pieces",
+   "durationInFrames": 354,
+   "voFrames": 324,
+   "labels": [
+    {
+     "text": "3 PIECES",
+     "delay": 14,
+     "place": "top",
+     "role": "title"
+    },
+    {
+     "text": "BASE PAY",
+     "delay": 91,
+     "place": "card1",
+     "role": "label"
+    },
+    {
+     "text": "COMMISSIONS",
+     "delay": 164,
+     "place": "card2",
+     "role": "label"
+    },
+    {
+     "text": "BONUSES",
+     "delay": 244,
+     "place": "card3",
+     "role": "label"
+    }
+   ]
+  },
+  {
+   "tag": "b03_ramp_to_commission",
+   "mode": "ramp",
+   "durationInFrames": 771,
+   "voFrames": 741,
+   "labels": [
+    {
+     "text": "RAMP PERIOD",
+     "delay": 141,
+     "place": "left",
+     "role": "label"
+    },
+    {
+     "text": "30+ KPI DAYS",
+     "delay": 558,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "FULL COMMISSION",
+     "delay": 649,
+     "place": "right",
+     "role": "label"
+    },
+    {
+     "text": "TRANSITION POINT",
+     "delay": 710,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ]
+  },
+  {
+   "tag": "b04_your_deal",
+   "mode": "sceneVideo",
+   "durationInFrames": 630,
+   "voFrames": 600,
+   "labels": [
+    {
+     "text": "WINNING DEAL",
+     "delay": 535,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "THAT'S YOUR DEAL",
+     "delay": 577,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "still": "lesson13A/stills/m13_L13A_b04_your-deal.png",
+   "anim": "lesson13A/anim/anim_b04_your_deal.mov",
+   "animFrames": 451,
+   "tail": "lesson13A/tails/b04_your_deal_tail.png"
+  },
+  {
+   "tag": "b05_commission_tiers",
+   "mode": "tiers",
+   "durationInFrames": 1035,
+   "voFrames": 1005,
+   "labels": [
+    {
+     "text": "TIER 1: $500",
+     "delay": 163,
+     "place": "tier1",
+     "role": "label"
+    },
+    {
+     "text": "TIER 2: $750",
+     "delay": 294,
+     "place": "tier2",
+     "role": "label"
+    },
+    {
+     "text": "TIER 3: $1,000",
+     "delay": 460,
+     "place": "tier3",
+     "role": "label"
+    },
+    {
+     "text": "HIGHEST TIER PAYS ALL DEALS",
+     "delay": 671,
+     "place": "bottom2",
+     "role": "caption"
+    },
+    {
+     "text": "5 x $1,000 = $5,000",
+     "delay": 850,
+     "place": "bottom",
+     "role": "label"
+    }
+   ]
+  },
+  {
+   "tag": "b06_appointment_bonus",
+   "mode": "appointments",
+   "durationInFrames": 857,
+   "voFrames": 827,
+   "labels": [
+    {
+     "text": "KEPT APPOINTMENTS COUNT",
+     "delay": 393,
+     "place": "top",
+     "role": "caption"
+    },
+    {
+     "text": "25 KEPT = $250",
+     "delay": 113,
+     "place": "left",
+     "role": "label"
+    },
+    {
+     "text": "50 KEPT = $500",
+     "delay": 619,
+     "place": "right",
+     "role": "label"
+    }
+   ]
+  },
+  {
+   "tag": "b07_example_tier_two",
+   "mode": "example2",
+   "durationInFrames": 1137,
+   "voFrames": 1107,
+   "labels": [
+    {
+     "text": "30 KEPT APPTS",
+     "delay": 272,
+     "place": "input1",
+     "role": "label"
+    },
+    {
+     "text": "3 CLOSED DEALS",
+     "delay": 344,
+     "place": "input2",
+     "role": "label"
+    },
+    {
+     "text": "3 x $750 = $2,250",
+     "delay": 798,
+     "place": "math1",
+     "role": "label"
+    },
+    {
+     "text": "$250 + $2,250 = $2,500",
+     "delay": 1010,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ]
+  },
+  {
+   "tag": "b08_example_tier_three",
+   "mode": "example3",
+   "durationInFrames": 1524,
+   "voFrames": 1494,
+   "labels": [
+    {
+     "text": "40 APPTS + 5 DEALS",
+     "delay": 197,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "TIER 3",
+     "delay": 834,
+     "place": "left",
+     "role": "label"
+    },
+    {
+     "text": "5 x $1,000 = $5,000",
+     "delay": 998,
+     "place": "math1",
+     "role": "label"
+    },
+    {
+     "text": "TOTAL: $5,250",
+     "delay": 1225,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "50 APPTS = +$250",
+     "delay": 602,
+     "place": "right",
+     "role": "label"
+    }
+   ]
+  },
+  {
+   "tag": "b09_direct_math_no_cap",
+   "mode": "curve",
+   "durationInFrames": 264,
+   "voFrames": 234,
+   "labels": [
+    {
+     "text": "THE MATH IS DIRECT",
+     "delay": 22,
+     "place": "top",
+     "role": "caption"
+    },
+    {
+     "text": "FOLLOW-UP + QUALIFICATION",
+     "delay": 79,
+     "place": "left",
+     "role": "label"
+    },
+    {
+     "text": "NO CAP",
+     "delay": 184,
+     "place": "bottom",
+     "role": "label"
+    }
+   ]
+  },
+  {
+   "tag": "b10_attribution_pipeline",
+   "mode": "attributionHero",
+   "durationInFrames": 716,
+   "voFrames": 686,
+   "labels": [
+    {
+     "text": "WORKED -> HANDOFF -> CLOSED",
+     "delay": 97,
+     "place": "bottom2",
+     "role": "caption"
+    },
+    {
+     "text": "3 MONTHS LATER",
+     "delay": 390,
+     "place": "left",
+     "role": "label"
+    },
+    {
+     "text": "CREDIT STAYS WITH YOU",
+     "delay": 477,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "hero": "lesson13A/hero/hero_b10_attribution_pipeline.mov",
+   "heroTransparent": true
+  },
+  {
+   "tag": "b11_what_top_earners_do",
+   "mode": "topEarners",
+   "durationInFrames": 807,
+   "voFrames": 777,
+   "labels": [
+    {
+     "text": "THOROUGH",
+     "delay": 178,
+     "place": "left",
+     "role": "label"
+    },
+    {
+     "text": "CONSISTENT",
+     "delay": 199,
+     "place": "right",
+     "role": "label"
+    },
+    {
+     "text": "CLEAN HANDOFFS",
+     "delay": 585,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "still": "lesson13A/stills/m13_L13A_b11_top-earners.png",
+   "animationStatus": "static_to_preserve_approved_plaque_text"
+  },
+  {
+   "tag": "b12_money_on_table",
+   "mode": "sceneVideo",
+   "durationInFrames": 308,
+   "voFrames": 278,
+   "labels": [
+    {
+     "text": "DON'T LET LEADS SLIP",
+     "delay": 34,
+     "place": "top",
+     "role": "caption"
+    },
+    {
+     "text": "LEFT ON THE TABLE",
+     "delay": 97,
+     "place": "leftLow",
+     "role": "label"
+    },
+    {
+     "text": "IT'S THAT DIRECT",
+     "delay": 264,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "still": "lesson13A/stills/m13_L13A_b12_money-table.png",
+   "anim": "lesson13A/anim/anim_b12_money_table.mov",
+   "animFrames": 451,
+   "tail": "lesson13A/tails/b12_money_on_table_tail.png"
+  },
+  {
+   "tag": "b13_operator_playbook_tease",
+   "mode": "hero",
+   "durationInFrames": 345,
+   "voFrames": 345,
+   "labels": [
+    {
+     "text": "NEXT: OPERATOR PLAYBOOK",
+     "delay": 34,
+     "place": "top",
+     "role": "caption"
+    },
+    {
+     "text": "REAL DAY WORKFLOW",
+     "delay": 76,
+     "place": "bottom2",
+     "role": "label"
+    },
+    {
+     "text": "RUN YOUR DAY + STAY IN SYNC",
+     "delay": 220,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "hero": "lesson13A/hero/hero_b13_operator_playbook_tease.mp4"
+  }
+ ],
+ "totalFrames": 9275,
+ "notes": {
+  "b10": "Andrea digital-avatar speaking beat; no generated still.",
+  "b11": "Static still by design to preserve approved EMPLOYEE OF THE MONTH plaque text."
+ }
+}

@@ -1,0 +1,76 @@
+LESSON 5B — "The Fact Find" (Module 05 / Chapter 5 / Slot 07, overflow)
+========================================================================
+Source: locked master _master-transcripts.md, Slot 07 (transcripts/Chapter 5 - FINAL.srt), cues 11–16 + cue 17 outro.
+This is the Step-2 half of Chapter 5, split off from Lesson 5A (which took cues 1–10, the opening).
+Narrator: Andrea. Voice: Elizabeth-Friendly.
+
+NOTE FOR THE 5B TAB:
+- The 80/20 "listen more than you talk" + "assume they're motivated" mindset (master cue 10) was
+  lifted into 5A as its closing bridge. 5B can reprise it lightly (cue 11 reinforces it) but should
+  NOT re-teach it as new — open by picking up the fact-find mechanics.
+- OUTRO / TEASE DECISION (flag to Jarrad before generating 5B audio): the master's own Slot 07
+  closing line (cue 17) teases a ROLEPLAY ("practice opening a call with a warm inbound lead"),
+  NOT Chapter 6. Chapter 6 ("Discovery & Handoff", Slot 08) opens by referencing "open a call and
+  run the basic fact find" as the prior module — i.e. the roleplay sits between Ch5 and Ch6. Same
+  trap as 1C's wrong tease. Decide: use cue 17 verbatim (roleplay tease) OR bridge to Chapter 6.
+  Cue 17 verbatim is the guide-default (use the master's own closing line).
+
+----------------------------------------------------------------------
+CLEANED 5B SCRIPT (cues 11–16, lightly cleaned; cue 17 outro)
+----------------------------------------------------------------------
+
+[intro / bridge — write for the split]
+You've opened the call, you've taken control, and you're in the conversation. Now comes Step 2:
+the fact find. This is where you'll spend the vast majority of the call.
+
+[cue 11]
+The fact find is not an interrogation. It's a conversation. You're genuinely trying to understand
+what this person is going through. And you are listening way more than you're talking. You have
+questions you need to cover, yeah, but don't fire them off like you're reading from a clipboard.
+Weave them into a natural conversation. It should feel like two people talking, not a survey.
+
+[cue 12 — property basics]
+For property basics, you want to find out what type of property it is — single family, or duplex,
+or whatever. How many bedrooms and bathrooms. What kind of condition it's in — and I like to ask
+them to rate it on a scale of one to ten, because it gives you a quick picture. And when the last
+time any major updates were done.
+
+[cue 13 — ownership & decision-making]
+For ownership and decision-making, you want to confirm they're actually the owner. Find out if
+there's anyone else on the title or involved in the decision. Ask if there's a mortgage on the
+property and roughly what's owed.
+
+[cue 14 — motivation & timeline + the power question]
+For motivation and timeline, you want to know what's going on with the property that has them
+considering selling. How long they've been thinking about it. Whether there's a timeline they're
+working with. And then this question, which is one of the most powerful questions you have.
+"What would happen if you didn't sell? What does that look like?" That question forces the seller
+to articulate the pain of not taking action. And that pain? That's what drives deals. That's what
+creates urgency. Don't skip it.
+
+[cue 15 — energy / smile]
+Let me talk about energy for a second, because this matters more than you probably think. Your
+energy on the call matters more than your words. If you sound bored, or flat, or robotic, the
+seller will check out in thirty seconds. Doesn't matter how perfect your script is. Even if it's
+your hundredth call of the day, every call should sound like it's your first. Fresh energy.
+Genuine interest. Warmth. Here's a trick that actually works. Smile when you talk on the phone.
+Literally, physically smile. I know it sounds weird, but people can hear it in your voice. It
+changes your tone, your pace, everything. Try it right now. Say "Hi, how are you doing today?"
+with a flat face. Now say it with a big smile. You can hear the difference, right? Your sellers
+can too.
+
+[cue 16 — common mistakes]
+A few things I see new people mess up consistently. Rushing straight to the property — don't jump
+right into "tell me about the house." Build some rapport first. Find out about them as a person
+before you start talking square footage. Talking too much — you should be listening eighty percent
+of the time. If you catch yourself going on a monologue, just stop. Ask a question. Reading the
+script like a robot — the script is a framework, not a teleprompter. Know the beats, know the flow,
+but deliver it in your own voice. If it sounds rehearsed, they're done. Skipping the pen-and-paper
+thing — I know it seems small, but it sets the tone for the entire call. Do it every single time.
+And giving up after one weak response — if they seem short or guarded at first, that's totally
+normal. They've probably been called by five different people already today. Be patient, be warm,
+and give them a reason to keep talking.
+
+[cue 17 — OUTRO, master verbatim (roleplay tease — see decision note above)]
+Alright, next up you're going to get your roleplay. You're going to practice opening a call with a
+warm inbound lead — someone who's curious but a little guarded. Time to put this stuff to work.

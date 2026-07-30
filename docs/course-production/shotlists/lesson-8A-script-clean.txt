@@ -1,0 +1,38 @@
+# Lesson 8A — Complex Objections (Part 1: Situation Objections)
+# Source: locked master _master-transcripts.md Slot 11 (Chapter 14 - Draft.srt, segmented 2026-07-01).
+# VERBATIM master cues 1-9. Cues 10-16 -> lesson-8B-script.txt (trust/people objections + recap + close).
+# Narrator: Andrea (Elizabeth-Friendly). No stage directions in source. No split-artifact duplicates found.
+# NOTE: on-disk "Chapter 14 - Draft.srt" is a stale 2-cue rough draft ("give a damn", no closing tease) —
+#       the master's embedded block is canonical and is what this script derives from.
+# b10 outro = WRITTEN BRIDGE (master deviation to record — the master's real closing tease lives in 8B).
+# Bookends: BEACH Andrea (Jarrad 2026-07-06 — replaces cafe for 8A).
+
+[b01_intro — cue 1]
+Earlier in training you learned the listen, acknowledge, ask, redirect framework and the most common objections. That covers probably 80 percent of what you'll hear. This section covers the other 20 percent, which is the complex, unusual, and sometimes uncomfortable stuff that makes most people on the phone freeze up.
+
+[b02_weight — cue 2]
+These situations are harder because they carry more emotional weight, more legal complexity, or more moving pieces. But the framework is the same. You just need more depth in how you apply it.
+
+[b03_underwater — cue 3]
+When a seller says "I owe more than it's worth," that's an underwater property. The mortgage balance is higher than what the house would sell for. This is more common than you'd think, especially in certain markets and with people who bought at the wrong time or took out second mortgages.
+
+[b04_underwater_response — cue 4]
+Your job here is to understand the full financial picture. Ask if they're current on their payments or falling behind. Ask roughly what they owe. Sometimes a short sale structure can work. Sometimes it's genuinely not a fit. Either way, don't make them feel bad about it. Being underwater is stressful and a lot of people are embarrassed to talk about it.
+
+[b05_tenants — cue 5]
+When they say "I have tenants, can I still sell?" the answer is yes. We buy properties with tenants all the time. The questions you need answered are whether the tenants are on a lease, whether they're paying rent, and whether they'd be willing to stay or need to move.
+
+[b06_squatters — cue 6]
+If there's a squatter situation, someone living in the property without a lease or permission, that's more complicated. Acknowledge how frustrating that is. Say something like "that sounds incredibly frustrating, and we've dealt with situations like that before. Let me get the details and see what we can do." Don't promise a solution. Just gather information.
+
+[b07_leaseback — cue 7]
+Leaseback requests come up when someone needs the cash from selling but isn't ready to move yet. Maybe they're waiting for a new place to be ready, or they need a few months to get situated. They'll ask "can I stay in the house after selling?" And the answer is that it's something we can discuss. A leaseback means they'd stay as a tenant for a defined period after closing. You don't need to negotiate the terms yourself. Just say "that's something our acquisition team handles on the specifics, but yes, we've done arrangements like that before. Let me get the details of what you'd need."
+
+[b08_privacy — cue 8]
+Privacy concerns are more common than you might expect. "I don't want my neighbors to know I'm selling." There's usually something behind that. Financial trouble they don't want people to see. A divorce. Family drama. Whatever it is, the answer is simple. When you sell to us, there's no listing on the MLS, no sign in the yard, no open houses, no strangers walking through. It's a private transaction.
+
+[b09_contract — cue 9]
+Contract fears. "What if I change my mind after signing?" People are scared of commitment, especially with something as big as their house. Tell them the contracts have an inspection period built in, that everything gets walked through before they sign, that nothing happens until they're comfortable, and that they'll have time to have an attorney or anyone they trust review everything. You're reducing the perceived risk of saying yes.
+
+[b10_outro — WRITTEN BRIDGE, not in master — deviation to record]
+So that's the situation side. The property, the money, the paperwork. But some of the hardest objections aren't about the property at all. They're about trust. Is this a scam? Are you just going to flip it for a profit? My attorney said don't sign anything. My family doesn't agree. That's the next lesson. I'll see you there.

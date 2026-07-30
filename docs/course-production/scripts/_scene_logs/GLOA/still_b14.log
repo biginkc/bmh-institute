@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b14_fsbo.png ===
+Verified: PNG, `1600x900`, six flat colors, visual pass for house + seller + FSBO sign only, no agent, no extra readable text. Note: `course-assets/` is ignored by git here, so the file exists on disk but will not show as a normal tracked change.
+
+
+OK mGLO_LGLOA_b14_fsbo.png

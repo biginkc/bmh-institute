@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b13_dom-calendar.png ===
+- no listing card, house, date numbers, or background doodles
+
+Note: direct CLI model control for `gpt-image-2` was unavailable in this sandbox because the local API key and Python SDK were missing, so I used the built-in image-generation path and saved the final PNG to the requested location.
+OK mGLO_LGLOA_b13_dom-calendar.png

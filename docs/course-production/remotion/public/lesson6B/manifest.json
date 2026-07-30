@@ -1,0 +1,204 @@
+{
+  "fps": 30,
+  "audio": "lesson6B/master.m4a",
+  "beats": [
+    {
+      "tag": "b01_intro",
+      "mode": "hero",
+      "hero": "lesson6B/hero/b01_intro.mp4",
+      "badge": true,
+      "transitionIn": "fade",
+      "transitionOut": "slide",
+      "voFrames": 743,
+      "durationInFrames": 773
+    },
+    {
+      "tag": "b02_crmnotes",
+      "mode": "progressive",
+      "transitionIn": "slide",
+      "transitionOut": "slide",
+      "progress": [
+        {
+          "src": "lesson6B/stills/m06_L6B_b02_form_01.png",
+          "delay": 0
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b02_form_02.png",
+          "delay": 104
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b02_form_03.png",
+          "delay": 155
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b02_form_04.png",
+          "delay": 197
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b02_form_05.png",
+          "delay": 414
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b02_form_06.png",
+          "delay": 581
+        }
+      ],
+      "labels": [
+        {
+          "text": "COMPLETE YOUR NOTES",
+          "delay": 104
+        }
+      ],
+      "voFrames": 643,
+      "durationInFrames": 673
+    },
+    {
+      "tag": "b03_briefam",
+      "mode": "corner",
+      "still": "lesson6B/stills/m06_L6B_b03_briefam.png",
+      "anim": "lesson6B/anim/b03_briefam.mp4",
+      "circle": "lesson6B/circle/b03_briefam.mp4",
+      "transitionIn": "slide",
+      "transitionOut": "cut",
+      "labels": [
+        {
+          "text": "BRIEF THE AM",
+          "delay": 38
+        }
+      ],
+      "voFrames": 1208,
+      "durationInFrames": 1238
+    },
+    {
+      "tag": "b04_transfer",
+      "mode": "still",
+      "still": "lesson6B/stills/m06_L6B_b04_transfer.png",
+      "transitionIn": "cut",
+      "transitionOut": "slide",
+      "voFrames": 759,
+      "durationInFrames": 789
+    },
+    {
+      "tag": "b05_frame",
+      "mode": "scene",
+      "still": "lesson6B/stills/m06_L6B_b05_frame.png",
+      "anim": "lesson6B/anim/b05_frame.mp4",
+      "transitionIn": "slide",
+      "transitionOut": "cut",
+      "labels": [
+        {
+          "text": "NO PRESSURE, NO OBLIGATION",
+          "delay": 559
+        }
+      ],
+      "voFrames": 962,
+      "durationInFrames": 992
+    },
+    {
+      "tag": "b06_checklist",
+      "mode": "progressive",
+      "transitionIn": "cut",
+      "transitionOut": "cut",
+      "progress": [
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_00.png",
+          "delay": 0
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_01.png",
+          "delay": 137
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_02.png",
+          "delay": 182
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_03.png",
+          "delay": 258
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_04.png",
+          "delay": 323
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_05.png",
+          "delay": 373
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_06.png",
+          "delay": 437
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_07.png",
+          "delay": 500
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_08.png",
+          "delay": 690
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_09.png",
+          "delay": 761
+        },
+        {
+          "src": "lesson6B/stills/m06_L6B_b06_check_10.png",
+          "delay": 859
+        }
+      ],
+      "labels": [
+        {
+          "text": "10-POINT CHECKLIST",
+          "delay": 91
+        }
+      ],
+      "voFrames": 1192,
+      "durationInFrames": 1222
+    },
+    {
+      "tag": "b07_killers",
+      "mode": "still",
+      "still": "lesson6B/stills/m06_L6B_b07_killers.png",
+      "transitionIn": "cut",
+      "transitionOut": "fade",
+      "push": true,
+      "labels": [
+        {
+          "text": "INCOMPLETE INFO",
+          "delay": 130
+        },
+        {
+          "text": "NO MOTIVATION CONTEXT",
+          "delay": 583
+        },
+        {
+          "text": "NO WARM INTRO",
+          "delay": 894
+        }
+      ],
+      "voFrames": 1247,
+      "durationInFrames": 1277
+    },
+    {
+      "tag": "b08_outro",
+      "mode": "hero",
+      "hero": "lesson6B/hero/b08_outro.mp4",
+      "transitionIn": "fade",
+      "transitionOut": "fade",
+      "voFrames": 386,
+      "durationInFrames": 386
+    }
+  ],
+  "totalFrames": 7350,
+  "circleCrop": {
+    "width": 1600,
+    "height": 900,
+    "left": -580,
+    "top": 65,
+    "diameter": 440
+  },
+  "notes": {
+    "stills": "All 21 stills approved by Jarrad 2026-07-10.",
+    "videoTail": "Hero, circle, and Seedance media are extended with decoded last-frame clone inside MP4. No PNG tail frames.",
+    "b05Fallback": "Seedance roll accepted"
+  }
+}

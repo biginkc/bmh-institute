@@ -1,0 +1,56 @@
+LESSON 4B — "The Five-Step Conversation Framework" (Module 04 / Chapter 4, Slot 06 overflow)
+Source of truth: ~/BMH-OS/BMH Training Course/Thinkific/_master-transcripts.md, Slot 06
+(transcripts/Chapter 4 - FINAL.srt). Derived from cues 13–17 — the OVERFLOW half of Slot 06,
+split from 4A ("Sales Pipeline & Stage Ownership", cues 1–12) at the master's own pivot (cue 13).
+~430 words, ~2:31.
+
+────────────────────────────────────────────────────────────────────────────────
+HANDOFF NOTE (for whoever picks up the 4B tab):
+- This is a NEW-TAB job. Claim "Module 04 / 4B" in NEXT-SESSION.md before starting; read
+  MODULE-PRODUCTION-GUIDE.md first. Owns *lesson4B* / paths distinct from 4A.
+- Topic: the five-step conversation framework that runs INSIDE every pipeline stage
+  (Intro → Fact Find → Pitch → Offer → Close), plus the 80/20 "the house is not the problem" rule.
+- 4A already teased this lesson in its outro (derived from cue 13). 4B should open by picking up
+  that thread ("Now, inside each of these pipeline stages, there's a conversation happening…").
+- 4B OUTRO = the master's ACTUAL closing line (cue 17), VERBATIM — do NOT invent:
+  "Alright, let's keep going. Next up we're going to break down exactly how to open a call and run
+  a fact find."  → hands to Slot 07 "Opening the Call" (Chapter 5 - FINAL.srt).
+- Natural visual spine: a five-step conversation strip (mirror of 4A's six-stage pipeline strip),
+  with an 80/20 bar on the "house is not the problem" beat. Cafe-Andrea bookends.
+- Cleaning: numerals → words for TTS ("Step 1" → "Step one"; "eighty percent" already spelled).
+────────────────────────────────────────────────────────────────────────────────
+
+[cue 13 — verbatim]
+Now, inside each of these pipeline stages, there's a conversation happening. And every conversation
+you have follows a five-step framework. Step one is the Intro, where you set expectations. You tell
+them who you are, why you're calling, and what they'll get out of the conversation. Step two is the
+Fact Find, where you ask questions, qualify, and listen. This is where you should be spending about
+eighty percent of your conversation time. And notice I said talking about the person, not the
+house. Step three is the Pitch, where you present what BMH does. This is actually the only part of
+the conversation that's really about the property and the transaction itself. Step four is the
+Offer, where you transition toward next steps. For you, that usually means teeing up the handoff
+rather than throwing out a number.
+
+[cue 14 — verbatim]
+And step five is the Close, where you get commitment. That might be setting an appointment with the
+acquisition team, getting agreement to receive an offer, or just locking in a firm follow-up time.
+
+[cue 15 — verbatim]
+Here's the thing that ties all this together. The pipeline stages are the organizational structure.
+They tell you where a lead is in the overall process. The five-step framework is how you actually
+execute within each conversation. Pipeline stages move leads forward through the system.
+Conversation steps move each individual call forward.
+
+[cue 16 — verbatim]
+One more thing, and this is important. About eighty percent of your conversation should NOT be about
+the property. Only about twenty percent should actually be about the house itself. The rest is
+intro, rapport building, fact finding, understanding the person. Because the house is not the
+problem. The person's situation is the problem. Your job is to find the solution to their problem,
+and the house just happens to be the vehicle for that solution. New people make the mistake of
+jumping straight to "tell me about the house" and trying to race toward an offer as fast as
+possible. Don't do that. Slow down. Build the relationship. Actually care about what's going on. The
+deals will follow.
+
+[cue 17 — verbatim — 4B OUTRO, teases Slot 07]
+Alright, let's keep going. Next up we're going to break down exactly how to open a call and run a
+fact find.

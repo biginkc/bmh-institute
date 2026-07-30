@@ -1,0 +1,46 @@
+# Lesson 19 "Career Growth Path" - clean script (2026-07-07)
+# Source: locked master _master-transcripts.md Slot 19 Career Growth Path (`Chapter 13 - FINAL.srt`), cues 1-10, with the approved b02/b03/b05/b12/b13 deviations recorded in `lesson-19-source-clean-vs-master.diff`.
+# Raw source cleanup: SRT cue numbers/timestamps/fence stripped. No stage directions were present.
+# Narrator: Andrea. Cafe Andrea opens and closes. No audio/stills/clips/render before storyboard approval.
+# Scope note: career-growth topic lesson; ONE lesson, no A/B split, no next-lesson tease, and no claim that training is complete.
+
+# b01_career_path_opener - cue 1
+Where you're starting is not where you have to stay. The BMH Group is growing, and the people who grow with us are the ones who master what's in front of them and consistently show they're ready for more. There's a real path here, and I want you to see it clearly.
+
+# b02_foundation_role - cue 2a (ROLE-AGNOSTIC REWRITE, Jarrad-approved verbatim 2026-07-10 — master deviation)
+Regardless of the role, you're either working leads, qualifying sellers, or building pipelines. That's the foundation. Everything else at this company builds on top of that.
+
+# b03_clean_handoffs - cue 2b (ROLE-AGNOSTIC REWRITE, Jarrad-approved verbatim 2026-07-10 — master deviation)
+Master it. Understand the sellers. Internalize the pipeline. Hit your KPIs consistently. Become the kind of person the team can rely on — because what you deliver is clean, well-documented, and actually ready.
+
+# b04_readiness_checkpoint - cue 3a
+Once you've proven you can do that consistently, hitting your numbers for 90-plus days, keeping your CRM spotless, showing leadership qualities, you move up.
+
+# b05_complex_leads_mentor - cue 3b
+At the next level you're handling more complex leads. Probate situations with emotional family dynamics. Multi-owner properties where you've got three siblings who can't agree on anything. Sellers who are in financial distress and need someone who can navigate a sensitive conversation. You're also mentoring the newer people coming in behind you. Earnings can grow with performance. You've got more autonomy. Less daily oversight.
+
+# b06_deal_closer_level - cue 4a
+Beyond that, the next level is where you're presenting offers, negotiating terms, and closing deals directly. You own the full sales cycle from handoff all the way through to a signed contract. The earning potential is significantly higher because you're earning commission on the deals you close, not just the ones you source.
+
+# b07_creative_deal_skill - cue 4b
+But the expectations are higher too. You need real negotiation skills. Market knowledge. The ability to structure deals creatively when the straightforward approach doesn't work.
+
+# b08_management_path - cue 5
+And if you have a leadership drive, if you're the kind of person who gets energy from building a team and developing other people, there's a management path where you're hiring, training, coaching, and owning the performance of an entire team. Your compensation at that level is tied to your team's output. When they win, you win.
+
+# b09_no_fixed_schedule - cue 6
+Now, what actually gets you promoted here? It's not time. Some people advance in six months. Some take a year. There's no fixed schedule. It's entirely based on demonstrated performance and readiness.
+
+# b10_daily_performance_criteria - cue 7
+The things we look at are pretty straightforward. Are you hitting your numbers consistently? Not on good days, not when you feel like it, but every day for extended stretches. Do your calls actually sound good? Is your CRM clean? Every lead has notes, a stage, and a next action. No leads sitting there with no plan.
+
+# NOTE (2026-07-10): b12 line change Jarrad-approved — "Are your leads producing revenue?" becomes "Is your work producing revenue?" (rest of cue 9 unchanged). Applied below.
+
+# b11_team_contribution_coachability - cue 8
+We also look at how you contribute to the team. Do you help people? Share what's working? Are you someone others want to work with? And are you coachable? When someone points out a gap in your process, do you fix it, or do you get defensive? The people who advance fastest are the ones who hear feedback, apply it, and come back better. Every time.
+
+# b12_revenue_opportunity - cue 9
+And the most obvious one. Is your work producing revenue? Are the people you hand off actually turning into closed deals? That speaks louder than anything else. The BMH Group is expanding. New markets, new teams, new positions. The people who are performing well right now are the first ones considered for every opportunity that opens up. How far you go here is up to you.
+
+# b13_course_close - Jarrad-approved career-growth topic close (2026-07-10 — master deviation)
+I hope this gives you a clear picture of the growth paths available at BMH. Your path will depend on what you're good at, where you want to go, and the results you produce. We're confident you can continue growing here if you keep improving and stay open to coaching. Keep the conversation going about where you want to grow next.

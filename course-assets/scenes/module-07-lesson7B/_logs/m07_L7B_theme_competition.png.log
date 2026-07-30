@@ -1,0 +1,1966 @@
+Reading prompt from stdin...
+2026-07-05T23:39:25.112952Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f34a6-a42e-7ef1-8917-be8d0a6c96c5
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands in front of one simple house looking a little overwhelmed as THREE other generic investor/agent characters (varied looks, none of them Andrea, none of them the seller, and NONE wearing a headset) crowd in from the sides, each reaching a hand toward the house — one holding a briefcase, one holding a small blank sign, one waving a blank document. Off to one side, Andrea (the BMH rep) waits calm and confident with relaxed arms, not crowding. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. NEVER add sweat drops, motion lines, speed lines, shock marks, thought bubbles, or any floating emphasis symbols — only the described subjects. 16:9 composition, 1600x900.
+
+2026-07-05T23:39:25.356216Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-05T23:39:25.356265Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-05T23:39:25.374684Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-05T23:39:25.486412Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-05T23:39:25.628871Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill for this asset and first read the local instructions that govern image generation and this repo’s workflow. Then I’ll generate the PNG and place it at the requested path.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' \""'$HOME/BMH-OS/CLAUDE.md"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,240p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,260p' \""'$HOME/BMH-OS/_Active.md"' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-07-05
+tags: [v1]
+related: ["[[STRATEGY]]", "[[MOC - v1]]", "[[MOC - v1 Verification Steps]]", "[[Four-app v1 control ledger]]"]
+---
+# _Active — what now
+
+Current priorities, seeded from [[STRATEGY]]'s bottleneck + the [[MOC - v1]] checklist. Frequently updated.
+
+## Operating model — Claude plans, Codex executes
+
+**Claude = planner/reviewer; Codex = executor.** For the four-app v1 push, Codex is executing the written per-app EXECUTE blocks directly in isolated worktrees; the start-orchestration bootstrap remains suspended until the repos are in known state. Claude still provides independent A5 review/approval before merge/deploy. Full handoff + recon + open decisions: [[2026-06-01 1815 — Four-app v1 plan + Codex execution handoff]]. Detailed per-app checklist: [[MOC - v1 Verification Steps]]. Cross-app context source: [[Four-app v1 control ledger]].
+
+**Autonomous = additive / reversible / observable** (STRATEGY's guardrail). A gate = destructive, irreversible, external-facing, or a judgment call.
+
+**Browser V1 acceptance gate:** fixture seeding, SQL assertions, unit/integration tests, GitHub Actions, and Playwright automation are scaffolding/supporting evidence only. Browser V1 is not accepted until Chrome/Chrome DevTools real-browser execution proves the persona flows through visible UI outcomes, screenshots, console/network inspection where relevant, and browser-console probes where required. Do not use Codex in-app browser / MAP / `iab` as the acceptance surface unless Jarrad explicitly reverses this.
+
+**Browser V1 UI-created data rule:** data setup is part of the browser test. For [[Closer Lab]] and [[BMH Institute]], create fixture/content/test records through Chrome/DevTools browser UI wherever the app UI supports creation or editing. Direct database/API writes are exception-only supporting setup for things the UI cannot create, such as auth bootstrap when no signup/admin UI exists, and must be labeled as non-acceptance evidence.
+
+**2026-06-02 browser-surface correction:** Jarrad first reset [[Closer Lab]] and [[BMH Institute]] Browser V1 acceptance to zero, then superseded the MAP/in-app-browser requirement with Chrome/DevTools real-browser execution. Current controller evidence shows [[BMH Institute]] residual proof closed and [[Closer Lab]] Browser V1 markers closed for pre-read persistence, signed embed-token proof, and scoring/runtime. [[Sandra]] production-readiness proof is GO as of 2026-06-11. The 2026-06-18 active-front reset (skip-trace/CASS preflight, filter preset discoverability, bulk tag creation, Sendillo-era Overview KPI visibility) is now CLEARED 2026-06-19 — all four shipped via merged PRs #288–#300, plus Messages disposition/outcomes hardening (#298/#299/#300). Remaining [[Sandra]] threads: PR #287 (hide dead-dispositioned leads from the kanban — OPEN, awaiting NULL-handling review) and the bulk-SMS→Campaigns KPI tracking gap (June 19 run, job `72b0e08d`, 7,547 messages queued with `campaignId=null`) — forward fix now tracked under **PR #306** (supersedes #301; per the 2026-06-23 [[Sandra PR 306 merge gate rules]] decision, updated 2026-07-05 — merge via GitHub-backed main once the Playwright golden-paths check passes; PR MERGEABLE/UNSTABLE, **not yet merged**) which requires a campaign name + auto-creates + stamps `campaign_id`, with the 2026-06-19 architect P1s folded in; the **June 19 backfill is still pending** (designed, not applied — must match by `property_id` intersection, not the created_at window which over-captures by 6; per the decision, the 423-member retry list is created only after production serves the merged fix).
+
+**2026-06-02 trust reset:** Jarrad challenged the controller's Playwright-heavy verification and does not trust acceptance unless it is revalidated in Chrome/DevTools. Treat Playwright/CI/API/DB evidence as support only. Fresh revalidation so far: [[BMH Institute]] Chrome snapshot/screenshot `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, with separate Sandra outcome confirmation `/tmp/browser-revalidation-bmh-institute-outcome.json`; [[Closer Lab]] member Chrome snapshot/screenshot `/tmp/browser-revalidation-closer-member-recording.*` visibly shows recording `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`, with separate Sandra outcome support `/tmp/browser-revalidation-closer-sandra-outcome-support.json`. [[Sandra]] production-readiness proof is GO on `https://sandra.bmhgroupkc.com`: real Sendillo production thread proof, `PR #236` sequence-admin gate, Chrome SOP matrix, and authenticated production non-admin sequence denial/enrollment behavior are all captured in [[Sandra - 2026-06-11]]. [[Jitter]] trust-reset browser work advanced in two steps: the earlier wrong-database/browser-auth mismatch was partially resolved by pinning production to the canonical `jitter-test` plane (`ypgntjjrrutjsratdwmk`) and proving controlled Chrome dialing in production, but that proof depended on a local scoped worker. Current blocker is no longer fixture creation; it is the **carrier swap**: Twilio is KYC-suspended/retired and **Telnyx is now the active carrier (account fully verified) — carrier validation PASSED 2026-06-04** — that carrier validation precedes the worker gate. The current Jitter gate (B2 plan, 2026-06-06) is **trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof**. The downstream acceptance gap is still a real worker path, but only after the single-line Telnyx dial proof.
+
+| Lane | Repo state (2026-06-01) | First autonomous task | Locked decisions |
+|------|------|------|------|
+| **[[Sandra]]** | Production-readiness proof GO on `https://sandra.bmhgroupkc.com` as of [[Sandra - 2026-06-11]]. Gate 1 real Sendillo production thread proof closed; Gate 2 `PR #236` sequence-admin gate merged/deployed/E2E green; Gate 3 Chrome SOP proof closed with admin SOP coverage, real Sendillo thread visibility, bulk SMS no-send inspection, admin authoring retention, and authenticated production non-admin sequence denial/enrollment behavior. Cleanup caveat: Sendillo canary rows retained as audit evidence and throwaway SOP sequence `7dfedf79-120a-434b-b417-c920b3227475` retained inactive. | no blocker; optional explicitly approved cleanup only if pristine DB is desired | consent: keep current |
+| **[[Closer Lab]]** | PR #60 merged; Browser V1 markers previously closed in Chrome/DevTools: pre-read persistence, BMH Institute signed embed-token path, scoring/runtime; Closer→Sandra sender/config/scoring hardening PRs #71/#72/#73/#74 merged and production proof PASS; fresh trust-reset Chrome revalidation captured member recording `72ad25d8-1b09-4ef9-a278-82113c12ce75` at 100% with transcript and rubric `MET 5 / 5` | browser-revalidated after trust reset | — |
+| **[[BMH Institute]]** | PR #79 and PR #80 merged; controller residual Chrome/DevTools proof closed after credential rotation; Sandra course-completed sender PR #81 merged, production env configured after token rotation, and Chrome/DevTools final lesson proof wrote `course.completed` into Sandra; fresh trust-reset Chrome revalidation captured visible `Lesson complete` and matching Sandra outcome | browser-revalidated after trust reset | cert PDF **deferred post-v1**; suspended-login block shipped via PR #79 |
+| **[[Jitter]]** | auth PR #144 merged; writeback PR #145, Sandra receiver PR #224, and boundary fix PR #146 merged; CPS pacing merged to `main` at `334ef8565d21b71bd3f645f05def2922179cee47` and deployed to production `dpl_75H8rsoMe7HEX7KSgtdo6cAjtJRS`; one controlled Chrome proof succeeded on `https://jitter.bmhgroupkc.com/dialer`, with browser audio connected and 4 successful `twilio.create_call` operations, but only while a local scoped worker was running. **Carrier since swapped: Twilio retired (KYC); Telnyx is the active carrier (account verified).** | **Current gate (B2 plan, 2026-06-06): trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof.** Then keep web + worker on the same reviewed SHA and rerun the final Chrome `/dialer` proof with the real worker before claiming accepted | business dialing approved; no extra live dial needed for writeback-only proof |
+
+## 🚦 Gates — full autonomy authorized (pre-launch, no users/data)
+Standing authorization (Jarrad, 2026-06-01): Codex may read/write any Supabase project incl. prod, run/apply migrations, open AND **merge** PRs, and deploy — quality-gated by Codex manual-code-review plus Claude A5 when reachable. If Claude is unavailable, Codex must try both CLI and desktop/app before using the fallback readiness gate. **No human click on merge/deploy.** See [[bmh-apps-prelaunch-no-prod-ceremony]] and [[Four-app v1 control ledger]].
+- **Hard pause:** billing changes; secret disclosure risk; uncontrolled provider use outside v1 verification; human-only MFA/CAPTCHA/account recovery after CLI/API/desktop workarounds.
+- [[Jitter]] business dialing is explicitly approved for v1 verification. Use product-appropriate caps/logging; no generic prod ceremony just because it is production.
+- New product decisions: make v1-compatible calls, record in the app's report, keep moving — never stall a lane unless it changes billing or creates uncontrolled provider use.
+
+## ✅ Fully autonomous (no checkpoint) — incl. TEST-env side effects
+Self-served, no longer Jarrad inputs:
+- **1Password reads** — all agents must read existing `BMH Secrets` items through the service account only: `export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -w -s OP_SERVICE_ACCOUNT_TOKEN)` then `op read "<redacted-1password-ref>"`. Do not use desktop-app/GUI/biometric/browser authorization for reads. If a GUI authorization prompt appears during a read, stop that path and retry with the service account; do not ask Jarrad to approve a read.
+- **Twilio** — read from 1Password (`Twilio - BMH Account Credentials`: SID, auth token, API key, `TWILIO_OWNED_NUMBERS_E164`, caller ID). Owned-number tests remain useful for smoke tests; [[Jitter]] may also dial real businesses for v1 verification under the standing approval above.
+- **Test accounts** — each lane provisions its own per-role accounts in its app's `*-test` Supabase project (`sandra-crm-test`, `closer-lab-test`, `bmh-institute-test`, `jitter-test`).
+- Dirty-work policy: snapshot to `wip/pre-v1-snapshot-<date>` *before* removing stale (reversible).
+- Plus: repo triage · code fixes in worktrees · unit/integration/build/lint · Playwright fake-media + fixtures · resolving `UNKNOWN` items by reading code · drafting PRs · `_inbox` notes.
+
+## Integrations — last
+Trust-reset integration front: do not call a lane accepted unless the current proof includes Chrome/DevTools-visible browser behavior. Pre-reset supporting proof remains useful but is not enough by itself. [[BMH Institute]] `course.completed`→[[Sandra]] has fresh Chrome/DevTools revalidation after Sandra #227/#228 and BMH Institute #81: `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, and separate outcome confirmation shows Sandra `institute_course_outcomes.id=61592447-b33d-489c-a230-d513435ef6b7` with webhook event `15e56f40-31b8-4d48-901e-942bdf0bbd8f` processed/signature verified. [[Closer Lab]] practice outcome→[[Sandra]] now has fresh Chrome/DevTools member recording revalidation: `/tmp/browser-revalidation-closer-member-recording.*` visibly shows attempt `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`; separate support file `/tmp/browser-revalidation-closer-sandra-outcome-support.json` ties the same attempt to Sandra `closer_practice_outcomes.id=90aaae3d-1053-4021-b9e1-a6e50b8a08f8`. [[Jitter]]→[[Sandra]] writeback remains supported by deployed production executor/API plus Sandra production DB proof after Jitter #145, Sandra #224, and Jitter #146, and a controlled Chrome `/dialer` proof succeeded after production was pinned to canonical `jitter-test` (`ypgntjjrrutjsratdwmk`). That proof is still not sufficient for acceptance because it depended on a local scoped worker. Current gap: a real worker path must back the final Chrome proof so dialing continues without the local helper and without warning banners, duplicate operations, or queue-time spikes.
+
+## Next step
+**▶️ RESUME (2026-06-06 21:23): [[2026-06-06 2123 — Doc-driven Jitter B2 plan with sub-agents (019e9fd7)]] — this is now the canonical raw plan note for the active [[Jitter]] lane.**
+
+**[[Jitter]] — B1.6 operator two-way audio PROVEN on Telnyx (2026-06-04, see [[2026-06-04 2110 — Jitter Telnyx B1.6 operator audio PROVEN]]).** Current front = **get the dialer DIALING (B2)**. Permission mode is now `bypassPermissions`. Loop running: **Claude orchestrates + reviews + commits + drives Chrome proof; Codex executes code** (`codex-exec.sh` + 3-min `watch.sh`).
+
+**OFFICIAL-DOCS-FIRST B2 order:** do not keep iterating on the old conference-callback hypothesis blindly. New research says the first move is to re-check the trust boundary on `/api/product/telephony/twiml/operator` because the current failing test may be enforcing signed-callback rules on the initial [[Telnyx]] TeXML instruction fetch. After that, keep strict signature validation on real callback routes, verify the browser-audio readiness contract across route/runtime/worker SQL, then proceed to the single-line live dial and the real [[Railway]] worker proof.
+
+**OPEN [[Jitter]] questions now ordered by impact:**
+1. Is the operator TeXML route enforcing the wrong auth contract for instruction fetches?
+2. Is `endConferenceOnExit=true` on `operator_browser` actually the intended product behavior?
+3. Is `productOperatorJoined` now being used consistently as the B2 dial-ready signal across route/runtime/worker layers?
+4. Are callback hosts and [[Vercel]] bypass assumptions explicit and correct for the environments being used?
+
+**Then:** single-line dial K=1 (canary guard ON, NOT gated) to +13107540662 → prove dialing. **Multi-line (K≥2) is GATED — needs Jarrad to EXPLICITLY lift his own "no multi-line without Telnyx L2 + written AUP" rule** (all calls redirect to his own number, so AUP not truly implicated, but the gate is his to lift). **Deferred (Jarrad: integrations last):** Sandra writeback (payload fixed `da659e3`, creds not staged), B1.4 voice_url, 1Password credential-id write-back (`70ad6f62…`, still PLACEHOLDER).
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'rg -n "lesson7B|BMH lesson|house scene|handshake-reference|rep_andrea|seller_male|image generation" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+2:scope: Use for BMH course image or animation generation when role assignment, face details, or hairstyle continuity must match the approved handshake-reference characters before still approval or animation.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The repo and vault instructions line up with this being a project-bound course asset. I’m treating the attached style sheets as references only, and the Andrea/seller anchors as strict identity constraints.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "find $HOME/.codex/memories/skills -maxdepth 3 -type f | sed -n '1,120p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+find: $HOME/.codex/memories/skills: No such file or directory
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git worktree list --porcelain' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+worktree $HOME/Sites/BMH apps/BMH Institute
+HEAD 94db1c533ad2b6eaee9e6494b3e16272a86a16dd
+branch refs/heads/claude/course-production
+
+worktree /private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-53bc65929a62da14-10054e166492ed63
+HEAD 10054e166492ed63c9367ff1615116639034896a
+detached
+prunable gitdir file points to non-existent location
+
+worktree /private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-53bc65929a62da14-f9a748c8861a028e
+HEAD f9a748c8861a028e79adbfdc0982cad311e12978
+detached
+prunable gitdir file points to non-existent location
+
+worktree $HOME/Sites/BMH apps/_codex_worktrees/answer-key-leak/bmh-institute
+HEAD 3a9c6748754a86dfc0c2dfddda163594a2ad1238
+branch refs/heads/main
+
+worktree $HOME/Sites/BMH apps/_codex_worktrees/v1-20260601/bmh-institute
+HEAD 6bcb2b0f748d3e393f6eb2cdcb5728e83a36b61e
+branch refs/heads/codex/20260602-institute-sandra-course-completed
+
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,24p' $HOME/.codex/memories/MEMORY.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+# Task Group: BMH course lesson, still, and animation character continuity corrections
+scope: Use for BMH course image or animation generation when role assignment, face details, or hairstyle continuity must match the approved handshake-reference characters before still approval or animation.
+applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, and Andrea character identities, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+
+## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+
+### rollout_summary_files
+
+- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+
+### keywords
+
+- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+
+## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+
+### rollout_summary_files
+
+- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+
+### keywords
+
+- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "ls -la .planning 2>/dev/null && find .planning -maxdepth 2 -type f | sort | sed -n '1,160p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+total 192
+drwxr-xr-x@  17 jarradhenry  staff    544 Jul  2 18:38 .
+drwxr-xr-x@  55 jarradhenry  staff   1760 Jul  5 16:43 ..
+-rw-r--r--@   1 jarradhenry  staff   2197 May  9 15:04 MILESTONES.md
+-rw-r--r--@   1 jarradhenry  staff   9561 May  9 18:30 PROJECT.md
+-rw-r--r--@   1 jarradhenry  staff   3593 May  9 14:30 REQUIREMENTS.md
+-rw-r--r--@   1 jarradhenry  staff   8356 May  9 18:30 ROADMAP.md
+-rw-r--r--@   1 jarradhenry  staff  45588 Jul  5 17:05 STATE.md
+-rw-r--r--@   1 jarradhenry  staff   5017 May  9 12:06 STITCH-HANDOFF.md
+-rw-r--r--@   1 jarradhenry  staff   2240 May  9 12:06 STITCH-RESUME.md
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  2 18:38 claude-convergence
+drwxr-xr-x@   9 jarradhenry  staff    288 May  4 11:11 codebase
+-rw-r--r--@   1 jarradhenry  staff   1117 Apr 30 18:29 config.json
+drwxr-xr-x@   6 jarradhenry  staff    192 May  9 05:27 milestones
+drwxr-xr-x@   3 jarradhenry  staff     96 May  1 00:24 notes
+drwxr-xr-x@   7 jarradhenry  staff    224 May  9 07:18 phases
+drwxr-xr-x@  10 jarradhenry  staff    320 May  9 18:20 qa
+drwxr-xr-x@ 223 jarradhenry  staff   7136 Jul  5 17:04 quick
+.planning/MILESTONES.md
+.planning/PROJECT.md
+.planning/REQUIREMENTS.md
+.planning/ROADMAP.md
+.planning/STATE.md
+.planning/STITCH-HANDOFF.md
+.planning/STITCH-RESUME.md
+.planning/claude-convergence/quiz-answer-key-leak.md
+.planning/codebase/ARCHITECTURE.md
+.planning/codebase/CONCERNS.md
+.planning/codebase/CONVENTIONS.md
+.planning/codebase/INTEGRATIONS.md
+.planning/codebase/STACK.md
+.planning/codebase/STRUCTURE.md
+.planning/codebase/TESTING.md
+.planning/config.json
+.planning/milestones/v1-follow-up-MILESTONE-AUDIT.md
+.planning/milestones/v1-follow-up-REQUIREMENTS.md
+.planning/milestones/v1-follow-up-ROADMAP.md
+.planning/milestones/v1-production-hardening-audit.md
+.planning/notes/2026-05-01-domain-decision-thebmhgroup.md
+.planning/qa/ISSUE-6-content-admin-polish-triage.md
+.planning/qa/PHASE-06-ISSUES.md
+.planning/qa/TEST-03-e2e-seed-content-plan.md
+.planning/qa/TEST-03-missing-playwright-coverage-plan.md
+.planning/qa/bmh-sister-alignment-login.png
+.planning/qa/performance-thresholds.md
+.planning/qa/production-readiness-assessment.md
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "git status --short --branch && pwd && ls -la course-assets/scenes/module-07-lesson7B && find course-assets/scenes/module-07-lesson7B -maxdepth 2 -type f | sort | sed -n '1,160p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+## claude/course-production...origin/main [ahead 3]
+ M .planning/STATE.md
+?? .planning/quick/260702-m01-lb-p03-clarity/
+?? .planning/quick/260702-q6j-write-reusable-course-production-illustr/
+?? .planning/quick/260702-qe1-generate-cash-asis-scene-asset/
+?? .planning/quick/260703-0rx-generate-13-character-course-cast-doodle/
+?? .planning/quick/260703-2ec-generate-fulfilling-work-scene-asset/
+?? .planning/quick/260703-generate-alignment-principle-card/
+?? .planning/quick/260703-generate-alignment-v2-scene-asset/
+?? .planning/quick/260703-generate-andrea-cafe-scene-asset/
+?? .planning/quick/260703-generate-andrea-headset-avatar/
+?? .planning/quick/260703-generate-andrea-yoga-scene-asset/
+?? .planning/quick/260703-generate-bmh-building-scene-asset/
+?? .planning/quick/260703-generate-calendar-frame-asset/
+?? .planning/quick/260703-generate-clarity-shift-v4-scene-asset/
+?? .planning/quick/260703-generate-clarity-shift-v5-scene-asset/
+?? .planning/quick/260703-generate-consult-not-sell-scene-asset/
+?? .planning/quick/260703-generate-curiosity-scene-asset/
+?? .planning/quick/260703-generate-detach-character-v2/
+?? .planning/quick/260703-generate-disrepair-vignette/
+?? .planning/quick/260703-generate-doctor-analogy-scene-asset/
+?? .planning/quick/260703-generate-equal-status-principle-card/
+?? .planning/quick/260703-generate-frozen-story3-scene-asset/
+?? .planning/quick/260703-generate-frozen-story3-v2-scene-asset/
+?? .planning/quick/260703-generate-guide-not-buyer-scene-asset/
+?? .planning/quick/260703-generate-hard-moments-v2-scene-asset/
+?? .planning/quick/260703-generate-inherited-story1-scene-asset/
+?? .planning/quick/260703-generate-long-game-scene-asset/
+?? .planning/quick/260703-generate-office-interior-scene-asset/
+?? .planning/quick/260703-generate-pedestrians-strip-scene-asset/
+?? .planning/quick/260703-generate-puzzle-scene-asset/
+?? .planning/quick/260703-generate-rep-call-scene-asset/
+?? .planning/quick/260703-generate-reps-board-v2/
+?? .planning/quick/260703-generate-reps-principle-card/
+?? .planning/quick/260703-generate-same-lens-principle-card/
+?? .planning/quick/260703-generate-script-tool-scene-asset/
+?? .planning/quick/260703-generate-script-tool-v2-scene-asset/
+?? .planning/quick/260703-generate-service-scene-asset/
+?? .planning/quick/260703-generate-story2-landlord-poseb-relaxed/
+?? .planning/quick/260703-generate-story2-landlord-scene-asset/
+?? .planning/quick/260703-generate-ten-principles-board-v2/
+?? .planning/quick/260703-generate-ten-principles-board/
+?? .planning/quick/260703-generate-title-objections-scene-asset/
+?? .planning/quick/260703-generate-title-offer-scene-asset/
+?? .planning/quick/260703-generate-title-process-scene-asset/
+?? .planning/quick/260703-generate-title-prospect-scene-asset/
+?? .planning/quick/260703-generate-tombstone-vignette/
+?? .planning/quick/260703-generate-training-montage-scene-asset/
+?? .planning/quick/260703-generate-training-montage-v2-scene-asset/
+?? .planning/quick/260703-hzc-generate-hard-moments-v3-course-scene-as/
+?? .planning/quick/260703-nxe-generate-detach-principle-card/
+?? .planning/quick/260703-nz2-generate-clarity-shift-scene-asset/
+?? .planning/quick/260703-oo2-generate-long-game-v2-scene-asset/
+?? .planning/quick/260703-oop-generate-module-01-lesson-b-scene-03-cla/
+?? .planning/quick/260703-tg3-generate-pose-b-frame-for-story2-landlor/
+?? .planning/quick/260704-generate-123-stairs-scene-asset/
+?? .planning/quick/260704-generate-123-stones-scene-asset/
+?? .planning/quick/260704-generate-align-scene-asset/
+?? .planning/quick/260704-generate-andrea-car-scene-asset/
+?? .planning/quick/260704-generate-andrea-car-v2-scene-asset/
+?? .planning/quick/260704-generate-balance-scale-timeline-asset/
+?? .planning/quick/260704-generate-car-plate-v2-asset/
+?? .planning/quick/260704-generate-cash-road-scene-asset/
+?? .planning/quick/260704-generate-cash-truth-scene-asset/
+?? .planning/quick/260704-generate-cash-truth-v2-scene-asset/
+?? .planning/quick/260704-generate-equal-status-v2-scene-asset/
+?? .planning/quick/260704-generate-higher-offer-scene-asset/
+?? .planning/quick/260704-generate-higher-offer-v2-scene-asset/
+?? .planning/quick/260704-generate-lc-b06-anchor-scene-asset/
+?? .planning/quick/260704-generate-lowballers-scene-asset/
+?? .planning/quick/260704-generate-m01-lc-b19-scenery-strip/
+?? .planning/quick/260704-generate-m02-l2a-b07-disqualify-scene-asset/
+?? .planning/quick/260704-generate-m02-l2a-grid1-inherited/
+?? .planning/quick/260704-generate-m02-l2a-grid2-landlord/
+?? .planning/quick/260704-generate-m02-l2a-grid4-relocating/
+?? .planning/quick/260704-generate-m02-l2a-grid6-repairs/
+?? .planning/quick/260704-generate-m03-l3a-devil-agent/
+?? .planning/quick/260704-generate-module-02-profile-scene-asset/
+?? .planning/quick/260704-generate-no-number-car-scene-asset/
+?? .planning/quick/260704-generate-office-andrea-v2b/
+?? .planning/quick/260704-generate-perform-contrast-scene-asset/
+?? .planning/quick/260704-generate-perform-v2-contrast-scene-asset/
+?? .planning/quick/260704-generate-price-headline-scene-asset/
+?? .planning/quick/260704-generate-reps-v3-board-asset/
+?? .planning/quick/260704-generate-too-high-scene-asset/
+?? .planning/quick/260704-generate-win-window-calendar-asset/
+?? .planning/quick/260704-generate-win-window-v2-calendar-asset/
+?? .planning/quick/260704-jxw-generate-one-bmh-institute-course-scene-/
+?? .planning/quick/260704-jyl-generate-deposition-scene-asset/
+?? .planning/quick/260704-jzs-generate-m01-lc-b11-movie-scene-asset/
+?? .planning/quick/260704-kf5-generate-car-plate-scene-asset/
+?? .planning/quick/260704-kf8-generate-cash-road-v2-scene-asset/
+?? .planning/quick/260704-kfc-generate-lowballers-v2-scene-asset/
+?? .planning/quick/260704-kvb-generate-longgame-ages-scene-asset/
+?? .planning/quick/260704-tnm-generate-canyon-price-gap-course-scene-a/
+?? .planning/quick/260704-twt-generate-m02-l2a-grid5-payments/
+?? .planning/quick/260704-twu-generate-m02-l2a-b06-motivated-scene-asset/
+?? .planning/quick/260704-u03-generate-m02-l2a-b06-curious-scene-asset/
+?? .planning/quick/260704-vog-generate-module-02-lesson-2b-david-portr/
+?? .planning/quick/260704-w0l-generate-m03-l3a-house-disrepair/
+?? .planning/quick/260704-woy-generate-module-02-lesson-2b-ray-portrai/
+?? .planning/quick/260705-0ht-generate-m04-l4a-offer-scene-asset/
+?? .planning/quick/260705-0ku-generate-m04-l4a-v1-capture/
+?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+?? .planning/quick/260705-1bd-generate-m03-l3a-steps-board-no-markers/
+?? .planning/quick/260705-1bj-regenerate-centered-module-03-lesson-3a-/
+?? .planning/quick/260705-29z-generate-m04-l4a-v6b-handoff-walkin/
+?? .planning/quick/260705-generate-carol-argue-scene/
+?? .planning/quick/260705-generate-m02-l2a-b05-motivation-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b10-outofstate-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b12-motivated-stand/
+?? .planning/quick/260705-generate-m02-l2a-b13-curious-stand/
+?? .planning/quick/260705-generate-m02-l2a-b16-notes-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b18-angrycaller/
+?? .planning/quick/260705-generate-m02-l2a-b20-handshake-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-grid3-divorce/
+?? .planning/quick/260705-generate-m02-l2b-beth-portrait/
+?? .planning/quick/260705-generate-m02-l2b-beth-scene/
+?? .planning/quick/260705-generate-m02-l2b-carol-scene-asset/
+?? .planning/quick/260705-generate-m02-l2b-david-portrait-v2/
+?? .planning/quick/260705-generate-m02-l2b-david-portrait-v3/
+?? .planning/quick/260705-generate-m02-l2b-david-scene-asset/
+?? .planning/quick/260705-generate-m02-l2b-david-simple-scene/
+?? .planning/quick/260705-generate-m02-l2b-marcus-dream-house-scene/
+?? .planning/quick/260705-generate-m02-l2b-marcus-portrait/
+?? .planning/quick/260705-generate-m02-l2b-marcus-underwater-scene/
+?? .planning/quick/260705-generate-m03-l3a-clock-kick-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-family-driveway/
+?? .planning/quick/260705-generate-m03-l3a-handshake-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-house-restored-asset/
+?? .planning/quick/260705-generate-m03-l3a-injury-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-peace-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-phone-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-rep-wand-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-steps-board/
+?? .planning/quick/260705-generate-m03-l3a-whiteboard-asset/
+?? .planning/quick/260705-generate-m03-l3b-andrea-stop/
+?? .planning/quick/260705-generate-m03-l3b-homeowner-avatar/
+?? .planning/quick/260705-generate-m03-l3b-ideal-seller/
+?? .planning/quick/260705-generate-m03-l3b-not-a-fit/
+?? .planning/quick/260705-generate-m03-l3b-offer-recap/
+?? .planning/quick/260705-generate-m03-l3b-relieved-seller-scene/
+?? .planning/quick/260705-generate-m03-l3b-rundown-house/
+?? .planning/quick/260705-generate-m04-l4a-contract-asset/
+?? .planning/quick/260705-generate-m04-l4a-discovery-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-handoff-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-qualify-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-qualify-v3/
+?? .planning/quick/260705-generate-m04-l4a-v2-firstcontact/
+?? .planning/quick/260705-generate-m04-l4b-v4b-offer-handoff/
+?? .planning/quick/260705-generate-m04-l4b-v7-person-situation-8020/
+?? .planning/quick/260705-generate-m05-l5a-card-handoff/
+?? .planning/quick/260705-generate-m05-l5a-demo-call/
+?? .planning/quick/260705-generate-m05-l5a-pen-notepad/
+?? .planning/quick/260705-generate-m05-l5a-phones/
+?? .planning/quick/260705-generate-m05-l5a-seller-couch-scene/
+?? .planning/quick/260705-generate-m05-l5a-stopwatch/
+?? .planning/quick/260705-generate-m05-l5a-two-doors/
+?? .planning/quick/260705-generate-m06-l6a-mask-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-notices/
+?? .planning/quick/260705-generate-m06-l6a-pyramid/
+?? .planning/quick/260705-generate-m07-l7a-b03-reframe/
+?? .planning/quick/260705-generate-m07-l7a-b04cold-mark/
+?? .planning/quick/260705-generate-m07-l7a-b04warm-jim/
+?? .planning/quick/260705-generate-m07-l7a-b07-complaints/
+?? .planning/quick/260705-generate-m07-l7b-price-theme/
+?? .planning/quick/260705-generate-m07-l7b-theme-asis/
+?? .planning/quick/260705-generate-m07-l7b-theme-delay/
+?? .planning/quick/260705-generate-m07-l7b-theme-distress/
+?? .planning/quick/260705-generate-m07-l7b-theme-trust/
+?? .planning/quick/260705-generate-office-andrea-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v2a-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v4a-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v4b-scene-asset/
+?? .planning/quick/260705-idk-generate-m02-l2a-b14-overshoulder-course/
+?? .planning/quick/260705-imq-generate-ray-scene-asset/
+?? .planning/quick/260705-imt-generate-m04-l4a-qualify-v2/
+?? .planning/quick/260705-imz-generate-carol-lien-scene/
+?? .planning/quick/260705-lkb-generate-m04-l4b-pitch-grounded/
+?? .planning/quick/260705-ltt-generate-one-module-04-lesson-4b-slow-do/
+?? .planning/quick/260705-ne7-generate-module-07-lesson-7a-b02-goodsig/
+?? .planning/quick/260705-nk6-generate-m07-l7a-b09-real/
+?? .planning/quick/260705-nkc-generate-m07-l7a-b08-reactionary/
+?? .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/
+?? .planning/quick/260705-nni-generate-m06-l6a-deciders-scene-asset/
+?? .planning/quick/260705-regenerate-m03-l3a-cash-handoff/
+?? cast-doodle.log
+?? cast-gen1.log
+?? docs/course-production/ARCHITECTURE.md
+?? docs/course-production/HANDOFF-3B.md
+?? docs/course-production/HANDOFF-lesson2A.md
+?? docs/course-production/LESSON-2B-V2-SCENES-SPEC.md
+?? docs/course-production/LESSON-4A-HANDOFF.md
+?? docs/course-production/MODULE-PRODUCTION-GUIDE.md
+?? docs/course-production/NEXT-SESSION.md
+?? docs/course-production/PLAYBOOK.md
+?? docs/course-production/RESEARCH-video-pipeline.md
+?? docs/course-production/STYLE-BLOCK.md
+?? docs/course-production/_QC-QUEUE.md
+?? docs/course-production/remotion/
+?? docs/course-production/scene-card-v2.md
+?? docs/course-production/scripts/
+?? docs/course-production/shotlists/lesson-1B-script-clean.txt
+?? docs/course-production/shotlists/lesson-1C-script-conversation-flow.txt
+?? docs/course-production/shotlists/lesson-4A-script.txt
+?? docs/course-production/shotlists/lesson-4B-script-clean.txt
+?? docs/course-production/shotlists/lesson-4B-script.txt
+?? docs/course-production/shotlists/lesson-5A-script-clean.txt
+?? docs/course-production/shotlists/lesson-5B-script.txt
+?? docs/course-production/shotlists/lesson-6A-script-clean.txt
+?? docs/course-production/shotlists/lesson-6B-script.txt
+?? docs/course-production/shotlists/lesson-7A-part2-script.txt
+?? docs/course-production/shotlists/lesson-7A-script-clean.txt
+?? docs/course-production/shotlists/module-01-lessonA-scenecards.md
+?? docs/course-production/shotlists/module-01-lessonB-scenecards.md
+?? docs/course-production/shotlists/module-01-lessonC-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2A-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2B-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2B-script-clean.txt
+?? docs/course-production/shotlists/module-03-lesson3A-scenecards.md
+?? docs/course-production/shotlists/module-03-lesson3B-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4A-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-bakeoff.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-production-plan.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-prompts.md
+?? docs/course-production/shotlists/module-04-lesson4B-assembly-review.md
+?? docs/course-production/shotlists/module-04-lesson4B-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4B-still-review.md
+?? docs/course-production/shotlists/module-05-lesson5A-scenecards.md
+?? docs/course-production/shotlists/module-06-lesson6A-scenecards.md
+?? docs/course-production/shotlists/module-07-lesson7A-scenecards.md
+?? style-extract.log
+$HOME/Sites/BMH apps/BMH Institute
+total 440
+drwxr-xr-x@ 10 jarradhenry  staff    320 Jul  5 18:31 .
+drwxr-xr-x@ 14 jarradhenry  staff    448 Jul  5 16:58 ..
+drwxr-xr-x@  4 jarradhenry  staff    128 Jul  5 18:32 _anchors
+drwxr-xr-x@  8 jarradhenry  staff    256 Jul  5 16:59 _logs
+-rw-r--r--@  1 jarradhenry  staff  38552 Jul  5 18:38 m07_L7B_theme_asis.png
+-rw-r--r--@  1 jarradhenry  staff  46150 Jul  5 18:37 m07_L7B_theme_competition.png
+-rw-r--r--@  1 jarradhenry  staff  25103 Jul  5 18:38 m07_L7B_theme_delay.png
+-rw-r--r--@  1 jarradhenry  staff  37160 Jul  5 17:12 m07_L7B_theme_distress.png
+-rw-r--r--@  1 jarradhenry  staff  30904 Jul  5 17:04 m07_L7B_theme_price.png
+-rw-r--r--@  1 jarradhenry  staff  31762 Jul  5 18:39 m07_L7B_theme_trust.png
+course-assets/scenes/module-07-lesson7B/_anchors/rep_andrea.png
+course-assets/scenes/module-07-lesson7B/_anchors/seller_male.png
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_distress.png.log
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_distress.png
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_price.png
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_trust.png
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+A prior `m07_L7B_theme_competition.png` already exists, and your request names that exact path, so this is an explicit replacement. I also found an existing GSD quick task for this same asset, so I’ll reuse that lane instead of creating a fresh planning thread.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png course-assets/scenes/module-07-lesson7B/_anchors/rep_andrea.png course-assets/scenes/module-07-lesson7B/_anchors/seller_male.png docs/design/style-ref-1.png docs/design/style-ref-2.png docs/design/cast-board.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+course-assets/scenes/module-07-lesson7B/_anchors/rep_andrea.png:       PNG image data, 270 x 530, 8-bit/color RGB, non-interlaced
+course-assets/scenes/module-07-lesson7B/_anchors/seller_male.png:      PNG image data, 490 x 810, 8-bit/color RGB, non-interlaced
+docs/design/style-ref-1.png:                                           PNG image data, 1504 x 1128, 8-bit/color RGB, non-interlaced
+docs/design/style-ref-2.png:                                           PNG image data, 1504 x 1128, 8-bit/color RGB, non-interlaced
+docs/design/cast-board.png:                                            PNG image data, 1536 x 1024, 8-bit/color RGB, non-interlaced
+
+exec
+/bin/zsh -lc "find .planning/quick/260705-nn2-generate-m07-l7b-theme-competition -maxdepth 2 -type f -print | sort | xargs -n1 sed -n '1,220p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: in-progress
+date: 2026-07-05
+---
+
+# Generate Module 07 Lesson 7B competition theme scene asset
+
+Goal: create `course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png` as a PNG course still.
+
+Coverage:
+- Visual inspection against the supplied style references and prompt.
+- Local file type and dimension checks.
+- Palette and background spot checks where useful.
+
+Acceptance:
+- The asset exists at the requested path.
+- The image is a PNG at 1600 x 900.
+- The scene shows one simple center house.
+- A seller stands in front of the house looking overwhelmed.
+- Three eager suitor characters crowd in from the sides and reach toward the house.
+- The suitors include one briefcase, one blank yard sign, and one blank document.
+- A friendly BMH rep wearing a phone headset waits calmly off to one side, not crowding.
+- The mood reads busy and competitive.
+- Style matches the flat sticker sheet references: thick black wobbly outlines, rounded simple silhouettes, flat yellow, orange, cream, white, and black fills on cornflower blue.
+- There are no words, readable text, gradients, textures, shadows, lighting, perspective, skin-tone shading, or decorative clutter that fights the prompt.
+
+Verification:
+- Inspect the generated image visually.
+- Verify file type and dimensions with local tooling.
+- Spot-check the flat background and limited course palette.
+---
+status: complete
+completed: 2026-07-05
+---
+
+# Generate Module 07 Lesson 7B competition theme scene asset
+
+Regenerated `course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png`.
+
+Verification:
+- File exists at the requested path.
+- PNG format confirmed.
+- Dimensions confirmed at 1600 x 900.
+- Palette check confirmed 6 flat colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+- Corner and background spot-check confirmed flat cornflower-blue background.
+- Visual inspection confirmed the center house, overwhelmed seller, three crowding suitors, briefcase, blank yard sign, blank document, and separated headset BMH rep.
+- Visual inspection confirmed Andrea is the only headset character and the seller has no headset.
+- Visual inspection found no readable text, extra characters, gradient, texture, shadows, lighting, or perspective in the saved image.
+
+Notes:
+- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+- Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+- The original generated source remains under `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`.
+- `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+Reading prompt from stdin...
+2026-07-05T23:39:25.112952Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f34a6-a42e-7ef1-8917-be8d0a6c96c5
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands in front of one simple house looking a little overwhelmed as THREE other generic investor/agent characters (varied looks, none of them Andrea, none of them the seller, and NONE wearing a headset) crowd in from the sides, each reaching a hand toward the house — one holding a briefcase, one holding a small blank sign, one waving a blank document. Off to one side, Andrea (the BMH rep) waits calm and confident with relaxed arms, not crowding. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. NEVER add sweat drops, motion lines, speed lines, shock marks, thought bubbles, or any floating emphasis symbols — only the described subjects. 16:9 composition, 1600x900.
+
+2026-07-05T23:39:25.356216Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-05T23:39:25.356265Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-05T23:39:25.374684Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-05T23:39:25.486412Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-05T23:39:25.628871Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill for this asset and first read the local instructions that govern image generation and this repo’s workflow. Then I’ll generate the PNG and place it at the requested path.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' \""'$HOME/BMH-OS/CLAUDE.md"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,240p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,260p' \""'$HOME/.Codex/get-shit-done/workflows/quick.md"' in $HOME/Sites/BMH apps/BMH Institute
+ exited 1 in 0ms:
+sed: $HOME/.Codex/get-shit-done/workflows/quick.md: No such file or directory
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+I’m generating the replacement now. Test coverage for this asset is visual QC plus hard checks for PNG format and 1600x900 dimensions; there is no code behavior to unit test here.
+codex
+The generated composition has the right characters and object count, but it came back with gradient-like smooth blue and subtle tonal variation, which violates the flat-fill requirement. I’m going to flatten it to the course palette and then re-check dimensions and colors before saving over the existing asset.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'which magick || which convert || which sips' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+magick not found
+convert not found
+/usr/bin/sips
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "find course-assets/scenes -path '*/_logs/*.log' -maxdepth 5 -type f | sort | tail -30 | xargs -n1 grep -H \"flatten\\|palette\\|sips\\|python\\|convert\\|magick\" 2>/dev/null | sed -n '1,160p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A slightly worn simple house in the center — a couple of visible wall cracks and one boarded-over window. In front, Andrea (the BMH rep) stands with both palms up in an easygoing 'no repairs needed' gesture; a closed toolbox sits unopened on the ground beside her. The seller stands nearby, reassured. Relaxed, take-it-as-it-is mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A slightly worn simple house in the center — a couple of visible wall cracks and one boarded-over window. In front, Andrea (the BMH rep) stands with both palms up in an easygoing 'no repairs needed' gesture; a closed toolbox sits unopened on the ground beside her. The seller stands nearby, reassured. Relaxed, take-it-as-it-is mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- Spot-check the flat background and limited palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` reports 1600 and 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:The new generation fixes the role problem: Andrea has the ponytail and headset, and the seller has curly hair with no headset. I’m now locating the generated source, flattening it to the course palette, and saving it over the requested asset path at exactly `1600 x 900`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:The generated source is the right scene, but it still has model-introduced gradient/lighting. I’m flattening it into the fixed course palette so the delivered file matches the “flat fills only” requirement instead of passing off a shaded image.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:/bin/zsh -lc "python3 - <<'PY'
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:/bin/zsh -lc "python3 - <<'PY'
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:/bin/zsh -lc "python3 - <<'PY'
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:palette = [
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:img = Image.open(src).convert('RGB').resize((1600, 900), Image.Resampling.LANCZOS)
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:            palette,
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:The palette pass is running locally over the full image. It is a simple pixel remap, so I’ll wait for it to finish before validating the final file.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:The corrected PNG is written to the requested path. I’m running the hard checks now: file type, dimensions, unique palette colors, then a visual inspection for character roles and composition.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:/bin/zsh -lc "python3 - <<'PY'
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:im=Image.open(p).convert('RGB')
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:/bin/zsh -lc 'file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png && sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png' in $HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` reports 1600 and 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` reports 1600 and 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:/bin/zsh -lc "file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png && python3 - <<'PY'
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:im=Image.open(p).convert('RGB')
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` reports 1600 and 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` reports 1600 and 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- six flat palette colors
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Mode: built-in image generation using your gpt-image-2/reference-image spec, then local palette flattening. Note: `course-assets/` is gitignored in this repo, so the PNG will not show in `git status`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` reports 1600 and 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log: - Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:- six flat palette colors
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:Mode: built-in image generation using your gpt-image-2/reference-image spec, then local palette flattening. Note: `course-assets/` is gitignored in this repo, so the PNG will not show in `git status`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands in front of one simple house looking a little overwhelmed as THREE other generic investor/agent characters (varied looks, none of them Andrea, none of them the seller, and NONE wearing a headset) crowd in from the sides, each reaching a hand toward the house — one holding a briefcase, one holding a small blank sign, one waving a blank document. Off to one side, Andrea (the BMH rep) waits calm and confident with relaxed arms, not crowding. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. NEVER add sweat drops, motion lines, speed lines, shock marks, thought bubbles, or any floating emphasis symbols — only the described subjects. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:- Spot-check the flat background and limited course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:- Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands in front of one simple house looking a little overwhelmed as THREE other generic investor/agent characters (varied looks, none of them Andrea, none of them the seller, and NONE wearing a headset) crowd in from the sides, each reaching a hand toward the house — one holding a briefcase, one holding a small blank sign, one waving a blank document. Off to one side, Andrea (the BMH rep) waits calm and confident with relaxed arms, not crowding. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. NEVER add sweat drops, motion lines, speed lines, shock marks, thought bubbles, or any floating emphasis symbols — only the described subjects. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:The generated composition has the right characters and object count, but it came back with gradient-like smooth blue and subtle tonal variation, which violates the flat-fill requirement. I’m going to flatten it to the course palette and then re-check dimensions and colors before saving over the existing asset.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands centered, one palm raised out in a calm 'hold on, not yet' gesture, easygoing expression. Beside him stands one big simple round wall clock. No headset, no other people. Patient, stalling, buying-time mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:The prompt has one real contradiction to guard against: it defines Andrea, but the composition says no other people. I’m treating Andrea as a role/palette constraint to prevent a headset from being added, while the final asset will contain only the seller and a clock.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:/bin/zsh -lc 'command -v gsd-sdk || true; command -v magick || true; command -v sips || true; command -v file || true; command -v identify || true' in $HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:/usr/bin/sips
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands centered, one palm raised out in a calm 'hold on, not yet' gesture, easygoing expression. Beside him stands one big simple round wall clock. No headset, no other people. Patient, stalling, buying-time mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:- The selected generated source was resized to 1600 x 900 and flattened to the approved six-color course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:- `sips` reports pixelWidth 1600 and pixelHeight 900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:- Local palette check reports six unique RGB colors.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:- Spot-check the flat background and limited palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:/bin/zsh -lc 'sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png && file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png' in $HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:/bin/zsh -lc 'find course-assets/scenes/module-07-lesson7B/_anchors -maxdepth 1 -type f -print | sort | while read -r f; do sips -g pixelWidth -g pixelHeight "$f" | sed "s#''^#$f #"; done' in $HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:The fresh generation got the main subject right, but it introduced soft gradients that violate the flat-fill constraint. I’m going to save it, flatten it to the project palette, and then check whether the result still reads correctly before replacing the course asset.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:/bin/zsh -lc "rg -n \"flatten|palette|cornflower|unique RGB|m07_L7B_theme_delay|ImageMagick|Pillow|six-color\" .planning/quick docs/course-production course-assets/scenes/module-07-lesson7B -g '"'!**/*.png'"'" in $HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-imq-generate-ray-scene-asset/PLAN.md:16:- Use `docs/design/cast-board.png` and `course-assets/scenes/module-02-lesson2B/m02_L2B_ray.png` as identity and palette references.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-imq-generate-ray-scene-asset/PLAN.md:25:- Run a local color check to confirm the output is a limited flat palette after normalization.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:15:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands centered, one palm raised out in a calm 'hold on, not yet' gesture, easygoing expression. Beside him stands one big simple round wall clock. No headset, no other people. Patient, stalling, buying-time mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:231:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:275:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:876:The prompt has one real contradiction to guard against: it defines Andrea, but the composition says no other people. I’m treating Andrea as a role/palette constraint to prevent a headset from being added, while the final asset will contain only the seller and a clock.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1094:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1281:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands centered, one palm raised out in a calm 'hold on, not yet' gesture, easygoing expression. Beside him stands one big simple round wall clock. No headset, no other people. Patient, stalling, buying-time mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1504:- The selected generated source was resized to 1600 x 900 and flattened to the approved six-color course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1509:- Local palette check reports six unique RGB colors.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1538:- Spot-check the flat background and limited palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1543:/bin/zsh -lc 'sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png && file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_delay.png' in $HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:1569:The fresh generation got the main subject right, but it introduced soft gradients that violate the flat-fill constraint. I’m going to save it, flatten it to the project palette, and then check whether the result still reads correctly before replacing the course asset.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:15:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_price.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: Andrea (the BMH rep) and the seller seated across a small simple table, mid-negotiation. Between them on the table sits one large yellow price tag on a string. A small simple house in the background. Both lean in slightly, engaged but easygoing. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:224:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:268:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:684:- brand palettes, slogans, or story beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:753:- style-transfer: Specify style cues to preserve (palette, texture, brushwork) and what must change; add `no extra elements` to prevent drift.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:866:                         [--palette PALETTE] [--materials MATERIALS]
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_price.png.log:897:  --palette PALETTE
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-imq-generate-ray-scene-asset/SUMMARY.md:15:- Treated `docs/design/cast-board.png` and `course-assets/scenes/module-02-lesson2B/m02_L2B_ray.png` as identity and palette references.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-imq-generate-ray-scene-asset/SUMMARY.md:18:- Flattened the final workspace PNG to the existing course palette: cornflower blue, yellow, orange, cream, warm white, black, light gray, and red.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:15:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_trust.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A house front door opened just a crack with a simple door chain still latched across the narrow gap. The seller peeks through the opening with a wary, skeptical, sizing-you-up look. Outside on the step, Andrea (the BMH rep) stands offering an open hand for a handshake and holding a single blank document. Cautious, guarded mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:800:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:844:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:1120:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:1497:- Flattened the generated gradients into the established six-color course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:1504:- Local palette check reports six flat colors: `#62B2EF`, `#FF7600`, `#FFD50D`, `#FFF8CA`, `#FFFFFF`, and `#000000`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:1572:The first render got the story and role assignment mostly right, but it violated the flat-fill requirement with gradients. I’m going to flatten it into the established six-color course palette and then inspect whether the character-role constraints still hold.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:1682:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_trust.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A house front door opened just a crack with a simple door chain still latched across the narrow gap. The seller peeks through the opening with a wary, skeptical, sizing-you-up look. Outside on the step, Andrea (the BMH rep) stands offering an open hand for a handshake and holding a single blank document. Cautious, guarded mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_trust.png.log:1904:I found `sharp` in the repo, so I can do the resizing and palette flattening locally without adding scripts or dependencies. I’m writing only the requested PNG path and leaving the generator’s original output in place.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:15:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: The seller stands in front of one simple house looking a little overwhelmed as THREE other generic investor/agent characters (varied looks, none of them Andrea, none of them the seller, and NONE wearing a headset) crowd in from the sides, each reaching a hand toward the house — one holding a briefcase, one holding a small blank sign, one waving a blank document. Off to one side, Andrea (the BMH rep) waits calm and confident with relaxed arms, not crowding. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:743:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:787:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1485:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1675:- Spot-check the flat background and limited course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1740:- Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1807:                         [--palette PALETTE] [--materials MATERIALS]
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1838:  --palette PALETTE
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1864:The fresh image has the right cast and scene structure, but the raw generation added soft tonal variation that violates the flat-fill requirement. I’m going to post-process it into the established six-color course palette and resize it exactly to 1600x900 before replacing the destination file.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1916:I’m using the generated source from `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`. The next step is mechanical image processing only: crop to exact 16:9 if needed, resize, map to the course palette, and write the requested PNG path.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1928:palette_hex = ['#111111', '#62B3F3', '#FF7A00', '#FFD23F', '#FFF7DE', '#FFFFFF']
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1929:palette = [tuple(int(h[i:i+2], 16) for i in (1, 3, 5)) for h in palette_hex]
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1950:        best = min(palette, key=lambda c: (r - c[0]) ** 2 + (g - c[1]) ** 2 + (b - c[2]) ** 2)
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1958:print(f'palette={palette_hex}')
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_competition.png.log:1966:palette=['#111111', '#62B3F3', '#FF7A00', '#FFD23F', '#FFF7DE', '#FFFFFF']
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_distress.png.log:15:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_distress.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A simple house sitting low with its bottom third submerged in flat stylized blue water. The seller stands on the roof looking worried. On dry ground at the side, Andrea (the BMH rep) tosses a round life-ring on a rope toward the house. NO motion lines, NO speed lines, NO shock or emphasis marks, NO floating symbols of any kind — only the characters, the house, the water, the life-ring, and the ground. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_distress.png.log:358:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_distress.png.log:415:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_distress.png.log:554:The first image has the core scene and roles correct, but I’m not accepting it blindly: it introduced soft gradient-like blue and yellow fills, which conflicts with the “flat fills only” requirement. I’m locating the generated file now so I can validate dimensions and decide whether to iterate or flatten/resample locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_distress.png.log:685:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:15:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A slightly worn simple house in the center — a couple of visible wall cracks and one boarded-over window. In front, Andrea (the BMH rep) stands with both palms up in an easygoing 'no repairs needed' gesture; a closed toolbox sits unopened on the ground beside her. The seller stands nearby, reassured. Relaxed, take-it-as-it-is mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:241:- brand names, slogans, palettes, or narrative beats that are not implied
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:711:Color palette: <palette notes>
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:1421:?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:1600:Generate one image with gpt-image-2 and save it to course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: A slightly worn simple house in the center — a couple of visible wall cracks and one boarded-over window. In front, Andrea (the BMH rep) stands with both palms up in an easygoing 'no repairs needed' gesture; a closed toolbox sits unopened on the ground beside her. The seller stands nearby, reassured. Relaxed, take-it-as-it-is mood. CAST — match the attached character anchors EXACTLY (identical face, hair, and palette): the BMH representative is ANDREA — a woman with black hair in a PONYTAIL wearing an orange phone headset. The seller is the man with bushy black curly hair and NO headset. ONLY Andrea ever wears the headset; the seller never wears one. Do not swap their roles. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:1846:- Spot-check the flat background and limited palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:1861:- Flattened the final workspace PNG to the six-color course palette so the background and fills have no gradients, texture, shadows, or lighting.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_asis.png.log:1867:- Local Pillow palette check reports 6 unique colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/scene-card-v2.md:71:5. **Palette:** locked 5-color — NO additions (Jarrad, 2026-07-03). Exception principle: when an object fails to *communicate* in palette colors (e.g. moving boxes reading as orange gift boxes), render that object in its real-world color (cardboard kraft) as a one-off communication fix. That's object realism, not a palette change — don't generalize it.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/scene-card-v2.md:79:- **Colors:** locked palette only — yellow `#FFD23F`, cream `#FFF7DE`, white, ink `#111`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/HANDOFF-lesson2A.md:170:   frame — palette exception, Jarrad-approved), `m02_L2A_b20_handshake.png` (WHITE hands, cream+orange sleeves).
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/HANDOFF-3B.md:39:- R1 B2: cash → money-GREEN (palette exception for money); manifest already keeps ONLY the bottom caption
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-imt-generate-m04-l4a-qualify-v2/PLAN.md:26:- Use thick wobbly black outlines, rounded corners, flat fills only, and the limited yellow, orange, cream, white, black palette, with green used only for checklist ticks.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/MODULE-PRODUCTION-GUIDE.md:11:Doodle-style training videos for BMH Group's 19-module Follow-Up Specialist course. Each lesson ≈ 3–6 min: **Andrea** (HeyGen avatar) narrates; flat doodle scenes illustrate; Remotion assembles. Locked visual brand: flat sticker-sheet doodle, thick wobbly black outlines, flat fills, **5-color palette (yellow #FFD23F-ish, orange, cream #FFF7DE, white, black) on cornflower blue `#62b3f3`** — no gradients, no shading, no skin tones, no text baked into AI images.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/MODULE-PRODUCTION-GUIDE.md:61:- Claude judges each still vs standing rules (no ambient doodles: hearts/sparkles/notes/bubbles/motion-marks; palette; centered for voice-only; nothing clipped). Fix with native-bg `drawbox` fills (sample the still's own bg hex — they vary slightly; normalization to canonical blue happens later at manifest build).
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/NEXT-SESSION.md:21:- **Module 03 / Lesson 3B "BMH Offer Playbook B"**: **REV2 CUT DELIVERED (2026-07-05)** — `review-lesson3B/LESSON-3B-v1-FULL.mp4` (3:52, 8 beats), re-rendered + QC frame-checked clean (all 8 beats + audio), AWAITING Jarrad watch-through. **Rev2 applied Jarrad's 4 watch-through notes:** (R1) B2 cash → money-GREEN + single bottom caption only "As-is · close fast · no repairs, no commissions" (top title dropped); (R2) B4 crossed sign REPLACED with headset-Andrea front-facing palm-out STOP gesture (`m03_L3B_s04_andrea-stop.png`, left ~40% / clip 785), X-list stays right; (R3) B7 relieved seller now walks from the SAME distressed house as B5 (holed roof, boarded+cracked window, weeds) with a legible SOLD yard sign + money-GREEN cash (house NOT renovated — we buy as-is); global: cash green on B2+B7. Money-green is an authorized palette exception for cash only. Regenerated 3 stills (offer/andreastop/relieved), rebuilt manifest, rendered via standalone entry. **Impl notes:** (a) **Word-timed reveal mechanic (Jarrad-approved)** — checklist rows / not-a-fit X's / callout stickers appear ONLY on their trigger word, NEVER an empty placeholder before it; scene stills are backgrounds only, ALL marks/text are code. (b) **1A solo-Andrea (`e527528e…`) is a PORTRAIT avatar** → HeyGen pads 16:9 with gray; `HeroBeat` clips to her blue strip `inset(0 513px 0 512px)` + backs it with `HERO_BLUE #56aaee` (HeyGen's own blue) → seam-free. (c) **B6 talking-doodle homeowner** = photo avatar `203ac03b07394344a3f796d032e14bf8` from the doodle still + **Mature Morgan** voice `e31e9614d31d4678be3377da14d99d3b` (Jarrad-approved), Avatar IV lip-sync, full-frame (16:9 source, no gray). (d) **Renders via standalone entry `remotion/src/preview3b.tsx`** — the shared `Root.tsx` won't bundle because the **2B tab registered `Lesson2B` but `public/lesson2B/manifest.json` is missing** (flag to 2B). Builder `scripts/build_manifest_3B.py`. Chapter-3 offer deep-dive, the second half after 3A. Sourced VERBATIM from locked master `_master-transcripts.md` Slot 05-**B** (`Chapter 3A.srt`, lines 1099–1175), 18 segments → **8 beats**: intro/deep-dive · what-we-sell (As-Is Cash) · Ideal Seller Profile · who's NOT a fit · core problems · **seller monologue (emotional peak)** · transformation · outro. **1A solo Andrea hero** bookends (`e527528e…`, NOT cafe/office — Jarrad pick) + Andrea corner-circles; **B1 intro trimmed** (drops process/pricing/objections — those are 3A's). **B6 = its own talking-doodle HeyGen avatar + separate man's voice** (Avatar IV doodle-mouth, proven line 29); generate homeowner image FIRST → gate → then avatar+lip-sync. All Remotion motion, **zero Seedance**. Outro tease verbatim from master line 1174 (→ 4A pipeline). Storyboard APPROVED by Jarrad. **Owns only `*lesson3B*` paths** (distinct from 3A's `module-03`/`lesson3A` despite shared `module-03` prefix): `shotlists/module-03-lesson3B-*`, `remotion/src/Lesson3B.tsx`, `remotion/public/lesson3B/`, `course-assets/scenes/module-03-lesson3B/`, `course-assets/heygen/lesson3B/`, `review-lesson3B/`, `scripts/*_3B.*`. Does NOT write into any 3A path incl. `course-assets/scenes/module-03/`. DO NOT TOUCH.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/NEXT-SESSION.md:67:v2 (`remotion/out/lessonA-v2.mp4`, 3:15): avatar #2 (headset, hands at sides — HeyGen photo avatar `e527528e584a404f9da68ee4faca1353`), "Hi I'm Andrea", 0.9 speed, TransitionSeries camera-travel slides + card pop-ins, centered voice-only scenes, s04 v3 (FORECLOSURE note — single-caps-word gen exception works; cardboard boxes; bushes hue-fixed to palette via selectivecolor), hero clips = alpha webm (kills blue banding — new recipe), circle = face crop 1.5×. Text style LOCKED: V1 white card (`Sticker.tsx` default). Standing rules in `scene-card-v2.md`.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/ARCHITECTURE.md:63:Verify: `anim_landlord_matched.mp4` held our exact palette but — SEE FINAL VERDICT BELOW — it still REDREW the character in Grok's polished house style (wrong proportions, detailed eyes, shading). The 3-part recipe fixes color/palette but does NOT preserve our chunky-doodle character. Superseded by the FINAL VERDICT section.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/ARCHITECTURE.md:94:- Prompt spine: "Flat 2D vector doodle cartoon, thick uniform black outlines, solid flat fills, five-color palette on
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-imt-generate-m04-l4a-qualify-v2/SUMMARY.md:16:- The explicit CLI/API `gpt-image-2` path could not run in this shell because no `OPENAI_API_KEY` is configured locally and the Python `openai` package is not installed, so the image was generated with the built-in image tool and then flattened locally.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/PLAYBOOK.md:30:| 1.5 | Palette locked (5 colors). Object-realism exception ONLY when meaning fails (cardboard kraft) — not a palette change | Orange boxes → "gifts"; brown fixed it |
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/PLAYBOOK.md:31:| 1.6 | Codex drifts off-palette occasionally → **selectivecolor remap** the offending hue; don't re-roll a good image | Green bushes → gold via `selectivecolor=greens=…` twice + yellows pass |
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/PLAYBOOK.md:170:| 8.8 | **Codex occasionally returns a corrupted/dithered image** (not off-palette — actual halftone noise). Re-roll with "clean flat sticker-doodle, NO dithering/texture/hatching" added — one-shot fix. Also: a "clock" needs a real face (hands, ticks, numerals); "no numbers" made a blank disc | b04 disrepair v1 garbled; b06 clock blank |
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/remotion/src/Sticker.tsx:10: * spring pop-in with a tiny rotation. Colors locked to the brand palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260704-generate-higher-offer-v2-scene-asset/PLAN.md:19:- Match the cornflower blue, yellow, orange, cream, white, and black palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260704-generate-higher-offer-v2-scene-asset/PLAN.md:29:- Confirm a flat limited color palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-generate-m02-l2b-marcus-dream-house-scene/PLAN.md:27:- Use thick wobbly black outlines, flat fills only, and the limited yellow, orange, cream, white, black, and light gray palette on a cornflower-blue background.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:docs/course-production/visual-bible/01-cast-sheet.md:34:1. Skin tones render as flat fills from the palette's warm range — distinct per character, consistent forever
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260704-generate-higher-offer-v2-scene-asset/SUMMARY.md:16:- Flattened the final workspace PNG to the existing six-color Lesson C module palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-generate-office-andrea-v2a-scene-asset/PLAN.md:24:- Use cornflower-blue background and the established yellow, orange, cream, white, and black course palette.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-generate-m02-l2b-david-scene-asset/SUMMARY.md:15:- Treated Image 3 as the cast-board character and palette reference.
+course-assets/scenes/module-07-lesson7B/_logs/m07_L7B_theme_delay.png.log:.planning/quick/260705-generate-m02-l2b-david-scene-asset/SUMMARY.md:19:- Flattened the final workspace PNG to the existing flat course palette: cornflower blue, light gray, cream, white, yellow, orange, and black.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find "${CODEX_HOME:-$HOME/.codex}/generated_images" -maxdepth 3 -type f -name '"'*.png' -print0 2>/dev/null | xargs -0 ls -lt | sed -n '1,20p'" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "find docs/course-production course-assets -type f \\( -name '*palette*' -o -name '*image*' -o -name '*flatten*' -o -name '*.py' -o -name '*.sh' \\) | sort | sed -n '1,220p'" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+ succeeded in 106ms:
+-rw-r--r--@ 1 jarradhenry  staff  1284682 Jul  5 18:41 $HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/ig_02bf70bd0f196053016a4aeb78a2c88192845620bf60c56b19.png
+-rw-r--r--@ 1 jarradhenry  staff  1000362 Jul  5 18:41 $HOME/.codex/generated_images/019f34a4-91e1-7762-b110-dcd7094c3723/ig_001160b69397ad4c016a4aeb72cccc819f9ac1e585f8be5278.png
+-rw-r--r--@ 1 jarradhenry  staff  1259133 Jul  5 18:40 $HOME/.codex/generated_images/019f34a4-a2be-7da3-bb24-fe419d64fd81/ig_0e9f9a2952d66e93016a4aeb2b632881a29b0fff88aa9f98ff.png
+-rw-r--r--@ 1 jarradhenry  staff  1200102 Jul  5 18:39 $HOME/.codex/generated_images/019f34a1-6615-7e03-a7b5-205b3dd17885/ig_0397bd71a4988123016a4aeb17c7bc819cbbc320d0cbf91bf0.png
+-rw-r--r--@ 1 jarradhenry  staff  1389669 Jul  5 18:38 $HOME/.codex/generated_images/019f34a3-e042-7dd3-b15f-cc63cd732ea0/ig_01d81f6f4954a7cb016a4aead46ef081a38eb7c103bfa2b101.png
+-rw-r--r--@ 1 jarradhenry  staff  1232728 Jul  5 18:38 $HOME/.codex/generated_images/019f34a1-4a07-7762-8c04-f275d15aea21/ig_040f5e26f79ec46c016a4aead2cee0819285f7bfd94130d54a.png
+-rw-r--r--@ 1 jarradhenry  staff  1233364 Jul  5 18:37 $HOME/.codex/generated_images/019f34a1-619a-75b1-bcdc-5f32e9f925dc/ig_070d43dd901aaae9016a4aea5f86f0819c9640ebbf78c15539.png
+-rw-r--r--@ 1 jarradhenry  staff  1148531 Jul  5 18:37 $HOME/.codex/generated_images/019f34a1-6615-7e03-a7b5-205b3dd17885/ig_0e16c74a42ec734d016a4aea6b77e08192b4d923e8916882b6.png
+-rw-r--r--@ 1 jarradhenry  staff  1304745 Jul  5 18:36 $HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/ig_01996db9f8beac6e016a4aea3d0a748191948376ee72f07e05.png
+-rw-r--r--@ 1 jarradhenry  staff  1229185 Jul  5 18:36 $HOME/.codex/generated_images/019f34a1-5b91-7d31-b74c-009903722f15/ig_07c225f71c6d5b84016a4aea3ad5b481a0a16d097db9d206f8.png
+-rw-r--r--@ 1 jarradhenry  staff  1114373 Jul  5 18:36 $HOME/.codex/generated_images/019f34a1-56cf-7e90-a857-344da888944c/ig_04439cde33ddbc10016a4aea40084c819e88e1c38ba654296d.png
+-rw-r--r--@ 1 jarradhenry  staff  1246392 Jul  5 18:36 $HOME/.codex/generated_images/019f34a1-4a07-7762-8c04-f275d15aea21/ig_092be1547b660113016a4aea3c9e08819fb2210502ef633087.png
+-rw-r--r--@ 1 jarradhenry  staff  1176335 Jul  5 18:35 $HOME/.codex/generated_images/019f34a1-6615-7e03-a7b5-205b3dd17885/ig_051257a6f80ee9ba016a4aea121c7c819da3cf2cb991ec95c8.png
+-rw-r--r--@ 1 jarradhenry  staff  1192586 Jul  5 17:11 $HOME/.codex/generated_images/019f3453-79cd-7452-897e-4c4759bf0597/ig_069cbd1ee2a06287016a4ad6667a488197adac202676266826.png
+-rw-r--r--@ 1 jarradhenry  staff  1074565 Jul  5 17:07 $HOME/.codex/generated_images/019f344a-dd3e-76a3-aa6f-9d33e1603ee6/ig_0a302b5e6db41ba0016a4ad569da8c8193801293bba1801778.png
+-rw-r--r--@ 1 jarradhenry  staff  1131597 Jul  5 17:04 $HOME/.codex/generated_images/019f344a-dd3e-76a3-aa6f-9d33e1603ee6/ig_0b7cfb26e77cc252016a4ad4bbf6e4819483c4e565bea3eff1.png
+-rw-r--r--@ 1 jarradhenry  staff  1247060 Jul  5 17:04 $HOME/.codex/generated_images/019f344a-ee4e-7951-be20-b96fad820249/ig_02ab00be11ab9864016a4ad4a3a490819699d0f36a1e385509.png
+-rw-r--r--@ 1 jarradhenry  staff  1124387 Jul  5 17:03 $HOME/.codex/generated_images/019f344a-d765-7f71-9666-67633fb8326f/ig_00827b31537d7176016a4ad48e287881979ae6c9a08b0c43a3.png
+-rw-r--r--@ 1 jarradhenry  staff  1537204 Jul  5 17:03 $HOME/.codex/generated_images/019f344a-cb4c-7d93-b26a-c1b8151da8a1/ig_05400b4f99a3181e016a4ad444ac2c819498167bf7ec9ffde6.png
+-rw-r--r--@ 1 jarradhenry  staff  1223859 Jul  5 17:03 $HOME/.codex/generated_images/019f3445-eb95-7c02-bc7e-c6759ebdcf1e/ig_0410815620f1d724016a4ad46537448197b84be199bd2eebbd.png
+
+hook: PostToolUse Completed
+ succeeded in 181ms:
+docs/course-production/remotion/node_modules/@jridgewell/trace-mapping/src/flatten-map.ts
+docs/course-production/remotion/node_modules/@jridgewell/trace-mapping/types/flatten-map.d.cts
+docs/course-production/remotion/node_modules/@jridgewell/trace-mapping/types/flatten-map.d.cts.map
+docs/course-production/remotion/node_modules/@jridgewell/trace-mapping/types/flatten-map.d.mts
+docs/course-production/remotion/node_modules/@jridgewell/trace-mapping/types/flatten-map.d.mts.map
+docs/course-production/remotion/node_modules/@remotion/cli/dist/config/image-sequence.d.ts
+docs/course-production/remotion/node_modules/@remotion/cli/dist/config/image-sequence.js
+docs/course-production/remotion/node_modules/@remotion/cli/dist/determine-image-format.d.ts
+docs/course-production/remotion/node_modules/@remotion/cli/dist/determine-image-format.js
+docs/course-production/remotion/node_modules/@remotion/cli/dist/image-formats.d.ts
+docs/course-production/remotion/node_modules/@remotion/cli/dist/image-formats.js
+docs/course-production/remotion/node_modules/@remotion/media-parser/dist/state/images.d.ts
+docs/course-production/remotion/node_modules/@remotion/media-parser/dist/state/images.js
+docs/course-production/remotion/node_modules/@remotion/media-utils/dist/get-image-dimensions.d.ts
+docs/course-production/remotion/node_modules/@remotion/media-utils/dist/get-image-dimensions.js
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/assets/flatten-volume-array.d.ts
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/assets/flatten-volume-array.js
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/image-format.d.ts
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/image-format.js
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/image-sequence-pattern.d.ts
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/image-sequence-pattern.js
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/image-sequence.d.ts
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/image-sequence.js
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/still-image-format.d.ts
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/still-image-format.js
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/video-image-format.d.ts
+docs/course-production/remotion/node_modules/@remotion/renderer/dist/options/video-image-format.js
+docs/course-production/remotion/node_modules/@remotion/timeline-utils/dist/image-thumbnail/draw-repeating-image-thumbnail.d.ts
+docs/course-production/remotion/node_modules/@remotion/timeline-utils/dist/image-thumbnail/draw-repeating-image-thumbnail.js
+docs/course-production/remotion/node_modules/@remotion/timeline-utils/dist/image-thumbnail/get-scaled-image-thumbnail-dimensions.d.ts
+docs/course-production/remotion/node_modules/@remotion/timeline-utils/dist/image-thumbnail/get-scaled-image-thumbnail-dimensions.js
+docs/course-production/remotion/node_modules/@remotion/transitions/dist/flatten-children.d.ts
+docs/course-production/remotion/node_modules/@remotion/transitions/dist/flatten-children.js
+docs/course-production/remotion/node_modules/@remotion/web-renderer/dist/drawing/mask-image.d.ts
+docs/course-production/remotion/node_modules/caniuse-lite/data/features/border-image.js
+docs/course-production/remotion/node_modules/caniuse-lite/data/features/createimagebitmap.js
+docs/course-production/remotion/node_modules/caniuse-lite/data/features/css-font-palette.js
+docs/course-production/remotion/node_modules/caniuse-lite/data/features/css-image-orientation.js
+docs/course-production/remotion/node_modules/caniuse-lite/data/features/css-image-set.js
+docs/course-production/remotion/node_modules/caniuse-lite/data/features/imagecapture.js
+docs/course-production/remotion/node_modules/remotion/dist/cjs/animated-image/decode-image.d.ts
+docs/course-production/remotion/node_modules/remotion/dist/cjs/animated-image/decode-image.js
+docs/course-production/remotion/node_modules/remotion/dist/cjs/animated-image/resolve-image-source.d.ts
+docs/course-production/remotion/node_modules/remotion/dist/cjs/animated-image/resolve-image-source.js
+docs/course-production/remotion/node_modules/remotion/dist/cjs/calculate-image-fit.d.ts
+docs/course-production/remotion/node_modules/remotion/dist/cjs/calculate-image-fit.js
+docs/course-production/remotion/node_modules/remotion/dist/cjs/flatten-schema.d.ts
+docs/course-production/remotion/node_modules/remotion/dist/cjs/flatten-schema.js
+docs/course-production/remotion/node_modules/remotion/dist/cjs/series/flatten-children.d.ts
+docs/course-production/remotion/node_modules/remotion/dist/cjs/series/flatten-children.js
+docs/course-production/scripts/build_manifest_1C.py
+docs/course-production/scripts/build_manifest_2A.py
+docs/course-production/scripts/build_manifest_2B.py
+docs/course-production/scripts/build_manifest_3A.py
+docs/course-production/scripts/build_manifest_3B.py
+docs/course-production/scripts/build_manifest_4A.py
+docs/course-production/scripts/build_manifest_4B.py
+docs/course-production/scripts/build_manifest_TEMPLATE.py
+docs/course-production/scripts/build_seller_avatars_2B.py
+docs/course-production/scripts/gen_andrea_b05a.py
+docs/course-production/scripts/gen_andrea_b06a.py
+docs/course-production/scripts/gen_audio_1C.py
+docs/course-production/scripts/gen_audio_2A.py
+docs/course-production/scripts/gen_audio_2A_v2.py
+docs/course-production/scripts/gen_audio_2B.py
+docs/course-production/scripts/gen_audio_3A.py
+docs/course-production/scripts/gen_audio_3B.py
+docs/course-production/scripts/gen_audio_4A.py
+docs/course-production/scripts/gen_audio_4A_leadfix.py
+docs/course-production/scripts/gen_audio_4B.py
+docs/course-production/scripts/gen_audio_6A.py
+docs/course-production/scripts/gen_audio_7A.py
+docs/course-production/scripts/gen_audio_TEMPLATE.py
+docs/course-production/scripts/gen_auditions_2B.py
+docs/course-production/scripts/gen_avatar_1A_2A.py
+docs/course-production/scripts/gen_avatar_2A.py
+docs/course-production/scripts/gen_avatar_3A.py
+docs/course-production/scripts/gen_avatar_4A.py
+docs/course-production/scripts/gen_avatar_4B.py
+docs/course-production/scripts/gen_avatar_b01_1A.py
+docs/course-production/scripts/gen_avatar_b01_standing.py
+docs/course-production/scripts/gen_avatar_car_1C.py
+docs/course-production/scripts/gen_avatar_clips_7A.py
+docs/course-production/scripts/gen_avatar_clips_TEMPLATE.py
+docs/course-production/scripts/gen_avatar_office_2A.py
+docs/course-production/scripts/gen_beth_v2.sh
+docs/course-production/scripts/gen_carol_argue.sh
+docs/course-production/scripts/gen_clips_2B.py
+docs/course-production/scripts/gen_hero_clips_1C.py
+docs/course-production/scripts/gen_scenes_2B.sh
+docs/course-production/scripts/gen_seller_clip_david_2B.py
+docs/course-production/scripts/gen_stills_1C.sh
+docs/course-production/scripts/gen_stills_2A.sh
+docs/course-production/scripts/gen_stills_2A_v2.sh
+docs/course-production/scripts/gen_stills_2A_v4.sh
+docs/course-production/scripts/gen_stills_2B.sh
+docs/course-production/scripts/gen_stills_3A.sh
+docs/course-production/scripts/gen_stills_3B.sh
+docs/course-production/scripts/gen_stills_4A.sh
+docs/course-production/scripts/gen_stills_5A.sh
+docs/course-production/scripts/gen_stills_6A.sh
+docs/course-production/scripts/gen_stills_7A.sh
+docs/course-production/scripts/gen_stills_7B.sh
+docs/course-production/scripts/gen_stills_TEMPLATE.sh
+docs/course-production/scripts/make_photo_avatar_TEMPLATE.py
+docs/course-production/scripts/qc_animation_clips_4B.py
+
+codex
+I found the new generated source at `~/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/ig_02bf70bd0f196053016a4aeb78a2c88192845620bf60c56b19.png`. The next step is mechanical only: center-crop to 16:9 if needed, resize to 1600x900, and map pixels to the locked palette.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from pathlib import Path
+
+src = Path('$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/ig_02bf70bd0f196053016a4aeb78a2c88192845620bf60c56b19.png')
+dst = Path('course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png')
+palette_hex = ['#111111', '#62B3F3', '#FF7A00', '#FFD23F', '#FFF7DE', '#FFFFFF']
+palette = [tuple(int(h[i:i+2], 16) for i in (1, 3, 5)) for h in palette_hex]
+
+img = Image.open(src).convert('RGB')
+w, h = img.size
+# Center-crop to 16:9 before resizing so the output is exact without stretching.
+target_ratio = 16 / 9
+ratio = w / h
+if ratio > target_ratio:
+    new_w = int(round(h * target_ratio))
+    left = (w - new_w) // 2
+    img = img.crop((left, 0, left + new_w, h))
+elif ratio < target_ratio:
+    new_h = int(round(w / target_ratio))
+    top = (h - new_h) // 2
+    img = img.crop((0, top, w, top + new_h))
+
+img = img.resize((1600, 900), Image.Resampling.LANCZOS)
+px = img.load()
+for y in range(img.height):
+    for x in range(img.width):
+        r, g, b = px[x, y]
+        # Bias near-light colors toward cream/white and dark antialiased edges toward ink.
+        best = min(palette, key=lambda c: (r - c[0]) ** 2 + (g - c[1]) ** 2 + (b - c[2]) ** 2)
+        px[x, y] = best
+
+dst.parent.mkdir(parents=True, exist_ok=True)
+img.save(dst, 'PNG', optimize=True)
+print(f'source={src}')
+print(f'source_size={w}x{h}')
+print(f'output={dst}')
+print('output_size=1600x900')
+print(f'palette={palette_hex}')
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse Completed
+ succeeded in 1547ms:
+source=$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/ig_02bf70bd0f196053016a4aeb78a2c88192845620bf60c56b19.png
+source_size=1672x941
+output=course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png
+output_size=1600x900
+palette=['#111111', '#62B3F3', '#FF7A00', '#FFD23F', '#FFF7DE', '#FFFFFF']
+
+codex
+The file is written. I’m doing the final adversarial pass now: hard file checks plus visual inspection to catch role swaps, accidental headset leakage, text, or extra emphasis marks.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,120p' .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+completed: 2026-07-05
+---
+
+# Generate Module 07 Lesson 7B competition theme scene asset
+
+Regenerated `course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png`.
+
+Verification:
+- File exists at the requested path.
+- PNG format confirmed.
+- Dimensions confirmed at 1600 x 900.
+- Palette check confirmed 6 flat colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+- Corner and background spot-check confirmed flat cornflower-blue background.
+- Visual inspection confirmed the center house, overwhelmed seller, three crowding suitors, briefcase, blank yard sign, blank document, and separated headset BMH rep.
+- Visual inspection confirmed Andrea is the only headset character and the seller has no headset.
+- Visual inspection found no readable text, extra characters, gradient, texture, shadows, lighting, or perspective in the saved image.
+
+Notes:
+- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+- Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+- The original generated source remains under `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`.
+- `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short -- course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/PLAN.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+?? .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/PLAN.md
+?? .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png && sips -g pixelWidth -g pixelHeight course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+$HOME/Sites/BMH apps/BMH Institute/course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png
+  pixelWidth: 1600
+  pixelHeight: 900
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from collections import Counter
+p='course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png'
+im=Image.open(p).convert('RGB')
+colors=Counter(im.getdata())
+print('size', im.size)
+print('unique_colors', len(colors))
+for color,count in colors.most_common():
+    print('#%02X%02X%02X %d' % (*color, count))
+print('corners', [('#%02X%02X%02X' % im.getpixel(xy)) for xy in [(0,0),(1599,0),(0,899),(1599,899),(800,0),(800,899)]])
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 152ms:
+size (1600, 900)
+unique_colors 6
+#62B3F3 983590
+#FFF7DE 151690
+#111111 129201
+#FFD23F 82503
+#FF7A00 67597
+#FFFFFF 25419
+corners ['#62B3F3', '#62B3F3', '#62B3F3', '#62B3F3', '#62B3F3', '#62B3F3']
+
+codex
+The final image passes the hard requirements: one house, seller in front, exactly three non-headset competitors with briefcase/sign/document, Andrea alone in the headset, no text or floating emphasis marks. I’m updating the small GSD summary so it points at the fresh generated source rather than the earlier run.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+diff --git a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+index 0072bada69226da110ba5d76852650cb6b46d342..792c5fbf9a3ad6b08f6ff3229bc8d8ec8b1c5c0b
+--- a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
++++ b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+@@ -20,5 +20,5 @@
+ Notes:
+ - Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+ - Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+-- The original generated source remains under `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`.
++- The original generated source remains under `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+ - `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+index 0072bada69226da110ba5d76852650cb6b46d342..792c5fbf9a3ad6b08f6ff3229bc8d8ec8b1c5c0b
+--- a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
++++ b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+@@ -20,5 +20,5 @@
+ Notes:
+ - Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+ - Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+-- The original generated source remains under `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`.
++- The original generated source remains under `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+ - `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,80p' .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "nl -ba $HOME/.codex/memories/MEMORY.md | sed -n '1,20p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+completed: 2026-07-05
+---
+
+# Generate Module 07 Lesson 7B competition theme scene asset
+
+Regenerated `course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png`.
+
+Verification:
+- File exists at the requested path.
+- PNG format confirmed.
+- Dimensions confirmed at 1600 x 900.
+- Palette check confirmed 6 flat colors: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, and `#FFFFFF`.
+- Corner and background spot-check confirmed flat cornflower-blue background.
+- Visual inspection confirmed the center house, overwhelmed seller, three crowding suitors, briefcase, blank yard sign, blank document, and separated headset BMH rep.
+- Visual inspection confirmed Andrea is the only headset character and the seller has no headset.
+- Visual inspection found no readable text, extra characters, gradient, texture, shadows, lighting, or perspective in the saved image.
+
+Notes:
+- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+- Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+- The original generated source remains under `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+- `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+ succeeded in 0ms:
+     1	# Task Group: BMH course lesson, still, and animation character continuity corrections
+     2	scope: Use for BMH course image or animation generation when role assignment, face details, or hairstyle continuity must match the approved handshake-reference characters before still approval or animation.
+     3	applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, and Andrea character identities, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+     4	
+     5	## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+     6	
+     7	### rollout_summary_files
+     8	
+     9	- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+    10	
+    11	### keywords
+    12	
+    13	- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+    14	
+    15	## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+    16	
+    17	### rollout_summary_files
+    18	
+    19	- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+    20	
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short -- course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+?? .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "file course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png && python3 - <<'PY'
+from PIL import Image
+from collections import Counter
+p='course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png'
+im=Image.open(p).convert('RGB')
+colors=Counter(im.getdata())
+print('size', im.size)
+print('unique_colors', len(colors))
+print('colors', ' '.join('#%02X%02X%02X' % c for c in sorted(colors)))
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 186ms:
+size (1600, 900)
+unique_colors 6
+colors #111111 #62B3F3 #FF7A00 #FFD23F #FFF7DE #FFFFFF
+
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+index 0072bada69226da110ba5d76852650cb6b46d342..792c5fbf9a3ad6b08f6ff3229bc8d8ec8b1c5c0b
+--- a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
++++ b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+@@ -20,5 +20,5 @@
+ Notes:
+ - Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+ - Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+-- The original generated source remains under `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`.
++- The original generated source remains under `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+ - `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+codex
+Saved the generated PNG here:
+
+[m07_L7B_theme_competition.png]($HOME/Sites/BMH%20apps/BMH%20Institute/course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png)
+
+Verified:
+- PNG, `1600 x 900`
+- six flat course colors only: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, `#FFFFFF`
+- seller has no headset
+- Andrea is the only headset character
+- three competitors, with briefcase, blank sign, and blank document
+- no text, bubbles, motion marks, gradients, shadows, or extra symbols
+
+The original generated source is still in `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+
+
+diff --git a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+index 0072bada69226da110ba5d76852650cb6b46d342..792c5fbf9a3ad6b08f6ff3229bc8d8ec8b1c5c0b
+--- a/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
++++ b/.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md
+@@ -20,5 +20,5 @@
+ Notes:
+ - Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+ - Copied the selected generated result into the workspace path, resized it from 1672 x 941 to 1600 x 900, and flattened it to the course palette.
+-- The original generated source remains under `$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/`.
++- The original generated source remains under `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+ - `course-assets/` is ignored by Git in this repo, so the final PNG is intentionally present on disk but not listed as a tracked change.
+
+hook: Stop
+hook: Stop Completed
+tokens used
+74,477
+Saved the generated PNG here:
+
+[m07_L7B_theme_competition.png]($HOME/Sites/BMH%20apps/BMH%20Institute/course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png)
+
+Verified:
+- PNG, `1600 x 900`
+- six flat course colors only: `#111111`, `#62B3F3`, `#FF7A00`, `#FFD23F`, `#FFF7DE`, `#FFFFFF`
+- seller has no headset
+- Andrea is the only headset character
+- three competitors, with briefcase, blank sign, and blank document
+- no text, bubbles, motion marks, gradients, shadows, or extra symbols
+
+The original generated source is still in `$HOME/.codex/generated_images/019f34a6-a42e-7ef1-8917-be8d0a6c96c5/`.
+
+

@@ -1,0 +1,652 @@
+{
+  "fps": 30,
+  "audio": "lessonISP/master.m4a",
+  "totalFrames": 9364,
+  "beats": [
+    {
+      "id": "b01",
+      "tag": "b01_isp_open",
+      "durationInFrames": 482,
+      "voFrames": 452,
+      "labels": [],
+      "transition": "cut",
+      "mode": "hero",
+      "video": "lessonISP/hero/hero_b01_isp_open_1a.mp4",
+      "videoFrames": 451,
+      "badge": true
+    },
+    {
+      "id": "b02",
+      "tag": "b02_target_seller",
+      "durationInFrames": 399,
+      "voFrames": 369,
+      "labels": [
+        {
+          "text": "RESIDENTIAL PROPERTY OWNER",
+          "delay": 119
+        },
+        {
+          "text": "DISTRESSED SELLER",
+          "delay": 192
+        },
+        {
+          "text": "ALTERNATIVE TO TRADITIONAL SALE",
+          "delay": 241
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b02_target-seller.png",
+      "mode": "animation",
+      "video": "lessonISP/anim-v6/anim_b02.mp4",
+      "videoFrames": 451,
+      "holdLastFrame": true
+    },
+    {
+      "id": "b03",
+      "tag": "b03_seller_types",
+      "durationInFrames": 369,
+      "voFrames": 339,
+      "labels": [
+        {
+          "text": "HOMEOWNERS",
+          "delay": 48
+        },
+        {
+          "text": "SMALL LANDLORDS",
+          "delay": 97
+        },
+        {
+          "text": "ESTATE EXECUTORS",
+          "delay": 207
+        },
+        {
+          "text": "HANDLE QUICKLY",
+          "delay": 298
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b03_seller-types.png",
+      "mode": "static"
+    },
+    {
+      "id": "b04",
+      "tag": "b04_regions",
+      "durationInFrames": 578,
+      "voFrames": 548,
+      "labels": [
+        {
+          "text": "UP TO 10 PROPERTIES",
+          "delay": 115
+        },
+        {
+          "text": "KANSAS CITY",
+          "delay": 256
+        },
+        {
+          "text": "ST. LOUIS",
+          "delay": 294
+        },
+        {
+          "text": "DAYTON",
+          "delay": 338
+        },
+        {
+          "text": "LAKE OF THE OZARKS",
+          "delay": 359
+        },
+        {
+          "text": "WHERE WE CAN HELP MOST",
+          "delay": 510
+        }
+      ],
+      "transition": "cut",
+      "safeArtBaked": true,
+      "still": "lessonISP/stills/safe-88-62b3f3-mISP_LISP_b04_regions.png",
+      "mode": "static"
+    },
+    {
+      "id": "b05",
+      "tag": "b05_needs",
+      "durationInFrames": 481,
+      "voFrames": 451,
+      "labels": [
+        {
+          "text": "SPEED",
+          "delay": 38
+        },
+        {
+          "text": "CERTAINTY",
+          "delay": 73
+        },
+        {
+          "text": "CONVENIENCE",
+          "delay": 107
+        },
+        {
+          "text": "FASTER RELIABLE SOLUTION",
+          "delay": 337
+        }
+      ],
+      "transition": "cut",
+      "safeArtBaked": true,
+      "still": "lessonISP/stills/safe-88-62b3f3-mISP_LISP_b05_needs-comparison.png",
+      "mode": "static"
+    },
+    {
+      "id": "b06",
+      "tag": "b06_property_stress",
+      "durationInFrames": 417,
+      "voFrames": 387,
+      "labels": [
+        {
+          "text": "DAMAGED",
+          "delay": 98
+        },
+        {
+          "text": "NEGLECTED",
+          "delay": 127
+        },
+        {
+          "text": "REPAIRS THEY CAN'T AFFORD",
+          "delay": 233
+        },
+        {
+          "text": "STRESS + UNCERTAINTY",
+          "delay": 328
+        }
+      ],
+      "transition": "slide",
+      "still": "lessonISP/stills/mISP_LISP_b06_david-repairs.png",
+      "mode": "animation",
+      "video": "lessonISP/anim-v6/anim_b06.mp4",
+      "videoFrames": 451,
+      "holdLastFrame": true
+    },
+    {
+      "id": "b07",
+      "tag": "b07_financial_pressure",
+      "durationInFrames": 399,
+      "voFrames": 369,
+      "labels": [
+        {
+          "text": "UNPAID TAXES",
+          "delay": 98
+        },
+        {
+          "text": "LIENS",
+          "delay": 145
+        },
+        {
+          "text": "MORTGAGE ISSUES",
+          "delay": 176
+        },
+        {
+          "text": "FORECLOSURE RISK",
+          "delay": 256
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b07_financial-pressure.png",
+      "mode": "static"
+    },
+    {
+      "id": "b08",
+      "tag": "b08_life_events_inheritance",
+      "durationInFrames": 696,
+      "voFrames": 666,
+      "labels": [
+        {
+          "text": "LIFE EVENTS",
+          "delay": 0
+        },
+        {
+          "text": "FAST DECISION",
+          "delay": 174
+        },
+        {
+          "text": "QUICK CLOSE",
+          "delay": 257
+        },
+        {
+          "text": "TRIGGERS MATTER",
+          "delay": 388
+        },
+        {
+          "text": "INHERITED PROPERTY",
+          "delay": 469
+        }
+      ],
+      "transition": "slide",
+      "mode": "hero",
+      "video": "lessonISP/hero/hero_b08_life_events_1a.mp4",
+      "videoFrames": 665,
+      "badge": false
+    },
+    {
+      "id": "b09",
+      "tag": "b09_urgent_events",
+      "durationInFrames": 453,
+      "voFrames": 423,
+      "labels": [
+        {
+          "text": "FORECLOSURE",
+          "delay": 20
+        },
+        {
+          "text": "BANKRUPTCY",
+          "delay": 70
+        },
+        {
+          "text": "TAX SALE",
+          "delay": 118
+        },
+        {
+          "text": "SPEED + CERTAINTY",
+          "delay": 226
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b09_urgency-board.png",
+      "mode": "animation",
+      "video": "lessonISP/anim-v6/anim_b09.mp4",
+      "videoFrames": 451,
+      "holdLastFrame": true
+    },
+    {
+      "id": "b10",
+      "tag": "b10_severe_damage",
+      "durationInFrames": 275,
+      "voFrames": 245,
+      "labels": [
+        {
+          "text": "FIRE DAMAGE",
+          "delay": 54
+        },
+        {
+          "text": "FLOOD DAMAGE",
+          "delay": 79
+        },
+        {
+          "text": "LONG-TERM NEGLECT",
+          "delay": 110
+        },
+        {
+          "text": "AS-IS MODEL",
+          "delay": 198
+        }
+      ],
+      "transition": "slide",
+      "still": "lessonISP/stills/mISP_LISP_b10_severe-damage.png",
+      "mode": "static"
+    },
+    {
+      "id": "b11",
+      "tag": "b11_landlords_exit",
+      "durationInFrames": 304,
+      "voFrames": 274,
+      "labels": [
+        {
+          "text": "READY TO EXIT",
+          "delay": 54
+        },
+        {
+          "text": "STOP MANAGING TENANTS",
+          "delay": 104
+        },
+        {
+          "text": "CLEAN SIMPLE WAY OUT",
+          "delay": 185
+        },
+        {
+          "text": "PROPERTY BURDEN",
+          "delay": 248
+        }
+      ],
+      "transition": "slide",
+      "still": "lessonISP/stills/mISP_LISP_b11_david-landlord-exit.png",
+      "mode": "animation",
+      "video": "lessonISP/anim-v6/anim_b11.mp4",
+      "videoFrames": 451,
+      "holdLastFrame": true
+    },
+    {
+      "id": "b12",
+      "tag": "b12_hard_filters",
+      "durationInFrames": 330,
+      "voFrames": 300,
+      "labels": [
+        {
+          "text": "HARD FILTERS",
+          "delay": 60
+        },
+        {
+          "text": "CLOSE WITHIN 30 DAYS",
+          "delay": 196
+        },
+        {
+          "text": "LEGAL OWNER OR AUTHORITY",
+          "delay": 277
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b12_hard-filter-gate.png",
+      "mode": "static"
+    },
+    {
+      "id": "b13",
+      "tag": "b13_realtor_equity_disqualifiers",
+      "durationInFrames": 746,
+      "voFrames": 716,
+      "labels": [
+        {
+          "text": "NOT CURRENTLY LISTED",
+          "delay": 15
+        },
+        {
+          "text": "SPEED + CONVENIENCE TRADEOFF",
+          "delay": 193
+        },
+        {
+          "text": "PROTECT TIME",
+          "delay": 384
+        },
+        {
+          "text": "ALREADY LISTED",
+          "delay": 533
+        },
+        {
+          "text": "NO LEGAL AUTHORITY",
+          "delay": 647
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b13_fit-vs-avoid.png",
+      "mode": "static"
+    },
+    {
+      "id": "b14",
+      "tag": "b14_key_phrases",
+      "durationInFrames": 376,
+      "voFrames": 346,
+      "labels": [
+        {
+          "text": "\"SELL AS-IS\"",
+          "delay": 109
+        },
+        {
+          "text": "\"NO REALTORS\"",
+          "delay": 175
+        },
+        {
+          "text": "\"SELL FAST\"",
+          "delay": 247
+        },
+        {
+          "text": "SIGNALS FOR SUCCESS",
+          "delay": 299
+        }
+      ],
+      "transition": "slide",
+      "still": "lessonISP/stills/mISP_LISP_b14_key-phrases-call.png",
+      "mode": "static"
+    },
+    {
+      "id": "b15",
+      "tag": "b15_messaging_speed_certainty",
+      "durationInFrames": 316,
+      "voFrames": 286,
+      "labels": [
+        {
+          "text": "SPEED OF CLOSING",
+          "delay": 108
+        },
+        {
+          "text": "CERTAINTY",
+          "delay": 144
+        },
+        {
+          "text": "CASH OFFER",
+          "delay": 164
+        },
+        {
+          "text": "NO TRADITIONAL DELAYS",
+          "delay": 215
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_b15_message-speed-certainty.png",
+      "mode": "static"
+    },
+    {
+      "id": "b16",
+      "tag": "b16_no_repairs_commissions_cleanup",
+      "durationInFrames": 468,
+      "voFrames": 438,
+      "labels": [
+        {
+          "text": "NO REPAIRS",
+          "delay": 80
+        },
+        {
+          "text": "NO COMMISSIONS",
+          "delay": 133
+        },
+        {
+          "text": "NO CLEANUP",
+          "delay": 183
+        },
+        {
+          "text": "SIMPLE + EMPATHETIC",
+          "delay": 256
+        }
+      ],
+      "transition": "slide",
+      "still": "lessonISP/stills/mISP_LISP_b16_no-repairs-simple.png",
+      "mode": "animation",
+      "video": "lessonISP/anim-v6/anim_b16_clean_exit.mp4",
+      "videoFrames": 257,
+      "holdLastFrame": true
+    },
+    {
+      "id": "b17",
+      "tag": "b17_discovery_condition_motivation",
+      "durationInFrames": 359,
+      "voFrames": 329,
+      "labels": [
+        {
+          "text": "PROPERTY CONDITION",
+          "delay": 103
+        },
+        {
+          "text": "TRUE MOTIVATION",
+          "delay": 161
+        },
+        {
+          "text": "WHAT'S DRIVING THE SALE?",
+          "delay": 246
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_bA_magnifier.png",
+      "mode": "static"
+    },
+    {
+      "id": "b18",
+      "tag": "b18_timeline_repairs_legal",
+      "durationInFrames": 329,
+      "voFrames": 299,
+      "labels": [
+        {
+          "text": "HOW SOON TO CLOSE?",
+          "delay": 13
+        },
+        {
+          "text": "SPECIFIC REPAIRS?",
+          "delay": 86
+        },
+        {
+          "text": "LEGAL ISSUES?",
+          "delay": 114
+        },
+        {
+          "text": "FAST CLOSE FILTERS",
+          "delay": 262
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_bA_magnifier.png",
+      "mode": "static"
+    },
+    {
+      "id": "b19",
+      "tag": "b19_occupancy_authority",
+      "durationInFrames": 363,
+      "voFrames": 333,
+      "labels": [
+        {
+          "text": "OCCUPANCY STATUS",
+          "delay": 18
+        },
+        {
+          "text": "LEGAL OWNER",
+          "delay": 120
+        },
+        {
+          "text": "NEXT STEPS",
+          "delay": 211
+        },
+        {
+          "text": "SMOOTH TRANSITION",
+          "delay": 292
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_bA_magnifier.png",
+      "mode": "static"
+    },
+    {
+      "id": "b20",
+      "tag": "b20_realtor_or_faster_option",
+      "durationInFrames": 351,
+      "voFrames": 321,
+      "labels": [
+        {
+          "text": "CONSIDERED A REALTOR?",
+          "delay": 44
+        },
+        {
+          "text": "LOOKING FOR FASTER?",
+          "delay": 138
+        },
+        {
+          "text": "SIMPLE",
+          "delay": 214
+        },
+        {
+          "text": "EFFECTIVE",
+          "delay": 242
+        },
+        {
+          "text": "TRUSTWORTHY",
+          "delay": 272
+        }
+      ],
+      "transition": "cut",
+      "still": "lessonISP/stills/mISP_LISP_bB_fork.png",
+      "mode": "static"
+    },
+    {
+      "id": "b21",
+      "tag": "b21_powerful_closing_question",
+      "durationInFrames": 310,
+      "voFrames": 280,
+      "labels": [
+        {
+          "text": "IF WE MADE THIS SIMPLE...",
+          "delay": 142
+        },
+        {
+          "text": "...AND CLOSED QUICKLY...",
+          "delay": 168
+        },
+        {
+          "text": "WOULD THAT SOLVE IT?",
+          "delay": 224
+        }
+      ],
+      "transition": "slide",
+      "still": "lessonISP/stills/mISP_LISP_bC_question.png",
+      "mode": "animation",
+      "video": "lessonISP/anim-v6/anim_b21.mp4",
+      "videoFrames": 451,
+      "holdLastFrame": true
+    },
+    {
+      "id": "b22",
+      "tag": "b22_outro_offer_playbook_tease",
+      "durationInFrames": 563,
+      "voFrames": 545,
+      "labels": [
+        {
+          "text": "OBJECTION HANDLING LATER",
+          "delay": 55
+        },
+        {
+          "text": "MASTER THE PROFILE",
+          "delay": 103
+        },
+        {
+          "text": "FOCUS YOUR EFFORTS",
+          "delay": 206
+        },
+        {
+          "text": "HELP SELLERS MOVE FORWARD",
+          "delay": 302
+        },
+        {
+          "text": "NEXT: OFFER PLAYBOOK",
+          "delay": 436
+        },
+        {
+          "text": "WHY IT WORKS",
+          "delay": 499
+        }
+      ],
+      "transition": "slide",
+      "mode": "hero",
+      "video": "lessonISP/hero/hero_b22_outro_1a.mp4",
+      "videoFrames": 544,
+      "badge": false
+    }
+  ],
+  "motionTruth": {
+    "seedance": [
+      "b02",
+      "b06",
+      "b09",
+      "b11",
+      "b16",
+      "b21"
+    ],
+    "static": [
+      "b03",
+      "b04",
+      "b05",
+      "b07",
+      "b10",
+      "b12",
+      "b13",
+      "b14",
+      "b15",
+      "b17",
+      "b18",
+      "b19",
+      "b20"
+    ],
+    "heroes": [
+      "b01",
+      "b08",
+      "b22"
+    ]
+  }
+}

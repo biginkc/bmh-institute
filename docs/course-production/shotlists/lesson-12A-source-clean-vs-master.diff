@@ -1,0 +1,12 @@
+# Diff result: Jarrad-directed v5 master deviations.
+
+Compared `lesson-12A-script-clean.txt` against locked master `_master-transcripts.md` Slot 16 (`Chapter 11 - FINAL.srt`). Original Stage 1 cleanup was verbatim, but v5 intentionally changes the active script by Jarrad direction so the lesson is evergreen and role-agnostic.
+
+Result: active v5 script is not verbatim. Approved deviations:
+- b06 removes the fixed daily dial range and reframes dial count as real effort and consistency.
+- b07 removes the fixed dial-count example while keeping the speed-dialing quality warning.
+- b08 removes fixed connection-rate percentages, dial counts, people counts, and threshold language while keeping the spam flag, stale list, and bad timing concept.
+- b09 removes the fixed quality-conversation conversion percentage while keeping the definition and coaching context.
+- b12 removes the fixed contract benchmark while keeping negotiation/pricing attention.
+- b15 is removed entirely because role-specific daily targets belong in dynamic role materials.
+- b18 replaces the next-topic tease with a neutral lesson close.

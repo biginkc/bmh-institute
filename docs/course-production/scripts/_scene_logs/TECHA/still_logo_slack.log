@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_logo_slack.png ===
+Used the built-in image generation workflow with your `gpt-image-2` prompt, then resized and palette-flattened locally. Verified it is a 1600x900 PNG, corners are `#62b3f3`, and the frame contains only the centered Slack mark plus the `Slack` wordmark.
+
+
+OK mTECH_LTECHA_logo_slack.png

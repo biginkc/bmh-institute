@@ -1,0 +1,250 @@
+{
+ "fps": 30,
+ "draft": false,
+ "selectedModel": "mixed_kling_b4b_seedance_b5_b06_seedance_loop",
+ "visualGate": "pending Jarrad final visual QC",
+ "beats": [
+  {
+   "tag": "b01_bridge",
+   "mode": "hero",
+   "step": 0,
+   "durationInFrames": 406,
+   "voFrames": 376,
+   "animationStatus": "not-required",
+   "badge": true,
+   "hero": "lesson4B/hero/hero_b01_bridge.mov",
+   "heroFrames": 377
+  },
+  {
+   "tag": "b02_step1_intro",
+   "mode": "scene",
+   "step": 0,
+   "durationInFrames": 304,
+   "voFrames": 274,
+   "animationStatus": "approved-split-call-animation",
+   "still": "lesson4B/stills/m04_L4B_v2_intro_split_screen_reroll.png",
+   "labels": [
+    {
+     "text": "STEP 1 \u00b7 INTRO",
+     "delay": 6,
+     "placement": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson4B/anim/b02_step1_intro_part01.mp4"
+   ],
+   "videoFrames": [
+    301
+   ],
+   "tailFrame": "lesson4B/tails/b02_step1_intro_part01_tail.png"
+  },
+  {
+   "tag": "b03_step2_factfind",
+   "mode": "scene",
+   "step": 2,
+   "durationInFrames": 455,
+   "voFrames": 425,
+   "animationStatus": "b04a-single-clip-freeze_b06-approved-seedance-loop",
+   "still": "lesson4B/stills/m04_L4B_v2_factfind_listen_nobubble.png",
+   "labels": [
+    {
+     "text": "STEP 2 \u00b7 FACT FIND",
+     "delay": 5,
+     "placement": "bottom"
+    },
+    {
+     "text": "80% LISTEN",
+     "delay": 236,
+     "placement": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson4B/anim/b03_step2_factfind_part01.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "tailFrame": "lesson4B/tails/b03_step2_factfind_part01_tail.png"
+  },
+  {
+   "tag": "b04a_pitch",
+   "mode": "scene",
+   "step": 3,
+   "durationInFrames": 408,
+   "voFrames": 378,
+   "animationStatus": "single-clip-freeze-tail-no-loop",
+   "still": "lesson4B/stills/m04_L4B_v4a_pitch_grounded.png",
+   "labels": [
+    {
+     "text": "STEP 3 \u00b7 PITCH",
+     "delay": 47,
+     "placement": "bottom"
+    }
+   ],
+  "videos": [
+   "lesson4B/anim/b04a_pitch_part01.mp4"
+  ],
+  "videoFrames": [
+   241
+  ],
+  "tailFrame": "lesson4B/tails/b04a_pitch_part01_tail.png"
+  },
+  {
+   "tag": "b04b_offer",
+   "mode": "scene",
+   "step": 4,
+   "durationInFrames": 329,
+   "voFrames": 299,
+   "animationStatus": "approved-kling-offer-animation",
+   "still": "lesson4B/stills/m04_L4B_v4b_offer_handoff_animated_base.png",
+   "labels": [
+    {
+     "text": "STEP 4 \u00b7 OFFER",
+     "delay": 45,
+     "placement": "bottom"
+    },
+    {
+     "text": "TEE UP THE HANDOFF",
+     "delay": 224,
+     "placement": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson4B/anim/b04b_offer_part01.mp4"
+   ],
+   "videoFrames": [
+    301
+   ],
+   "tailFrame": "lesson4B/tails/b04b_offer_part01_tail.png"
+  },
+  {
+   "tag": "b05_step5_close",
+   "mode": "scene",
+   "step": 5,
+   "durationInFrames": 380,
+   "voFrames": 350,
+   "animationStatus": "b04a-single-clip-freeze_b06-approved-seedance-loop",
+   "still": "lesson4B/stills/m04_L4B_v5_rep_closeup_headset.png",
+   "labels": [
+    {
+     "text": "STEP 5 \u00b7 CLOSE",
+     "delay": 10,
+     "placement": "bottom"
+    },
+    {
+     "text": "GET COMMITMENT",
+     "delay": 86,
+     "placement": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson4B/anim/b05_step5_close_part01.mp4"
+   ],
+   "videoFrames": [
+    361
+   ],
+   "tailFrame": "lesson4B/tails/b05_step5_close_part01_tail.png"
+  },
+  {
+   "tag": "b06_structure_vs_execution",
+   "mode": "scene",
+   "step": 0,
+   "durationInFrames": 767,
+   "voFrames": 737,
+   "animationStatus": "approved-seedance-conveyor-loop",
+   "still": "lesson4B/stills/m04_L4B_v6_conveyor_call_candidate_1600x900.png",
+   "labels": [
+    {
+     "text": "PIPELINE = WHERE",
+     "delay": 99,
+     "placement": "bottom"
+    },
+    {
+     "text": "FRAMEWORK = HOW",
+     "delay": 419,
+     "placement": "bottom"
+    }
+   ],
+  "videos": [
+   "lesson4B/anim/b06_conveyor_seedance_loop_full.mp4"
+  ],
+  "videoFrames": [
+   780
+  ]
+  },
+  {
+   "tag": "b07_8020_rule",
+   "mode": "rule8020",
+   "step": 0,
+   "durationInFrames": 1022,
+   "voFrames": 992,
+   "animationStatus": "full-coverage-mixed_kling_b4b_seedance_b5-full",
+   "still": "lesson4B/stills/m04_L4B_v7_person_situation_8020.png",
+   "labels": [
+    {
+     "text": "80% PERSON / 20% HOUSE",
+     "delay": 99,
+     "placement": "bottom"
+    },
+    {
+     "text": "THE PERSON'S SITUATION",
+     "delay": 650,
+     "placement": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson4B/anim/b07_8020_rule_part01.mp4",
+    "lesson4B/anim/b07_8020_rule_part02.mp4",
+    "lesson4B/anim/b07_8020_rule_part03.mp4"
+   ],
+   "videoFrames": [
+    451,
+    451,
+    121
+   ],
+   "tailFrame": "lesson4B/tails/b07_8020_rule_part03_tail.png"
+  },
+  {
+   "tag": "b08_slow_down",
+   "mode": "scene",
+   "step": 0,
+   "durationInFrames": 501,
+   "voFrames": 471,
+   "animationStatus": "full-coverage-mixed_kling_b4b_seedance_b5-full",
+   "still": "lesson4B/stills/m04_L4B_v8_slow_down_care_reroll.png",
+   "labels": [
+    {
+     "text": "SLOW DOWN",
+     "delay": 268,
+     "placement": "bottom"
+    },
+    {
+     "text": "CARE FIRST",
+     "delay": 362,
+     "placement": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson4B/anim/b08_slow_down_part01.mp4",
+    "lesson4B/anim/b08_slow_down_part02.mp4"
+   ],
+   "videoFrames": [
+    451,
+    121
+   ],
+   "tailFrame": "lesson4B/tails/b08_slow_down_part02_tail.png"
+  },
+  {
+   "tag": "b09_outro",
+   "mode": "hero",
+   "step": 0,
+   "durationInFrames": 246,
+   "voFrames": 246,
+   "animationStatus": "not-required",
+   "hero": "lesson4B/hero/hero_b09_outro.mov",
+   "heroFrames": 247
+  }
+ ],
+ "audio": "lesson4B/master.m4a",
+ "totalFrames": 4818
+}

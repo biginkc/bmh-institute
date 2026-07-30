@@ -1,0 +1,1655 @@
+Reading prompt from stdin...
+2026-07-09T06:40:46.604452Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f459b-7763-7880-8c67-f6c2fd2cb745
+--------
+user
+Generate one corrected Lesson 18A v2 image with gpt-image-2 and save it to course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png (PNG, 1600x900). Match the attached BMH course doodle references exactly. PRIYA / BMH representative identity: same exact woman as the attached operator-priya reference, black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes, flat white/cream face and hands, small dot eyes, tiny curved cast-board nose, simple friendly mouth. COMPOSITION: A 3x3 grid montage: nine equal rounded panels on one blue canvas. In every panel, the SAME Priya/BMH representative appears on a different phone call with the same headset and outfit, but different gestures and expressions: listening, smiling, focused note-taking, asking a question, checking screen, dialing, thinking, confirming, wrapping up. Same person in all nine frames. No text, no numbers, no captions. The scene reads as several calls in one calling block. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow #FFD23F, orange, cream #FFF7DE, white, and black. No gradients, no texture, no shading, no shadows, no lighting, no perspective, no skin-tone shading. Faces and hands use flat white or cream fill only, tiny dot eyes, a small subtle curved cast-board nose like a tiny hook/comma, simple mouth. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, speech bubbles, motion marks, random icons, random props, or decorative clutter. No text, letters, words, numbers, labels, captions, UI labels, readable screens, readable messages, readable paperwork, real app logos, or screenshots anywhere. Use blank app-like panes, blank cards, blank rows, blank message bubbles, blank check boxes, and blank pseudo-lines only. Leave clean open cornflower-blue space for code-rendered Remotion labels. 16:9 composition, 1600x900 PNG. NEGATIVE: no duplicate people, no extra characters beyond the requested count, no skin-tone colors, no brown/tan/peach/pink cheeks, no readable text, no logos, no watermarks, no realistic UI, no decorative filler, no clutter, no clipped subject.
+
+2026-07-09T06:40:46.908854Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-09T06:40:46.952387Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-09T06:40:46.967442Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-09T06:40:47.110993Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-09T06:40:47.117321Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll generate the asset in place and keep it scoped to the requested file. I’m going to load the image-generation instructions first so the output path and reference handling are correct.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/CLAUDE.md" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'rg -n "BMH course|course still|operator-priya|Lesson 18A|module-18|image generation|gpt-image" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+1:# Task Group: BMH course compensation-script genericization and Claude/Fable fallback review
+3:applies_to: cwd=$HOME/Sites/BMH apps and $HOME/Sites/BMH apps/BMH Institute; reuse_rule=safe for BMH course compensation-lesson rewrites and second-review fallback handling when the same course-production source files and lesson-script pipeline are in play, but lesson numbers, approved wording, and on-disk asset state must be refreshed per lesson.
+32:# Task Group: BMH course lesson claims, storyboard gates, and execution discipline
+34:applies_to: cwd=$HOME/Sites/BMH apps and $HOME/Sites/BMH apps/BMH Institute; reuse_rule=safe for BMH course lesson-setup, storyboard-gate, and final-status work when the same `NEXT-SESSION.md`, master-transcript, and stage-gated Remotion pipeline are in play, but lesson numbers, claim lines, approval state, and on-disk artifact presence are lesson-specific and must be refreshed.
+46:## Task 2: Verify Slot 18 source and current course-production gate for Lesson 18A, partial
+50:- rollout_summaries/2026-07-07T07-22-53-09cJ-lesson_18a_operator_playbook_storyboard_gated_image_generati.md (cwd=$HOME/Sites/BMH apps, rollout_path=$HOME/.codex/sessions/2026/07/07/rollout-2026-07-07T02-22-53-019f3b75-5872-7ec0-bb69-9fc7e0972229.jsonl, updated_at=2026-07-07T14:26:44+00:00, thread_id=019f3b75-5872-7ec0-bb69-9fc7e0972229, strict doc-read order, Slot 18 source verification, and storyboard-first gate for Lesson 18A Operator Playbook)
+56:## Task 3: Capture repo state and continuation handoff for Lesson 18A, partial
+64:- claude/course-production, git status --short --branch, ahead 3, 94db1c5, continuation prompt, stop stopping, module-18-lesson18A, still filenames, dirty worktree
+94:- For Lesson 18A, the current authoritative onboarding path is `MODULE-PRODUCTION-GUIDE.md`, then `PLAYBOOK.md`, then `scene-card-v2.md`, then the `docs/course-production/remotion/src/Lesson7A.tsx` composition reference [Task 2]
+95:- Slot 18's authoritative source block is `## Slot 18 — Operator Playbook (Ch17, segmented 2026-07-01)`; it contains 14 cues, maps to `transcripts/Chapter 17 - Draft.srt`, and the repo already had `Lesson 18B` but no visible `Lesson 18A` claim or local `lesson18A` artifacts at inspection time [Task 2]
+96:- The intended Lesson 18A artifact sequence was `NEXT-SESSION.md` claim, `lesson-18A-script-clean.txt`, `lesson-18A-source-clean-vs-master.diff`, `module-18-lesson18A-scenecards.md`, then the eight stills the user named [Task 2][Task 3]
+97:- The requested Lesson 18A still filenames were `m18_L18A_b02_command-center.png`, `m18_L18A_b03_research-prep.png`, `m18_L18A_b04_first-call-block.png`, `m18_L18A_b05_break-reset.png`, `m18_L18A_b07_admin-block.png`, `m18_L18A_b09_pipeline-review.png`, `m18_L18A_b12_energy-management.png`, and `m18_L18A_b13_one-call-humans.png` [Task 3]
+98:- The repo-state handoff for Lesson 18A was on branch `claude/course-production` at head `94db1c5` (`Lock doodle sticker style as the course brand`), ahead of `origin/main` by 3 commits, with a heavily dirty working tree that should be preserved rather than cleaned opportunistically [Task 3]
+112:# Task Group: BMH course 4B exact replication, narration speed, and animation tail-frame assembly
+113:scope: Use for BMH course production when another agent needs to reproduce the approved Lesson 4B still/animation output exactly, or when audio speed and clip-ending behavior must match the current approved course-production defaults.
+114:applies_to: cwd=$HOME/Sites/BMH apps/BMH Institute and BMH course lesson/still/animation workflow; reuse_rule=safe for future BMH course generation or regeneration that follows the same lesson-doc, reference-image, HeyGen, and assembly pipeline, but scene prompts, approved assets, and lesson-specific gates should be refreshed per lesson.
+134:- exact prompts, senior engineer handoff, gpt-image-2, seedance_2_0, kling3_0, object-board.png, animation-bakeoff, mixed_kling_b4b_seedance_b5, flat sticker-sheet, no text anywhere
+140:- extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md, updated_at=2026-07-06T11:56:43-05:00, audio-speed correction note for Andrea and narrator delivery)
+144:- Andrea, narration, normal speed, voice speed 1.0, default speed, HeyGen, 0.95 stale, BMH course [ad-hoc note]
+150:- extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md, updated_at=2026-07-06T12:13:30-05:00, animation-tail-frame assembly note for beat/transition timing)
+167:- The still-generation recipe used `gpt-image-2` with attached refs `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, `docs/design/cast-board.png`, and `docs/design/object-board.png`; the style lock was flat sticker-sheet doodle, thick wobble black outlines, rounded simple forms, cornflower-blue background `#62b3f3`, tiny dot eyes, tiny centered two-stroke/comma nose, and no text, gradients, shadows, or perspective [Task 2]
+182:# Task Group: BMH course lesson, still, and animation character continuity corrections
+183:scope: Use for BMH course image or animation generation when role assignment, face details, hairstyle continuity, or replacement-style choices must match the approved course visual canon before still approval or animation.
+184:applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, Andrea, and approved doodle-style visual language, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+186:## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+190:- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+194:- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+200:- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+204:- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+210:- extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md, updated_at=2026-07-07T11:23:27-05:00, control-frame guardrail for BMH course still and animation source selection)
+214:- BMH course, control frame, rough SVG composite, geometry-fix image, production still, animation source, reference-only, visually acceptable, doodle style [ad-hoc note]
+220:- extensions/ad_hoc/notes/20260707-123236-bmh-course-no-vector-replacement-style.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-123236-bmh-course-no-vector-replacement-style.md, updated_at=2026-07-07T12:32:36-05:00, replacement-style correction after rejected Lesson 18B deterministic plates)
+224:- BMH course, vector replacement, deterministic plate, SVG, slide-icon style, Lesson 18B, county-map replacements, rejected stills, approved doodle style [ad-hoc note]
+232:- The seller identity for BMH course scenes is the curly black-haired man in the orange sweater and cream pants on the right side of the handshake reference; seller/customer scenes should use him rather than Andrea [Task 1][ad-hoc note]
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/custom-convergence-loop/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: custom-convergence-loop
+description: Run a plan-aligned Claude/Codex convergence loop where Claude acts as orchestrator/reviewer, Codex executes and verifies, optional read-only research agents gather narrow evidence, and the loop continues until evidence-backed completion, high-confidence DONE readiness review, browser proof, and conditional PR merge/posting. Use when the user asks to have Claude direct the next step, run a Claude/Codex loop, make Claude the orchestrator and Codex the executor, converge with Claude, or execute with repeated Claude feedback.
+---
+
+# Claude Convergence Loop
+
+Use this skill when the user wants Claude to orchestrate a goal while Codex executes, verifies, records evidence, and feeds results back to Claude until the goal is proven complete or blocked.
+
+Claude is advisory, not authoritative. Codex must adversarially verify every Claude recommendation before acting.
+
+## Required Inputs
+
+Before starting, establish these from the user request, repo state, PR state, or current thread. Do not ask if they are discoverable.
+
+- `goal_id`: stable short identifier for the loop.
+- `goal_description`: concrete outcome the loop must reach.
+- `plan_source`: the repo plan, roadmap, issue, PR body, or thread artifact the goal must align to.
+- `acceptance_gates`: explicit, independently verifiable gates required for `DONE`.
+- `baseline_ref`: git commit, PR head, production snapshot, or other stable baseline.
+- `authority_profile`: default to `Production-aware` unless the user gives a narrower scope.
+- `evidence_record`: local ledger path; if PR-bound, also update the PR.
+- `claude_surface`: default to Claude desktop/app Code surface unless the user explicitly requests CLI or desktop cannot be controlled.
+
+If acceptance gates are missing, derive a conservative gate list from the goal and ask Claude to confirm it in the first state packet. Do not accept `DONE` until every gate is independently verified.
+
+## Transport And Tool Preflight
+
+Before starting the loop, do a control-surface preflight so required tools are not discovered missing halfway through execution.
+
+Check and record:
+
+- Which Claude surface the loop will use first.
+- Whether that primary surface is actually reachable from the current runtime.
+- Whether the CLI fallback exists and is authenticated, if CLI might be needed later.
+- Whether any browser/control tooling required for final proof or handoff is available now.
+- Whether any repo/provider CLIs the loop explicitly depends on are installed and callable now.
+
+Rules:
+
+- Desktop/app is the default first path. Do not skip straight to Claude CLI unless the user explicitly requested CLI or the desktop/app path was already proven unavailable or uncontrollable.
+- Treat `claude_surface_unavailable` as a preflight classification whenever the chosen surface cannot be controlled at loop start. Do not wait until late in the loop to discover this.
+- Claude CLI is the last fallback, not the primary assumption. If you may need it, verify it early with `command -v claude` and `claude auth status` when available.
+- If final proof depends on Chrome, app automation, DevTools, or another control plane, verify that the relevant tool path exists before the loop commits to a plan that requires it.
+- If a required tool is unavailable, either:
+  - switch to another verified surface immediately,
+  - narrow the loop so it does not depend on that tool, or
+  - stop before the loop meaningfully starts and report the exact missing tool/control plane as a preflight gap.
+
+Record the preflight result in the evidence ledger before the first Claude state packet.
+
+## Plan Alignment
+
+Before executing, map the requested goal to the current plan. Prefer repo-local planning artifacts and live PR/issue state over memory:
+
+- Use the explicit user request first.
+- Check PR body, linked issues, roadmap, and repo planning files such as `.planning/`, `MASTER-PLAN.md`, addenda, or the current milestone docs.
+- Identify plan items the goal satisfies, any plan items it intentionally excludes, and any divergence from the plan.
+- Add plan-derived acceptance gates when the plan contains concrete proof requirements.
+- If the goal conflicts with the plan or lacks a plan anchor, continue only for safe investigation or ask the user for the missing decision. Do not use standing merge authority until plan alignment is clear.
+- Re-check plan alignment before final readiness and before any merge.
+
+## Claude Surface
+
+Prefer surfaces in this order:
+
+1. Claude desktop/app Code surface.
+   - Before using it, prove the surface is reachable from the current runtime: inspect app state, confirm the relevant Claude window/session can be targeted, and confirm the automation path can at least focus and interact with the intended input surface.
+   - Use Computer Use or available app automation to inspect Claude before interacting.
+   - If Claude is running, has a queued prompt, or is on an unrelated active session, do not overwrite it. Wait, open an appropriate new session, or ask the user for timing if the safe path is not obvious.
+   - Use app automation to paste the prompt, send it, wait for completion, and extract the response.
+   - Never stop after a partial response or while Claude is still running.
+2. Claude Code CLI/headless only when the user explicitly requests CLI, the desktop app cannot be controlled, or deterministic capture is required and the user approves that fallback.
+   - Check with `command -v claude` and `claude auth status` when available.
+   - Prefer print/headless mode for deterministic capture, such as `claude -p`.
+   - Prefer structured output when available, such as JSON/schema output.
+   - Official references: https://code.claude.com/docs/en/cli-usage and https://code.claude.com/docs/en/agent-sdk/overview.
+3. Prompt-only fallback.
+   - If neither surface can be controlled, produce the exact Claude prompt and record `claude_surface_unavailable` as a loop evidence gap.
+   - Do not proceed as if Claude reviewed the state.
+
+## Authority Profile
+
+Default authority profile: `Production-aware`.
+
+Allowed only when the loop goal explicitly grants it:
+
+- Production reads.
+- Scoped, non-destructive production writes.
+
+Always hard-gated and requiring explicit immediate user approval:
+
+- Merge or release actions, except the standing PR merge authority below.
+- Destructive filesystem, git, provider, or database actions.
+- Production environment variable writes, except the standing timestamp-refresh approval below.
+- Production database mutations, including inserts and updates.
+- Production deploys or redeploys.
+- Paid API usage beyond normal local development.
+- Real outbound calls, SMS, email, payment, or other external side effects.
+- PII reads, including logs or exports containing customer phone numbers, emails, addresses, or similar sensitive data.
+- Multi-tenant blast-radius changes.
+- Secret disclosure.
+
+Standing timestamp-refresh approval: Jarrad has granted this skill permission to refresh only the existing approval freshness timestamp needed to make the final operator click path ready after Claude returns `DONE` with `confidence: high`. For Jitter-POC live-list readiness, this means automatically refreshing `JITTER_PRODUCT_LIVE_LIST_APPROVAL_ISSUED_AT` when the approval status is already valid and only timestamp freshness is blocking `Start Session`. Do not ask for another prompt before doing that refresh.
+
+This standing approval does not allow creating alternate approval variables, changing `JITTER_PRODUCT_LIVE_LIST_APPROVAL`, changing K/concurrency/list/destination settings, writing secrets, mutating production data, deploying/redeploying, clicking `Start Session`, or placing real outbound calls/SMS/email/payment actions. Those remain hard-gated.
+
+Standing PR merge authority: Jarrad has granted this skill permission to merge the current PR automatically when every condition below is true:
+
+- The goal is aligned to the current plan and every acceptance gate is satisfied.
+- The current PR is the intended PR for this loop, is not a draft, has no merge conflicts, and GitHub reports passing required checks or an equivalent clean merge state.
+- Code review is complete for the current PR head: Claude/external review feedback has no unresolved valid findings, and required GitHub review policy is satisfied when present.
+- Codex-side manual review is complete: `custom-manual-code-review` ran exhaustively with reviewer sub-agents when available, valid findings were fixed, and the fixes were reverified.
+- The high-confidence readiness workflow passed, including Chrome opened to the target application and `Start Session` verified visible, enabled, and free of blocking errors.
+- There are no production merge blockers: stale deployment/alias evidence, failing preview/prod checks, unresolved env/config blockers, secret-management gaps that affect runtime, pending migrations, external side-effect risk, or user-owned decisions.
+- The working tree and PR branch contain only the intended reviewed changes, and no secrets or sensitive artifacts are included.
+
+When those conditions pass, merge the PR without asking for another approval, then post a concise status to the PR or relevant thread/ledger with the merge result, head SHA, checks/reviews, manual-review result, Chrome readiness result, and any residual non-blocking gaps. This authority does not allow manual production deploys/redeploys, live calls, SMS/email/payment actions, or clicking `Start Session`.
+
+## State Packet
+
+Send Claude a secret-free state packet every iteration. Keep it self-contained enough to paste into a fresh Claude session.
+
+
+```text
+# START HERE
+
+You are Claude. Act as orchestrator and reviewer. Codex is executor and verifier.
+
+Goal:
+- goal_id: <stable id>
+- goal_description: <target outcome>
+- plan_source: <repo plan/roadmap/issue/PR body/thread artifact>
+- baseline_ref: <commit/PR/system snapshot>
+- authority_profile: <Production-aware or override>
+
+Plan Alignment:
+- plan_items: <plan items this goal satisfies>
+- exclusions_or_divergence: <none or explicit divergence>
+- plan_gate_delta: <acceptance gates added from plan>
+
+Loop State:
+- iteration_count: <n>
+- current_status: <what Codex has done>
+- evidence_delta_last_iteration: <yes/no + concrete delta>
+- blockers: <none or list>
+- prior_advice_log: <compressed prior Claude advice + outcome>
+- budget_remaining: <time/token/research/iteration budget>
+
+Acceptance Gates:
+- [ ] <gate with verification method>
+- [ ] <gate with verification method>
+
+Verification Results:
+- <gate>: pass | fail | untested | blocked, with evidence
+
+Evidence:
+- <file path/line, command output summary, provider doc citation, PR comment, screenshot path, or agent result>
+
+Constraints:
+- <repo constraints, safety boundaries, hard gates, prompt hygiene, no secrets>
+
+Exact Question:
+- <one narrow question for Claude>
+
+Return exactly one verdict: NEXT_STEP, RESEARCH_NEEDED, DONE, BLOCKED, or LOOP_REASSESS.
+Use `proposed_action`, not `next_step`.
+```
+
+Redact evidence before it enters the packet. Do not include secret values, full tokens, cookies, session IDs, private keys, raw `.env` contents, unredacted logs, or sensitive screenshots.
+
+## Claude Response Contract
+
+Ask Claude to return this shape:
+
+```text
+verdict: NEXT_STEP | RESEARCH_NEEDED | DONE | BLOCKED | LOOP_REASSESS
+reasoning: <short rationale>
+confidence: low | medium | high
+
+proposed_action:
+  action: <only for NEXT_STEP; concrete action Codex should verify before executing>
+  scope: <files/systems/providers allowed to touch>
+  expected_verification: <how Codex proves the action worked>
+  hard_gate_risk: <none or named gate>
+
+research_questions:
+  - <only for RESEARCH_NEEDED; max 3 narrow read-only questions>
+
+done_criteria:
+  - <only for DONE; acceptance gates Claude believes are satisfied>
+
+blocker_description: <only for BLOCKED; exact missing input/permission/data>
+iteration_budget_advice: <continue | reduce scope | reassess | stop>
+```
+
+If Claude does not follow the shape, ask once for a corrected response. If it still fails, record a Claude response-format gap and continue only if a safe, evidence-backed next action is obvious.
+
+## Manual Review Before Claude Escalation
+
+Claude should not be the first reviewer of Codex's code. Once the loop has a code diff, PR branch, or changed implementation surface, invoke `custom-manual-code-review` before asking Claude for code review, final readiness, or another next-step decision that depends on the changed code.
+
+Rules:
+
+- If a PR exists, run `custom-manual-code-review` against the PR before sending Claude a review/readiness/next-step packet.
+- If no PR exists yet, run the same manual-review lane model against the current branch or diff and record the no-PR review surface.
+- Fix every valid in-scope manual-review finding and rerun the verification that proves the fix before asking Claude to review or choose the next implementation step.
+- Include the manual-review result, accepted/rejected findings, fixes, verification, residual gaps, and head SHA in the next Claude state packet.
+- If manual review tooling is unavailable, record that exact gap in the ledger and continue only when the next action is safe without external review.
+- Purely initial planning packets before any code changes may go to Claude without manual review, but the first review/readiness/next-step packet after code changes must be preceded by manual review.
+
+## Blocker Escalation
+
+Do not treat a local failure as the end of the loop until Claude has been used to challenge the blocker, except when the next step requires immediate user authorization that Claude cannot grant.
+
+Rules:
+
+- First verify the blocker locally: capture the failing command, browser state, PR/check state, missing credential, missing permission, or contradictory evidence.
+- Classify the blocker as one of: `hard_gate_user_approval`, `credentials_or_secret_access`, `production_or_external_side_effect`, `engineering_blocker`, `test_or_environment_blocker`, `tooling_blocker`, `no_evidence_delta`, or `claude_surface_unavailable`.
+- For non-hard-gate blockers, send Claude a blocker-focused state packet before reporting blocked to the user. The exact question should ask Claude to either identify a safe unblocked path, reduce scope, request narrow research, or confirm `BLOCKED` with the precise missing input.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/_Active.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-07-05
+tags: [v1]
+related: ["[[STRATEGY]]", "[[MOC - v1]]", "[[MOC - v1 Verification Steps]]", "[[Four-app v1 control ledger]]"]
+---
+# _Active — what now
+
+Current priorities, seeded from [[STRATEGY]]'s bottleneck + the [[MOC - v1]] checklist. Frequently updated.
+
+## Operating model — Claude plans, Codex executes
+
+**Claude = planner/reviewer; Codex = executor.** For the four-app v1 push, Codex is executing the written per-app EXECUTE blocks directly in isolated worktrees; the start-orchestration bootstrap remains suspended until the repos are in known state. Claude still provides independent A5 review/approval before merge/deploy. Full handoff + recon + open decisions: [[2026-06-01 1815 — Four-app v1 plan + Codex execution handoff]]. Detailed per-app checklist: [[MOC - v1 Verification Steps]]. Cross-app context source: [[Four-app v1 control ledger]].
+
+**Autonomous = additive / reversible / observable** (STRATEGY's guardrail). A gate = destructive, irreversible, external-facing, or a judgment call.
+
+**Browser V1 acceptance gate:** fixture seeding, SQL assertions, unit/integration tests, GitHub Actions, and Playwright automation are scaffolding/supporting evidence only. Browser V1 is not accepted until Chrome/Chrome DevTools real-browser execution proves the persona flows through visible UI outcomes, screenshots, console/network inspection where relevant, and browser-console probes where required. Do not use Codex in-app browser / MAP / `iab` as the acceptance surface unless Jarrad explicitly reverses this.
+
+**Browser V1 UI-created data rule:** data setup is part of the browser test. For [[Closer Lab]] and [[BMH Institute]], create fixture/content/test records through Chrome/DevTools browser UI wherever the app UI supports creation or editing. Direct database/API writes are exception-only supporting setup for things the UI cannot create, such as auth bootstrap when no signup/admin UI exists, and must be labeled as non-acceptance evidence.
+
+**2026-06-02 browser-surface correction:** Jarrad first reset [[Closer Lab]] and [[BMH Institute]] Browser V1 acceptance to zero, then superseded the MAP/in-app-browser requirement with Chrome/DevTools real-browser execution. Current controller evidence shows [[BMH Institute]] residual proof closed and [[Closer Lab]] Browser V1 markers closed for pre-read persistence, signed embed-token proof, and scoring/runtime. [[Sandra]] production-readiness proof is GO as of 2026-06-11. The 2026-06-18 active-front reset (skip-trace/CASS preflight, filter preset discoverability, bulk tag creation, Sendillo-era Overview KPI visibility) is now CLEARED 2026-06-19 — all four shipped via merged PRs #288–#300, plus Messages disposition/outcomes hardening (#298/#299/#300). Remaining [[Sandra]] threads: PR #287 (hide dead-dispositioned leads from the kanban — OPEN, awaiting NULL-handling review) and the bulk-SMS→Campaigns KPI tracking gap (June 19 run, job `72b0e08d`, 7,547 messages queued with `campaignId=null`) — forward fix now tracked under **PR #306** (supersedes #301; per the 2026-06-23 [[Sandra PR 306 merge gate rules]] decision, updated 2026-07-05 — merge via GitHub-backed main once the Playwright golden-paths check passes; PR MERGEABLE/UNSTABLE, **not yet merged**) which requires a campaign name + auto-creates + stamps `campaign_id`, with the 2026-06-19 architect P1s folded in; the **June 19 backfill is still pending** (designed, not applied — must match by `property_id` intersection, not the created_at window which over-captures by 6; per the decision, the 423-member retry list is created only after production serves the merged fix).
+
+**2026-06-02 trust reset:** Jarrad challenged the controller's Playwright-heavy verification and does not trust acceptance unless it is revalidated in Chrome/DevTools. Treat Playwright/CI/API/DB evidence as support only. Fresh revalidation so far: [[BMH Institute]] Chrome snapshot/screenshot `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, with separate Sandra outcome confirmation `/tmp/browser-revalidation-bmh-institute-outcome.json`; [[Closer Lab]] member Chrome snapshot/screenshot `/tmp/browser-revalidation-closer-member-recording.*` visibly shows recording `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`, with separate Sandra outcome support `/tmp/browser-revalidation-closer-sandra-outcome-support.json`. [[Sandra]] production-readiness proof is GO on `https://sandra.bmhgroupkc.com`: real Sendillo production thread proof, `PR #236` sequence-admin gate, Chrome SOP matrix, and authenticated production non-admin sequence denial/enrollment behavior are all captured in [[Sandra - 2026-06-11]]. [[Jitter]] trust-reset browser work advanced in two steps: the earlier wrong-database/browser-auth mismatch was partially resolved by pinning production to the canonical `jitter-test` plane (`ypgntjjrrutjsratdwmk`) and proving controlled Chrome dialing in production, but that proof depended on a local scoped worker. Current blocker is no longer fixture creation; it is the **carrier swap**: Twilio is KYC-suspended/retired and **Telnyx is now the active carrier (account fully verified) — carrier validation PASSED 2026-06-04** — that carrier validation precedes the worker gate. The current Jitter gate (B2 plan, 2026-06-06) is **trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof**. The downstream acceptance gap is still a real worker path, but only after the single-line Telnyx dial proof.
+
+| Lane | Repo state (2026-06-01) | First autonomous task | Locked decisions |
+|------|------|------|------|
+| **[[Sandra]]** | Production-readiness proof GO on `https://sandra.bmhgroupkc.com` as of [[Sandra - 2026-06-11]]. Gate 1 real Sendillo production thread proof closed; Gate 2 `PR #236` sequence-admin gate merged/deployed/E2E green; Gate 3 Chrome SOP proof closed with admin SOP coverage, real Sendillo thread visibility, bulk SMS no-send inspection, admin authoring retention, and authenticated production non-admin sequence denial/enrollment behavior. Cleanup caveat: Sendillo canary rows retained as audit evidence and throwaway SOP sequence `7dfedf79-120a-434b-b417-c920b3227475` retained inactive. | no blocker; optional explicitly approved cleanup only if pristine DB is desired | consent: keep current |
+| **[[Closer Lab]]** | PR #60 merged; Browser V1 markers previously closed in Chrome/DevTools: pre-read persistence, BMH Institute signed embed-token path, scoring/runtime; Closer→Sandra sender/config/scoring hardening PRs #71/#72/#73/#74 merged and production proof PASS; fresh trust-reset Chrome revalidation captured member recording `72ad25d8-1b09-4ef9-a278-82113c12ce75` at 100% with transcript and rubric `MET 5 / 5` | browser-revalidated after trust reset | — |
+| **[[BMH Institute]]** | PR #79 and PR #80 merged; controller residual Chrome/DevTools proof closed after credential rotation; Sandra course-completed sender PR #81 merged, production env configured after token rotation, and Chrome/DevTools final lesson proof wrote `course.completed` into Sandra; fresh trust-reset Chrome revalidation captured visible `Lesson complete` and matching Sandra outcome | browser-revalidated after trust reset | cert PDF **deferred post-v1**; suspended-login block shipped via PR #79 |
+| **[[Jitter]]** | auth PR #144 merged; writeback PR #145, Sandra receiver PR #224, and boundary fix PR #146 merged; CPS pacing merged to `main` at `334ef8565d21b71bd3f645f05def2922179cee47` and deployed to production `dpl_75H8rsoMe7HEX7KSgtdo6cAjtJRS`; one controlled Chrome proof succeeded on `https://jitter.bmhgroupkc.com/dialer`, with browser audio connected and 4 successful `twilio.create_call` operations, but only while a local scoped worker was running. **Carrier since swapped: Twilio retired (KYC); Telnyx is the active carrier (account verified).** | **Current gate (B2 plan, 2026-06-06): trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof.** Then keep web + worker on the same reviewed SHA and rerun the final Chrome `/dialer` proof with the real worker before claiming accepted | business dialing approved; no extra live dial needed for writeback-only proof |
+
+## 🚦 Gates — full autonomy authorized (pre-launch, no users/data)
+Standing authorization (Jarrad, 2026-06-01): Codex may read/write any Supabase project incl. prod, run/apply migrations, open AND **merge** PRs, and deploy — quality-gated by Codex manual-code-review plus Claude A5 when reachable. If Claude is unavailable, Codex must try both CLI and desktop/app before using the fallback readiness gate. **No human click on merge/deploy.** See [[bmh-apps-prelaunch-no-prod-ceremony]] and [[Four-app v1 control ledger]].
+- **Hard pause:** billing changes; secret disclosure risk; uncontrolled provider use outside v1 verification; human-only MFA/CAPTCHA/account recovery after CLI/API/desktop workarounds.
+- [[Jitter]] business dialing is explicitly approved for v1 verification. Use product-appropriate caps/logging; no generic prod ceremony just because it is production.
+- New product decisions: make v1-compatible calls, record in the app's report, keep moving — never stall a lane unless it changes billing or creates uncontrolled provider use.
+
+## ✅ Fully autonomous (no checkpoint) — incl. TEST-env side effects
+Self-served, no longer Jarrad inputs:
+- **1Password reads** — all agents must read existing `BMH Secrets` items through the service account only: `export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -w -s OP_SERVICE_ACCOUNT_TOKEN)` then `op read "<redacted-1password-ref>"`. Do not use desktop-app/GUI/biometric/browser authorization for reads. If a GUI authorization prompt appears during a read, stop that path and retry with the service account; do not ask Jarrad to approve a read.
+- **Twilio** — read from 1Password (`Twilio - BMH Account Credentials`: SID, auth token, API key, `TWILIO_OWNED_NUMBERS_E164`, caller ID). Owned-number tests remain useful for smoke tests; [[Jitter]] may also dial real businesses for v1 verification under the standing approval above.
+- **Test accounts** — each lane provisions its own per-role accounts in its app's `*-test` Supabase project (`sandra-crm-test`, `closer-lab-test`, `bmh-institute-test`, `jitter-test`).
+- Dirty-work policy: snapshot to `wip/pre-v1-snapshot-<date>` *before* removing stale (reversible).
+- Plus: repo triage · code fixes in worktrees · unit/integration/build/lint · Playwright fake-media + fixtures · resolving `UNKNOWN` items by reading code · drafting PRs · `_inbox` notes.
+
+## Integrations — last
+Trust-reset integration front: do not call a lane accepted unless the current proof includes Chrome/DevTools-visible browser behavior. Pre-reset supporting proof remains useful but is not enough by itself. [[BMH Institute]] `course.completed`→[[Sandra]] has fresh Chrome/DevTools revalidation after Sandra #227/#228 and BMH Institute #81: `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, and separate outcome confirmation shows Sandra `institute_course_outcomes.id=61592447-b33d-489c-a230-d513435ef6b7` with webhook event `15e56f40-31b8-4d48-901e-942bdf0bbd8f` processed/signature verified. [[Closer Lab]] practice outcome→[[Sandra]] now has fresh Chrome/DevTools member recording revalidation: `/tmp/browser-revalidation-closer-member-recording.*` visibly shows attempt `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`; separate support file `/tmp/browser-revalidation-closer-sandra-outcome-support.json` ties the same attempt to Sandra `closer_practice_outcomes.id=90aaae3d-1053-4021-b9e1-a6e50b8a08f8`. [[Jitter]]→[[Sandra]] writeback remains supported by deployed production executor/API plus Sandra production DB proof after Jitter #145, Sandra #224, and Jitter #146, and a controlled Chrome `/dialer` proof succeeded after production was pinned to canonical `jitter-test` (`ypgntjjrrutjsratdwmk`). That proof is still not sufficient for acceptance because it depended on a local scoped worker. Current gap: a real worker path must back the final Chrome proof so dialing continues without the local helper and without warning banners, duplicate operations, or queue-time spikes.
+
+## Next step
+**▶️ RESUME (2026-06-06 21:23): [[2026-06-06 2123 — Doc-driven Jitter B2 plan with sub-agents (019e9fd7)]] — this is now the canonical raw plan note for the active [[Jitter]] lane.**
+
+**[[Jitter]] — B1.6 operator two-way audio PROVEN on Telnyx (2026-06-04, see [[2026-06-04 2110 — Jitter Telnyx B1.6 operator audio PROVEN]]).** Current front = **get the dialer DIALING (B2)**. Permission mode is now `bypassPermissions`. Loop running: **Claude orchestrates + reviews + commits + drives Chrome proof; Codex executes code** (`codex-exec.sh` + 3-min `watch.sh`).
+
+**OFFICIAL-DOCS-FIRST B2 order:** do not keep iterating on the old conference-callback hypothesis blindly. New research says the first move is to re-check the trust boundary on `/api/product/telephony/twiml/operator` because the current failing test may be enforcing signed-callback rules on the initial [[Telnyx]] TeXML instruction fetch. After that, keep strict signature validation on real callback routes, verify the browser-audio readiness contract across route/runtime/worker SQL, then proceed to the single-line live dial and the real [[Railway]] worker proof.
+
+**OPEN [[Jitter]] questions now ordered by impact:**
+1. Is the operator TeXML route enforcing the wrong auth contract for instruction fetches?
+2. Is `endConferenceOnExit=true` on `operator_browser` actually the intended product behavior?
+3. Is `productOperatorJoined` now being used consistently as the B2 dial-ready signal across route/runtime/worker layers?
+4. Are callback hosts and [[Vercel]] bypass assumptions explicit and correct for the environments being used?
+
+**Then:** single-line dial K=1 (canary guard ON, NOT gated) to +13107540662 → prove dialing. **Multi-line (K≥2) is GATED — needs Jarrad to EXPLICITLY lift his own "no multi-line without Telnyx L2 + written AUP" rule** (all calls redirect to his own number, so AUP not truly implicated, but the gate is his to lift). **Deferred (Jarrad: integrations last):** Sandra writeback (payload fixed `da659e3`, creds not staged), B1.4 voice_url, 1Password credential-id write-back (`70ad6f62…`, still PLACEHOLDER).
+
+hook: PostToolUse
+ succeeded in 111ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+ succeeded in 106ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+I’m using the `imagegen` skill for the raster asset. The convergence-loop skill is present in the repo instructions, but this request is a direct asset generation task, so I’m keeping the loop overhead out unless a blocker requires Claude review.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '221,520p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+## Examples
+
+### Generation example (hero image)
+```text
+Use case: product-mockup
+Asset type: landing page hero
+Primary request: a minimal hero image of a ceramic coffee mug
+Style/medium: clean product photography
+Composition/framing: wide composition with usable negative space for page copy if needed
+Lighting/mood: soft studio lighting
+Constraints: no logos, no text, no watermark
+```
+
+### Edit example (invariants)
+```text
+Use case: precise-object-edit
+Asset type: product photo background replacement
+Primary request: replace only the background with a warm sunset gradient
+Constraints: change only the background; keep the product and its edges unchanged; no text; no watermark
+```
+
+## Prompting best practices
+- Structure prompt as scene/backdrop -> subject -> details -> constraints.
+- Include intended use (ad, UI mock, infographic) to set the mode and polish level.
+- Use camera/composition language for photorealism.
+- Only use SVG/vector stand-ins when the user explicitly asked for vector output or a non-image placeholder.
+- Quote exact text and specify typography + placement.
+- For tricky words, spell them letter-by-letter and require verbatim rendering.
+- For multi-image inputs, reference images by index and describe how they should be used.
+- For edits, repeat invariants every iteration to reduce drift.
+- Iterate with single-change follow-ups.
+- If the prompt is generic, add only the extra detail that will materially help.
+- If the prompt is already detailed, normalize it instead of expanding it.
+- For CLI fallback only, see `references/cli.md` and `references/image-api.md` for model, `quality`, `input_fidelity`, masks, output format, and output-path guidance.
+- For transparent images, use the built-in-first chroma-key workflow unless the request is complex enough to need true CLI transparency; ask before switching to CLI `gpt-image-1.5`.
+
+More principles shared by both modes: `references/prompting.md`.
+Copy/paste specs shared by both modes: `references/sample-prompts.md`.
+
+## Guidance by asset type
+Asset-type templates (website assets, game assets, wireframes, logo) are consolidated in `references/sample-prompts.md`.
+
+## gpt-image-2 guidance for CLI fallback
+
+The fallback CLI defaults to `gpt-image-2`.
+
+- Use `gpt-image-2` for new CLI/API workflows unless the request needs true model-native transparent output.
+- If a transparent request may need CLI fallback, ask before using `gpt-image-1.5` unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. Explain that the built-in chroma-key path is the default, but true transparency requires `gpt-image-1.5` because `gpt-image-2` does not support `background=transparent`.
+- `gpt-image-2` always uses high fidelity for image inputs; do not set `input_fidelity` with this model.
+- `gpt-image-2` supports `quality` values `low`, `medium`, `high`, and `auto`.
+- Use `quality low` for fast drafts, thumbnails, and quick iterations. Use `medium`, `high`, or `auto` for final assets, dense text, diagrams, identity-sensitive edits, or high-resolution outputs.
+- Square images are typically fastest to generate. Use `1024x1024` for fast square drafts.
+- If the user asks for 4K-style output, use `3840x2160` for landscape or `2160x3840` for portrait.
+- `gpt-image-2` size may be `auto` or `WIDTHxHEIGHT` if all constraints hold: max edge `<= 3840px`, both edges multiples of `16px`, long-to-short ratio `<= 3:1`, total pixels between `655,360` and `8,294,400`.
+
+Popular `gpt-image-2` sizes:
+- `1024x1024` square
+- `1536x1024` landscape
+- `1024x1536` portrait
+- `2048x2048` 2K square
+- `2048x1152` 2K landscape
+- `3840x2160` 4K landscape
+- `2160x3840` 4K portrait
+- `auto`
+
+## Fallback CLI mode only
+
+### Temp and output conventions
+These conventions apply only to the CLI fallback. They do not describe built-in `image_gen` output behavior.
+- Use `tmp/imagegen/` for intermediate files (for example JSONL batches); delete them when done.
+- Write final artifacts under `output/imagegen/`.
+- Use `--out` or `--out-dir` to control output paths; keep filenames stable and descriptive.
+
+### Dependencies
+Prefer `uv` for dependency management in this repo.
+
+Required Python package:
+```bash
+uv pip install openai
+```
+
+Required for local chroma-key removal and optional downscaling:
+```bash
+uv pip install pillow
+```
+
+Portability note:
+- If you are using the installed skill outside this repo, install dependencies into that environment with its package manager.
+- In uv-managed environments, `uv pip install ...` remains the preferred path.
+
+### Environment
+- `OPENAI_API_KEY` must be set for live API calls.
+- Do not ask the user for `OPENAI_API_KEY` when using the built-in `image_gen` tool.
+- Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.
+
+If the key is missing, give the user these steps:
+1. Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys
+2. Set `OPENAI_API_KEY` as an environment variable in their system.
+3. Offer to guide them through setting the environment variable for their OS/shell if needed.
+
+If installation is not possible in this environment, tell the user which dependency is missing and how to install it into their active environment.
+
+### Script-mode notes
+- CLI commands + examples: `references/cli.md`
+- API parameter quick reference: `references/image-api.md`
+- Network approvals / sandbox settings for CLI mode: `references/codex-network.md`
+
+## Reference map
+- `references/prompting.md`: shared prompting principles for both modes.
+- `references/sample-prompts.md`: shared copy/paste prompt recipes for both modes.
+- `references/cli.md`: fallback-only CLI usage via `scripts/image_gen.py`.
+- `references/image-api.md`: fallback-only API/CLI parameter reference.
+- `references/codex-network.md`: fallback-only network/sandbox troubleshooting for CLI mode.
+- `scripts/image_gen.py`: fallback-only CLI implementation. Do not load or use it unless the user explicitly chooses CLI mode or explicitly confirms a transparent request's true CLI transparency fallback.
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: local post-processing helper for built-in transparent-image requests.
+
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+exec
+/bin/zsh -lc "sed -n '221,520p' $HOME/.codex/skills/custom-convergence-loop/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+- For hard gates, do not ask Claude to authorize or bypass the gate. If a safe alternative path might avoid the gate without exposing secrets or crossing production/external side-effect boundaries, ask Claude for that alternative first. If no safe alternative exists, report the gate directly to the user with the exact approval or input needed.
+- If code has changed and the blocker depends on the changed implementation, run `custom-manual-code-review` before asking Claude to diagnose or confirm the blocker, then include the manual-review result in the Claude packet.
+- If Claude returns `BLOCKED`, Codex must independently confirm the blocker against repo state, tests, docs, tools, and safety constraints before stopping.
+- If Claude returns `RESEARCH_NEEDED`, run only narrow, read-only research that can resolve the blocker; do not use research agents to make product decisions or cross hard gates.
+- If Claude suggests an action that crosses a hard gate, reject that action, record the rejection, and either ask Claude for a safe alternative or go to the user if no safe path remains.
+- Record the blocker classification, Claude verdict, Codex confirmation, attempted alternatives, and final unblock request in the evidence ledger.
+
+## High-Confidence Done Readiness
+
+Treat Claude `DONE` with `confidence: high` as a readiness transition, not the final stop.
+
+Before telling the user the goal is ready:
+
+- Confirm `custom-manual-code-review` has already run for the current PR, branch, or changed surface after the latest code changes. If not, invoke it exhaustively now. Its standing approval for reviewer sub-agents applies here; do not ask the user for a separate "spawn sub-agents" approval. If no PR exists, use the same lane model against the current branch/diff and record the no-PR review surface.
+- Wait for all reviewer lanes to finish or record a concrete unavailable-tool gap.
+- Consolidate findings, implement every valid in-scope fix, and rerun the same verification that exposed each issue.
+- If fixes change behavior, rerun Claude convergence once more against the new head before final readiness.
+- If the target app has an approval timestamp or freshness gate, refresh the timestamp automatically when it is covered by the standing timestamp-refresh approval. For Jitter-POC live-list readiness, ensure `JITTER_PRODUCT_LIVE_LIST_APPROVAL_ISSUED_AT` is fresh enough for the operator click path. Do not invent alternate approval variables.
+- Production env writes outside the timestamp-refresh carve-out, real outbound calls, SMS, email, payment, or other external side effects still require immediate explicit user approval. If that approval is missing, stop with the exact blocked command/action; do not claim click-ready.
+- Open the final target in Google Chrome with the relevant URL or file, for example `open -a "Google Chrome" <url>`. Do not ask the user to open it.
+- Verify the visible operator path is ready for the user: the `Start Session` control is present, enabled, and ready to click; there are no blocking error banners, auth walls, stale-approval messages, disabled-state blockers, or console/runtime errors that would prevent the click test.
+- If standing PR merge authority applies, merge only after this readiness proof passes. After the merge, post the merge/readiness result and reopen or verify the relevant application tab again when the merge changes the deployed or preview target.
+
+The desired final state is that after Claude says high-confidence done, the user can switch to Chrome and click `Start Session` immediately without first asking Codex to clear review findings, refresh approval freshness, fix a blocker, or reopen the app.
+
+## Adversarial Evaluation
+
+Before executing Claude's `proposed_action`, Codex must check:
+
+- Scope fit: Does it advance `goal_id` and stay within the accepted blast radius?
+- Scope creep: Does it introduce unrelated work, files, systems, or product decisions?
+- Testability: Is `expected_verification` concrete and feasible?
+- Hard gates: Does it cross any authority hard gate?
+- Repetition: Has this or a semantically equivalent action failed in the last two iterations?
+- Evidence quality: Is Claude's reasoning supported by local code, tests, docs, provider docs, runtime evidence, or research-agent evidence?
+- Secret safety: Can the action and evidence be performed without exposing secrets or sensitive data?
+
+Reject or defer actions that fail these checks. Record the rejection reason in the loop ledger and feed it back to Claude in the next packet.
+
+## Research Agents
+
+Research agents are optional read-only helpers, not orchestrators.
+
+Use them when Claude returns `RESEARCH_NEEDED` or when Codex sees a narrow evidence question that can be answered in parallel without blocking the immediate local path.
+
+Rules:
+
+- Depth cap is 1. Research agents must not spawn agents.
+- Budget per iteration is usually 0-3 research questions.
+- Questions must be specific and evidence-oriented.
+- Agents must not edit files, commit, push, deploy, call production side-effect APIs, expose secrets, or make product decisions.
+- Codex summarizes research evidence into the next state packet; agents do not talk to Claude directly.
+
+## Loop Control
+
+Continue until one of these conditions occurs:
+
+- Claude returns `DONE`, Codex independently verifies every plan-aligned acceptance gate, any `confidence: high` response has passed the high-confidence readiness workflow, and any eligible PR has been merged/posted under the standing PR merge authority.
+- Claude returns `BLOCKED` and Codex confirms the blocker is real after following Blocker Escalation.
+- Codex detects a hard gate requiring user approval and no safe Claude-reviewed alternative path remains.
+- Two consecutive iterations produce no evidence delta; force `LOOP_REASSESS` or `BLOCKED`.
+- The iteration budget is exhausted; report the remaining gap and the next concrete action.
+- Claude surface fails; fall back to prompt-only and record the external-review gap.
+
+An iteration cap is a safety breaker, not the definition of success. Default to 10 iterations unless the user sets a different budget.
+
+## Composition With Other Skills
+
+When the loop reaches PR review, invoke `custom-manual-code-review` rather than recreating its workflow. Treat its consolidated findings, fixes, verification, and Claude follow-up as evidence in this loop.
+
+When the loop needs a Claude handoff prompt but no execution loop, prefer `custom-status-prompt`.
+
+When the loop needs a next-tab handoff, prefer `custom-next-tab`.
+
+## Evidence Ledger
+
+Use a local ledger when a workspace/repo is involved. Prefer the repo's existing planning or QA convention. If none exists, use:
+
+```text
+.planning/claude-convergence/<goal_id>.md
+```
+
+Record:
+
+- Goal and acceptance gates.
+- Plan source, plan alignment, exclusions, and plan-derived gates.
+- Baseline and authority profile.
+- Transport/tool preflight result, including verified primary Claude surface, CLI fallback status, and any browser/control-plane prerequisites.
+- Claude surface used.
+- Each iteration's state-packet summary.
+- Claude verdict.
+- Codex adversarial evaluation result.
+- Actions executed or rejected.
+- Verification evidence.
+- Research-agent summaries.
+- High-confidence readiness review, fixes, approval timestamp refresh status, Chrome target, and `Start Session` enabled/error-free evidence when applicable.
+- Code review result, Codex-side manual-review result, production merge-blocker check, merge command/result, and posted status when merge authority applies.
+- Hard gates or blockers.
+- Final outcome.
+
+If PR-bound, also update the PR with concise findings, fixes, verification, and residual gaps.
+
+## Redaction
+
+Redact at evidence extraction, before prompts or logs are written.
+
+At minimum, remove or mask:
+
+- API keys, bearer tokens, OAuth tokens, JWTs, private keys, webhook secrets, service-role keys, cookies, session IDs, and database URLs.
+- Full phone numbers, email addresses, postal addresses, customer names, and other PII unless the user explicitly permits that exact disclosure.
+- Screenshots that display secrets, cookies, private customer data, or unredacted provider credentials.
+
+If evidence cannot be shared safely, summarize it by presence, location, and verification result without copying the sensitive value.
+
+## Final Report
+
+Report:
+
+- Final verdict: completed, blocked, reassess needed, or Claude unavailable.
+- Claude surface used.
+- Iterations run and why the loop stopped.
+- Plan source and plan alignment status.
+- Acceptance gates and verification status.
+- Actions executed.
+- Actions rejected or deferred, with reasons.
+- Research agents used and what they proved.
+- Manual-review lanes run after any high-confidence `DONE`, valid fixes made, and remaining residual gaps.
+- Approval timestamp status when the target flow depends on one.
+- Chrome target opened and whether `Start Session` was visible, enabled, and error-free.
+- PR merge status, posted status location, and any production merge blockers checked.
+- PR or ledger locations.
+- Any hard gates requiring the user.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '88,105p;160,176p;182,236p' $HOME/.codex/memories/MEMORY.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+## Reusable knowledge
+
+- `docs/course-production/NEXT-SESSION.md` is the first stop for claim status, and the authoritative transcript source for these lessons was the locked master note at `~/BMH-OS/BMH Training Course/Thinkific/_master-transcripts.md`, not a local SRT file [Task 1][Task 4]
+- Slot 15 is the canonical source for Lesson 11A: `## Slot 15 — Closing & Deal Engineering`, and the clean-script verification that worked was a normalized `diff -u` after stripping only SRT numbers, timestamps, and fence lines from the master [Task 1]
+- Final Lesson 11A status ended up recorded in three canonical places: `NEXT-SESSION.md`, `docs/course-production/_QC-QUEUE.md`, and the lesson-specific scene-card file, with a parallel BMH-OS `_inbox` approval capture plus `_meta/log.md` entry [Task 1]
+- The final approved Lesson 11A cut was `course-assets/review-lesson11A/LESSON-11A-v2.mp4` with 16 beats, 1600x900 H.264/AAC, yuv420p limited BT.709, loudness `-17.2 LUFS`; the approved visual direction reused the Lesson 9A park-bench Andrea for b01/b08/b15/b16 plus Priya/seller trust beats and the acquisition-team scene set [Task 1]
+- For Lesson 18A, the current authoritative onboarding path is `MODULE-PRODUCTION-GUIDE.md`, then `PLAYBOOK.md`, then `scene-card-v2.md`, then the `docs/course-production/remotion/src/Lesson7A.tsx` composition reference [Task 2]
+- Slot 18's authoritative source block is `## Slot 18 — Operator Playbook (Ch17, segmented 2026-07-01)`; it contains 14 cues, maps to `transcripts/Chapter 17 - Draft.srt`, and the repo already had `Lesson 18B` but no visible `Lesson 18A` claim or local `lesson18A` artifacts at inspection time [Task 2]
+- The intended Lesson 18A artifact sequence was `NEXT-SESSION.md` claim, `lesson-18A-script-clean.txt`, `lesson-18A-source-clean-vs-master.diff`, `module-18-lesson18A-scenecards.md`, then the eight stills the user named [Task 2][Task 3]
+- The requested Lesson 18A still filenames were `m18_L18A_b02_command-center.png`, `m18_L18A_b03_research-prep.png`, `m18_L18A_b04_first-call-block.png`, `m18_L18A_b05_break-reset.png`, `m18_L18A_b07_admin-block.png`, `m18_L18A_b09_pipeline-review.png`, `m18_L18A_b12_energy-management.png`, and `m18_L18A_b13_one-call-humans.png` [Task 3]
+- The repo-state handoff for Lesson 18A was on branch `claude/course-production` at head `94db1c5` (`Lock doodle sticker style as the course brand`), ahead of `origin/main` by 3 commits, with a heavily dirty working tree that should be preserved rather than cleaned opportunistically [Task 3]
+- For Slot 19, the authoritative artifacts created were `lesson-19-script-clean.txt`, `lesson-19-source-clean-vs-master.diff`, and `module-19-lesson19-scenecards.md`; the reusable storyboard pattern was one lesson, 13 beats, grounded BMH work visuals, cafe Andrea bookends, BMH badge on opener, and the exact final close preserved without a next-lesson tease [Task 4]
+- Verification that mattered for Slot 19 was a normalized compare against the locked master after stripping cue numbers, timestamps, blank lines, and fence markers; the clean script passed exactly after fixing the regex extraction [Task 4]
+
+## Failures and how to do differently
+
+- symptom: the thread keeps saying it is blocked by Plan Mode after the user has clearly told it to proceed; cause: execution-mode uncertainty is being treated as an ongoing blocker instead of a one-time check; fix: verify the actual artifact gate, then either write the requested lesson artifacts or state the exact blocker once and hand off cleanly [Task 2][Task 3]
+- symptom: course-production behavior is driven by an older skill or stale note; cause: newer lesson-guide docs were not given priority; fix: prefer `MODULE-PRODUCTION-GUIDE.md` and `PLAYBOOK.md` when they conflict with older course-production skill assumptions [Task 2]
+- when the user asked for "the exact text, the exact prompts, the exact models" and said "Pretend like you are a senior engineer providing directions to another agent/llm" -> answer exact-replication requests with a copy-paste handoff that includes refs, model choices, prompt fragments, and guardrails rather than vague advice [Task 2]
+
+## Reusable knowledge
+
+- `lesson-4B-script-clean.txt` and `module-04-lesson4B-scenecards.md` were already the on-disk Stage 1 package for this lesson, and the locked source of truth was `~/BMH-OS/BMH Training Course/Thinkific/_master-transcripts.md`, Slot 06, cues 13-17 only [Task 1]
+- The 4B master verification passed with `master_words 379`, `script_words 379`, and `exact_normalized_match True`; `module-04-lesson4B-current-gate.md` records the final approved state [Task 1]
+- `course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4` is the preserved style anchor for the approved 4B cut, and the authoritative lesson state lives in `module-04-lesson4B-still-review.md`, `module-04-lesson4B-animation-prompts.md`, `module-04-lesson4B-animation-bakeoff.md`, `module-04-lesson4B-model-choice-prompt.md`, and `module-04-lesson4B-current-gate.md` [Task 1][Task 2]
+- The still-generation recipe used `gpt-image-2` with attached refs `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, `docs/design/cast-board.png`, and `docs/design/object-board.png`; the style lock was flat sticker-sheet doodle, thick wobble black outlines, rounded simple forms, cornflower-blue background `#62b3f3`, tiny dot eyes, tiny centered two-stroke/comma nose, and no text, gradients, shadows, or perspective [Task 2]
+- The stable character locks were seller = curly black-haired man in orange sweater and cream pants, BMH representative / Priya = headset woman with black back ponytail, orange/yellow headband, orange headset, yellow top, cream pants, and Andrea = narrator/company avatar only [Task 2]
+- The recorded final 4B model policy was mixed: default `seedance_2_0`, override `b04b_offer: kling3_0`, override `b05_step5_close: seedance_2_0`; use the queue metadata and current-gate docs rather than memory when reconstructing the exact recipe [Task 2]
+- Andrea and other narrator delivery should stay at HeyGen voice speed `1.0` / default speed; any guide, template, scene card, or script that still says `0.95` is stale and should be corrected before regeneration [Task 3][ad-hoc note]
+- When an AI animation clip ends before the beat or transition ends, hold that clip's own extracted final frame; do not fall back to the source still and do not use forward/reverse loops [Task 4][ad-hoc note]
+
+## Failures and how to do differently
+
+- symptom: time gets wasted on the wrong lesson; cause: the lesson was inferred from nearby examples and 5A files were created before checking the requested target; fix: confirm the lesson code and locked-master cue range before making any file writes [Task 1]
+- symptom: prompt extraction turns noisy and unreliable; cause: broad searches across session logs surface unrelated artifacts; fix: narrow to lesson-scoped docs, reviewed assets, queue metadata, and current-gate files first [Task 1][Task 2]
+# Task Group: BMH course lesson, still, and animation character continuity corrections
+scope: Use for BMH course image or animation generation when role assignment, face details, hairstyle continuity, or replacement-style choices must match the approved course visual canon before still approval or animation.
+applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, Andrea, and approved doodle-style visual language, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+
+## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+
+### rollout_summary_files
+
+- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+
+### keywords
+
+- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+
+## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+
+### rollout_summary_files
+
+- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+
+### keywords
+
+- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+
+## Task 3: Reject crude control frames as production still or animation sources, success
+
+### rollout_summary_files
+
+- extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md, updated_at=2026-07-07T11:23:27-05:00, control-frame guardrail for BMH course still and animation source selection)
+
+### keywords
+
+- BMH course, control frame, rough SVG composite, geometry-fix image, production still, animation source, reference-only, visually acceptable, doodle style [ad-hoc note]
+
+## Task 4: Reject vector or deterministic replacements that break the established doodle style, success
+
+### rollout_summary_files
+
+- extensions/ad_hoc/notes/20260707-123236-bmh-course-no-vector-replacement-style.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-123236-bmh-course-no-vector-replacement-style.md, updated_at=2026-07-07T12:32:36-05:00, replacement-style correction after rejected Lesson 18B deterministic plates)
+
+### keywords
+
+- BMH course, vector replacement, deterministic plate, SVG, slide-icon style, Lesson 18B, county-map replacements, rejected stills, approved doodle style [ad-hoc note]
+
+## User preferences
+
+- when the user rejected deterministic/vector/SVG replacements for Lesson 18B b04 and b02 -> do not swap failed AI stills for clean vector boards or presentation-style icon plates that do not match the approved BMH doodle style [Task 4][ad-hoc note]
+
+## Reusable knowledge
+
+- The seller identity for BMH course scenes is the curly black-haired man in the orange sweater and cream pants on the right side of the handshake reference; seller/customer scenes should use him rather than Andrea [Task 1][ad-hoc note]
+- The BMH representative identity is the headset woman on the left side of the handshake reference with yellow top and cream pants; use Andrea only when the scene specifically calls for narration or a company-facing avatar role [Task 1][ad-hoc note]
+- The seller nose should stay as the tiny centered two-stroke/comma-like mark from the handshake reference, not a protruding side-profile nose [Task 2][ad-hoc note]
+- The BMH representative hairstyle must stay black hair pulled into a back ponytail with the orange/yellow headband and orange headset; if a still changes the seller nose or representative hairstyle, reject or reroll before animation [Task 2][ad-hoc note]
+- A crude hand-built control frame, rough SVG/composite, or visibly unpolished geometry-fix image can be used as reference-only, but it is not acceptable as a production still or animation source just because it fixes one layout issue; the source still must already be visually acceptable in the approved doodle style before spending animation credits [Task 3][ad-hoc note]
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "git status --short --branch && git rev-parse --show-toplevel && find course-assets/scenes/module-18-lesson18A -maxdepth 2 -type f | sort | sed -n '1,160p'" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 127ms:
+$HOME/Sites/BMH apps/BMH Institute
+course-assets/scenes/module-18-lesson18A/_anchors/operator-priya.png
+course-assets/scenes/module-18-lesson18A/_logs/lesson18A_seedance_prompt_contact.png
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b02_command-center.png.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b02_command-center.png.v2.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b03_research-prep.png.v2.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b04_first-call-block.png.v2.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b05_break-reset.png.v2.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b09_pipeline-review.png.v2.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b12_energy-management.png.v2.log
+course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b13_one-call-humans.raw-redo.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b02_command-center.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b03_research-prep.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b05_break-reset.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b07_admin-block.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b09_pipeline-review.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b12_energy-management.png
+course-assets/scenes/module-18-lesson18A/m18_L18A_b13_one-call-humans.png
+
+hook: PostToolUse Completed
+codex
+The repo already has the requested filename, so I’m treating this as an explicit replacement. Before overwriting it, I’m checking the existing plate and generation log so I can refute the likely failure modes instead of generating another near miss.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' course-assets/scenes/module-18-lesson18A/_logs/m18_L18A_b04_first-call-block.png.v2.log" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+Reading prompt from stdin...
+2026-07-09T06:40:46.604452Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f459b-7763-7880-8c67-f6c2fd2cb745
+--------
+user
+Generate one corrected Lesson 18A v2 image with gpt-image-2 and save it to course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png (PNG, 1600x900). Match the attached BMH course doodle references exactly. PRIYA / BMH representative identity: same exact woman as the attached operator-priya reference, black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes, flat white/cream face and hands, small dot eyes, tiny curved cast-board nose, simple friendly mouth. COMPOSITION: A 3x3 grid montage: nine equal rounded panels on one blue canvas. In every panel, the SAME Priya/BMH representative appears on a different phone call with the same headset and outfit, but different gestures and expressions: listening, smiling, focused note-taking, asking a question, checking screen, dialing, thinking, confirming, wrapping up. Same person in all nine frames. No text, no numbers, no captions. The scene reads as several calls in one calling block. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow #FFD23F, orange, cream #FFF7DE, white, and black. No gradients, no texture, no shading, no shadows, no lighting, no perspective, no skin-tone shading. Faces and hands use flat white or cream fill only, tiny dot eyes, a small subtle curved cast-board nose like a tiny hook/comma, simple mouth. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, speech bubbles, motion marks, random icons, random props, or decorative clutter. No text, letters, words, numbers, labels, captions, UI labels, readable screens, readable messages, readable paperwork, real app logos, or screenshots anywhere. Use blank app-like panes, blank cards, blank rows, blank message bubbles, blank check boxes, and blank pseudo-lines only. Leave clean open cornflower-blue space for code-rendered Remotion labels. 16:9 composition, 1600x900 PNG. NEGATIVE: no duplicate people, no extra characters beyond the requested count, no skin-tone colors, no brown/tan/peach/pink cheeks, no readable text, no logos, no watermarks, no realistic UI, no decorative filler, no clutter, no clipped subject.
+
+2026-07-09T06:40:46.908854Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-09T06:40:46.952387Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-09T06:40:46.967442Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-09T06:40:47.110993Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-09T06:40:47.117321Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll generate the asset in place and keep it scoped to the requested file. I’m going to load the image-generation instructions first so the output path and reference handling are correct.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/CLAUDE.md" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'rg -n "BMH course|course still|operator-priya|Lesson 18A|module-18|image generation|gpt-image" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+1:# Task Group: BMH course compensation-script genericization and Claude/Fable fallback review
+3:applies_to: cwd=$HOME/Sites/BMH apps and $HOME/Sites/BMH apps/BMH Institute; reuse_rule=safe for BMH course compensation-lesson rewrites and second-review fallback handling when the same course-production source files and lesson-script pipeline are in play, but lesson numbers, approved wording, and on-disk asset state must be refreshed per lesson.
+32:# Task Group: BMH course lesson claims, storyboard gates, and execution discipline
+34:applies_to: cwd=$HOME/Sites/BMH apps and $HOME/Sites/BMH apps/BMH Institute; reuse_rule=safe for BMH course lesson-setup, storyboard-gate, and final-status work when the same `NEXT-SESSION.md`, master-transcript, and stage-gated Remotion pipeline are in play, but lesson numbers, claim lines, approval state, and on-disk artifact presence are lesson-specific and must be refreshed.
+46:## Task 2: Verify Slot 18 source and current course-production gate for Lesson 18A, partial
+50:- rollout_summaries/2026-07-07T07-22-53-09cJ-lesson_18a_operator_playbook_storyboard_gated_image_generati.md (cwd=$HOME/Sites/BMH apps, rollout_path=$HOME/.codex/sessions/2026/07/07/rollout-2026-07-07T02-22-53-019f3b75-5872-7ec0-bb69-9fc7e0972229.jsonl, updated_at=2026-07-07T14:26:44+00:00, thread_id=019f3b75-5872-7ec0-bb69-9fc7e0972229, strict doc-read order, Slot 18 source verification, and storyboard-first gate for Lesson 18A Operator Playbook)
+56:## Task 3: Capture repo state and continuation handoff for Lesson 18A, partial
+64:- claude/course-production, git status --short --branch, ahead 3, 94db1c5, continuation prompt, stop stopping, module-18-lesson18A, still filenames, dirty worktree
+94:- For Lesson 18A, the current authoritative onboarding path is `MODULE-PRODUCTION-GUIDE.md`, then `PLAYBOOK.md`, then `scene-card-v2.md`, then the `docs/course-production/remotion/src/Lesson7A.tsx` composition reference [Task 2]
+95:- Slot 18's authoritative source block is `## Slot 18 — Operator Playbook (Ch17, segmented 2026-07-01)`; it contains 14 cues, maps to `transcripts/Chapter 17 - Draft.srt`, and the repo already had `Lesson 18B` but no visible `Lesson 18A` claim or local `lesson18A` artifacts at inspection time [Task 2]
+96:- The intended Lesson 18A artifact sequence was `NEXT-SESSION.md` claim, `lesson-18A-script-clean.txt`, `lesson-18A-source-clean-vs-master.diff`, `module-18-lesson18A-scenecards.md`, then the eight stills the user named [Task 2][Task 3]
+97:- The requested Lesson 18A still filenames were `m18_L18A_b02_command-center.png`, `m18_L18A_b03_research-prep.png`, `m18_L18A_b04_first-call-block.png`, `m18_L18A_b05_break-reset.png`, `m18_L18A_b07_admin-block.png`, `m18_L18A_b09_pipeline-review.png`, `m18_L18A_b12_energy-management.png`, and `m18_L18A_b13_one-call-humans.png` [Task 3]
+98:- The repo-state handoff for Lesson 18A was on branch `claude/course-production` at head `94db1c5` (`Lock doodle sticker style as the course brand`), ahead of `origin/main` by 3 commits, with a heavily dirty working tree that should be preserved rather than cleaned opportunistically [Task 3]
+112:# Task Group: BMH course 4B exact replication, narration speed, and animation tail-frame assembly
+113:scope: Use for BMH course production when another agent needs to reproduce the approved Lesson 4B still/animation output exactly, or when audio speed and clip-ending behavior must match the current approved course-production defaults.
+114:applies_to: cwd=$HOME/Sites/BMH apps/BMH Institute and BMH course lesson/still/animation workflow; reuse_rule=safe for future BMH course generation or regeneration that follows the same lesson-doc, reference-image, HeyGen, and assembly pipeline, but scene prompts, approved assets, and lesson-specific gates should be refreshed per lesson.
+134:- exact prompts, senior engineer handoff, gpt-image-2, seedance_2_0, kling3_0, object-board.png, animation-bakeoff, mixed_kling_b4b_seedance_b5, flat sticker-sheet, no text anywhere
+140:- extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md, updated_at=2026-07-06T11:56:43-05:00, audio-speed correction note for Andrea and narrator delivery)
+144:- Andrea, narration, normal speed, voice speed 1.0, default speed, HeyGen, 0.95 stale, BMH course [ad-hoc note]
+150:- extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md, updated_at=2026-07-06T12:13:30-05:00, animation-tail-frame assembly note for beat/transition timing)
+167:- The still-generation recipe used `gpt-image-2` with attached refs `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, `docs/design/cast-board.png`, and `docs/design/object-board.png`; the style lock was flat sticker-sheet doodle, thick wobble black outlines, rounded simple forms, cornflower-blue background `#62b3f3`, tiny dot eyes, tiny centered two-stroke/comma nose, and no text, gradients, shadows, or perspective [Task 2]
+182:# Task Group: BMH course lesson, still, and animation character continuity corrections
+183:scope: Use for BMH course image or animation generation when role assignment, face details, hairstyle continuity, or replacement-style choices must match the approved course visual canon before still approval or animation.
+184:applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, Andrea, and approved doodle-style visual language, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+186:## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+190:- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+194:- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+200:- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+204:- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+210:- extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md, updated_at=2026-07-07T11:23:27-05:00, control-frame guardrail for BMH course still and animation source selection)
+214:- BMH course, control frame, rough SVG composite, geometry-fix image, production still, animation source, reference-only, visually acceptable, doodle style [ad-hoc note]
+220:- extensions/ad_hoc/notes/20260707-123236-bmh-course-no-vector-replacement-style.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-123236-bmh-course-no-vector-replacement-style.md, updated_at=2026-07-07T12:32:36-05:00, replacement-style correction after rejected Lesson 18B deterministic plates)
+224:- BMH course, vector replacement, deterministic plate, SVG, slide-icon style, Lesson 18B, county-map replacements, rejected stills, approved doodle style [ad-hoc note]
+232:- The seller identity for BMH course scenes is the curly black-haired man in the orange sweater and cream pants on the right side of the handshake reference; seller/customer scenes should use him rather than Andrea [Task 1][ad-hoc note]
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/custom-convergence-loop/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: custom-convergence-loop
+description: Run a plan-aligned Claude/Codex convergence loop where Claude acts as orchestrator/reviewer, Codex executes and verifies, optional read-only research agents gather narrow evidence, and the loop continues until evidence-backed completion, high-confidence DONE readiness review, browser proof, and conditional PR merge/posting. Use when the user asks to have Claude direct the next step, run a Claude/Codex loop, make Claude the orchestrator and Codex the executor, converge with Claude, or execute with repeated Claude feedback.
+---
+
+# Claude Convergence Loop
+
+Use this skill when the user wants Claude to orchestrate a goal while Codex executes, verifies, records evidence, and feeds results back to Claude until the goal is proven complete or blocked.
+
+Claude is advisory, not authoritative. Codex must adversarially verify every Claude recommendation before acting.
+
+## Required Inputs
+
+Before starting, establish these from the user request, repo state, PR state, or current thread. Do not ask if they are discoverable.
+
+- `goal_id`: stable short identifier for the loop.
+- `goal_description`: concrete outcome the loop must reach.
+- `plan_source`: the repo plan, roadmap, issue, PR body, or thread artifact the goal must align to.
+- `acceptance_gates`: explicit, independently verifiable gates required for `DONE`.
+- `baseline_ref`: git commit, PR head, production snapshot, or other stable baseline.
+- `authority_profile`: default to `Production-aware` unless the user gives a narrower scope.
+- `evidence_record`: local ledger path; if PR-bound, also update the PR.
+- `claude_surface`: default to Claude desktop/app Code surface unless the user explicitly requests CLI or desktop cannot be controlled.
+
+If acceptance gates are missing, derive a conservative gate list from the goal and ask Claude to confirm it in the first state packet. Do not accept `DONE` until every gate is independently verified.
+
+## Transport And Tool Preflight
+
+Before starting the loop, do a control-surface preflight so required tools are not discovered missing halfway through execution.
+
+Check and record:
+
+- Which Claude surface the loop will use first.
+- Whether that primary surface is actually reachable from the current runtime.
+- Whether the CLI fallback exists and is authenticated, if CLI might be needed later.
+- Whether any browser/control tooling required for final proof or handoff is available now.
+- Whether any repo/provider CLIs the loop explicitly depends on are installed and callable now.
+
+Rules:
+
+- Desktop/app is the default first path. Do not skip straight to Claude CLI unless the user explicitly requested CLI or the desktop/app path was already proven unavailable or uncontrollable.
+- Treat `claude_surface_unavailable` as a preflight classification whenever the chosen surface cannot be controlled at loop start. Do not wait until late in the loop to discover this.
+- Claude CLI is the last fallback, not the primary assumption. If you may need it, verify it early with `command -v claude` and `claude auth status` when available.
+- If final proof depends on Chrome, app automation, DevTools, or another control plane, verify that the relevant tool path exists before the loop commits to a plan that requires it.
+- If a required tool is unavailable, either:
+  - switch to another verified surface immediately,
+  - narrow the loop so it does not depend on that tool, or
+  - stop before the loop meaningfully starts and report the exact missing tool/control plane as a preflight gap.
+
+Record the preflight result in the evidence ledger before the first Claude state packet.
+
+## Plan Alignment
+
+Before executing, map the requested goal to the current plan. Prefer repo-local planning artifacts and live PR/issue state over memory:
+
+- Use the explicit user request first.
+- Check PR body, linked issues, roadmap, and repo planning files such as `.planning/`, `MASTER-PLAN.md`, addenda, or the current milestone docs.
+- Identify plan items the goal satisfies, any plan items it intentionally excludes, and any divergence from the plan.
+- Add plan-derived acceptance gates when the plan contains concrete proof requirements.
+- If the goal conflicts with the plan or lacks a plan anchor, continue only for safe investigation or ask the user for the missing decision. Do not use standing merge authority until plan alignment is clear.
+- Re-check plan alignment before final readiness and before any merge.
+
+## Claude Surface
+
+Prefer surfaces in this order:
+
+1. Claude desktop/app Code surface.
+   - Before using it, prove the surface is reachable from the current runtime: inspect app state, confirm the relevant Claude window/session can be targeted, and confirm the automation path can at least focus and interact with the intended input surface.
+   - Use Computer Use or available app automation to inspect Claude before interacting.
+   - If Claude is running, has a queued prompt, or is on an unrelated active session, do not overwrite it. Wait, open an appropriate new session, or ask the user for timing if the safe path is not obvious.
+   - Use app automation to paste the prompt, send it, wait for completion, and extract the response.
+   - Never stop after a partial response or while Claude is still running.
+2. Claude Code CLI/headless only when the user explicitly requests CLI, the desktop app cannot be controlled, or deterministic capture is required and the user approves that fallback.
+   - Check with `command -v claude` and `claude auth status` when available.
+   - Prefer print/headless mode for deterministic capture, such as `claude -p`.
+   - Prefer structured output when available, such as JSON/schema output.
+   - Official references: https://code.claude.com/docs/en/cli-usage and https://code.claude.com/docs/en/agent-sdk/overview.
+3. Prompt-only fallback.
+   - If neither surface can be controlled, produce the exact Claude prompt and record `claude_surface_unavailable` as a loop evidence gap.
+   - Do not proceed as if Claude reviewed the state.
+
+## Authority Profile
+
+Default authority profile: `Production-aware`.
+
+Allowed only when the loop goal explicitly grants it:
+
+- Production reads.
+- Scoped, non-destructive production writes.
+
+Always hard-gated and requiring explicit immediate user approval:
+
+- Merge or release actions, except the standing PR merge authority below.
+- Destructive filesystem, git, provider, or database actions.
+- Production environment variable writes, except the standing timestamp-refresh approval below.
+- Production database mutations, including inserts and updates.
+- Production deploys or redeploys.
+- Paid API usage beyond normal local development.
+- Real outbound calls, SMS, email, payment, or other external side effects.
+- PII reads, including logs or exports containing customer phone numbers, emails, addresses, or similar sensitive data.
+- Multi-tenant blast-radius changes.
+- Secret disclosure.
+
+Standing timestamp-refresh approval: Jarrad has granted this skill permission to refresh only the existing approval freshness timestamp needed to make the final operator click path ready after Claude returns `DONE` with `confidence: high`. For Jitter-POC live-list readiness, this means automatically refreshing `JITTER_PRODUCT_LIVE_LIST_APPROVAL_ISSUED_AT` when the approval status is already valid and only timestamp freshness is blocking `Start Session`. Do not ask for another prompt before doing that refresh.
+
+This standing approval does not allow creating alternate approval variables, changing `JITTER_PRODUCT_LIVE_LIST_APPROVAL`, changing K/concurrency/list/destination settings, writing secrets, mutating production data, deploying/redeploying, clicking `Start Session`, or placing real outbound calls/SMS/email/payment actions. Those remain hard-gated.
+
+Standing PR merge authority: Jarrad has granted this skill permission to merge the current PR automatically when every condition below is true:
+
+- The goal is aligned to the current plan and every acceptance gate is satisfied.
+- The current PR is the intended PR for this loop, is not a draft, has no merge conflicts, and GitHub reports passing required checks or an equivalent clean merge state.
+- Code review is complete for the current PR head: Claude/external review feedback has no unresolved valid findings, and required GitHub review policy is satisfied when present.
+- Codex-side manual review is complete: `custom-manual-code-review` ran exhaustively with reviewer sub-agents when available, valid findings were fixed, and the fixes were reverified.
+- The high-confidence readiness workflow passed, including Chrome opened to the target application and `Start Session` verified visible, enabled, and free of blocking errors.
+- There are no production merge blockers: stale deployment/alias evidence, failing preview/prod checks, unresolved env/config blockers, secret-management gaps that affect runtime, pending migrations, external side-effect risk, or user-owned decisions.
+- The working tree and PR branch contain only the intended reviewed changes, and no secrets or sensitive artifacts are included.
+
+When those conditions pass, merge the PR without asking for another approval, then post a concise status to the PR or relevant thread/ledger with the merge result, head SHA, checks/reviews, manual-review result, Chrome readiness result, and any residual non-blocking gaps. This authority does not allow manual production deploys/redeploys, live calls, SMS/email/payment actions, or clicking `Start Session`.
+
+## State Packet
+
+Send Claude a secret-free state packet every iteration. Keep it self-contained enough to paste into a fresh Claude session.
+
+
+
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png course-assets/scenes/module-18-lesson18A/_anchors/operator-priya.png docs/design/style-ref-1.png docs/design/style-ref-2.png docs/design/cast-board.png docs/design/object-board.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+course-assets/scenes/module-18-lesson18A/_anchors/operator-priya.png:       PNG image data, 460 x 735, 8-bit/color RGB, non-interlaced
+docs/design/style-ref-1.png:                                                PNG image data, 1504 x 1128, 8-bit/color RGB, non-interlaced
+docs/design/style-ref-2.png:                                                PNG image data, 1504 x 1128, 8-bit/color RGB, non-interlaced
+docs/design/cast-board.png:                                                 PNG image data, 1536 x 1024, 8-bit/color RGB, non-interlaced
+docs/design/object-board.png:                                               PNG image data, 1402 x 1122, 8-bit/color RGB, non-interlaced
+
+exec
+/bin/zsh -lc "find .planning/quick -maxdepth 2 -name '*first-call*' -o -name '*18a*b04*' | sort | sed -n '1,120p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The current plate is a single-desk scene, so it misses the requested 3x3 calling-block montage. I’m generating a replacement now with the failure points made explicit: exactly nine Priya panels, no other people, no readable marks, and the same operator identity in every frame.
+codex
+The generated composition now matches the requested nine-panel structure and keeps Priya consistent. I’m locating the generated PNG, then I’ll copy it over the requested project asset and validate dimensions.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'find /private/tmp /tmp "$TMPDIR" -type f '"\\( -name '*.png' -o -name '*.webp' -o -name '*.jpg' \\) -mmin -10 -print 2>/dev/null | sort | tail -80" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'find "$HOME/.codex" -type f '"\\( -name '*.png' -o -name '*.webp' -o -name '*.jpg' \\) -mmin -10 -print 2>/dev/null | sort | tail -80" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'find "${CODEX_HOME:-$HOME/.codex}" -path '"'*generated_images*' -type f -mmin -10 -print | sort" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 750ms:
+$HOME/.codex/generated_images/019f459b-7763-7880-8c67-f6c2fd2cb745/ig_01dfd30c318b8c3f016a4f42da79788194a54822ad08d04eb0.png
+$HOME/.codex/generated_images/019f459b-7768-73b2-a703-768906a19ff0/ig_0c1d7969251c23b1016a4f42d2bf088195b8f7d72097ae1a4f.png
+
+ succeeded in 757ms:
+$HOME/.codex/generated_images/019f459b-7763-7880-8c67-f6c2fd2cb745/ig_01dfd30c318b8c3f016a4f42da79788194a54822ad08d04eb0.png
+$HOME/.codex/generated_images/019f459b-7768-73b2-a703-768906a19ff0/ig_0c1d7969251c23b1016a4f42d2bf088195b8f7d72097ae1a4f.png
+
+hook: PostToolUse
+ succeeded in 1010ms:
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b07_creative_deal_skill_sweep03.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b07_creative_deal_skill_sweep04.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b07_creative_deal_skill_sweep05.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_early0.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_early1.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_early2.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_early3.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_early4.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep00.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep01.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep02.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep03.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep04.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep05.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep06.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep07.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep08.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep09.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep10.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep11.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/hero_b13_course_close_sweep12.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/pop_b01_career_path_opener_a.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/pop_b01_career_path_opener_b.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/pop_b07_creative_deal_skill_a.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/pop_b07_creative_deal_skill_b.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b01_career_path_opener_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b01_career_path_opener_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b01_career_path_opener_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b02_foundation_role_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b02_foundation_role_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b02_foundation_role_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b03_clean_handoffs_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b03_clean_handoffs_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b03_clean_handoffs_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b04_readiness_checkpoint_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b04_readiness_checkpoint_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b04_readiness_checkpoint_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b05_complex_leads_mentor_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b05_complex_leads_mentor_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b05_complex_leads_mentor_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b06_deal_closer_level_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b06_deal_closer_level_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b06_deal_closer_level_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b07_creative_deal_skill_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b07_creative_deal_skill_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b07_creative_deal_skill_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b08_management_path_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b08_management_path_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b08_management_path_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b09_no_fixed_schedule_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b09_no_fixed_schedule_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b09_no_fixed_schedule_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b10_daily_performance_criteria_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b10_daily_performance_criteria_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b10_daily_performance_criteria_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b11_team_contribution_coachability_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b11_team_contribution_coachability_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b11_team_contribution_coachability_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b12_revenue_opportunity_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b12_revenue_opportunity_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b12_revenue_opportunity_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b13_course_close_end.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b13_course_close_mid.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/frames/qc_b13_course_close_start.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_00.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_01.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_02.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_03.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_04.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_05.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_06.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_07.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_08.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_09.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_10.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_11.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_12.jpg
+/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/9fc9be95-6681-43e3-b63a-a82a6eed54d6/scratchpad/qc19/grids/grid_13.jpg
+/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/codex-clipboard-2c11def5-b257-42ba-9aaa-eafa3d1db770.png
+/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/codex-clipboard-9c1a954c-b6f0-4714-a313-b2a4b59144fc.png
+
+hook: PostToolUse Completed
+codex
+There are two recent generated files, including the one under this session’s ID. I’m visually checking both before copying so I don’t overwrite the course asset with the wrong generation.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'file $HOME/.codex/generated_images/019f459b-7763-7880-8c67-f6c2fd2cb745/ig_01dfd30c318b8c3f016a4f42da79788194a54822ad08d04eb0.png $HOME/.codex/generated_images/019f459b-7768-73b2-a703-768906a19ff0/ig_0c1d7969251c23b1016a4f42d2bf088195b8f7d72097ae1a4f.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.codex/generated_images/019f459b-7763-7880-8c67-f6c2fd2cb745/ig_01dfd30c318b8c3f016a4f42da79788194a54822ad08d04eb0.png: PNG image data, 1672 x 941, 8-bit/color RGB, non-interlaced
+$HOME/.codex/generated_images/019f459b-7768-73b2-a703-768906a19ff0/ig_0c1d7969251c23b1016a4f42d2bf088195b8f7d72097ae1a4f.png: PNG image data, 1672 x 941, 8-bit/color RGB, non-interlaced
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The first recent file is the correct nine-panel generation. It came out at 1672x941, so I’m going to resample it to the requested exact 1600x900 PNG while leaving the generated original intact.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'command -v magick || command -v convert || command -v sips' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+/usr/bin/sips
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git ls-files --stage course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png && git diff --numstat -- course-assets/scenes/module-18-lesson18A/m18_L18A_b04_first-call-block.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+I’m not accepting the first pass as-is. It has the correct grid, but it drifted into gray device fills and subtle blue gradients, which directly violates the locked palette and flat-fill requirements. I’m rerolling with those failures named more aggressively.

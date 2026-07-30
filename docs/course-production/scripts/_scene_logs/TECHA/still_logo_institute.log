@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_logo_institute.png ===
+`course-assets/scenes/module-techstack/mTECH_LTECHA_logo_institute.png`
+
+Verification passed: PNG, `1600 x 900`, exact flat `#62b3f3` edge background, 5 allowed flat colors, and visual check shows only the centered BMH Institute logo with no tagline or extra elements. I also added the quick GSD trace under `.planning/quick/260710-2ei-generate-bmh-institute-logo-callout/`.
+OK mTECH_LTECHA_logo_institute.png

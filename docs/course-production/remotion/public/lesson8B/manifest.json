@@ -1,0 +1,379 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_bridge",
+   "mode": "hero",
+   "durationInFrames": 442,
+   "voFrames": 412,
+   "stickers": [],
+   "badge": true,
+   "hero": "lesson8B/hero/hero_b01_bridge.mp4"
+  },
+  {
+   "tag": "b02_flip_profit",
+   "mode": "scene",
+   "durationInFrames": 836,
+   "voFrames": 806,
+   "stickers": [
+    {
+     "text": "WE ARE A BUSINESS",
+     "delay": 272,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 453
+    },
+    {
+     "text": "FAST CASH, NO REPAIRS",
+     "delay": 459,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 724
+    },
+    {
+     "text": "BOTH SIDES GET SOMETHING",
+     "delay": 730,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b02_zillow-listing.png",
+   "animationStatus": "still-fallback",
+   "fallback": "Seedance invented baked listing numbers/text; using approved still."
+  },
+  {
+   "tag": "b03_scam_concerns",
+   "mode": "scene",
+   "durationInFrames": 906,
+   "voFrames": 876,
+   "stickers": [
+    {
+     "text": "DO NOT GET DEFENSIVE",
+     "delay": 316,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 472
+    },
+    {
+     "text": "LICENSED TITLE COMPANY",
+     "delay": 478,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 532
+    },
+    {
+     "text": "ATTORNEY REVIEW",
+     "delay": 538,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 629
+    },
+    {
+     "text": "$0 UPFRONT",
+     "delay": 635,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 791
+    },
+    {
+     "text": "VERIFY FIRST",
+     "delay": 797,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b03_scam-proof-path.png",
+   "video": "lesson8B/anim/anim_b03_scam_concerns.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson8B/tails/anim_b03_scam_concerns_tail.png",
+   "animationStatus": "seedance"
+  },
+  {
+   "tag": "b04_attorney",
+   "mode": "scene",
+   "durationInFrames": 716,
+   "voFrames": 686,
+   "stickers": [
+    {
+     "text": "WELCOME THAT",
+     "delay": 109,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 145
+    },
+    {
+     "text": "NEVER FIGHT THE ATTORNEY",
+     "delay": 151,
+     "role": "caption",
+     "bottomCenter": true,
+     "until": 575
+    },
+    {
+     "text": "MAKE THEM AN ALLY",
+     "delay": 581,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b04_attorney-ally.png",
+   "video": "lesson8B/anim/anim_b04_attorney.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson8B/tails/anim_b04_attorney_tail.png",
+   "animationStatus": "seedance"
+  },
+  {
+   "tag": "b05_family_dynamics",
+   "mode": "scene",
+   "durationInFrames": 1145,
+   "voFrames": 1115,
+   "stickers": [
+    {
+     "text": "WHAT IS THEIR MAIN CONCERN?",
+     "delay": 498,
+     "role": "caption",
+     "bottomCenter": true,
+     "until": 609
+    },
+    {
+     "text": "SHOW THE FULL PICTURE",
+     "delay": 615,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 902
+    },
+    {
+     "text": "OFFER TO TALK DIRECTLY",
+     "delay": 908,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b05_bed-family-dynamics.png",
+   "video": "lesson8B/anim/anim_b05_family_dynamics.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson8B/tails/anim_b05_family_dynamics_tail.png",
+   "animationStatus": "seedance"
+  },
+  {
+   "tag": "b06_disclosure_issues",
+   "mode": "hero",
+   "durationInFrames": 793,
+   "voFrames": 763,
+   "stickers": [
+    {
+     "text": "ANY CONDITION",
+     "delay": 467,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 651
+    },
+    {
+     "text": "STILL INTERESTED",
+     "delay": 657,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 694
+    },
+    {
+     "text": "FACTOR IT IN",
+     "delay": 700,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson8B/hero/hero_b06_disclosure_issues.mp4"
+  },
+  {
+   "tag": "b07_belongings_relief",
+   "mode": "scene",
+   "durationInFrames": 541,
+   "voFrames": 511,
+   "stickers": [
+    {
+     "text": "TAKE WHAT YOU WANT",
+     "delay": 85,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 197
+    },
+    {
+     "text": "WE HANDLE WHAT'S LEFT",
+     "delay": 203,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 452
+    },
+    {
+     "text": "NO FULL CLEANOUT",
+     "delay": 458,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b07_belongings-relief.png",
+   "video": "lesson8B/anim/anim_b07_belongings_relief.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson8B/tails/anim_b07_belongings_relief_tail.png",
+   "animationStatus": "seedance"
+  },
+  {
+   "tag": "b08_pattern_framework",
+   "mode": "framework",
+   "durationInFrames": 705,
+   "voFrames": 675,
+   "stickers": [
+    {
+     "text": "THE FRAMEWORK DOESN'T CHANGE",
+     "delay": 654,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "framework": [
+    {
+     "text": "LISTEN",
+     "delay": 154
+    },
+    {
+     "text": "ACKNOWLEDGE",
+     "delay": 214
+    },
+    {
+     "text": "ASK",
+     "delay": 292
+    },
+    {
+     "text": "REDIRECT",
+     "delay": 391
+    }
+   ]
+  },
+  {
+   "tag": "b09_heart_of_the_work",
+   "mode": "scene",
+   "durationInFrames": 728,
+   "voFrames": 698,
+   "stickers": [
+    {
+     "text": "HEAVY EMOTIONAL WEIGHT",
+     "delay": 173,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 523
+    },
+    {
+     "text": "GENUINELY CARE",
+     "delay": 529,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 677
+    },
+    {
+     "text": "SELLERS CAN TELL",
+     "delay": 683,
+     "role": "label",
+     "bottomCenter": true
+    },
+    {
+     "text": "GRIEF",
+     "delay": 205,
+     "role": "caption",
+     "top": 98,
+     "left": 127
+    },
+    {
+     "text": "EMBARRASSMENT",
+     "delay": 235,
+     "role": "caption",
+     "top": 98,
+     "left": 598
+    },
+    {
+     "text": "FEAR",
+     "delay": 280,
+     "role": "caption",
+     "top": 98,
+     "left": 1100
+    },
+    {
+     "text": "FAMILY CONFLICT",
+     "delay": 313,
+     "role": "caption",
+     "top": 362,
+     "left": 94
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b09_emotion-grid.png",
+   "video": "lesson8B/anim/anim_b09_heart_of_the_work.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson8B/tails/anim_b09_heart_of_the_work_tail.png",
+   "animationStatus": "seedance"
+  },
+  {
+   "tag": "b10_roleplay_drill",
+   "mode": "scene",
+   "durationInFrames": 284,
+   "voFrames": 254,
+   "stickers": [
+    {
+     "text": "ROLEPLAY:\nPRE-FORECLOSURE",
+     "delay": 116,
+     "role": "caption",
+     "top": 86,
+     "left": 1118
+    },
+    {
+     "text": "SCAM CONCERN DRILL",
+     "delay": 184,
+     "role": "caption",
+     "top": 276,
+     "left": 1118
+    },
+    {
+     "text": "AS REAL AS IT GETS",
+     "delay": 228,
+     "role": "caption",
+     "top": 596,
+     "left": 1138
+    }
+   ],
+   "still": "lesson8B/stills/m08_L8B_b10_roleplay-drill.png",
+   "video": "lesson8B/anim/anim_b10_roleplay_drill.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson8B/tails/anim_b10_roleplay_drill_tail.png",
+   "animationStatus": "seedance"
+  },
+  {
+   "tag": "b11_next_stop_faq",
+   "mode": "hero",
+   "durationInFrames": 274,
+   "voFrames": 274,
+   "stickers": [
+    {
+     "text": "QUESTIONS SELLERS ASK",
+     "delay": 118,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 169
+    },
+    {
+     "text": "NOT OBJECTIONS",
+     "delay": 175,
+     "role": "label",
+     "bottomCenter": true,
+     "until": 244
+    },
+    {
+     "text": "ANSWER WITHOUT FLINCHING",
+     "delay": 250,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson8B/hero/hero_b11_next_stop_faq.mp4"
+  }
+ ],
+ "audio": "lesson8B/master.m4a",
+ "totalFrames": 7370,
+ "missing": []
+}

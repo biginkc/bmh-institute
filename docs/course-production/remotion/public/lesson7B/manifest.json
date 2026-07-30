@@ -1,0 +1,522 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "intro",
+   "mode": "hero",
+   "durationInFrames": 1292,
+   "badge": true,
+   "hero": "lesson7B/hero/hero_intro.mp4"
+  },
+  {
+   "tag": "yourturn",
+   "mode": "hero",
+   "durationInFrames": 446,
+   "hero": "lesson7B/hero/hero_yourturn.mp4"
+  },
+  {
+   "tag": "theme_price",
+   "mode": "theme",
+   "durationInFrames": 283,
+   "still": "lesson7B/stills/m07_L7B_theme_price.png",
+   "label": "Price"
+  },
+  {
+   "tag": "d01_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d01_seller.mp4",
+   "lineEnd": 38,
+   "drill": 1
+  },
+  {
+   "tag": "d01_comeback",
+   "mode": "hero",
+   "durationInFrames": 268,
+   "hero": "lesson7B/hero/cb01.mp4"
+  },
+  {
+   "tag": "d02_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d02_seller.mp4",
+   "lineEnd": 56,
+   "drill": 2
+  },
+  {
+   "tag": "d02_comeback",
+   "mode": "hero",
+   "durationInFrames": 797,
+   "hero": "lesson7B/hero/cb02.mp4"
+  },
+  {
+   "tag": "d24_seller",
+   "mode": "seller",
+   "durationInFrames": 759,
+   "clip": "lesson7B/clips/d24_seller.mp4",
+   "lineEnd": 97,
+   "drill": 24
+  },
+  {
+   "tag": "d24_comeback",
+   "mode": "hero",
+   "durationInFrames": 724,
+   "hero": "lesson7B/hero/cb24.mp4"
+  },
+  {
+   "tag": "d29_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d29_seller.mp4",
+   "lineEnd": 84,
+   "drill": 29
+  },
+  {
+   "tag": "d29_comeback",
+   "mode": "hero",
+   "durationInFrames": 521,
+   "hero": "lesson7B/hero/cb29.mp4"
+  },
+  {
+   "tag": "theme_competition",
+   "mode": "theme",
+   "durationInFrames": 294,
+   "still": "lesson7B/stills/m07_L7B_theme_competition.png",
+   "label": "Competition"
+  },
+  {
+   "tag": "d03_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d03_seller.mp4",
+   "lineEnd": 56,
+   "drill": 3
+  },
+  {
+   "tag": "d03_comeback",
+   "mode": "hero",
+   "durationInFrames": 728,
+   "hero": "lesson7B/hero/cb03.mp4"
+  },
+  {
+   "tag": "d04_seller",
+   "mode": "seller",
+   "durationInFrames": 758,
+   "clip": "lesson7B/clips/d04_seller.mp4",
+   "lineEnd": 91,
+   "drill": 4
+  },
+  {
+   "tag": "d04_comeback",
+   "mode": "hero",
+   "durationInFrames": 461,
+   "hero": "lesson7B/hero/cb04.mp4"
+  },
+  {
+   "tag": "d13_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d13_seller.mp4",
+   "lineEnd": 104,
+   "drill": 13
+  },
+  {
+   "tag": "d13_comeback",
+   "mode": "hero",
+   "durationInFrames": 347,
+   "hero": "lesson7B/hero/cb13.mp4"
+  },
+  {
+   "tag": "d14_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d14_seller.mp4",
+   "lineEnd": 63,
+   "drill": 14
+  },
+  {
+   "tag": "d14_comeback",
+   "mode": "hero",
+   "durationInFrames": 392,
+   "hero": "lesson7B/hero/cb14.mp4"
+  },
+  {
+   "tag": "d15_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d15_seller.mp4",
+   "lineEnd": 63,
+   "drill": 15
+  },
+  {
+   "tag": "d15_comeback",
+   "mode": "hero",
+   "durationInFrames": 645,
+   "hero": "lesson7B/hero/cb15.mp4"
+  },
+  {
+   "tag": "theme_delay",
+   "mode": "theme",
+   "durationInFrames": 283,
+   "still": "lesson7B/stills/m07_L7B_theme_delay.png",
+   "label": "Delay"
+  },
+  {
+   "tag": "d05_seller",
+   "mode": "seller",
+   "durationInFrames": 758,
+   "clip": "lesson7B/clips/d05_seller.mp4",
+   "lineEnd": 93,
+   "drill": 5
+  },
+  {
+   "tag": "d05_comeback",
+   "mode": "hero",
+   "durationInFrames": 338,
+   "hero": "lesson7B/hero/cb05.mp4"
+  },
+  {
+   "tag": "d07_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d07_seller.mp4",
+   "lineEnd": 85,
+   "drill": 7
+  },
+  {
+   "tag": "d07_comeback",
+   "mode": "hero",
+   "durationInFrames": 220,
+   "hero": "lesson7B/hero/cb07.mp4"
+  },
+  {
+   "tag": "d12_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d12_seller.mp4",
+   "lineEnd": 41,
+   "drill": 12
+  },
+  {
+   "tag": "d12_comeback",
+   "mode": "hero",
+   "durationInFrames": 403,
+   "hero": "lesson7B/hero/cb12.mp4"
+  },
+  {
+   "tag": "d31_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d31_seller.mp4",
+   "lineEnd": 43,
+   "drill": 31
+  },
+  {
+   "tag": "d31_comeback",
+   "mode": "hero",
+   "durationInFrames": 358,
+   "hero": "lesson7B/hero/cb31.mp4"
+  },
+  {
+   "tag": "theme_trust",
+   "mode": "theme",
+   "durationInFrames": 250,
+   "still": "lesson7B/stills/m07_L7B_theme_trust.png",
+   "label": "Trust"
+  },
+  {
+   "tag": "d06_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d06_seller.mp4",
+   "lineEnd": 45,
+   "drill": 6
+  },
+  {
+   "tag": "d06_comeback",
+   "mode": "hero",
+   "durationInFrames": 364,
+   "hero": "lesson7B/hero/cb06.mp4"
+  },
+  {
+   "tag": "d08_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d08_seller.mp4",
+   "lineEnd": 53,
+   "drill": 8
+  },
+  {
+   "tag": "d08_comeback",
+   "mode": "hero",
+   "durationInFrames": 326,
+   "hero": "lesson7B/hero/cb08.mp4"
+  },
+  {
+   "tag": "d09_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d09_seller.mp4",
+   "lineEnd": 46,
+   "drill": 9
+  },
+  {
+   "tag": "d09_comeback",
+   "mode": "hero",
+   "durationInFrames": 366,
+   "hero": "lesson7B/hero/cb09.mp4"
+  },
+  {
+   "tag": "d10_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d10_seller.mp4",
+   "lineEnd": 65,
+   "drill": 10
+  },
+  {
+   "tag": "d10_comeback",
+   "mode": "hero",
+   "durationInFrames": 244,
+   "hero": "lesson7B/hero/cb10.mp4"
+  },
+  {
+   "tag": "d17_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d17_seller.mp4",
+   "lineEnd": 125,
+   "drill": 17
+  },
+  {
+   "tag": "d17_comeback",
+   "mode": "hero",
+   "durationInFrames": 658,
+   "hero": "lesson7B/hero/cb17.mp4"
+  },
+  {
+   "tag": "d18_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d18_seller.mp4",
+   "lineEnd": 49,
+   "drill": 18
+  },
+  {
+   "tag": "d18_comeback",
+   "mode": "hero",
+   "durationInFrames": 611,
+   "hero": "lesson7B/hero/cb18.mp4"
+  },
+  {
+   "tag": "d26_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d26_seller.mp4",
+   "lineEnd": 82,
+   "drill": 26
+  },
+  {
+   "tag": "d26_comeback",
+   "mode": "hero",
+   "durationInFrames": 550,
+   "hero": "lesson7B/hero/cb26.mp4"
+  },
+  {
+   "tag": "d27_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d27_seller.mp4",
+   "lineEnd": 102,
+   "drill": 27
+  },
+  {
+   "tag": "d27_comeback",
+   "mode": "hero",
+   "durationInFrames": 681,
+   "hero": "lesson7B/hero/cb27.mp4"
+  },
+  {
+   "tag": "d28_seller",
+   "mode": "seller",
+   "durationInFrames": 759,
+   "clip": "lesson7B/clips/d28_seller.mp4",
+   "lineEnd": 107,
+   "drill": 28
+  },
+  {
+   "tag": "d28_comeback",
+   "mode": "hero",
+   "durationInFrames": 592,
+   "hero": "lesson7B/hero/cb28.mp4"
+  },
+  {
+   "tag": "d32_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d32_seller.mp4",
+   "lineEnd": 45,
+   "drill": 32
+  },
+  {
+   "tag": "d32_comeback",
+   "mode": "hero",
+   "durationInFrames": 410,
+   "hero": "lesson7B/hero/cb32.mp4"
+  },
+  {
+   "tag": "theme_asis",
+   "mode": "theme",
+   "durationInFrames": 278,
+   "still": "lesson7B/stills/m07_L7B_theme_asis.png",
+   "label": "As-Is"
+  },
+  {
+   "tag": "d11_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d11_seller.mp4",
+   "lineEnd": 54,
+   "drill": 11
+  },
+  {
+   "tag": "d11_comeback",
+   "mode": "hero",
+   "durationInFrames": 486,
+   "hero": "lesson7B/hero/cb11.mp4"
+  },
+  {
+   "tag": "d16_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d16_seller.mp4",
+   "lineEnd": 85,
+   "drill": 16
+  },
+  {
+   "tag": "d16_comeback",
+   "mode": "hero",
+   "durationInFrames": 630,
+   "hero": "lesson7B/hero/cb16.mp4"
+  },
+  {
+   "tag": "d19_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d19_seller.mp4",
+   "lineEnd": 88,
+   "drill": 19
+  },
+  {
+   "tag": "d19_comeback",
+   "mode": "hero",
+   "durationInFrames": 626,
+   "hero": "lesson7B/hero/cb19.mp4"
+  },
+  {
+   "tag": "d30_seller",
+   "mode": "seller",
+   "durationInFrames": 759,
+   "clip": "lesson7B/clips/d30_seller.mp4",
+   "lineEnd": 136,
+   "drill": 30
+  },
+  {
+   "tag": "d30_comeback",
+   "mode": "hero",
+   "durationInFrames": 578,
+   "hero": "lesson7B/hero/cb30.mp4"
+  },
+  {
+   "tag": "theme_distress",
+   "mode": "theme",
+   "durationInFrames": 377,
+   "still": "lesson7B/stills/m07_L7B_theme_distress.png",
+   "label": "Distress"
+  },
+  {
+   "tag": "d20_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d20_seller.mp4",
+   "lineEnd": 41,
+   "drill": 20
+  },
+  {
+   "tag": "d20_comeback",
+   "mode": "hero",
+   "durationInFrames": 503,
+   "hero": "lesson7B/hero/cb20.mp4"
+  },
+  {
+   "tag": "d21_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d21_seller.mp4",
+   "lineEnd": 52,
+   "drill": 21
+  },
+  {
+   "tag": "d21_comeback",
+   "mode": "hero",
+   "durationInFrames": 578,
+   "hero": "lesson7B/hero/cb21.mp4"
+  },
+  {
+   "tag": "d22_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d22_seller.mp4",
+   "lineEnd": 80,
+   "drill": 22
+  },
+  {
+   "tag": "d22_comeback",
+   "mode": "hero",
+   "durationInFrames": 504,
+   "hero": "lesson7B/hero/cb22.mp4"
+  },
+  {
+   "tag": "d23_seller",
+   "mode": "seller",
+   "durationInFrames": 759,
+   "clip": "lesson7B/clips/d23_seller.mp4",
+   "lineEnd": 121,
+   "drill": 23
+  },
+  {
+   "tag": "d23_comeback",
+   "mode": "hero",
+   "durationInFrames": 536,
+   "hero": "lesson7B/hero/cb23.mp4"
+  },
+  {
+   "tag": "d25_seller",
+   "mode": "seller",
+   "durationInFrames": 760,
+   "clip": "lesson7B/clips/d25_seller.mp4",
+   "lineEnd": 76,
+   "drill": 25
+  },
+  {
+   "tag": "d25_comeback",
+   "mode": "hero",
+   "durationInFrames": 516,
+   "hero": "lesson7B/hero/cb25.mp4"
+  },
+  {
+   "tag": "summary",
+   "mode": "hero",
+   "durationInFrames": 810,
+   "hero": "lesson7B/hero/hero_summary.mp4"
+  },
+  {
+   "tag": "outro",
+   "mode": "hero",
+   "durationInFrames": 675,
+   "hero": "lesson7B/hero/hero_outro.mp4"
+  }
+ ],
+ "audio": "lesson7B/master.m4a",
+ "totalFrames": 45261
+}

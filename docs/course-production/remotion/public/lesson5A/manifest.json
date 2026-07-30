@@ -1,0 +1,244 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 766,
+   "badge": true,
+   "stickers": [
+    {
+     "text": "Step 1 \u00b7 how to open the call",
+     "delay": 40,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson5A/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_15sec",
+   "mode": "stopwatch",
+   "durationInFrames": 486
+  },
+  {
+   "tag": "b03_demo",
+   "mode": "hero",
+   "durationInFrames": 951,
+   "hero": "lesson5A/hero/lip_b03_demo.mp4"
+  },
+  {
+   "tag": "b04a_thatsit",
+   "mode": "hero",
+   "durationInFrames": 230,
+   "hero": "lesson5A/hero/hero_b04a_thatsit.mp4",
+   "heroInset": true
+  },
+  {
+   "tag": "b04b_breakdown",
+   "mode": "prop",
+   "durationInFrames": 695,
+   "stickers": [
+    {
+     "text": "They feel evaluated, not sold",
+     "delay": 413,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson5A/stills/m05_L5A_breakdown.png"
+  },
+  {
+   "tag": "b05_intrigue",
+   "mode": "stamp",
+   "durationInFrames": 571,
+   "cues": {
+    "approved": 20,
+    "denied": 86
+   }
+  },
+  {
+   "tag": "b06_goodtime",
+   "mode": "fork",
+   "durationInFrames": 549,
+   "stickers": [
+    {
+     "text": "Did I catch you at a good time?",
+     "delay": 81,
+     "role": "caption",
+     "topCenter": true
+    },
+    {
+     "text": "NO  \u2192  callback",
+     "delay": 319,
+     "role": "label",
+     "top": 560,
+     "left": 150
+    },
+    {
+     "text": "YES  \u2192  continue",
+     "delay": 467,
+     "role": "label",
+     "top": 560,
+     "left": 1010
+    }
+   ]
+  },
+  {
+   "tag": "b07_penpaper",
+   "mode": "video",
+   "durationInFrames": 803,
+   "stickers": [
+    {
+     "text": "Grab a pen",
+     "delay": 244,
+     "role": "caption",
+     "bottomCenter": true
+    },
+    {
+     "text": "YOUR NAME",
+     "delay": 467,
+     "role": "label",
+     "top": 64,
+     "left": 1150
+    },
+    {
+     "text": "SPELL LAST NAME",
+     "delay": 498,
+     "role": "label",
+     "top": 172,
+     "left": 1030
+    },
+    {
+     "text": "COMPANY",
+     "delay": 581,
+     "role": "label",
+     "top": 280,
+     "left": 1150
+    },
+    {
+     "text": "PHONE NUMBER",
+     "delay": 694,
+     "role": "label",
+     "top": 388,
+     "left": 1085
+    }
+   ],
+   "still": "lesson5A/stills/m05_L5A_pen-notepad.png",
+   "video": "lesson5A/video/anim_pennote.mp4",
+   "videoFrames": 451
+  },
+  {
+   "tag": "b08_control",
+   "mode": "prop",
+   "durationInFrames": 721,
+   "stickers": [
+    {
+     "text": "TAKING CONTROL",
+     "delay": 116,
+     "role": "label",
+     "topCenter": true
+    },
+    {
+     "text": "= engagement",
+     "delay": 666,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson5A/stills/m05_L5A_seller-couch.png"
+  },
+  {
+   "tag": "b09_compliance",
+   "mode": "gauge",
+   "durationInFrames": 715,
+   "stickers": [
+    {
+     "text": "COMPLIANCE TEST",
+     "delay": 30,
+     "role": "title",
+     "topCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b10_trust",
+   "mode": "video",
+   "durationInFrames": 621,
+   "stickers": [
+    {
+     "text": "BUILD TRUST EARLY",
+     "delay": 42,
+     "role": "label",
+     "topCenter": true
+    },
+    {
+     "text": "Your real name \u00b7 your real number",
+     "delay": 112,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson5A/stills/m05_L5A_card-handoff.png",
+   "video": "lesson5A/video/anim_card.mp4",
+   "videoFrames": 451
+  },
+  {
+   "tag": "b11_landline",
+   "mode": "prop",
+   "durationInFrames": 612,
+   "stickers": [
+    {
+     "text": "Landline or cell?",
+     "delay": 100,
+     "role": "caption",
+     "topCenter": true
+    },
+    {
+     "text": "cell  \u2192  you can text",
+     "delay": 341,
+     "role": "label",
+     "top": 650,
+     "left": 140
+    },
+    {
+     "text": "landline  \u2192  you call",
+     "delay": 430,
+     "role": "label",
+     "top": 650,
+     "left": 930
+    }
+   ],
+   "still": "lesson5A/stills/m05_L5A_phones.png"
+  },
+  {
+   "tag": "b12_8020",
+   "mode": "bar",
+   "durationInFrames": 981,
+   "stickers": [
+    {
+     "text": "Assume they're motivated",
+     "delay": 208,
+     "role": "caption",
+     "topCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b13_outro",
+   "mode": "hero",
+   "durationInFrames": 502,
+   "stickers": [
+    {
+     "text": "Next: the Fact Find",
+     "delay": 325,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "hero": "lesson5A/hero/hero_b13_outro.mp4"
+  }
+ ],
+ "audio": "lesson5A/master.m4a",
+ "totalFrames": 9203
+}

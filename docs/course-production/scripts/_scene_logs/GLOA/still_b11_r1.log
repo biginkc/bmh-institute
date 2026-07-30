@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b11_on-market-flag.png ===
+Validation: PNG signature valid, 1600x900, exact `#62b3f3` background, 6-color flat palette, visual check passes the three-element constraint: house, `FOR SALE` sign, and celebrating non-cast agent only.
+
+Note: the strict CLI `gpt-image-2` path was blocked by missing local API setup, so I used the built-in image generator and saved the project copy. `course-assets/` is gitignored, so the file exists locally but will not appear in normal git status.
+OK mGLO_LGLOA_b11_on-market-flag.png

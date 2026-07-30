@@ -1,0 +1,5 @@
+# Diff result: no textual differences.
+
+Compared `lesson-18A-script-clean.txt` against locked master `_master-transcripts.md` Slot 18 Operator Playbook (`Chapter 17 - Draft.srt`) after stripping only SRT cue numbers, timestamps, blank lines, and code-fence markers from the master; stripping only comment/beat header lines from the clean script; and normalizing paragraph breaks/whitespace so beat headers do not count as wording changes.
+
+Result: clean script is verbatim Slot 18 Operator Playbook master text. No master deviations.

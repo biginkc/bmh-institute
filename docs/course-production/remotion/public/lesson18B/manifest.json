@@ -1,0 +1,365 @@
+{
+  "fps": 30,
+  "gapFrames": 30,
+  "audio": "lesson18B/master.m4a",
+  "beats": [
+    {
+      "tag": "b01_command_center",
+      "mode": "hero",
+      "durationInFrames": 869,
+      "voFrames": 839,
+      "labels": [],
+      "hero": "lesson18B/hero/b01_command_center.mp4",
+      "badge": true
+    },
+    {
+      "tag": "b02_county_channels",
+      "mode": "video",
+      "durationInFrames": 840,
+      "voFrames": 810,
+      "labels": [
+        {
+          "text": "COUNTY CHANNELS",
+          "delay": 45,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "ORGANIZED BY MARKET",
+          "delay": 470,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b02_county_channels.png",
+      "anim": "lesson18B/anim/b02_county_channels.mp4",
+      "tail": "lesson18B/tails/b02_county_channels_tail.png",
+      "animFrames": 450
+    },
+    {
+      "tag": "b03_approval_flow",
+      "mode": "smsExchange",
+      "durationInFrames": 595,
+      "voFrames": 565,
+      "labels": [
+        {
+          "text": "DRAFT TEXT",
+          "delay": 55,
+          "place": "bottom",
+          "role": "label"
+        },
+        {
+          "text": "MANAGER REVIEW",
+          "delay": 245,
+          "place": "bottom",
+          "role": "caption"
+        },
+        {
+          "text": "APPROVED TO SEND",
+          "delay": 430,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ]
+    },
+    {
+      "tag": "b04_quality_check",
+      "mode": "video",
+      "durationInFrames": 590,
+      "voFrames": 560,
+      "labels": [
+        {
+          "text": "TONE",
+          "delay": 115,
+          "place": "topLeft",
+          "role": "label"
+        },
+        {
+          "text": "CONTENT",
+          "delay": 150,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "TIMING",
+          "delay": 190,
+          "place": "topRight",
+          "role": "label"
+        },
+        {
+          "text": "QUALITY CHECK",
+          "delay": 430,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b04_quality_check.png",
+      "anim": "lesson18B/anim/b04_quality_check.mp4",
+      "tail": "lesson18B/tails/b04_quality_check_tail.png",
+      "animFrames": 451
+    },
+    {
+      "tag": "b05_handoff_thread",
+      "mode": "video",
+      "durationInFrames": 1260,
+      "voFrames": 1230,
+      "labels": [
+        {
+          "text": "USE THREADS",
+          "delay": 195,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "TAG THE RIGHT PEOPLE",
+          "delay": 275,
+          "place": "bottom",
+          "role": "caption"
+        },
+        {
+          "text": "FULL NOTES IN SANDRA",
+          "delay": 520,
+          "place": "topRight",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b05_handoff_thread.png",
+      "anim": "lesson18B/anim/b05_handoff_thread.mp4",
+      "tail": "lesson18B/tails/b05_handoff_thread_tail.png",
+      "animFrames": 451
+    },
+    {
+      "tag": "b06_sandra_packet",
+      "mode": "scene",
+      "durationInFrames": 778,
+      "voFrames": 748,
+      "labels": [
+        {
+          "text": "PUSH TO SANDRA FIRST",
+          "delay": 80,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "PROFILE",
+          "delay": 255,
+          "place": "left",
+          "role": "caption"
+        },
+        {
+          "text": "MOTIVATION",
+          "delay": 350,
+          "place": "right",
+          "role": "caption"
+        },
+        {
+          "text": "HOT BUTTONS",
+          "delay": 630,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b06_sandra_packet.png"
+    },
+    {
+      "tag": "b07_dual_handoff",
+      "mode": "video",
+      "durationInFrames": 381,
+      "voFrames": 351,
+      "labels": [
+        {
+          "text": "CRM DATA + SLACK NOTIFICATION",
+          "delay": 22,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "NOTHING FALLS THROUGH",
+          "delay": 255,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b07_dual_handoff.png",
+      "anim": "lesson18B/anim/b07_dual_handoff.mp4",
+      "tail": "lesson18B/tails/b07_dual_handoff_tail.png",
+      "animFrames": 451
+    },
+    {
+      "tag": "b08_response_loop",
+      "mode": "video",
+      "durationInFrames": 769,
+      "voFrames": 739,
+      "labels": [
+        {
+          "text": "LOG IT IMMEDIATELY",
+          "delay": 145,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "POST IN COUNTY CHANNEL",
+          "delay": 260,
+          "place": "left",
+          "role": "caption"
+        },
+        {
+          "text": "TAG IF NEEDED",
+          "delay": 475,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b08_response_loop.png"
+    },
+    {
+      "tag": "b09_daily_standup",
+      "mode": "video",
+      "durationInFrames": 660,
+      "voFrames": 630,
+      "labels": [
+        {
+          "text": "3-5 LINES",
+          "delay": 360,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "SHORT DAILY STANDUP",
+          "delay": 20,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b09_daily_standup.png",
+      "anim": "lesson18B/anim/b09_daily_standup.mp4",
+      "tail": "lesson18B/tails/b09_daily_standup_tail.png",
+      "animFrames": 451
+    },
+    {
+      "tag": "b10_ask_manager",
+      "mode": "video",
+      "durationInFrames": 1057,
+      "voFrames": 1027,
+      "labels": [
+        {
+          "text": "DON'T GUESS",
+          "delay": 330,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "TAG YOUR MANAGER",
+          "delay": 530,
+          "place": "bottom",
+          "role": "caption"
+        },
+        {
+          "text": "KEEP WORKING OTHER LEADS",
+          "delay": 780,
+          "place": "topRight",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b10_ask_manager.png",
+      "anim": "lesson18B/anim/b10_ask_manager.mp4",
+      "tail": "lesson18B/tails/b10_ask_manager_tail.png",
+      "animFrames": 451
+    },
+    {
+      "tag": "b11_team_norms",
+      "mode": "norms",
+      "durationInFrames": 747,
+      "voFrames": 717,
+      "labels": [],
+      "rows": [
+        {
+          "text": "OVER-COMMUNICATE",
+          "delay": 80
+        },
+        {
+          "text": "RESPOND WITHIN THE HOUR",
+          "delay": 420
+        },
+        {
+          "text": "KEEP IT PROFESSIONAL",
+          "delay": 575
+        }
+      ]
+    },
+    {
+      "tag": "b12_wins_momentum",
+      "mode": "video",
+      "durationInFrames": 503,
+      "voFrames": 473,
+      "labels": [
+        {
+          "text": "POST THE WIN",
+          "delay": 160,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "WINS BUILD MOMENTUM",
+          "delay": 300,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "still": "lesson18B/stills/b12_wins_momentum.png",
+      "anim": "lesson18B/anim/b12_wins_momentum.mp4",
+      "tail": "lesson18B/tails/b12_wins_momentum_tail.png",
+      "animFrames": 451
+    },
+    {
+      "tag": "b13_systems_wrap",
+      "mode": "systems",
+      "durationInFrames": 558,
+      "voFrames": 528,
+      "labels": [],
+      "rows": [
+        {
+          "text": "CRM: LEADS + DATA",
+          "delay": 48
+        },
+        {
+          "text": "SLACK: COMMUNICATION",
+          "delay": 150
+        },
+        {
+          "text": "DIALPAD: CALLS",
+          "delay": 244
+        }
+      ]
+    },
+    {
+      "tag": "b14_roleplay_career_tease",
+      "mode": "hero",
+      "durationInFrames": 594,
+      "voFrames": 594,
+      "labels": [
+        {
+          "text": "ROLEPLAY: FAMILY DYNAMICS",
+          "delay": 115,
+          "place": "top",
+          "role": "label"
+        },
+        {
+          "text": "NEXT: CAREER GROWTH PATH",
+          "delay": 475,
+          "place": "bottom",
+          "role": "caption"
+        }
+      ],
+      "hero": "lesson18B/hero/b14_roleplay_career_tease.mp4"
+    }
+  ],
+  "totalFrames": 10201,
+  "notes": {
+    "b02": "Approved Remotion/code map pulse. Rejected Seedance county-map candidates are not referenced.",
+    "b03": "Remotion/code two-phone SMS exchange. Rejected generated approval-flow clip is not referenced.",
+    "b04": "Approved simplified quality-check Seedance clip. Rejected clutter/checklist candidates are not referenced.",
+    "b08": "Static deterministic response-loop plate. Generated b08 clip with hallucinated header text is not referenced.",
+    "b14": "QC v6 freeze fallback rejected for talking hero. v7 uses two short HeyGen takes, straight-cut mid-beat, with no freeze fallback."
+  }
+}

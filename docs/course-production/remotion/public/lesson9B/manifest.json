@@ -1,0 +1,347 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_bridge",
+   "mode": "bench",
+   "durationInFrames": 391,
+   "voFrames": 361,
+   "badge": true,
+   "clips": [
+    "lesson9B/clips/bench_b01_bridge.mp4"
+   ],
+   "clipFrames": [
+    362
+   ],
+   "tail": "lesson9B/tails/bench_b01_bridge_tail.png"
+  },
+  {
+   "tag": "b02a_q6",
+   "mode": "seller",
+   "durationInFrames": 113,
+   "voFrames": 83,
+   "clips": [
+    "lesson9B/clips/q6_seller_smoke.mp4"
+   ],
+   "clipFrames": [
+    136
+   ],
+   "tail": "lesson9B/tails/q6_seller_smoke_tail.png",
+   "overlays": [
+    {
+     "text": "DO I NEED TO MAKE ANY REPAIRS?",
+     "delay": 0,
+     "hold": true
+    }
+   ]
+  },
+  {
+   "tag": "b02b_a06",
+   "mode": "bench",
+   "durationInFrames": 488,
+   "voFrames": 458,
+   "clips": [
+    "lesson9B/clips/bench_a06_answer.mp4"
+   ],
+   "clipFrames": [
+    458
+   ],
+   "tail": "lesson9B/tails/bench_a06_answer_tail.png",
+   "overlays": [
+    {
+     "text": "ZERO REPAIRS",
+     "delay": 203
+    },
+    {
+     "text": "ANY CONDITION",
+     "delay": 301
+    },
+    {
+     "text": "EXACTLY AS IT IS",
+     "delay": 414
+    }
+   ]
+  },
+  {
+   "tag": "b03a_q7",
+   "mode": "seller",
+   "durationInFrames": 123,
+   "voFrames": 93,
+   "clips": [
+    "lesson9B/clips/q7_seller_smoke.mp4"
+   ],
+   "clipFrames": [
+    147
+   ],
+   "tail": "lesson9B/tails/q7_seller_smoke_tail.png",
+   "overlays": [
+    {
+     "text": "ARE THERE ANY FEES OR COMMISSIONS?",
+     "delay": 0,
+     "hold": true
+    }
+   ]
+  },
+  {
+   "tag": "b03b_a07",
+   "mode": "bench",
+   "durationInFrames": 500,
+   "voFrames": 470,
+   "clips": [
+    "lesson9B/clips/bench_a07_answer.mp4"
+   ],
+   "clipFrames": [
+    470
+   ],
+   "tail": "lesson9B/tails/bench_a07_answer_tail.png",
+   "overlays": [
+    {
+     "text": "NO FEES",
+     "delay": 204
+    },
+    {
+     "text": "NO COMMISSIONS",
+     "delay": 241
+    },
+    {
+     "text": "NO CLOSING COSTS",
+     "delay": 297
+    },
+    {
+     "text": "WALK-AWAY NUMBER",
+     "delay": 390
+    }
+   ]
+  },
+  {
+   "tag": "b04a_q8",
+   "mode": "seller",
+   "durationInFrames": 107,
+   "voFrames": 77,
+   "clips": [
+    "lesson9B/clips/q8_seller_ask.mp4"
+   ],
+   "clipFrames": [
+    130
+   ],
+   "tail": "lesson9B/tails/q8_seller_ask_tail.png",
+   "overlays": [
+    {
+     "text": "WHAT HAPPENS AFTER I SIGN?",
+     "delay": 0,
+     "hold": true
+    }
+   ]
+  },
+  {
+   "tag": "b04b_a08",
+   "mode": "bench",
+   "durationInFrames": 756,
+   "voFrames": 726,
+   "clips": [
+    "lesson9B/clips/bench_a08_answer.mp4"
+   ],
+   "clipFrames": [
+    727
+   ],
+   "tail": "lesson9B/tails/bench_a08_answer_tail.png",
+   "overlays": [
+    {
+     "text": "TRANSACTION TEAM TAKES IT",
+     "delay": 247
+    },
+    {
+     "text": "TITLE \u00b7 INSPECTIONS \u00b7 CLOSING",
+     "delay": 337
+    },
+    {
+     "text": "MONEY SAME DAY OR NEXT",
+     "delay": 629
+    }
+   ]
+  },
+  {
+   "tag": "b05a_q9",
+   "mode": "seller",
+   "durationInFrames": 115,
+   "voFrames": 85,
+   "clips": [
+    "lesson9B/clips/q9_seller_ask.mp4"
+   ],
+   "clipFrames": [
+    139
+   ],
+   "tail": "lesson9B/tails/q9_seller_ask_tail.png",
+   "overlays": [
+    {
+     "text": "CAN I STAY IN THE HOUSE AFTER SELLING?",
+     "delay": 0,
+     "hold": true
+    }
+   ]
+  },
+  {
+   "tag": "b05b_a09",
+   "mode": "bench",
+   "durationInFrames": 582,
+   "voFrames": 552,
+   "clips": [
+    "lesson9B/clips/bench_a09_answer.mp4"
+   ],
+   "clipFrames": [
+    552
+   ],
+   "tail": "lesson9B/tails/bench_a09_answer_tail.png",
+   "overlays": [
+    {
+     "text": "SOMETHING WE CAN DISCUSS",
+     "delay": 160
+    },
+    {
+     "text": "LEASEBACK",
+     "delay": 211
+    },
+    {
+     "text": "ACQUISITION WORKS OUT DETAILS",
+     "delay": 418
+    }
+   ]
+  },
+  {
+   "tag": "b06a_q10",
+   "mode": "seller",
+   "durationInFrames": 101,
+   "voFrames": 71,
+   "clips": [
+    "lesson9B/clips/q10_seller_ask.mp4"
+   ],
+   "clipFrames": [
+    124
+   ],
+   "tail": "lesson9B/tails/q10_seller_ask_tail.png",
+   "overlays": [
+    {
+     "text": "WHAT IF I CHANGE MY MIND?",
+     "delay": 0,
+     "hold": true
+    }
+   ]
+  },
+  {
+   "tag": "b06b_a10",
+   "mode": "bench",
+   "durationInFrames": 599,
+   "voFrames": 569,
+   "clips": [
+    "lesson9B/clips/bench_a10_answer.mp4"
+   ],
+   "clipFrames": [
+    570
+   ],
+   "tail": "lesson9B/tails/bench_a10_answer_tail.png",
+   "overlays": [
+    {
+     "text": "INSPECTION PERIOD BUILT IN",
+     "delay": 115
+    },
+    {
+     "text": "NOT FINAL UNTIL COMFORTABLE",
+     "delay": 281
+    },
+    {
+     "text": "REDUCE THE FEAR",
+     "delay": 499
+    }
+   ]
+  },
+  {
+   "tag": "b07_close",
+   "mode": "bench",
+   "durationInFrames": 704,
+   "voFrames": 674,
+   "clips": [
+    "lesson9B/clips/bench_b07_close.mp4"
+   ],
+   "clipFrames": [
+    674
+   ],
+   "tail": "lesson9B/tails/bench_b07_close_tail.png",
+   "overlays": [
+    {
+     "text": "NOT PERFORMING",
+     "delay": 102
+    },
+    {
+     "text": "REAL PERSON",
+     "delay": 234
+    },
+    {
+     "text": "CLEARLY AND HONESTLY",
+     "delay": 408
+    }
+   ]
+  },
+  {
+   "tag": "b08_practice",
+   "mode": "bench",
+   "durationInFrames": 622,
+   "voFrames": 592,
+   "tiles": [
+    {
+     "text": "CAR",
+     "delay": 155
+    },
+    {
+     "text": "HOME",
+     "delay": 204
+    },
+    {
+     "text": "MIRROR",
+     "delay": 252
+    },
+    {
+     "text": "LIVE CALL",
+     "delay": 407
+    }
+   ],
+   "clips": [
+    "lesson9B/clips/bench_b08_practice.mp4"
+   ],
+   "clipFrames": [
+    593
+   ],
+   "tail": "lesson9B/tails/bench_b08_practice_tail.png",
+   "overlays": [
+    {
+     "text": "SAY IT OUT LOUD",
+     "delay": 56
+    },
+    {
+     "text": "DON'T HESITATE",
+     "delay": 447
+    }
+   ]
+  },
+  {
+   "tag": "b09_outro",
+   "mode": "standing",
+   "durationInFrames": 221,
+   "voFrames": 191,
+   "clips": [
+    "lesson9B/clips/outro_1a_standing.mp4"
+   ],
+   "clipFrames": [
+    190
+   ],
+   "tail": "lesson9B/tails/outro_1a_standing_tail.png",
+   "overlays": [
+    {
+     "text": "NEXT: FOLLOW-UP GAME",
+     "delay": 84
+    }
+   ]
+  }
+ ],
+ "audio": "lesson9B/master.m4a",
+ "totalFrames": 5422
+}

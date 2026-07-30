@@ -1,0 +1,208 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 537,
+   "voFrames": 507,
+   "badge": true,
+   "hero": "lesson7A/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_goodsign",
+   "mode": "video",
+   "durationInFrames": 865,
+   "voFrames": 835,
+   "label": "A GOOD SIGN",
+   "labelDelay": 106,
+   "labelPlace": "bottom",
+   "videos": [
+    "lesson7A/anim/anim_b02_goodsign.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b02_goodsign_tail.png"
+  },
+  {
+   "tag": "b03_reframe",
+   "mode": "video",
+   "durationInFrames": 928,
+   "voFrames": 898,
+   "circle": "lesson7A/circle/circle_b03.mp4",
+   "label": "NOT A REJECTION",
+   "labelDelay": 159,
+   "labelPlace": "top",
+   "videos": [
+    "lesson7A/anim/anim_b03_reframe.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b03_reframe_tail.png"
+  },
+  {
+   "tag": "b04_calltype",
+   "mode": "calltype",
+   "durationInFrames": 1231,
+   "voFrames": 1201,
+   "coldClip": "lesson7A/anim/anim_b04cold.mov",
+   "coldFrames": 451,
+   "coldStill": "lesson7A/stills/b04_calltype_cold_tail.png",
+   "coldLabel": "COLD CALL",
+   "coldDelay": 215,
+   "warmClip": "lesson7A/anim/anim_b04warm.mov",
+   "warmFrames": 451,
+   "warmStill": "lesson7A/stills/b04_calltype_warm_tail.png",
+   "warmLabel": "WARMED UP",
+   "warmDelay": 597,
+   "slideFrame": 597
+  },
+  {
+   "tag": "b05_fourtypes",
+   "mode": "grid4",
+   "durationInFrames": 230,
+   "voFrames": 200,
+   "circle": "lesson7A/circle/circle_b05.mp4",
+   "label": "4 RESPONSE TYPES",
+   "labelDelay": 70,
+   "labelPlace": "top"
+  },
+  {
+   "tag": "b06_silence",
+   "mode": "video",
+   "durationInFrames": 709,
+   "voFrames": 679,
+   "label": "1 \u00b7 SILENCE",
+   "labelDelay": 32,
+   "labelPlace": "top",
+   "caption": "\u2192 GIVE SPACE, WAIT",
+   "captionDelay": 457,
+   "quad": 1,
+   "videos": [
+    "lesson7A/anim/anim_b06_silence.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b06_silence_tail.png"
+  },
+  {
+   "tag": "b07_complaints",
+   "mode": "video",
+   "durationInFrames": 974,
+   "voFrames": 944,
+   "label": "2 \u00b7 COMPLAINTS",
+   "labelDelay": 39,
+   "labelPlace": "top",
+   "caption": "\u2192 ACKNOWLEDGE & REDIRECT",
+   "captionDelay": 589,
+   "quad": 2,
+   "videos": [
+    "lesson7A/anim/anim_b07_complaints.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b07_complaints_tail.png"
+  },
+  {
+   "tag": "b08_reactionary",
+   "mode": "video",
+   "durationInFrames": 1086,
+   "voFrames": 1056,
+   "label": "3 \u00b7 REACTIONARY DEFENSE",
+   "labelDelay": 69,
+   "labelPlace": "top",
+   "caption": "\u2192 DON'T TAKE THE BAIT",
+   "captionDelay": 614,
+   "quad": 3,
+   "videos": [
+    "lesson7A/anim/anim_b08_reactionary.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b08_reactionary_tail.png"
+  },
+  {
+   "tag": "b09_realobjections",
+   "mode": "video",
+   "durationInFrames": 584,
+   "voFrames": 554,
+   "label": "4 \u00b7 REAL OBJECTIONS",
+   "labelDelay": 53,
+   "labelPlace": "top",
+   "caption": "\u2192 THE FRAMEWORK",
+   "captionDelay": 518,
+   "quad": 4,
+   "videos": [
+    "lesson7A/anim/anim_b09_real.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b09_realobjections_tail.png"
+  },
+  {
+   "tag": "b10_framework",
+   "mode": "steps",
+   "durationInFrames": 1966,
+   "voFrames": 1936,
+   "steps": [
+    {
+     "text": "LISTEN",
+     "delay": 156
+    },
+    {
+     "text": "ACKNOWLEDGE",
+     "delay": 442
+    },
+    {
+     "text": "ASK",
+     "delay": 1071
+    },
+    {
+     "text": "REDIRECT",
+     "delay": 1602
+    }
+   ]
+  },
+  {
+   "tag": "b11_sequence",
+   "mode": "lockup",
+   "durationInFrames": 231,
+   "voFrames": 201,
+   "circle": "lesson7A/circle/circle_b11.mp4",
+   "label": "LISTEN \u00b7 ACKNOWLEDGE \u00b7 ASK \u00b7 REDIRECT",
+   "labelDelay": 7,
+   "labelPlace": "center"
+  },
+  {
+   "tag": "b12_doorway",
+   "mode": "video",
+   "durationInFrames": 1217,
+   "voFrames": 1187,
+   "label": "A DOORWAY, NOT A DEAD END",
+   "labelDelay": 220,
+   "labelPlace": "bottom",
+   "videos": [
+    "lesson7A/anim/anim_b12_doorway.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson7A/stills/b12_doorway_tail.png"
+  },
+  {
+   "tag": "b13_outro",
+   "mode": "hero",
+   "durationInFrames": 196,
+   "voFrames": 196,
+   "hero": "lesson7A/hero/hero_b13_outro.mp4"
+  }
+ ],
+ "audio": "lesson7A/master.m4a",
+ "totalFrames": 10754
+}

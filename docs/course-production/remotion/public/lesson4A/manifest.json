@@ -1,0 +1,146 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "stage": 0,
+   "durationInFrames": 751,
+   "voFrames": 721,
+   "badge": true,
+   "hero": "lesson4A/hero/hero_b01_intro.mov",
+   "heroFrames": 751
+  },
+  {
+   "tag": "b02_overview",
+   "mode": "pipeline",
+   "stage": 1,
+   "durationInFrames": 781,
+   "voFrames": 751,
+   "label": "6 STAGES",
+   "labelDelay": 96,
+   "circle": "lesson4A/circle/circle_b02.mp4"
+  },
+  {
+   "tag": "b03a_capture",
+   "mode": "pipeline",
+   "stage": 1,
+   "durationInFrames": 953,
+   "voFrames": 923,
+   "label": "STAGE 1 \u00b7 LEAD CAPTURE",
+   "labelDelay": 62,
+   "still": "lesson4A/stills/m04_L4A_v1_capture.png"
+  },
+  {
+   "tag": "b03b_firstcontact",
+   "mode": "pipeline",
+   "stage": 1,
+   "durationInFrames": 1029,
+   "voFrames": 999,
+   "label": "STAGE 1 \u00b7 LEAD CAPTURE",
+   "labelDelay": 558,
+   "still": "lesson4A/stills/m04_L4A_v2_firstcontact.png"
+  },
+  {
+   "tag": "b04_qualify",
+   "mode": "pipeline",
+   "stage": 2,
+   "durationInFrames": 1620,
+   "voFrames": 1590,
+   "label": "STAGE 2 \u00b7 QUALIFICATION",
+   "labelDelay": 49,
+   "still": "lesson4A/stills/m04_L4A_v3_qualify_v3.png"
+  },
+  {
+   "tag": "b05a_discovery",
+   "mode": "pipeline",
+   "stage": 3,
+   "durationInFrames": 1549,
+   "voFrames": 1519,
+   "label": "STAGE 3 \u00b7 DISCOVERY",
+   "labelDelay": 37,
+   "andreaCut": 713,
+   "videos": [
+    "lesson4A/anim/anim_b05a_discovery_v2.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "andrea": "lesson4A/andrea/hero_b05a_andrea.mov"
+  },
+  {
+   "tag": "b05b_discovery_exit",
+   "mode": "pipeline",
+   "stage": 3,
+   "durationInFrames": 639,
+   "voFrames": 609,
+   "still": "lesson4A/stills/m04_L4A_v4_discovery.png"
+  },
+  {
+   "tag": "b06a_handoff",
+   "mode": "pipeline",
+   "stage": 4,
+   "durationInFrames": 810,
+   "voFrames": 780,
+   "label": "STAGE 4 \u00b7 HANDOFF",
+   "labelDelay": 55,
+   "andreaCut": 284,
+   "videos": [
+    "lesson4A/anim/kling_b06a_priya-handoff-v2.mov"
+   ],
+   "videoFrames": [
+    241
+   ],
+   "andrea": "lesson4A/andrea/hero_b06a_andrea.mov"
+  },
+  {
+   "tag": "b06b_handoff_clean",
+   "mode": "pipeline",
+   "stage": 4,
+   "durationInFrames": 1135,
+   "voFrames": 1105,
+   "still": "lesson4A/stills/m04_L4A_v6_handoff.png"
+  },
+  {
+   "tag": "b07_offer",
+   "mode": "pipeline",
+   "stage": 5,
+   "durationInFrames": 781,
+   "voFrames": 751,
+   "label": "STAGE 5 \u00b7 OFFER REVIEW",
+   "labelDelay": 41,
+   "still": "lesson4A/stills/m04_L4A_v7_offer.png"
+  },
+  {
+   "tag": "b08_contract",
+   "mode": "pipeline",
+   "stage": 6,
+   "durationInFrames": 831,
+   "voFrames": 801,
+   "label": "STAGE 6 \u00b7 CONTRACT",
+   "labelDelay": 40,
+   "still": "lesson4A/stills/m04_L4A_v8_contract_v2.png"
+  },
+  {
+   "tag": "b09_ownership",
+   "mode": "pipeline",
+   "stage": 0,
+   "durationInFrames": 1098,
+   "voFrames": 1068,
+   "label": "YOU OWN STAGES 1 \u2192 4",
+   "labelDelay": 128,
+   "circle": "lesson4A/circle/circle_b09.mp4"
+  },
+  {
+   "tag": "b10_outro",
+   "mode": "hero",
+   "stage": 0,
+   "durationInFrames": 588,
+   "voFrames": 588,
+   "hero": "lesson4A/hero/hero_b10_outro.mov",
+   "heroFrames": 588
+  }
+ ],
+ "audio": "lesson4A/master.m4a",
+ "totalFrames": 12565
+}

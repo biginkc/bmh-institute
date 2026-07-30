@@ -1,0 +1,8 @@
+=== GEN mTECH_LTECHA_logo_hubstaff.png ===
+One caveat: the strict local `gpt-image-2` CLI route is still blocked in this shell by missing `OPENAI_API_KEY` and OpenAI SDK, so I used the established built-in GPT image workflow and normalized the output locally.
+
+
+OK mTECH_LTECHA_logo_hubstaff.png
+uilt-in image generation workflow and normalized the final PNG locally.
+
+OK mTECH_LTECHA_logo_hubstaff.png

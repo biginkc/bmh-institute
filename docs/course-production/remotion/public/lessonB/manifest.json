@@ -1,0 +1,184 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 505,
+   "badge": true,
+   "hero": "lessonB/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_guide",
+   "mode": "scene",
+   "durationInFrames": 382,
+   "label": "YOU ARE THE GUIDE",
+   "labelDelay": 317,
+   "still": "lessonB/stills/m01_LB_s02_guide-not-buyer_v2_clean.png"
+  },
+  {
+   "tag": "b03_clarity",
+   "mode": "scene",
+   "durationInFrames": 409,
+   "label": "WIN CLARITY",
+   "labelDelay": 119,
+   "still": "lessonB/stills/m01_LB_s03_clarity-shift_v5.png"
+  },
+  {
+   "tag": "b04_doctor",
+   "mode": "video",
+   "durationInFrames": 728,
+   "label": "\u201cWhat seems to be the problem?\u201d",
+   "labelDelay": 342,
+   "circle": "lessonB/circle/circle_b04.mp4",
+   "still": "lessonB/stills/m01_LB_s04_doctor-analogy_clean.png",
+   "videos": [
+    "lessonB/anim/anim_doctor_15s.mp4"
+   ],
+   "videoFrames": [
+    451
+   ]
+  },
+  {
+   "tag": "b05_board",
+   "mode": "scene",
+   "durationInFrames": 247,
+   "label": "10 PRINCIPLES",
+   "labelDelay": 26,
+   "still": "lessonB/stills/m01_LB_s07_ten-principles-board_v2.png"
+  },
+  {
+   "tag": "b06a_p1",
+   "mode": "card",
+   "durationInFrames": 223,
+   "label": "1 \u00b7 SERVICE OVER SELF",
+   "labelDelay": 4,
+   "still": "lessonB/stills/m01_LB_p01_service_clean.png"
+  },
+  {
+   "tag": "b06b_story1",
+   "mode": "map",
+   "durationInFrames": 754,
+   "circle": "lessonB/circle/circle_b06b.mp4",
+   "still": "lessonB/stills/m01_LB_story1_inherited_v2_labeled.png"
+  },
+  {
+   "tag": "b07a_p2",
+   "mode": "card",
+   "durationInFrames": 237,
+   "label": "2 \u00b7 ALIGNMENT",
+   "labelDelay": 8,
+   "still": "lessonB/stills/m01_LB_p02_alignment_v2.png"
+  },
+  {
+   "tag": "b07b_story2",
+   "mode": "video",
+   "durationInFrames": 620,
+   "label": "He wants his life back",
+   "labelDelay": 243,
+   "still": "lessonB/stills/m01_LB_story2_landlord_centered.png",
+   "videos": [
+    "lessonB/anim/anim_landlord_15s.mp4"
+   ],
+   "videoFrames": [
+    451
+   ]
+  },
+  {
+   "tag": "b08a_p3",
+   "mode": "hero",
+   "durationInFrames": 517,
+   "label": "3 \u00b7 CLARITY BEATS PRESSURE",
+   "labelDelay": 4,
+   "hero": "lessonB/hero/cafe_b08a.mp4"
+  },
+  {
+   "tag": "b08b_story3",
+   "mode": "movie",
+   "durationInFrames": 580,
+   "extras": {
+    "movie": 68,
+    "fork": 173,
+    "end": 127
+   },
+   "still": "lessonB/stills/m01_LB_p03_clarity_clean.png",
+   "still2": "lessonB/stills/m01_LB_story3_frozen_v2.png"
+  },
+  {
+   "tag": "b09_p4",
+   "mode": "card",
+   "durationInFrames": 922,
+   "label": "4 \u00b7 DETACH",
+   "labelDelay": 5,
+   "still": "lessonB/stills/m01_LB_p04_detach_v2.png"
+  },
+  {
+   "tag": "b10_p5",
+   "mode": "card",
+   "durationInFrames": 818,
+   "label": "5 \u00b7 CURIOSITY",
+   "labelDelay": 4,
+   "still": "lessonB/stills/m01_LB_p05_curiosity_clean.png"
+  },
+  {
+   "tag": "b11_p6",
+   "mode": "card",
+   "durationInFrames": 655,
+   "label": "6 \u00b7 EQUAL STATUS",
+   "labelDelay": 9,
+   "still": "lessonB/stills/m01_LB_p06_equal-status_v2.png"
+  },
+  {
+   "tag": "b12_p7",
+   "mode": "video",
+   "durationInFrames": 834,
+   "label": "7 \u00b7 LONG GAME",
+   "labelDelay": 7,
+   "still": "lessonB/stills/m01_LB_p07_longgame_ages.png",
+   "videos": [
+    "lessonB/anim/anim_longgame_ages.mp4"
+   ],
+   "videoFrames": [
+    451
+   ]
+  },
+  {
+   "tag": "b13_p8",
+   "mode": "card",
+   "durationInFrames": 761,
+   "label": "8 \u00b7 PUZZLES, NOT WALLS",
+   "labelDelay": 5,
+   "still": "lessonB/stills/m01_LB_p08_puzzles_clean.png"
+  },
+  {
+   "tag": "b14_p9",
+   "mode": "scene",
+   "durationInFrames": 470,
+   "label": "9 \u00b7 REPS CREATE CALM",
+   "labelDelay": 5,
+   "still": "lessonB/stills/m01_LB_p09_reps_v3.png"
+  },
+  {
+   "tag": "b15_p10",
+   "mode": "card",
+   "durationInFrames": 477,
+   "label": "10 \u00b7 SAME LENS",
+   "labelDelay": 4,
+   "still": "lessonB/stills/m01_LB_p10_same-lens.png"
+  },
+  {
+   "tag": "b16_recap",
+   "mode": "recap",
+   "durationInFrames": 326,
+   "still": "lessonB/stills/m01_LB_s07_ten-principles-board_v2.png"
+  },
+  {
+   "tag": "b17_outro",
+   "mode": "hero",
+   "durationInFrames": 414,
+   "hero": "lessonB/hero/hero_b17_outro.mp4"
+  }
+ ],
+ "audio": "lessonB/master.m4a",
+ "totalFrames": 10879
+}

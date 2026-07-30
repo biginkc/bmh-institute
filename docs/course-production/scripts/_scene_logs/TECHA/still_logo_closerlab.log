@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_logo_closerlab.png ===
+Saved the asset here: [mTECH_LTECHA_logo_closerlab.png](</Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/scenes/module-techstack/mTECH_LTECHA_logo_closerlab.png>).
+
+Verified it is a 1600x900 PNG, flattened to the six course colors, with only the Closer Lab mark and `Closer Lab` wordmark on the blue field. The local explicit `gpt-image-2` CLI path was unavailable because this shell has no API key or OpenAI SDK, so I used the built-in image generation path and recorded that in the GSD quick-task summary.
+OK mTECH_LTECHA_logo_closerlab.png

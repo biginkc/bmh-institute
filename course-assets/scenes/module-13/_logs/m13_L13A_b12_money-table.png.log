@@ -1,0 +1,2064 @@
+Reading prompt from stdin...
+2026-07-07T08:27:58.839524Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f3bb0-e74e-7d33-bc40-3f8e871ca617
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-13/m13_L13A_b12_money-table.png (PNG, 1600x900). Match the attached style references and cast-board character style exactly. COMPOSITION: Comedic chase scene on a plain cornflower-blue field, but keep faces on-brand with the cast-board. LEFT/BACK: one BMH follow-up representative woman inspired by PRIYA on the cast-board, wearing the simple orange phone headset, yellow top, cream pants, and ponytail/headband. She runs forward with a determined posture and arms reaching forward but not touching anyone; her face uses tiny dot eyes and a small simple mouth only, not crazy eyes. RIGHT/FRONT: one seller/homeowner inspired by the curly black-haired man in the orange shirt and cream pants from the cast-board runs away, body leaning away and shoulders tense. His face must use tiny black dot eyes, tiny centered two-stroke/comma nose, and a small worried downturned mouth only; no large ring eyes, no big open mouth, no teeth, no horror face. The scene should read cartoon-safe and funny, not violent, not horror, no weapons, no contact, no injury. Exactly two people total, clearly different characters, no clones. Leave clean open blue space above and lower center for later code labels. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow, orange, cream, white, and black. No gradients, no texture, no shadows, no lighting, no perspective, no skin-tone shading. Faces must match the cast-board: flat white/cream fill, tiny black dot eyes only, tiny centered two-stroke/comma nose, and a very small simple mouth. Do not use ring eyes, side-eye eyeballs, large open mouths, teeth, eyebrows, sunglasses, or detailed expressions. Show emotion mainly through body posture, not altered facial anatomy. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, motion marks, icons, random props, or decorative clutter. No text, letters, words, numbers, symbols, dollar signs, labels, captions, screens with writing, or readable paperwork anywhere unless the composition explicitly requests the exact plaque phrase EMPLOYEE OF THE MONTH. Leave clean open cornflower-blue space for code-rendered Sticker overlays. 16:9 composition, 1600x900 PNG.
+
+2026-07-07T08:27:59.214975Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-07T08:27:59.248565Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-07T08:27:59.290241Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-07T08:27:59.397688Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-07T08:27:59.475893Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill for the asset request and the repo’s quick GSD workflow before making the file change. I’m also checking the local project/vault instructions first so the generated asset lands in the right lane without stepping on other work.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+exec
+/bin/zsh -lc 'rg -n "module-13|Lesson 13|money-table|course-assets|gpt-image|style-ref|cast-board|PRIYA|seller|follow-up" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+23:- exact prompts, senior engineer handoff, gpt-image-2, seedance_2_0, kling3_0, style-ref-1.png, style-ref-2.png, cast-board.png, flat sticker-sheet, no text or words anywhere, palette flattening, finalizer
+53:- `course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4` is the preserved style anchor for the approved 4B cut, and the authoritative lesson state lives in `module-04-lesson4B-still-review.md`, `module-04-lesson4B-animation-prompts.md`, `module-04-lesson4B-animation-production-plan.md`, `module-04-lesson4B-current-gate.md`, and `module-04-lesson4B-assembly-review.md` [Task 1]
+54:- The reviewed 4B working asset roots are `course-assets/scenes/module-04-lesson4B/` and `course-assets/heygen/lesson4B/`; prefer these lesson-scoped paths over broad session-log greps when reconstructing the final recipe [Task 1]
+55:- The final still-generation recipe used the built-in image workflow with `gpt-image-2` plus attached refs `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, and `docs/design/cast-board.png`; exact prompt fragments that mattered included flat sticker-sheet doodle style, thick wobble black outlines, tiny dot eyes, tiny centered two-stroke/comma nose, cornflower-blue background, no text, no gradients, no shadows, no perspective, and no ambient doodles [Task 2]
+70:applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, and Andrea character identities, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+72:## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+80:- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+82:## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+90:- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+94:- The seller identity for BMH course scenes is the curly black-haired man in the orange sweater and cream pants on the right side of the handshake reference; seller/customer scenes should use him rather than Andrea [Task 1][ad-hoc note]
+96:- The seller nose should stay as the tiny centered two-stroke/comma-like mark from the handshake reference, not a protruding side-profile nose [Task 2][ad-hoc note]
+97:- The BMH representative hairstyle must stay black hair pulled into a back ponytail with the orange/yellow headband and orange headset; if a still changes the seller nose or representative hairstyle, reject or reroll before animation [Task 2][ad-hoc note]
+253:scope: Use for Sandra production inbox triage when the user wants live Sendillo-era seller leads surfaced into a reusable handoff file with direct links and an independent-review prompt.
+256:## Task 1: Triaging live Sandra inbound SMS into VA follow-up leads, success
+264:- Sandra, Sendillo, production Supabase, inbound SMS, follow-up leads, /messages?thread=, /leads/, false positives, DNC, wrong-number, renter, offer request, call request, appointment timing, America/Chicago
+274:- Sandra, markdown handoff, Sandra/tmp, va-follow-up-leads-2026-06-25.md, transportable, direct links, Today First, Older Backlog, Scan Notes, link integrity
+297:- The safest high-signal lead triggers in this workflow were: explicit price or offer interest, call request, appointment timing, or complex owner/seller situations; bare yes/no context-free replies and obvious negative dispositions should be excluded [Task 1]
+304:- symptom: bare "yes" or price language slips into the final handoff without enough context; cause: later thread context and disposition state were not considered; fix: require either clear seller/appointment/offer context or a stronger follow-up signal before inclusion [Task 1]
+309:# Task Group: Sandra CRM follow-up and appointment architecture
+310:scope: Use for Sandra follow-up, callback, and appointment-planning work when the user wants current-state code truth, a recommended object model, or guidance on whether calendar views need a dedicated page.
+311:applies_to: cwd=$HOME/Sites/BMH apps and $HOME/Sites/BMH apps/Sandra; reuse_rule=safe for Sandra CRM follow-up/task/appointment architecture when the same dashboard task substrate and Google Calendar integration are in play, but any final implementation plan remains reviewable draft guidance until the user approves code changes.
+313:## Task 1: Audit current Sandra follow-ups and appointment support, success
+321:- Sandra, follow-ups, appointments, tasks, callback, due_at, inbox-detail, tasks-panel, overdue tasks, Google Calendar, no dedicated calendar route
+331:- Sandra, appointments, follow-ups, Pipedrive, Close, REsimpli, HighLevel, Follow Up Boss, Salesforce, Podio, day-week-month, one-way sync, internal reminders
+341:- Sandra, appointments vs tasks, reviewable draft, Claude review, /follow-ups, seller commitments, list-day-week-month, quick create
+345:- when the user said "see how follow-ups and appointment settings work currently in the codebase, whether it's functional or not, and then let's come back to chat" -> start with current code reality before proposing changes [Task 1]
+354:- `setOutreachDispo()` creates task rows for follow-up and callback states, while Slack and Google Calendar dispatch are optional side effects rather than the scheduling system itself [Task 1]
+355:- The current inbox follow-up UI is date-only, the dashboard task panel is only `Today` and `Upcoming`, and there is no dedicated day/week/month calendar route in the app tree [Task 1]
+357:- The strongest recommended model was: tasks = future obligations, appointments = scheduled seller commitments, activities/history = past interactions [Task 2]
+358:- The highest-leverage UX direction was quick-create from the conversation/lead plus a dedicated `/follow-ups` page with `List`, `Day`, `Week`, and `Month` views [Task 2][Task 3]
+359:- Internal reminders are the safer v1 default; seller-facing reminder automation and two-way calendar sync are later complexity [Task 2]
+363:- symptom: a callback or follow-up behaves like a weak reminder instead of a real appointment; cause: the current UI only captures a date and has no appointment lifecycle; fix: add appointment-specific time, duration, and status fields instead of stretching date-only tasks further [Task 1]
+364:- symptom: overdue follow-ups silently drop out of sight; cause: the dashboard query starts at today and only shows `Today` plus `Upcoming`; fix: keep overdue items visible on any future follow-up surface [Task 1][Task 2]
+366:- symptom: the plan drifts into heavyweight CRM patterns too early; cause: Salesforce-style object complexity, Podio-style calendar sprawl, or GHL-style booking flexibility gets imported wholesale; fix: keep the first move centered on clean booking, visibility, and follow-up flow [Task 2]
+424:## Task 3: Re-space the remaining live queue and manage timer follow-up, success
+475:- when the user iterated "OK let's change it to four seconds", "Ok let's do three seconds down", "Set a timer for one hour and in one hour change it back to 5 seconds", and later "Go ahead and reset it now" -> treat live cadence changes as immediate operational work, and use a one-time automation instead of relying on chat memory for timed follow-up [Task 3]
+494:- A correct cadence confirmation should check three layers together: `campaigns.pace_seconds`, queued-row spacing in `messages.scheduled_for`, and a follow-up rise in `sent` or `delivered` counts after waiting past the first new release window [Task 6]
+1147:- Jitter unauthenticated route protection was confirmed, but authenticated browser proof was not: the temp account path hit `Invalid email or password.` and follow-up auth inspection hit `Database error finding users` [Task 3]
+1206:- when the user asks to discuss "the content that the database should be populated with", "some user roles that make sense", and "various actions that these users will take" -> proactively spell out fixture models, personas, and action matrices instead of waiting for follow-up steering [Task 1][Task 2]
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/_Active.md" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/CLAUDE.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-07-05
+tags: [v1]
+related: ["[[STRATEGY]]", "[[MOC - v1]]", "[[MOC - v1 Verification Steps]]", "[[Four-app v1 control ledger]]"]
+---
+# _Active — what now
+
+Current priorities, seeded from [[STRATEGY]]'s bottleneck + the [[MOC - v1]] checklist. Frequently updated.
+
+## Operating model — Claude plans, Codex executes
+
+**Claude = planner/reviewer; Codex = executor.** For the four-app v1 push, Codex is executing the written per-app EXECUTE blocks directly in isolated worktrees; the start-orchestration bootstrap remains suspended until the repos are in known state. Claude still provides independent A5 review/approval before merge/deploy. Full handoff + recon + open decisions: [[2026-06-01 1815 — Four-app v1 plan + Codex execution handoff]]. Detailed per-app checklist: [[MOC - v1 Verification Steps]]. Cross-app context source: [[Four-app v1 control ledger]].
+
+**Autonomous = additive / reversible / observable** (STRATEGY's guardrail). A gate = destructive, irreversible, external-facing, or a judgment call.
+
+**Browser V1 acceptance gate:** fixture seeding, SQL assertions, unit/integration tests, GitHub Actions, and Playwright automation are scaffolding/supporting evidence only. Browser V1 is not accepted until Chrome/Chrome DevTools real-browser execution proves the persona flows through visible UI outcomes, screenshots, console/network inspection where relevant, and browser-console probes where required. Do not use Codex in-app browser / MAP / `iab` as the acceptance surface unless Jarrad explicitly reverses this.
+
+**Browser V1 UI-created data rule:** data setup is part of the browser test. For [[Closer Lab]] and [[BMH Institute]], create fixture/content/test records through Chrome/DevTools browser UI wherever the app UI supports creation or editing. Direct database/API writes are exception-only supporting setup for things the UI cannot create, such as auth bootstrap when no signup/admin UI exists, and must be labeled as non-acceptance evidence.
+
+**2026-06-02 browser-surface correction:** Jarrad first reset [[Closer Lab]] and [[BMH Institute]] Browser V1 acceptance to zero, then superseded the MAP/in-app-browser requirement with Chrome/DevTools real-browser execution. Current controller evidence shows [[BMH Institute]] residual proof closed and [[Closer Lab]] Browser V1 markers closed for pre-read persistence, signed embed-token proof, and scoring/runtime. [[Sandra]] production-readiness proof is GO as of 2026-06-11. The 2026-06-18 active-front reset (skip-trace/CASS preflight, filter preset discoverability, bulk tag creation, Sendillo-era Overview KPI visibility) is now CLEARED 2026-06-19 — all four shipped via merged PRs #288–#300, plus Messages disposition/outcomes hardening (#298/#299/#300). Remaining [[Sandra]] threads: PR #287 (hide dead-dispositioned leads from the kanban — OPEN, awaiting NULL-handling review) and the bulk-SMS→Campaigns KPI tracking gap (June 19 run, job `72b0e08d`, 7,547 messages queued with `campaignId=null`) — forward fix now tracked under **PR #306** (supersedes #301; per the 2026-06-23 [[Sandra PR 306 merge gate rules]] decision, updated 2026-07-05 — merge via GitHub-backed main once the Playwright golden-paths check passes; PR MERGEABLE/UNSTABLE, **not yet merged**) which requires a campaign name + auto-creates + stamps `campaign_id`, with the 2026-06-19 architect P1s folded in; the **June 19 backfill is still pending** (designed, not applied — must match by `property_id` intersection, not the created_at window which over-captures by 6; per the decision, the 423-member retry list is created only after production serves the merged fix).
+
+**2026-06-02 trust reset:** Jarrad challenged the controller's Playwright-heavy verification and does not trust acceptance unless it is revalidated in Chrome/DevTools. Treat Playwright/CI/API/DB evidence as support only. Fresh revalidation so far: [[BMH Institute]] Chrome snapshot/screenshot `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, with separate Sandra outcome confirmation `/tmp/browser-revalidation-bmh-institute-outcome.json`; [[Closer Lab]] member Chrome snapshot/screenshot `/tmp/browser-revalidation-closer-member-recording.*` visibly shows recording `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`, with separate Sandra outcome support `/tmp/browser-revalidation-closer-sandra-outcome-support.json`. [[Sandra]] production-readiness proof is GO on `https://sandra.bmhgroupkc.com`: real Sendillo production thread proof, `PR #236` sequence-admin gate, Chrome SOP matrix, and authenticated production non-admin sequence denial/enrollment behavior are all captured in [[Sandra - 2026-06-11]]. [[Jitter]] trust-reset browser work advanced in two steps: the earlier wrong-database/browser-auth mismatch was partially resolved by pinning production to the canonical `jitter-test` plane (`ypgntjjrrutjsratdwmk`) and proving controlled Chrome dialing in production, but that proof depended on a local scoped worker. Current blocker is no longer fixture creation; it is the **carrier swap**: Twilio is KYC-suspended/retired and **Telnyx is now the active carrier (account fully verified) — carrier validation PASSED 2026-06-04** — that carrier validation precedes the worker gate. The current Jitter gate (B2 plan, 2026-06-06) is **trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof**. The downstream acceptance gap is still a real worker path, but only after the single-line Telnyx dial proof.
+
+| Lane | Repo state (2026-06-01) | First autonomous task | Locked decisions |
+|------|------|------|------|
+| **[[Sandra]]** | Production-readiness proof GO on `https://sandra.bmhgroupkc.com` as of [[Sandra - 2026-06-11]]. Gate 1 real Sendillo production thread proof closed; Gate 2 `PR #236` sequence-admin gate merged/deployed/E2E green; Gate 3 Chrome SOP proof closed with admin SOP coverage, real Sendillo thread visibility, bulk SMS no-send inspection, admin authoring retention, and authenticated production non-admin sequence denial/enrollment behavior. Cleanup caveat: Sendillo canary rows retained as audit evidence and throwaway SOP sequence `7dfedf79-120a-434b-b417-c920b3227475` retained inactive. | no blocker; optional explicitly approved cleanup only if pristine DB is desired | consent: keep current |
+| **[[Closer Lab]]** | PR #60 merged; Browser V1 markers previously closed in Chrome/DevTools: pre-read persistence, BMH Institute signed embed-token path, scoring/runtime; Closer→Sandra sender/config/scoring hardening PRs #71/#72/#73/#74 merged and production proof PASS; fresh trust-reset Chrome revalidation captured member recording `72ad25d8-1b09-4ef9-a278-82113c12ce75` at 100% with transcript and rubric `MET 5 / 5` | browser-revalidated after trust reset | — |
+| **[[BMH Institute]]** | PR #79 and PR #80 merged; controller residual Chrome/DevTools proof closed after credential rotation; Sandra course-completed sender PR #81 merged, production env configured after token rotation, and Chrome/DevTools final lesson proof wrote `course.completed` into Sandra; fresh trust-reset Chrome revalidation captured visible `Lesson complete` and matching Sandra outcome | browser-revalidated after trust reset | cert PDF **deferred post-v1**; suspended-login block shipped via PR #79 |
+| **[[Jitter]]** | auth PR #144 merged; writeback PR #145, Sandra receiver PR #224, and boundary fix PR #146 merged; CPS pacing merged to `main` at `334ef8565d21b71bd3f645f05def2922179cee47` and deployed to production `dpl_75H8rsoMe7HEX7KSgtdo6cAjtJRS`; one controlled Chrome proof succeeded on `https://jitter.bmhgroupkc.com/dialer`, with browser audio connected and 4 successful `twilio.create_call` operations, but only while a local scoped worker was running. **Carrier since swapped: Twilio retired (KYC); Telnyx is the active carrier (account verified).** | **Current gate (B2 plan, 2026-06-06): trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof.** Then keep web + worker on the same reviewed SHA and rerun the final Chrome `/dialer` proof with the real worker before claiming accepted | business dialing approved; no extra live dial needed for writeback-only proof |
+
+## 🚦 Gates — full autonomy authorized (pre-launch, no users/data)
+Standing authorization (Jarrad, 2026-06-01): Codex may read/write any Supabase project incl. prod, run/apply migrations, open AND **merge** PRs, and deploy — quality-gated by Codex manual-code-review plus Claude A5 when reachable. If Claude is unavailable, Codex must try both CLI and desktop/app before using the fallback readiness gate. **No human click on merge/deploy.** See [[bmh-apps-prelaunch-no-prod-ceremony]] and [[Four-app v1 control ledger]].
+- **Hard pause:** billing changes; secret disclosure risk; uncontrolled provider use outside v1 verification; human-only MFA/CAPTCHA/account recovery after CLI/API/desktop workarounds.
+- [[Jitter]] business dialing is explicitly approved for v1 verification. Use product-appropriate caps/logging; no generic prod ceremony just because it is production.
+- New product decisions: make v1-compatible calls, record in the app's report, keep moving — never stall a lane unless it changes billing or creates uncontrolled provider use.
+
+## ✅ Fully autonomous (no checkpoint) — incl. TEST-env side effects
+Self-served, no longer Jarrad inputs:
+- **1Password reads** — all agents must read existing `BMH Secrets` items through the service account only: `export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -w -s OP_SERVICE_ACCOUNT_TOKEN)` then `op read "<redacted-1password-ref>"`. Do not use desktop-app/GUI/biometric/browser authorization for reads. If a GUI authorization prompt appears during a read, stop that path and retry with the service account; do not ask Jarrad to approve a read.
+- **Twilio** — read from 1Password (`Twilio - BMH Account Credentials`: SID, auth token, API key, `TWILIO_OWNED_NUMBERS_E164`, caller ID). Owned-number tests remain useful for smoke tests; [[Jitter]] may also dial real businesses for v1 verification under the standing approval above.
+- **Test accounts** — each lane provisions its own per-role accounts in its app's `*-test` Supabase project (`sandra-crm-test`, `closer-lab-test`, `bmh-institute-test`, `jitter-test`).
+- Dirty-work policy: snapshot to `wip/pre-v1-snapshot-<date>` *before* removing stale (reversible).
+- Plus: repo triage · code fixes in worktrees · unit/integration/build/lint · Playwright fake-media + fixtures · resolving `UNKNOWN` items by reading code · drafting PRs · `_inbox` notes.
+
+## Integrations — last
+Trust-reset integration front: do not call a lane accepted unless the current proof includes Chrome/DevTools-visible browser behavior. Pre-reset supporting proof remains useful but is not enough by itself. [[BMH Institute]] `course.completed`→[[Sandra]] has fresh Chrome/DevTools revalidation after Sandra #227/#228 and BMH Institute #81: `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, and separate outcome confirmation shows Sandra `institute_course_outcomes.id=61592447-b33d-489c-a230-d513435ef6b7` with webhook event `15e56f40-31b8-4d48-901e-942bdf0bbd8f` processed/signature verified. [[Closer Lab]] practice outcome→[[Sandra]] now has fresh Chrome/DevTools member recording revalidation: `/tmp/browser-revalidation-closer-member-recording.*` visibly shows attempt `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`; separate support file `/tmp/browser-revalidation-closer-sandra-outcome-support.json` ties the same attempt to Sandra `closer_practice_outcomes.id=90aaae3d-1053-4021-b9e1-a6e50b8a08f8`. [[Jitter]]→[[Sandra]] writeback remains supported by deployed production executor/API plus Sandra production DB proof after Jitter #145, Sandra #224, and Jitter #146, and a controlled Chrome `/dialer` proof succeeded after production was pinned to canonical `jitter-test` (`ypgntjjrrutjsratdwmk`). That proof is still not sufficient for acceptance because it depended on a local scoped worker. Current gap: a real worker path must back the final Chrome proof so dialing continues without the local helper and without warning banners, duplicate operations, or queue-time spikes.
+
+## Next step
+**▶️ RESUME (2026-06-06 21:23): [[2026-06-06 2123 — Doc-driven Jitter B2 plan with sub-agents (019e9fd7)]] — this is now the canonical raw plan note for the active [[Jitter]] lane.**
+
+**[[Jitter]] — B1.6 operator two-way audio PROVEN on Telnyx (2026-06-04, see [[2026-06-04 2110 — Jitter Telnyx B1.6 operator audio PROVEN]]).** Current front = **get the dialer DIALING (B2)**. Permission mode is now `bypassPermissions`. Loop running: **Claude orchestrates + reviews + commits + drives Chrome proof; Codex executes code** (`codex-exec.sh` + 3-min `watch.sh`).
+
+**OFFICIAL-DOCS-FIRST B2 order:** do not keep iterating on the old conference-callback hypothesis blindly. New research says the first move is to re-check the trust boundary on `/api/product/telephony/twiml/operator` because the current failing test may be enforcing signed-callback rules on the initial [[Telnyx]] TeXML instruction fetch. After that, keep strict signature validation on real callback routes, verify the browser-audio readiness contract across route/runtime/worker SQL, then proceed to the single-line live dial and the real [[Railway]] worker proof.
+
+**OPEN [[Jitter]] questions now ordered by impact:**
+1. Is the operator TeXML route enforcing the wrong auth contract for instruction fetches?
+2. Is `endConferenceOnExit=true` on `operator_browser` actually the intended product behavior?
+3. Is `productOperatorJoined` now being used consistently as the B2 dial-ready signal across route/runtime/worker layers?
+4. Are callback hosts and [[Vercel]] bypass assumptions explicit and correct for the environments being used?
+
+**Then:** single-line dial K=1 (canary guard ON, NOT gated) to +13107540662 → prove dialing. **Multi-line (K≥2) is GATED — needs Jarrad to EXPLICITLY lift his own "no multi-line without Telnyx L2 + written AUP" rule** (all calls redirect to his own number, so AUP not truly implicated, but the gate is his to lift). **Deferred (Jarrad: integrations last):** Sandra writeback (payload fixed `da659e3`, creds not staged), B1.4 voice_url, 1Password credential-id write-back (`70ad6f62…`, still PLACEHOLDER).
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The existing memory confirms this scene belongs to the BMH course asset workflow and repeats the same important visual gates: gpt-image-2, sticker-sheet style, tiny dot eyes, centered comma nose, no text, no gradients, no clutter. I’m going to treat those as hard acceptance checks rather than loose style notes.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' "'$HOME/.Codex/get-shit-done/workflows/quick.md' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "nl -ba $HOME/.codex/memories/MEMORY.md | sed -n '1,110p'" in $HOME/Sites/BMH apps/BMH Institute
+ exited 1 in 0ms:
+sed: $HOME/.Codex/get-shit-done/workflows/quick.md: No such file or directory
+
+ succeeded in 0ms:
+     1	# Task Group: BMH course 4B exact replication, narration speed, and animation tail-frame assembly
+     2	scope: Use for BMH course production when another agent needs to reproduce the approved Lesson 4B still/animation output exactly, or when audio speed and clip-ending behavior must match the current approved course-production defaults.
+     3	applies_to: cwd=$HOME/Sites/BMH apps/BMH Institute and BMH course lesson/still/animation workflow; reuse_rule=safe for future BMH course generation or regeneration that follows the same lesson-doc, reference-image, HeyGen, and assembly pipeline, but scene prompts, approved assets, and lesson-specific gates should be refreshed per lesson.
+     4	
+     5	## Task 1: Review approved 4B assets and lesson-scoped docs before generating, success
+     6	
+     7	### rollout_summary_files
+     8	
+     9	- rollout_summaries/2026-07-05T08-01-21-sfjY-bmh_4b_exact_prompts_models_handoff.md (cwd=$HOME/Sites/BMH apps, rollout_path=$HOME/.codex/sessions/2026/07/05/rollout-2026-07-05T03-01-21-019f314b-d570-7480-a135-bcd9b6b6ce22.jsonl, updated_at=2026-07-06T20:48:50+00:00, thread_id=019f314b-d570-7480-a135-bcd9b6b6ce22, approved 4B asset review and lesson-scoped style extraction)
+    10	
+    11	### keywords
+    12	
+    13	- BMH Institute, module-04-lesson4B, review-lesson4B, LESSON-4B-v1-APPROVED.mp4, module-04-lesson4B-still-review.md, module-04-lesson4B-current-gate.md, assembly-review, style anchor, Slot 06, cues 13-17
+    14	
+    15	## Task 2: Produce an exact engineer-style handoff for 4B prompts, refs, and models, success
+    16	
+    17	### rollout_summary_files
+    18	
+    19	- rollout_summaries/2026-07-05T08-01-21-sfjY-bmh_4b_exact_prompts_models_handoff.md (cwd=$HOME/Sites/BMH apps, rollout_path=$HOME/.codex/sessions/2026/07/05/rollout-2026-07-05T03-01-21-019f314b-d570-7480-a135-bcd9b6b6ce22.jsonl, updated_at=2026-07-06T20:48:50+00:00, thread_id=019f314b-d570-7480-a135-bcd9b6b6ce22, paste-ready replication handoff with refs, prompts, and model decisions)
+    20	
+    21	### keywords
+    22	
+    23	- exact prompts, senior engineer handoff, gpt-image-2, seedance_2_0, kling3_0, style-ref-1.png, style-ref-2.png, cast-board.png, flat sticker-sheet, no text or words anywhere, palette flattening, finalizer
+    24	
+    25	## Task 3: Keep Andrea narration at normal speed, success
+    26	
+    27	### rollout_summary_files
+    28	
+    29	- extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md, updated_at=2026-07-06T11:56:43-05:00, audio-speed correction note for Andrea and narrator delivery)
+    30	
+    31	### keywords
+    32	
+    33	- Andrea, narration, normal speed, voice speed 1.0, default speed, HeyGen, 0.95 stale, BMH course [ad-hoc note]
+    34	
+    35	## Task 4: Hold an animation clip's own final frame when it ends early, success
+    36	
+    37	### rollout_summary_files
+    38	
+    39	- extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md, updated_at=2026-07-06T12:13:30-05:00, animation-tail-frame assembly note for beat/transition timing)
+    40	
+    41	### keywords
+    42	
+    43	- course animation, tail frame, extracted final frame, clip ends early, transition ends, source still, forward loop, reverse loop [ad-hoc note]
+    44	
+    45	## User preferences
+    46	
+    47	- when the user asked "Can you watch the videos that have already been generated? So that you can know my style" -> future BMH course generation should inspect approved cuts and frame sheets before generating new stills or animations [Task 1]
+    48	- when the user was frustrated about wasted work and wrong lesson targeting -> verify the exact lesson, slot, and cue range before editing or generating anything for course production [Task 1]
+    49	- when the user asked for "the exact prompts... models, etc. etc." and said "Pretend like you are a senior engineer providing directions to another agent/llm" -> answer exact-replication requests with a copy-paste handoff that includes refs, model choices, prompt fragments, and guardrails rather than vague advice [Task 2]
+    50	
+    51	## Reusable knowledge
+    52	
+    53	- `course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4` is the preserved style anchor for the approved 4B cut, and the authoritative lesson state lives in `module-04-lesson4B-still-review.md`, `module-04-lesson4B-animation-prompts.md`, `module-04-lesson4B-animation-production-plan.md`, `module-04-lesson4B-current-gate.md`, and `module-04-lesson4B-assembly-review.md` [Task 1]
+    54	- The reviewed 4B working asset roots are `course-assets/scenes/module-04-lesson4B/` and `course-assets/heygen/lesson4B/`; prefer these lesson-scoped paths over broad session-log greps when reconstructing the final recipe [Task 1]
+    55	- The final still-generation recipe used the built-in image workflow with `gpt-image-2` plus attached refs `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, and `docs/design/cast-board.png`; exact prompt fragments that mattered included flat sticker-sheet doodle style, thick wobble black outlines, tiny dot eyes, tiny centered two-stroke/comma nose, cornflower-blue background, no text, no gradients, no shadows, no perspective, and no ambient doodles [Task 2]
+    56	- For 4B animation, `seedance_2_0` was the accepted model for B2/B3/B4A/B4B/B5/B6/B7/B8, while `kling3_0` was tested and rejected for B4B because the mouth motion was too frantic [Task 2]
+    57	- Prompts alone were not enough to reproduce the approved output; the working recipe also depended on the attached refs, character locks, palette flattening, and visual approval/finalizer checks [Task 1][Task 2]
+    58	- Andrea and other narrator delivery should stay at HeyGen voice speed `1.0` / default speed; any guide, template, scene card, or script that still says `0.95` is stale and should be corrected before regeneration [Task 3][ad-hoc note]
+    59	- When an AI animation clip ends before the beat or transition ends, hold that clip's own extracted final frame; do not fall back to the source still and do not use forward/reverse loops [Task 4][ad-hoc note]
+    60	
+    61	## Failures and how to do differently
+    62	
+    63	- symptom: prompt extraction turns noisy and unreliable; cause: broad searches across session logs surface unrelated artifacts; fix: narrow to lesson-scoped docs, reviewed assets, final manifests, and current-gate/assembly-review files first [Task 1][Task 2]
+    64	- symptom: a "replicate exactly" handoff still fails to reproduce the approved look; cause: only prompt text was handed off; fix: include refs, model choice, rejected-model reason, negative constraints, and postprocess/finalizer requirements together [Task 2]
+    65	- symptom: regenerated course narration sounds oddly slow; cause: stale templates still say Andrea speed `0.95`; fix: reset to HeyGen/default speed `1.0` unless Jarrad explicitly asks for a different delivery [Task 3][ad-hoc note]
+    66	- symptom: an animation ends early and the tail looks wrong; cause: the assembly falls back to a source still or loop trick; fix: hold the clip's own extracted final frame through the remaining beat/transition duration [Task 4][ad-hoc note]
+    67	
+    68	# Task Group: BMH course lesson, still, and animation character continuity corrections
+    69	scope: Use for BMH course image or animation generation when role assignment, face details, or hairstyle continuity must match the approved handshake-reference characters before still approval or animation.
+    70	applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, and Andrea character identities, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+    71	
+    72	## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+    73	
+    74	### rollout_summary_files
+    75	
+    76	- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+    77	
+    78	### keywords
+    79	
+    80	- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+    81	
+    82	## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+    83	
+    84	### rollout_summary_files
+    85	
+    86	- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+    87	
+    88	### keywords
+    89	
+    90	- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+    91	
+    92	## Reusable knowledge
+    93	
+    94	- The seller identity for BMH course scenes is the curly black-haired man in the orange sweater and cream pants on the right side of the handshake reference; seller/customer scenes should use him rather than Andrea [Task 1][ad-hoc note]
+    95	- The BMH representative identity is the headset woman on the left side of the handshake reference with yellow top and cream pants; use Andrea only when the scene specifically calls for narration or a company-facing avatar role [Task 1][ad-hoc note]
+    96	- The seller nose should stay as the tiny centered two-stroke/comma-like mark from the handshake reference, not a protruding side-profile nose [Task 2][ad-hoc note]
+    97	- The BMH representative hairstyle must stay black hair pulled into a back ponytail with the orange/yellow headband and orange headset; if a still changes the seller nose or representative hairstyle, reject or reroll before animation [Task 2][ad-hoc note]
+    98	
+    99	# Task Group: Sandra campaign status review, verification gates, and corrective merge follow-through
+   100	scope: Use for Sandra campaign UI/status work when a merged or merge-ready change needs retroactive manual review, CI-gate verification, or a corrective PR to align list/detail status contracts before calling it done.
+   101	applies_to: cwd=$HOME/Sites/BMH apps and $HOME/Sites/BMH apps/Sandra; reuse_rule=safe for Sandra campaign review-and-verification work when the same Campaigns table/detail/action paths and GitHub merge flow are in play, but PR numbers, check names, and remote merge state are time-sensitive and must be refreshed.
+   102	
+   103	## Task 1: Retroactive manual review of merged campaign-label change, partial
+   104	
+   105	### rollout_summary_files
+   106	
+   107	- rollout_summaries/2026-06-30T19-45-42-ckle-sandra_campaign_status_manual_review_and_ci_hardening.md (cwd=$HOME/Sites/BMH apps, rollout_path=$HOME/.codex/sessions/2026/06/30/rollout-2026-06-30T14-45-42-019f1a10-e562-7291-b41b-e70870076504.jsonl, updated_at=2026-07-01T04:30:15+00:00, thread_id=019f1a10-e562-7291-b41b-e70870076504, post-merge review found a missing CI gate and list/detail status mismatch)
+   108	
+   109	### keywords
+   110	
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "wc -l $HOME/.codex/skills/.system/imagegen/SKILL.md && sed -n '221,520p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+     356 $HOME/.codex/skills/.system/imagegen/SKILL.md
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+## Examples
+
+### Generation example (hero image)
+```text
+Use case: product-mockup
+Asset type: landing page hero
+Primary request: a minimal hero image of a ceramic coffee mug
+Style/medium: clean product photography
+Composition/framing: wide composition with usable negative space for page copy if needed
+Lighting/mood: soft studio lighting
+Constraints: no logos, no text, no watermark
+```
+
+### Edit example (invariants)
+```text
+Use case: precise-object-edit
+Asset type: product photo background replacement
+Primary request: replace only the background with a warm sunset gradient
+Constraints: change only the background; keep the product and its edges unchanged; no text; no watermark
+```
+
+## Prompting best practices
+- Structure prompt as scene/backdrop -> subject -> details -> constraints.
+- Include intended use (ad, UI mock, infographic) to set the mode and polish level.
+- Use camera/composition language for photorealism.
+- Only use SVG/vector stand-ins when the user explicitly asked for vector output or a non-image placeholder.
+- Quote exact text and specify typography + placement.
+- For tricky words, spell them letter-by-letter and require verbatim rendering.
+- For multi-image inputs, reference images by index and describe how they should be used.
+- For edits, repeat invariants every iteration to reduce drift.
+- Iterate with single-change follow-ups.
+- If the prompt is generic, add only the extra detail that will materially help.
+- If the prompt is already detailed, normalize it instead of expanding it.
+- For CLI fallback only, see `references/cli.md` and `references/image-api.md` for model, `quality`, `input_fidelity`, masks, output format, and output-path guidance.
+- For transparent images, use the built-in-first chroma-key workflow unless the request is complex enough to need true CLI transparency; ask before switching to CLI `gpt-image-1.5`.
+
+More principles shared by both modes: `references/prompting.md`.
+Copy/paste specs shared by both modes: `references/sample-prompts.md`.
+
+## Guidance by asset type
+Asset-type templates (website assets, game assets, wireframes, logo) are consolidated in `references/sample-prompts.md`.
+
+## gpt-image-2 guidance for CLI fallback
+
+The fallback CLI defaults to `gpt-image-2`.
+
+- Use `gpt-image-2` for new CLI/API workflows unless the request needs true model-native transparent output.
+- If a transparent request may need CLI fallback, ask before using `gpt-image-1.5` unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. Explain that the built-in chroma-key path is the default, but true transparency requires `gpt-image-1.5` because `gpt-image-2` does not support `background=transparent`.
+- `gpt-image-2` always uses high fidelity for image inputs; do not set `input_fidelity` with this model.
+- `gpt-image-2` supports `quality` values `low`, `medium`, `high`, and `auto`.
+- Use `quality low` for fast drafts, thumbnails, and quick iterations. Use `medium`, `high`, or `auto` for final assets, dense text, diagrams, identity-sensitive edits, or high-resolution outputs.
+- Square images are typically fastest to generate. Use `1024x1024` for fast square drafts.
+- If the user asks for 4K-style output, use `3840x2160` for landscape or `2160x3840` for portrait.
+- `gpt-image-2` size may be `auto` or `WIDTHxHEIGHT` if all constraints hold: max edge `<= 3840px`, both edges multiples of `16px`, long-to-short ratio `<= 3:1`, total pixels between `655,360` and `8,294,400`.
+
+Popular `gpt-image-2` sizes:
+- `1024x1024` square
+- `1536x1024` landscape
+- `1024x1536` portrait
+- `2048x2048` 2K square
+- `2048x1152` 2K landscape
+- `3840x2160` 4K landscape
+- `2160x3840` 4K portrait
+- `auto`
+
+## Fallback CLI mode only
+
+### Temp and output conventions
+These conventions apply only to the CLI fallback. They do not describe built-in `image_gen` output behavior.
+- Use `tmp/imagegen/` for intermediate files (for example JSONL batches); delete them when done.
+- Write final artifacts under `output/imagegen/`.
+- Use `--out` or `--out-dir` to control output paths; keep filenames stable and descriptive.
+
+### Dependencies
+Prefer `uv` for dependency management in this repo.
+
+Required Python package:
+```bash
+uv pip install openai
+```
+
+Required for local chroma-key removal and optional downscaling:
+```bash
+uv pip install pillow
+```
+
+Portability note:
+- If you are using the installed skill outside this repo, install dependencies into that environment with its package manager.
+- In uv-managed environments, `uv pip install ...` remains the preferred path.
+
+### Environment
+- `OPENAI_API_KEY` must be set for live API calls.
+- Do not ask the user for `OPENAI_API_KEY` when using the built-in `image_gen` tool.
+- Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.
+
+If the key is missing, give the user these steps:
+1. Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys
+2. Set `OPENAI_API_KEY` as an environment variable in their system.
+3. Offer to guide them through setting the environment variable for their OS/shell if needed.
+
+If installation is not possible in this environment, tell the user which dependency is missing and how to install it into their active environment.
+
+### Script-mode notes
+- CLI commands + examples: `references/cli.md`
+- API parameter quick reference: `references/image-api.md`
+- Network approvals / sandbox settings for CLI mode: `references/codex-network.md`
+
+## Reference map
+- `references/prompting.md`: shared prompting principles for both modes.
+- `references/sample-prompts.md`: shared copy/paste prompt recipes for both modes.
+- `references/cli.md`: fallback-only CLI usage via `scripts/image_gen.py`.
+- `references/image-api.md`: fallback-only API/CLI parameter reference.
+- `references/codex-network.md`: fallback-only network/sandbox troubleshooting for CLI mode.
+- `scripts/image_gen.py`: fallback-only CLI implementation. Do not load or use it unless the user explicitly chooses CLI mode or explicitly confirms a transparent request's true CLI transparency fallback.
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: local post-processing helper for built-in transparent-image requests.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "pwd && rg --files | rg '("'^|/)AGENTS'"\\.md"'$|docs/design/(style-ref-1|style-ref-2|cast-board|object-board)'"\\.png|course-assets/scenes/module-13|\\.planning|package.json'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/Sites/BMH apps/BMH Institute
+package.json
+AGENTS.md
+docs/design/object-board.png
+docs/design/style-ref-1.png
+docs/design/style-ref-2.png
+docs/design/cast-board.png
+docs/course-production/remotion/package.json
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short --branch' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+## claude/course-production...origin/main [ahead 3]
+ M .planning/STATE.md
+?? .planning/quick/260702-m01-lb-p03-clarity/
+?? .planning/quick/260702-q6j-write-reusable-course-production-illustr/
+?? .planning/quick/260702-qe1-generate-cash-asis-scene-asset/
+?? .planning/quick/260703-0rx-generate-13-character-course-cast-doodle/
+?? .planning/quick/260703-2ec-generate-fulfilling-work-scene-asset/
+?? .planning/quick/260703-generate-alignment-principle-card/
+?? .planning/quick/260703-generate-alignment-v2-scene-asset/
+?? .planning/quick/260703-generate-andrea-cafe-scene-asset/
+?? .planning/quick/260703-generate-andrea-headset-avatar/
+?? .planning/quick/260703-generate-andrea-yoga-scene-asset/
+?? .planning/quick/260703-generate-bmh-building-scene-asset/
+?? .planning/quick/260703-generate-calendar-frame-asset/
+?? .planning/quick/260703-generate-clarity-shift-v4-scene-asset/
+?? .planning/quick/260703-generate-clarity-shift-v5-scene-asset/
+?? .planning/quick/260703-generate-consult-not-sell-scene-asset/
+?? .planning/quick/260703-generate-curiosity-scene-asset/
+?? .planning/quick/260703-generate-detach-character-v2/
+?? .planning/quick/260703-generate-disrepair-vignette/
+?? .planning/quick/260703-generate-doctor-analogy-scene-asset/
+?? .planning/quick/260703-generate-equal-status-principle-card/
+?? .planning/quick/260703-generate-frozen-story3-scene-asset/
+?? .planning/quick/260703-generate-frozen-story3-v2-scene-asset/
+?? .planning/quick/260703-generate-guide-not-buyer-scene-asset/
+?? .planning/quick/260703-generate-hard-moments-v2-scene-asset/
+?? .planning/quick/260703-generate-inherited-story1-scene-asset/
+?? .planning/quick/260703-generate-long-game-scene-asset/
+?? .planning/quick/260703-generate-office-interior-scene-asset/
+?? .planning/quick/260703-generate-pedestrians-strip-scene-asset/
+?? .planning/quick/260703-generate-puzzle-scene-asset/
+?? .planning/quick/260703-generate-rep-call-scene-asset/
+?? .planning/quick/260703-generate-reps-board-v2/
+?? .planning/quick/260703-generate-reps-principle-card/
+?? .planning/quick/260703-generate-same-lens-principle-card/
+?? .planning/quick/260703-generate-script-tool-scene-asset/
+?? .planning/quick/260703-generate-script-tool-v2-scene-asset/
+?? .planning/quick/260703-generate-service-scene-asset/
+?? .planning/quick/260703-generate-story2-landlord-poseb-relaxed/
+?? .planning/quick/260703-generate-story2-landlord-scene-asset/
+?? .planning/quick/260703-generate-ten-principles-board-v2/
+?? .planning/quick/260703-generate-ten-principles-board/
+?? .planning/quick/260703-generate-title-objections-scene-asset/
+?? .planning/quick/260703-generate-title-offer-scene-asset/
+?? .planning/quick/260703-generate-title-process-scene-asset/
+?? .planning/quick/260703-generate-title-prospect-scene-asset/
+?? .planning/quick/260703-generate-tombstone-vignette/
+?? .planning/quick/260703-generate-training-montage-scene-asset/
+?? .planning/quick/260703-generate-training-montage-v2-scene-asset/
+?? .planning/quick/260703-hzc-generate-hard-moments-v3-course-scene-as/
+?? .planning/quick/260703-nxe-generate-detach-principle-card/
+?? .planning/quick/260703-nz2-generate-clarity-shift-scene-asset/
+?? .planning/quick/260703-oo2-generate-long-game-v2-scene-asset/
+?? .planning/quick/260703-oop-generate-module-01-lesson-b-scene-03-cla/
+?? .planning/quick/260703-tg3-generate-pose-b-frame-for-story2-landlor/
+?? .planning/quick/260704-generate-123-stairs-scene-asset/
+?? .planning/quick/260704-generate-123-stones-scene-asset/
+?? .planning/quick/260704-generate-align-scene-asset/
+?? .planning/quick/260704-generate-andrea-car-scene-asset/
+?? .planning/quick/260704-generate-andrea-car-v2-scene-asset/
+?? .planning/quick/260704-generate-balance-scale-timeline-asset/
+?? .planning/quick/260704-generate-car-plate-v2-asset/
+?? .planning/quick/260704-generate-cash-road-scene-asset/
+?? .planning/quick/260704-generate-cash-truth-scene-asset/
+?? .planning/quick/260704-generate-cash-truth-v2-scene-asset/
+?? .planning/quick/260704-generate-equal-status-v2-scene-asset/
+?? .planning/quick/260704-generate-higher-offer-scene-asset/
+?? .planning/quick/260704-generate-higher-offer-v2-scene-asset/
+?? .planning/quick/260704-generate-lc-b06-anchor-scene-asset/
+?? .planning/quick/260704-generate-lowballers-scene-asset/
+?? .planning/quick/260704-generate-m01-lc-b19-scenery-strip/
+?? .planning/quick/260704-generate-m02-l2a-b07-disqualify-scene-asset/
+?? .planning/quick/260704-generate-m02-l2a-grid1-inherited/
+?? .planning/quick/260704-generate-m02-l2a-grid2-landlord/
+?? .planning/quick/260704-generate-m02-l2a-grid4-relocating/
+?? .planning/quick/260704-generate-m02-l2a-grid6-repairs/
+?? .planning/quick/260704-generate-m03-l3a-devil-agent/
+?? .planning/quick/260704-generate-module-02-profile-scene-asset/
+?? .planning/quick/260704-generate-no-number-car-scene-asset/
+?? .planning/quick/260704-generate-office-andrea-v2b/
+?? .planning/quick/260704-generate-perform-contrast-scene-asset/
+?? .planning/quick/260704-generate-perform-v2-contrast-scene-asset/
+?? .planning/quick/260704-generate-price-headline-scene-asset/
+?? .planning/quick/260704-generate-reps-v3-board-asset/
+?? .planning/quick/260704-generate-too-high-scene-asset/
+?? .planning/quick/260704-generate-win-window-calendar-asset/
+?? .planning/quick/260704-generate-win-window-v2-calendar-asset/
+?? .planning/quick/260704-jxw-generate-one-bmh-institute-course-scene-/
+?? .planning/quick/260704-jyl-generate-deposition-scene-asset/
+?? .planning/quick/260704-jzs-generate-m01-lc-b11-movie-scene-asset/
+?? .planning/quick/260704-kf5-generate-car-plate-scene-asset/
+?? .planning/quick/260704-kf8-generate-cash-road-v2-scene-asset/
+?? .planning/quick/260704-kfc-generate-lowballers-v2-scene-asset/
+?? .planning/quick/260704-kvb-generate-longgame-ages-scene-asset/
+?? .planning/quick/260704-tnm-generate-canyon-price-gap-course-scene-a/
+?? .planning/quick/260704-twt-generate-m02-l2a-grid5-payments/
+?? .planning/quick/260704-twu-generate-m02-l2a-b06-motivated-scene-asset/
+?? .planning/quick/260704-u03-generate-m02-l2a-b06-curious-scene-asset/
+?? .planning/quick/260704-vog-generate-module-02-lesson-2b-david-portr/
+?? .planning/quick/260704-w0l-generate-m03-l3a-house-disrepair/
+?? .planning/quick/260704-woy-generate-module-02-lesson-2b-ray-portrai/
+?? .planning/quick/260705-0ht-generate-m04-l4a-offer-scene-asset/
+?? .planning/quick/260705-0ku-generate-m04-l4a-v1-capture/
+?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+?? .planning/quick/260705-1bd-generate-m03-l3a-steps-board-no-markers/
+?? .planning/quick/260705-1bj-regenerate-centered-module-03-lesson-3a-/
+?? .planning/quick/260705-29z-generate-m04-l4a-v6b-handoff-walkin/
+?? .planning/quick/260705-generate-carol-argue-scene/
+?? .planning/quick/260705-generate-m02-l2a-b05-motivation-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b10-outofstate-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b12-motivated-stand/
+?? .planning/quick/260705-generate-m02-l2a-b13-curious-stand/
+?? .planning/quick/260705-generate-m02-l2a-b16-notes-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b18-angrycaller/
+?? .planning/quick/260705-generate-m02-l2a-b20-handshake-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-grid3-divorce/
+?? .planning/quick/260705-generate-m02-l2b-beth-portrait/
+?? .planning/quick/260705-generate-m02-l2b-beth-scene/
+?? .planning/quick/260705-generate-m02-l2b-carol-scene-asset/
+?? .planning/quick/260705-generate-m02-l2b-david-portrait-v2/
+?? .planning/quick/260705-generate-m02-l2b-david-portrait-v3/
+?? .planning/quick/260705-generate-m02-l2b-david-scene-asset/
+?? .planning/quick/260705-generate-m02-l2b-david-simple-scene/
+?? .planning/quick/260705-generate-m02-l2b-marcus-dream-house-scene/
+?? .planning/quick/260705-generate-m02-l2b-marcus-portrait/
+?? .planning/quick/260705-generate-m02-l2b-marcus-underwater-scene/
+?? .planning/quick/260705-generate-m03-l3a-clock-kick-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-family-driveway/
+?? .planning/quick/260705-generate-m03-l3a-handshake-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-house-restored-asset/
+?? .planning/quick/260705-generate-m03-l3a-injury-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-peace-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-phone-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-rep-wand-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-steps-board/
+?? .planning/quick/260705-generate-m03-l3a-whiteboard-asset/
+?? .planning/quick/260705-generate-m03-l3b-andrea-stop/
+?? .planning/quick/260705-generate-m03-l3b-homeowner-avatar/
+?? .planning/quick/260705-generate-m03-l3b-ideal-seller/
+?? .planning/quick/260705-generate-m03-l3b-not-a-fit/
+?? .planning/quick/260705-generate-m03-l3b-offer-recap/
+?? .planning/quick/260705-generate-m03-l3b-relieved-seller-scene/
+?? .planning/quick/260705-generate-m03-l3b-rundown-house/
+?? .planning/quick/260705-generate-m04-l4a-contract-asset/
+?? .planning/quick/260705-generate-m04-l4a-discovery-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-handoff-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-qualify-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-qualify-v3/
+?? .planning/quick/260705-generate-m04-l4a-v2-firstcontact/
+?? .planning/quick/260705-generate-m04-l4b-v4b-offer-handoff/
+?? .planning/quick/260705-generate-m04-l4b-v7-person-situation-8020/
+?? .planning/quick/260705-generate-m05-l5a-card-handoff/
+?? .planning/quick/260705-generate-m05-l5a-demo-call/
+?? .planning/quick/260705-generate-m05-l5a-pen-notepad/
+?? .planning/quick/260705-generate-m05-l5a-phones/
+?? .planning/quick/260705-generate-m05-l5a-seller-couch-scene/
+?? .planning/quick/260705-generate-m05-l5a-stopwatch/
+?? .planning/quick/260705-generate-m05-l5a-two-doors/
+?? .planning/quick/260705-generate-m06-l6a-dig-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-fork/
+?? .planning/quick/260705-generate-m06-l6a-mask-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-notices/
+?? .planning/quick/260705-generate-m06-l6a-office-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-pyramid/
+?? .planning/quick/260705-generate-m07-l7a-b03-reframe/
+?? .planning/quick/260705-generate-m07-l7a-b04cold-mark/
+?? .planning/quick/260705-generate-m07-l7a-b04warm-jim/
+?? .planning/quick/260705-generate-m07-l7a-b07-complaints/
+?? .planning/quick/260705-generate-m07-l7b-price-theme/
+?? .planning/quick/260705-generate-m07-l7b-theme-asis/
+?? .planning/quick/260705-generate-m07-l7b-theme-delay/
+?? .planning/quick/260705-generate-m07-l7b-theme-distress/
+?? .planning/quick/260705-generate-m07-l7b-theme-trust/
+?? .planning/quick/260705-generate-office-andrea-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v2a-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v4a-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v4b-scene-asset/
+?? .planning/quick/260705-idk-generate-m02-l2a-b14-overshoulder-course/
+?? .planning/quick/260705-imq-generate-ray-scene-asset/
+?? .planning/quick/260705-imt-generate-m04-l4a-qualify-v2/
+?? .planning/quick/260705-imz-generate-carol-lien-scene/
+?? .planning/quick/260705-lkb-generate-m04-l4b-pitch-grounded/
+?? .planning/quick/260705-ltt-generate-one-module-04-lesson-4b-slow-do/
+?? .planning/quick/260705-ne7-generate-module-07-lesson-7a-b02-goodsig/
+?? .planning/quick/260705-nk6-generate-m07-l7a-b09-real/
+?? .planning/quick/260705-nkc-generate-m07-l7a-b08-reactionary/
+?? .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/
+?? .planning/quick/260705-nni-generate-m06-l6a-deciders-scene-asset/
+?? .planning/quick/260705-pxe-generate-m06-l6a-iceberg-scene-asset/
+?? .planning/quick/260705-regenerate-m03-l3a-cash-handoff/
+?? .planning/quick/260705-w66-generate-m05-l5b-computer/
+?? .planning/quick/260706-generate-m05-l5a-breakdown/
+?? .planning/quick/260706-generate-m05-l5b-conversation/
+?? .planning/quick/260706-generate-m05-l5b-interrogation-scene/
+?? .planning/quick/260706-generate-m08-l8a-andrea-beach/
+?? .planning/quick/260706-generate-m08-l8a-b04-response/
+?? .planning/quick/260706-generate-m08-l8a-b07-leaseback/
+?? .planning/quick/260706-generate-m08-l8a-ray-contract/
+?? .planning/quick/260706-generate-m08-l8a-squatters/
+?? .planning/quick/260706-generate-m08-l8a-tenants/
+?? .planning/quick/260706-generate-m08-l8a-underwater-scene/
+?? .planning/quick/260706-generate-m09-l9a-b07-scale/
+?? .planning/quick/260706-generate-m09-l9a-b08-beth-retry/
+?? .planning/quick/260706-generate-m09-l9a-bench-andrea/
+?? .planning/quick/260706-generate-m09-l9a-carol-door/
+?? .planning/quick/260706-generate-m09-l9a-david-papers/
+?? .planning/quick/260706-generate-m09-l9a-grace-call/
+?? .planning/quick/260706-hag-generate-m08-l8a-b02-weight/
+?? .planning/quick/260706-hbr-generate-m08-l8a-privacy-carol-scene/
+?? .planning/quick/260706-htr-generate-m09-l9a-b04-jim-shrug/
+?? .planning/quick/260707-0cg-generate-final-m08-l8a-b09-contract-imag/
+?? .planning/quick/260707-3ac-generate-m12-l12a-b16-coaching-review-co/
+?? .planning/quick/260707-3da-generate-module-11-lesson-11a-deal-risks/
+?? .planning/quick/260707-3hy-generate-m18-l18b-b12-wins-momentum/
+?? .planning/quick/260707-3ik-generate-m18-l18b-b03-approval-flow-scen/
+?? .planning/quick/260707-3iu-generate-m18-l18b-b04-quality-check-scen/
+?? .planning/quick/260707-3qx-generate-m12-l12a-b07-dial-quality-priya/
+?? .planning/quick/260707-4bd-generate-m18-l18b-b02-county-channels/
+?? .planning/quick/260707-generate-m11-l11a-b15-impact-path/
+?? .planning/quick/260707-generate-m12-l12a-b04-flying-blind/
+?? .planning/quick/260707-generate-m12-l12a-b04-priya-cane/
+?? .planning/quick/260707-generate-m12-l12a-b07-dial-quality/
+?? .planning/quick/260707-generate-m12-l12a-b11-offers-made/
+?? .planning/quick/260707-generate-m18-l18b-b08-response-loop/
+?? cast-doodle.log
+?? cast-gen1.log
+?? docs/course-production/ARCHITECTURE.md
+?? docs/course-production/HANDOFF-3B.md
+?? docs/course-production/HANDOFF-lesson2A.md
+?? docs/course-production/HANDOFF-lesson7A.md
+?? docs/course-production/LESSON-2B-V2-SCENES-SPEC.md
+?? docs/course-production/LESSON-4A-HANDOFF.md
+?? docs/course-production/MODULE-PRODUCTION-GUIDE.md
+?? docs/course-production/NEXT-SESSION.md
+?? docs/course-production/PLAYBOOK.md
+?? docs/course-production/RESEARCH-video-pipeline.md
+?? docs/course-production/STYLE-BLOCK.md
+?? docs/course-production/_QC-QUEUE.md
+?? docs/course-production/remotion/
+?? docs/course-production/scene-card-v2.md
+?? docs/course-production/scripts/
+?? docs/course-production/shotlists/lesson-10A-script-clean.txt
+?? docs/course-production/shotlists/lesson-10A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-11A-script-clean.txt
+?? docs/course-production/shotlists/lesson-11A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-12A-script-clean.txt
+?? docs/course-production/shotlists/lesson-12A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-13A-script-clean.txt
+?? docs/course-production/shotlists/lesson-13A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-18B-script-clean.txt
+?? docs/course-production/shotlists/lesson-18B-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-19-script-clean.txt
+?? docs/course-production/shotlists/lesson-19-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-1B-script-clean.txt
+?? docs/course-production/shotlists/lesson-1C-script-conversation-flow.txt
+?? docs/course-production/shotlists/lesson-4A-script.txt
+?? docs/course-production/shotlists/lesson-4B-script-clean.txt
+?? docs/course-production/shotlists/lesson-4B-script.txt
+?? docs/course-production/shotlists/lesson-5A-script-clean.txt
+?? docs/course-production/shotlists/lesson-5B-script.txt
+?? docs/course-production/shotlists/lesson-6A-script-clean.txt
+?? docs/course-production/shotlists/lesson-6B-script-clean.txt
+?? docs/course-production/shotlists/lesson-6B-script.txt
+?? docs/course-production/shotlists/lesson-7A-part2-script.txt
+?? docs/course-production/shotlists/lesson-7A-script-clean.txt
+?? docs/course-production/shotlists/lesson-7B-script-clean.txt
+?? docs/course-production/shotlists/lesson-8A-script-clean.txt
+?? docs/course-production/shotlists/lesson-8B-script.txt
+?? docs/course-production/shotlists/lesson-9A-script-clean.txt
+?? docs/course-production/shotlists/lesson-9B-script.txt
+?? docs/course-production/shotlists/module-01-lessonA-scenecards.md
+?? docs/course-production/shotlists/module-01-lessonB-scenecards.md
+?? docs/course-production/shotlists/module-01-lessonC-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2A-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2B-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2B-script-clean.txt
+?? docs/course-production/shotlists/module-03-lesson3A-scenecards.md
+?? docs/course-production/shotlists/module-03-lesson3B-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4A-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-bakeoff.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-production-plan.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-prompts.md
+?? docs/course-production/shotlists/module-04-lesson4B-assembly-review.md
+?? docs/course-production/shotlists/module-04-lesson4B-current-gate.md
+?? docs/course-production/shotlists/module-04-lesson4B-model-choice-prompt.md
+?? docs/course-production/shotlists/module-04-lesson4B-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4B-still-review.md
+?? docs/course-production/shotlists/module-05-lesson5A-scenecards.md
+?? docs/course-production/shotlists/module-05-lesson5B-scenecards.md
+?? docs/course-production/shotlists/module-06-lesson6A-scenecards.md
+?? docs/course-production/shotlists/module-06-lesson6B-scenecards.md
+?? docs/course-production/shotlists/module-07-lesson7A-scenecards.md
+?? docs/course-production/shotlists/module-07-lesson7B-avatar-map.md
+?? docs/course-production/shotlists/module-08-lesson8A-scenecards.md
+?? docs/course-production/shotlists/module-09-lesson9A-scenecards.md
+?? docs/course-production/shotlists/module-10-lesson10A-scenecards.md
+?? docs/course-production/shotlists/module-11-lesson11A-scenecards.md
+?? docs/course-production/shotlists/module-12-lesson12A-scenecards.md
+?? docs/course-production/shotlists/module-13-lesson13A-scenecards.md
+?? docs/course-production/shotlists/module-17-lesson17-scenecards.md
+?? docs/course-production/shotlists/module-18-lesson18B-scenecards.md
+?? docs/course-production/shotlists/module-19-lesson19-scenecards.md
+?? remotion/
+?? style-extract.log
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The checkout is already a course-production branch with many existing untracked quick-task records and generated assets. I’m not going to clean or rewrite any of that; I’ll add only this scene asset and its matching quick-task record.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'find . -maxdepth 3 -name AGENTS.md -print' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "find course-assets -maxdepth 4 -type f | rg 'module-13|m13_L13A_b12|money-table' || true" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'find $HOME -path '"'*get-shit-done/workflows/quick.md' -print 2>/dev/null | head -20" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'ls -la $HOME | rg '"'Codex|codex'" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find course-assets/scenes -maxdepth 2 -type d | sort | tail -60' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes
+course-assets/scenes/module-01
+course-assets/scenes/module-02
+course-assets/scenes/module-02-lesson2B
+course-assets/scenes/module-03
+course-assets/scenes/module-03-lesson3B
+course-assets/scenes/module-04
+course-assets/scenes/module-04-lesson4B
+course-assets/scenes/module-04-lesson4B/.reroll_tmp
+course-assets/scenes/module-04-lesson4B/rejected
+course-assets/scenes/module-05
+course-assets/scenes/module-05-lesson5B
+course-assets/scenes/module-05-lesson5B/_anchors
+course-assets/scenes/module-06
+course-assets/scenes/module-07
+course-assets/scenes/module-07-lesson7B
+course-assets/scenes/module-07-lesson7B/_anchors
+course-assets/scenes/module-07-lesson7B/_logs
+course-assets/scenes/module-07/_anchors
+course-assets/scenes/module-08
+course-assets/scenes/module-08/_anchors
+course-assets/scenes/module-09
+course-assets/scenes/module-09/_v1_nosed
+course-assets/scenes/module-09/_v2_noseless
+course-assets/scenes/module-09/_v3_rejected
+course-assets/scenes/module-09/_v4_terrifying
+course-assets/scenes/module-10
+course-assets/scenes/module-10/_logs
+course-assets/scenes/module-11
+course-assets/scenes/module-11/_rejected-first-pass-20260707
+course-assets/scenes/module-12
+course-assets/scenes/module-12/_anchors
+course-assets/scenes/module-13
+course-assets/scenes/module-13/_logs
+course-assets/scenes/module-13/_superseded
+course-assets/scenes/module-17
+course-assets/scenes/module-17/_logs
+course-assets/scenes/module-18-lesson18B
+course-assets/scenes/module-18-lesson18B/_logs
+
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 175ms:
+course-assets/scenes/module-13/_superseded/m13_L13A_b04_your-deal-v1-handoff.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b04_your-deal-v2-podium-one-person.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b11_top-earners-v2-blank-square-plaques.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b11_top-earners-v1-desk.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b10_attribution-pipeline-v1-superseded.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v2-offbrand-eyes.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v1-table.png
+course-assets/scenes/module-13/_logs/m13_L13A_b04_your-deal.png.log
+course-assets/scenes/module-13/_logs/m13_L13A_b11_top-earners.png.log
+course-assets/scenes/module-13/_logs/m13_L13A_b12_money-table.png.log
+course-assets/scenes/module-13/_logs/m13_L13A_b10_attribution-pipeline.png.log
+course-assets/scenes/module-13/m13_L13A_b11_top-earners.png
+course-assets/scenes/module-13/m13_L13A_b12_money-table.png
+course-assets/scenes/module-13/m13_L13A_b04_your-deal.png
+
+ succeeded in 148ms:
+drwxr-xr-x@  59 jarradhenry  staff    1888 Jul  7 03:28 .codex
+
+ succeeded in 225ms:
+./AGENTS.md
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 20251ms:
+$HOME/.gemini/antigravity-backup/get-shit-done/workflows/quick.md
+$HOME/.gemini/antigravity-ide/get-shit-done/workflows/quick.md
+$HOME/.gemini/antigravity/get-shit-done/workflows/quick.md
+$HOME/.claude/get-shit-done/workflows/quick.md
+
+codex
+There is already a target file plus two rejected versions for this exact b12 scene. I’m treating this as an intentional replacement request because you named the exact final path and the existing rejected filenames identify why the prior attempts failed.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' course-assets/scenes/module-13/_logs/m13_L13A_b12_money-table.png.log" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-13/m13_L13A_b12_money-table.png course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v2-offbrand-eyes.png course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v1-table.png docs/design/cast-board.png' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "find $HOME/.codex -maxdepth 3 -type f -name '*.png' -mtime -2 | sed -n '1,80p'" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'ls -la $HOME/.codex/generated_images 2>/dev/null | tail -40' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 171ms:
+Reading prompt from stdin...
+2026-07-07T08:27:58.839524Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f3bb0-e74e-7d33-bc40-3f8e871ca617
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-13/m13_L13A_b12_money-table.png (PNG, 1600x900). Match the attached style references and cast-board character style exactly. COMPOSITION: Comedic chase scene on a plain cornflower-blue field, but keep faces on-brand with the cast-board. LEFT/BACK: one BMH follow-up representative woman inspired by PRIYA on the cast-board, wearing the simple orange phone headset, yellow top, cream pants, and ponytail/headband. She runs forward with a determined posture and arms reaching forward but not touching anyone; her face uses tiny dot eyes and a small simple mouth only, not crazy eyes. RIGHT/FRONT: one seller/homeowner inspired by the curly black-haired man in the orange shirt and cream pants from the cast-board runs away, body leaning away and shoulders tense. His face must use tiny black dot eyes, tiny centered two-stroke/comma nose, and a small worried downturned mouth only; no large ring eyes, no big open mouth, no teeth, no horror face. The scene should read cartoon-safe and funny, not violent, not horror, no weapons, no contact, no injury. Exactly two people total, clearly different characters, no clones. Leave clean open blue space above and lower center for later code labels. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow, orange, cream, white, and black. No gradients, no texture, no shadows, no lighting, no perspective, no skin-tone shading. Faces must match the cast-board: flat white/cream fill, tiny black dot eyes only, tiny centered two-stroke/comma nose, and a very small simple mouth. Do not use ring eyes, side-eye eyeballs, large open mouths, teeth, eyebrows, sunglasses, or detailed expressions. Show emotion mainly through body posture, not altered facial anatomy. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, motion marks, icons, random props, or decorative clutter. No text, letters, words, numbers, symbols, dollar signs, labels, captions, screens with writing, or readable paperwork anywhere unless the composition explicitly requests the exact plaque phrase EMPLOYEE OF THE MONTH. Leave clean open cornflower-blue space for code-rendered Sticker overlays. 16:9 composition, 1600x900 PNG.
+
+2026-07-07T08:27:59.214975Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-07T08:27:59.248565Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-07T08:27:59.290241Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-07T08:27:59.397688Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-07T08:27:59.475893Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill for the asset request and the repo’s quick GSD workflow before making the file change. I’m also checking the local project/vault instructions first so the generated asset lands in the right lane without stepping on other work.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+
+ succeeded in 172ms:
+course-assets/scenes/module-13/m13_L13A_b12_money-table.png:                              PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v2-offbrand-eyes.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v1-table.png:         PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+docs/design/cast-board.png:                                                               PNG image data, 1536 x 1024, 8-bit/color RGB, non-interlaced
+
+hook: PostToolUse
+ succeeded in 332ms:
+$HOME/.codex/generated_images/019f343f-7679-7842-bbd2-4fc40a720400/ig_0912f3be4e4eddfb016a4ad12701bc81958996da210c05796d.png
+$HOME/.codex/generated_images/019f3ae0-e98c-74f3-8850-c262ff160acf/ig_013085f40f42ac75016a4c84189f00819782f5c19717687f8a.png
+$HOME/.codex/generated_images/019f3ae0-e98c-74f3-8850-c262ff160acf/ig_013085f40f42ac75016a4c845c6ed081978e987834c835d3bb.png
+$HOME/.codex/generated_images/019f3ae0-e98c-74f3-8850-c262ff160acf/ig_013085f40f42ac75016a4c83da0c5c8197a6d6157a7c08f719.png
+$HOME/.codex/generated_images/019f3b7b-9079-7992-8502-df88764b9941/ig_0b62ca4b40867031016a4cabac7c8081a3942224a0d3d430ff.png
+$HOME/.codex/generated_images/019f3b7b-9079-7992-8502-df88764b9941/ig_0b62ca4b40867031016a4cabf269bc81a39f4c7c3180afe591.png
+$HOME/.codex/generated_images/019f337a-f03e-7e43-9348-aaee8fe4303e/ig_0b7590d59cb3cd7d016a4a9ef05d948197850762afd1e2c906.png
+$HOME/.codex/generated_images/019f3b84-db0d-7570-add6-94580c9b6f40/ig_05eb48a47b98b31d016a4cade8b59c8193bb38cb5406fd2483.png
+$HOME/.codex/generated_images/019f38ce-4e3d-7b50-bce7-006b7a97aeff/ig_0f5e08eb3e4726ed016a4bfc1841988194b7f420d277bf3459.png
+$HOME/.codex/generated_images/019f38ce-4e3d-7b50-bce7-006b7a97aeff/ig_0f7cad1701d51b7c016a4bfca498348195a914fd0c73e0a2ad.png
+$HOME/.codex/generated_images/019f34a3-e042-7dd3-b15f-cc63cd732ea0/ig_01d81f6f4954a7cb016a4aead46ef081a38eb7c103bfa2b101.png
+$HOME/.codex/generated_images/019f388a-dd12-76d3-89cf-9e6d58c13e6d/ig_0a053895fd2c5ce4016a4beb551aec8197bcbc0131c6754504.png
+$HOME/.codex/generated_images/019f3448-9e90-7d72-8333-4163b43912bb/ig_089836a14d6d2ed3016a4ad37940ac819489bd2c0934b2af5e.png
+$HOME/.codex/generated_images/019f3448-9e90-7d72-8333-4163b43912bb/ig_090c1adad1067152016a4ad3c9e4248194bcc5b85de0259ab0.png
+$HOME/.codex/generated_images/019f3448-9e90-7d72-8333-4163b43912bb/ig_0b9f0c078b9be5ab016a4ad41061148195bdc3990b8abaa2ec.png
+$HOME/.codex/generated_images/019f34a3-e58c-7243-9180-b8d8c5f0de1c/ig_0fe5294579560b37016a4aec47edc0819ca912c69cc33c2657.png
+$HOME/.codex/generated_images/019f34a3-e58c-7243-9180-b8d8c5f0de1c/ig_0fe5294579560b37016a4aec855bd0819c9f10902b406094fe.png
+$HOME/.codex/generated_images/019f3393-f0a4-7462-9bc2-f68f8677dff9/ig_01eaca31494a92ed016a4aa5431fd8819694cbace7a58405f6.png
+$HOME/.codex/generated_images/019f3445-eb95-7c02-bc7e-c6759ebdcf1e/ig_0410815620f1d724016a4ad46537448197b84be199bd2eebbd.png
+$HOME/.codex/generated_images/019f337a-f00f-71d0-9ca1-4812896ca7c0/ig_07a9301f53de09c8016a4a9eb6ec988194b3e58bb2efcacb37.png
+$HOME/.codex/generated_images/019f3ad8-de77-7963-acb2-eaa155db8d02/ig_04dd1115b07789b5016a4c817e079481939f22519ed3fb9047.png
+$HOME/.codex/generated_images/019f3ad8-de77-7963-acb2-eaa155db8d02/ig_03fc0bce6ab97245016a4c81df11888193b0fbf5780c7101a9.png
+$HOME/.codex/generated_images/019f388a-dd11-7d12-b492-c4793fe5bf3c/ig_023d1b7adb69060d016a4bead838e8819481246446f3167930.png
+$HOME/.codex/generated_images/019f3448-5bb7-7062-9b0a-6ce2b033215e/ig_03245d0d03d41e39016a4ad372b2348193ac49472cdf5b82c9.png
+$HOME/.codex/generated_images/019f3448-5bb7-7062-9b0a-6ce2b033215e/ig_03245d0d03d41e39016a4ad398d2d48193843fb97d755cb070.png
+$HOME/.codex/generated_images/019f38cf-2626-71a1-8231-c64193f3577e/ig_055bba4d1d92d20d016a4bfc11b49881938e39e8b9b4f5015c.png
+$HOME/.codex/generated_images/019f34a1-619a-75b1-bcdc-5f32e9f925dc/ig_070d43dd901aaae9016a4aea5f86f0819c9640ebbf78c15539.png
+$HOME/.codex/generated_images/019f3445-df91-75f1-afab-8f94a2107b08/ig_0c210279703a6d37016a4ad428bc5081909030ccc095fd02b7.png
+$HOME/.codex/generated_images/019f3b70-c036-76f2-a106-ccd0076ba8dc/ig_02710e8ff13e1555016a4ca895fc5c8196ae296d6498bb98c6.png
+$HOME/.codex/generated_images/019f3b70-c036-76f2-a106-ccd0076ba8dc/ig_08eb0987cabeffed016a4ca9397c208193883b8ae1e46e5f5c.png
+$HOME/.codex/generated_images/019f3875-23e6-7da2-953c-c01e539dcce3/ig_0da33ef2ccee1928016a4be51c92908196bcc9080e53a7b8c3.png
+$HOME/.codex/generated_images/019f388a-6647-7f33-9a06-b09ef1fa9330/ig_0368ea4b57cd268e016a4beae20354819480edb5a97acfc4a5.png
+$HOME/.codex/generated_images/019f38be-4467-7a61-beb7-64e78b5d3e3f/ig_08a2d10123eff9c9016a4bf803daf08194bb57647e98d939f4.png
+$HOME/.codex/generated_images/019f337e-e56c-72e1-a907-b9ad84569725/ig_05dfe0cc71de7b94016a4aa031c5188196bf27239567b58ce0.png
+$HOME/.codex/generated_images/019f337e-e56c-72e1-a907-b9ad84569725/ig_05dfe0cc71de7b94016a4a9ff7db78819696e4335ccc3f22ef.png
+$HOME/.codex/generated_images/019f3b70-90b8-7e91-bce7-ed248d775e6e/ig_04ba6da98e2eab96016a4ca9e351c08195ae4263439e04c843.png
+$HOME/.codex/generated_images/019f3b70-90b8-7e91-bce7-ed248d775e6e/ig_0e910b40bfb4a9a6016a4ca8da15d081969ab6a5365d4ce7ce.png
+$HOME/.codex/generated_images/019f344a-d090-7c33-9d5f-9fcccb26a0fc/ig_09e7c2db986e2ace016a4ad4683e98819088a268cbdca75750.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_06d388b96d0cfbdf016a4ab5718cac8190aafacb621747e45d.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_098c29ec691afb18016a4aad537b248195a4242f0f46be6249.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_071b9dd3d33c300a016a4ab4635f2c8195b91e50d5a55dc634.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_07b9650ca2d4f8e2016a4ab4b579c881908fab2809667588cc.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_0d546dac1a668c5d016a4be9adbbf081909be67b44376dca08.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_086c92f819ad26cc016a4a1d2afc5081908fee58ae2a98f653.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_087ed65e63458d23016a4aa2c2354081949521f49182f45a26.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_0da2ad24292d307d016a4ab6c0e3f48194b00c946fae0f5502.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_03e988341c9887c4016a4ab0a4ec1c81968a59e88e969fa75a.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_086c92f819ad26cc016a4a1d5ba0148190b245338f420bbafa.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_0218075ed9b304e0016a4aaff02bec8195a53ee1f090c3ede7.png
+$HOME/.codex/generated_images/019f314b-d570-7480-a135-bcd9b6b6ce22/ig_0483ba19da0486c2016a4aafa391948197860f6c881484a9be.png
+$HOME/.codex/generated_images/019f34a1-5b91-7d31-b74c-009903722f15/ig_07c225f71c6d5b84016a4aea3ad5b481a0a16d097db9d206f8.png
+$HOME/.codex/generated_images/019f38d4-d000-7963-a666-b2c7de284b67/ig_0cb7617e8e6d8b2e016a4bfdd41c38819084deb60be55300e3.png
+$HOME/.codex/generated_images/019f3b7b-907a-7802-abf0-dc9e0d8a6b66/ig_07afe43247f801dc016a4cab6c1de881a2bdae4382b5b161c7.png
+$HOME/.codex/generated_images/019f359d-24f9-72e3-9e55-5cbb0415ac7c/ig_01d10f2a3e0edb1d016a4b2b140b40819e8643f203726db584.png
+$HOME/.codex/generated_images/019f359d-24f9-72e3-9e55-5cbb0415ac7c/ig_01d10f2a3e0edb1d016a4b2acf038c819e95ad21e3c46ccd98.png
+$HOME/.codex/generated_images/019f3448-7666-7841-9572-26dc356736a5/ig_0b2c8b8829421253016a4ad3c3daa88193a49f6f417c1f2fc1.png
+$HOME/.codex/generated_images/019f343f-4f9a-7992-9114-ea3a43293d05/ig_075b09901277f471016a4ad1477bfc81948b1134e787e9f7f1.png
+$HOME/.codex/generated_images/019f34b0-853e-7f80-8917-1a1794b59e56/ig_0183e443d2811f74016a4aee0a54cc819f9375cb87e0d216aa.png
+$HOME/.codex/generated_images/019f34b0-853e-7f80-8917-1a1794b59e56/ig_00d36e1f97ec463e016a4aee9a9404819f93f61e4a569f1798.png
+$HOME/.codex/generated_images/019f34b0-043b-7e20-b31e-6b38245656b1/ig_0c9c8f62eadcfe50016a4aedd3fae081a2bd27bee25d95b1c6.png
+$HOME/.codex/generated_images/019f34b0-043b-7e20-b31e-6b38245656b1/ig_0197382f144bf22c016a4aeea515688191b0fe901dc0ea6d56.png
+$HOME/.codex/generated_images/019f38cf-2635-7843-8477-0801eedc3949/ig_097d6aabedbf0511016a4bfc08e3ac81949ae2ac79f092ebbf.png
+$HOME/.codex/generated_images/019f3875-1cbb-7b21-bcc9-dd75a22da033/ig_06c6808b91e27052016a4be4f3a6b08190a56746c9443a42be.png
+$HOME/.codex/generated_images/019f3875-1cbb-7b21-bcc9-dd75a22da033/ig_06c6808b91e27052016a4be52eea188190b9acc4e1d6730913.png
+$HOME/.codex/generated_images/019f3b84-db12-75a0-be63-35d86f85daca/ig_0e5afc79361597db016a4cae1f01388194aa91066acde2f8dc.png
+$HOME/.codex/generated_images/019f393d-4487-77c2-a456-3d83157ec7b0/ig_059073f62f4abc96016a4c186b3e84819187866dc544bb2a71.png
+$HOME/.codex/generated_images/019f34a1-503c-7462-8caa-ca27a215ec6c/ig_01996db9f8beac6e016a4aea3d0a748191948376ee72f07e05.png
+$HOME/.codex/generated_images/019f393d-448c-7e40-9671-2288ef930bb4/ig_036e0db72acfd730016a4c183aa87081949f8b4cc37976adbe.png
+$HOME/.codex/generated_images/019f3453-79cd-7452-897e-4c4759bf0597/ig_069cbd1ee2a06287016a4ad6667a488197adac202676266826.png
+$HOME/.codex/generated_images/019f3b7b-9077-7680-bb6a-7c8d4c21adbf/ig_0d34965740e9af56016a4cacb0376081a3b3036e0e37329fa4.png
+$HOME/.codex/generated_images/019f3b7b-9077-7680-bb6a-7c8d4c21adbf/ig_0e06604c11eae3cc016a4cababfe9881a19bee23e51f02160b.png
+$HOME/.codex/generated_images/019f3b7b-9078-7502-8b69-a3728fdcdb8b/ig_07800fc585063ded016a4cab1155708191843d5a0ae12479a5.png
+$HOME/.codex/generated_images/019f34a1-4a07-7762-8c04-f275d15aea21/ig_040f5e26f79ec46c016a4aead2cee0819285f7bfd94130d54a.png
+$HOME/.codex/generated_images/019f34a1-4a07-7762-8c04-f275d15aea21/ig_092be1547b660113016a4aea3c9e08819fb2210502ef633087.png
+$HOME/.codex/generated_images/019f34ca-406b-72f3-ae04-cb8d06894fca/ig_0eaa277836b2322e016a4af54395d4819ebebbaace5051147d.png
+$HOME/.codex/generated_images/019f34ca-406b-72f3-ae04-cb8d06894fca/ig_0eaa277836b2322e016a4af4ce8638819eafe751c879f982dd.png
+$HOME/.codex/generated_images/019f34ca-406b-72f3-ae04-cb8d06894fca/ig_0eaa277836b2322e016a4af50a9c60819e9d462e47b7fd44d9.png
+$HOME/.codex/generated_images/019f38be-4461-7951-bd42-e4626cec224e/ig_0a2b729ffe8437f7016a4bf7ebc8a88190b0996cb6592990dd.png
+$HOME/.codex/generated_images/019f3b70-c036-7953-a034-588135750cde/ig_0856808d093bc45c016a4ca93d55c48190acc5b7ba5492eb31.png
+$HOME/.codex/generated_images/019f3b70-c036-7953-a034-588135750cde/ig_03f6b864fee6240b016a4ca8ccb0a08193bb5bc8e62cdcd4ea.png
+
+hook: PostToolUse
+ succeeded in 461ms:
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  6 23:13 019f3ac5-a402-7b33-9c69-c654a9a49732
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  6 23:12 019f3ac5-f769-7e90-adad-8b7c4151d7b0
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  6 23:35 019f3ad8-de77-7963-acb2-eaa155db8d02
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  6 23:36 019f3ad8-e735-7653-b88b-ea2f5a090a55
+drwxr-xr-x@   5 jarradhenry  staff    160 Jul  6 23:46 019f3ae0-e98c-74f3-8850-c262ff160acf
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  6 23:55 019f3aeb-6692-7842-a3c4-21064474068a
+drwxr-xr-x@   5 jarradhenry  staff    160 Jul  7 00:09 019f3af5-fc40-73d1-b5ec-6cf9a8155a99
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 00:17 019f3afe-655f-7180-b435-2822a7d6f045
+drwxr-xr-x@  19 jarradhenry  staff    608 Jul  7 03:28 019f3b31-9447-7972-9ee6-989aca06497d
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:30 019f3b70-90b6-75f1-bab0-68750fc76c95
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:20 019f3b70-90b7-7e33-9be0-a71fb11b555c
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:26 019f3b70-90b8-7e91-bce7-ed248d775e6e
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:24 019f3b70-90e5-7680-9dba-596f0ff41025
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:23 019f3b70-c036-76f2-a106-ccd0076ba8dc
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:23 019f3b70-c036-7953-a034-588135750cde
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:21 019f3b70-c03e-7a41-815d-6e6ad108abe8
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:21 019f3b70-c03e-7f90-84d8-df5d1d36491f
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:23 019f3b71-d22f-7572-b953-2a802f23fcc5
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:24 019f3b71-d22f-7e63-b384-be1839c55b35
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:23 019f3b72-be39-7841-81ed-f3f6b2a6cdeb
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:38 019f3b7b-9077-7680-bb6a-7c8d4c21adbf
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:31 019f3b7b-9078-7502-8b69-a3728fdcdb8b
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:35 019f3b7b-9079-7992-8502-df88764b9941
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:32 019f3b7b-907a-73e2-a400-5d58462445b4
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:33 019f3b7b-907a-7802-abf0-dc9e0d8a6b66
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:34 019f3b7b-9089-7e80-a5cd-9d1376f8bb30
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:34 019f3b7b-90d3-7821-9470-4036d94755a8
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:33 019f3b7b-90d6-7ba3-8786-e53ff47cf5ce
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:32 019f3b7b-90fb-71b0-889e-0a4ab0872a4d
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:33 019f3b7b-9108-7991-b7db-26f3afa52913
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 02:44 019f3b84-db08-7020-b98a-cc2dc343872c
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:43 019f3b84-db0d-7570-add6-94580c9b6f40
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:44 019f3b84-db12-75a0-be63-35d86f85daca
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 02:47 019f3b88-6ec0-7723-91e2-5b209fbf742c
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 03:03 019f3b96-82ba-7fd2-8ccd-68dfbfba8e01
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 03:08 019f3b9b-831c-7322-9e9d-47e0da9c8d21
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 03:10 019f3b9d-6b29-75b2-b7aa-5f838422a1e1
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 03:11 019f3b9d-6b29-7bb0-9d79-96b3073bb0d9
+drwxr-xr-x@   3 jarradhenry  staff     96 Jul  7 03:10 019f3b9d-6b2a-7df3-9202-a96918ff256e
+drwxr-xr-x@   4 jarradhenry  staff    128 Jul  7 03:17 019f3ba2-3d98-7ad3-9451-6246356ccef5
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The repo already has a log for this exact scene. It confirms prior work was focused on the same prompt and that the “offbrand eyes” failure is real, so the next generation needs stricter face constraints rather than a broad creative retry.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,300p' $HOME/.claude/get-shit-done/workflows/quick.md" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'ls -d .planning/quick/*money-table* 2>/dev/null || true' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+zsh:1: no matches found: .planning/quick/*money-table*
+
+ succeeded in 0ms:
+<purpose>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking). Quick mode spawns gsd-planner (quick mode) + gsd-executor(s), tracks tasks in `.planning/quick/`, and updates STATE.md's "Quick Tasks Completed" table.
+
+With `--full` flag: enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+With `--validate` flag: enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+With `--discuss` flag: lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md so the planner treats them as locked.
+
+With `--research` flag: spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls. Use when you're unsure how to approach a task.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+</purpose>
+
+<required_reading>
+Read all files referenced by the invoking prompt's execution_context before starting.
+</required_reading>
+
+<available_agent_types>
+Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gsd-phase-researcher — Researches technical approaches for a phase
+- gsd-planner — Creates detailed plans from phase scope
+- gsd-plan-checker — Reviews plan quality before execution
+- gsd-executor — Executes plan tasks, commits, creates SUMMARY.md
+- gsd-verifier — Verifies phase completion, checks quality gates
+- gsd-code-reviewer — Reviews source files for bugs, security issues, and code quality
+</available_agent_types>
+
+<process>
+**Step 1: Parse arguments and get task description**
+
+Parse `$ARGUMENTS` for:
+- `--full` flag → store `$FULL_MODE=true`, `$DISCUSS_MODE=true`, `$RESEARCH_MODE=true`, `$VALIDATE_MODE=true`
+- `--validate` flag → store `$VALIDATE_MODE=true`
+- `--discuss` flag → store `$DISCUSS_MODE=true`
+- `--research` flag → store `$RESEARCH_MODE=true`
+- Remaining text → use as `$DESCRIPTION` if non-empty
+
+After parsing, normalize: if `$DISCUSS_MODE` and `$RESEARCH_MODE` and `$VALIDATE_MODE` are all true, set `$FULL_MODE=true`. This ensures `--discuss --research --validate` is treated identically to `--full`.
+
+If `$DESCRIPTION` is empty after parsing, prompt user interactively:
+
+
+**Text mode (`workflow.text_mode: true` in config or `--text` flag):** Set `TEXT_MODE=true` if `--text` is present in `$ARGUMENTS` OR `text_mode` from init JSON is `true`. When TEXT_MODE is active, replace every `AskUserQuestion` call with a plain-text numbered list and ask the user to type their choice number. This is required for non-Claude runtimes (OpenAI Codex, Gemini CLI, etc.) where `AskUserQuestion` is not available.
+
+```
+AskUserQuestion(
+  header: "Quick Task",
+  question: "What do you want to do?",
+  followUp: null
+)
+```
+
+Store response as `$DESCRIPTION`.
+
+If still empty, re-prompt: "Please provide a task description."
+
+Display banner based on active flags:
+
+If `$FULL_MODE` (all phases enabled — `--full` or all granular flags):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (FULL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + research + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` and `$VALIDATE_MODE` (no research):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS + VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` and `$RESEARCH_MODE` (no validate):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS + RESEARCH)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + research enabled
+```
+
+If `$RESEARCH_MODE` and `$VALIDATE_MODE` (no discuss):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (RESEARCH + VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Research + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion phase enabled — surfacing gray areas before planning
+```
+
+If `$RESEARCH_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (RESEARCH)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Research phase enabled — investigating approaches before planning
+```
+
+If `$VALIDATE_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Plan checking + verification enabled
+```
+
+---
+
+**Step 2: Initialize**
+
+```bash
+if ! command -v gsd-sdk &>/dev/null; then
+  echo "⚠ gsd-sdk not found in PATH — /gsd-quick requires it."
+  echo ""
+  echo "Install the GSD SDK:"
+  echo "  npm install -g @gsd-build/sdk"
+  echo ""
+  echo "Or update GSD to get the latest packages:"
+  echo "  /gsd-update"
+  exit 1
+fi
+```
+
+```bash
+INIT=$(gsd-sdk query init.quick "$DESCRIPTION")
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+AGENT_SKILLS_PLANNER=$(gsd-sdk query agent-skills gsd-planner)
+AGENT_SKILLS_EXECUTOR=$(gsd-sdk query agent-skills gsd-executor)
+AGENT_SKILLS_CHECKER=$(gsd-sdk query agent-skills gsd-plan-checker)
+AGENT_SKILLS_VERIFIER=$(gsd-sdk query agent-skills gsd-verifier)
+```
+
+Parse JSON for: `planner_model`, `executor_model`, `checker_model`, `verifier_model`, `commit_docs`, `branch_name`, `quick_id`, `slug`, `date`, `timestamp`, `quick_dir`, `task_dir`, `roadmap_exists`, `planning_exists`.
+
+```bash
+USE_WORKTREES=$(gsd-sdk query config-get workflow.use_worktrees 2>/dev/null || echo "true")
+```
+
+If the project uses git submodules, worktree isolation is skipped:
+
+```bash
+if [ -f .gitmodules ]; then
+  echo "[worktree] Submodule project detected (.gitmodules exists) — falling back to sequential execution"
+  USE_WORKTREES=false
+fi
+```
+
+**If `roadmap_exists` is false:** Error — Quick mode requires an active project with ROADMAP.md. Run `/gsd-new-project` first.
+
+Quick tasks can run mid-phase - validation only checks ROADMAP.md exists, not phase status.
+
+---
+
+**Step 2.5: Handle quick-task branching**
+
+**If `branch_name` is empty/null:** Skip and continue on the current branch.
+
+**If `branch_name` is set:** Check out the quick-task branch before any planning commits:
+
+```bash
+git checkout -b "$branch_name" 2>/dev/null || git checkout "$branch_name"
+```
+
+All quick-task commits for this run stay on that branch. User handles merge/rebase afterward.
+
+---
+
+**Step 3: Create task directory**
+
+```bash
+mkdir -p "${task_dir}"
+```
+
+---
+
+**Step 4: Create quick task directory**
+
+Create the directory for this quick task:
+
+```bash
+QUICK_DIR=".planning/quick/${quick_id}-${slug}"
+mkdir -p "$QUICK_DIR"
+```
+
+Report to user:
+```
+Creating quick task ${quick_id}: ${DESCRIPTION}
+Directory: ${QUICK_DIR}
+```
+
+Store `$QUICK_DIR` for use in orchestration.
+
+---
+
+**Step 4.5: Discussion phase (only when `$DISCUSS_MODE`)**
+
+Skip this step entirely if NOT `$DISCUSS_MODE`.
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► DISCUSSING QUICK TASK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Surfacing gray areas for: ${DESCRIPTION}
+```
+
+**4.5a. Identify gray areas**
+
+Analyze `$DESCRIPTION` to identify 2-4 gray areas — implementation decisions that would change the outcome and that the user should weigh in on.
+
+Use the domain-aware heuristic to generate phase-specific (not generic) gray areas:
+- Something users **SEE** → layout, density, interactions, states
+- Something users **CALL** → responses, errors, auth, versioning
+- Something users **RUN** → output format, flags, modes, error handling
+- Something users **READ** → structure, tone, depth, flow
+- Something being **ORGANIZED** → criteria, grouping, naming, exceptions
+
+Each gray area should be a concrete decision point, not a vague category. Example: "Loading behavior" not "UX".
+
+**4.5b. Present gray areas**
+
+```
+AskUserQuestion(
+  header: "Gray Areas",
+  question: "Which areas need clarification before planning?",
+  options: [
+    { label: "${area_1}", description: "${why_it_matters_1}" },
+    { label: "${area_2}", description: "${why_it_matters_2}" },
+    { label: "${area_3}", description: "${why_it_matters_3}" },
+    { label: "All clear", description: "Skip discussion — I know what I want" }
+  ],
+  multiSelect: true
+)
+```
+
+If user selects "All clear" → skip to Step 5 (no CONTEXT.md written).
+
+**4.5c. Discuss selected areas**
+
+For each selected area, ask 1-2 focused questions via AskUserQuestion:
+
+```
+AskUserQuestion(
+  header: "${area_name}",
+  question: "${specific_question_about_this_area}",
+  options: [
+    { label: "${concrete_choice_1}", description: "${what_this_means}" },
+    { label: "${concrete_choice_2}", description: "${what_this_means}" },
+    { label: "${concrete_choice_3}", description: "${what_this_means}" },
+    { label: "You decide", description: "Claude's discretion" }
+  ],
+  multiSelect: false
+)
+```
+
+Rules:
+- Options must be concrete choices, not abstract categories
+- Highlight recommended choice where you have a clear opinion
+- If user selects "Other" with freeform text, switch to plain text follow-up (per questioning.md freeform rule)
+- If user selects "You decide", capture as Claude's Discretion in CONTEXT.md
+- Max 2 questions per area — this is lightweight, not a deep dive
+
+Collect all decisions into `$DECISIONS`.
+
+**4.5d. Write CONTEXT.md**
+
+Write `${QUICK_DIR}/${quick_id}-CONTEXT.md` using the standard context template structure:
+
+```markdown
+# Quick Task ${quick_id}: ${DESCRIPTION} - Context
+
+**Gathered:** ${date}
+**Status:** Ready for planning
+
+<domain>
+## Task Boundary
+
+${DESCRIPTION}
+
+</domain>
+
+<decisions>
+## Implementation Decisions
+
+exec
+/bin/zsh -lc "find course-assets/scenes/module-13 -maxdepth 2 -type f -name '*b12*' -print0 | xargs -0 ls -lt" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+-rw-r--r--@ 1 jarradhenry  staff  130197 Jul  7 03:29 course-assets/scenes/module-13/_logs/m13_L13A_b12_money-table.png.log
+-rw-r--r--@ 1 jarradhenry  staff   22603 Jul  7 03:27 course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v2-offbrand-eyes.png
+-rw-r--r--@ 1 jarradhenry  staff   22603 Jul  7 03:14 course-assets/scenes/module-13/m13_L13A_b12_money-table.png
+-rw-r--r--@ 1 jarradhenry  staff   13418 Jul  7 03:06 course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v1-table.png
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "find $HOME/.codex/generated_images -maxdepth 2 -type f \\( -name '*.json' -o -name '*.txt' -o -name '*.md' \\) -mmin -120 -print | sed -n '1,80p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+exec
+/bin/zsh -lc "find $HOME/.codex/generated_images -maxdepth 2 -type f -name '*.png' -mmin -30 -print0 | xargs -0 ls -lt 2>/dev/null | sed -n '1,80p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+-rw-r--r--@ 1 jarradhenry  staff  1238849 Jul  7 03:28 $HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_02fda8180388f3c6016a4cb85dc5408194b7659283693a1d4e.png
+-rw-r--r--@ 1 jarradhenry  staff  1296873 Jul  7 03:25 $HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_095c38c6771c35dc016a4cb7c496208194a54770c6d461900c.png
+-rw-r--r--@ 1 jarradhenry  staff  1429222 Jul  7 03:24 $HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_095c38c6771c35dc016a4cb76785e88194a9f920c2572d2c9c.png
+-rw-r--r--@ 1 jarradhenry  staff  1315264 Jul  7 03:17 $HOME/.codex/generated_images/019f3ba2-3d98-7ad3-9451-6246356ccef5/ig_07d4a804ace15f63016a4cb5b7e6808193b0b95a94fe737670.png
+-rw-r--r--@ 1 jarradhenry  staff  1315761 Jul  7 03:15 $HOME/.codex/generated_images/019f3ba2-3d98-7ad3-9451-6246356ccef5/ig_07d4a804ace15f63016a4cb5558544819392aec7efc4051381.png
+-rw-r--r--@ 1 jarradhenry  staff  1080551 Jul  7 03:11 $HOME/.codex/generated_images/019f3b9d-6b29-7bb0-9d79-96b3073bb0d9/ig_062bf1d7642ee765016a4cb4619d00819689c2f1d0d506da07.png
+-rw-r--r--@ 1 jarradhenry  staff  1138934 Jul  7 03:10 $HOME/.codex/generated_images/019f3b9d-6b29-75b2-b7aa-5f838422a1e1/ig_069af4b93ee241f2016a4cb4326d8c8196a5c1e25477fcbc42.png
+-rw-r--r--@ 1 jarradhenry  staff  1023081 Jul  7 03:10 $HOME/.codex/generated_images/019f3b9d-6b2a-7df3-9202-a96918ff256e/ig_084963dddb12b360016a4cb41e502c8195adf8d99489ece4f0.png
+-rw-r--r--@ 1 jarradhenry  staff  1110006 Jul  7 03:09 $HOME/.codex/generated_images/019f3b9d-6b29-7bb0-9d79-96b3073bb0d9/ig_062bf1d7642ee765016a4cb40a1e108196b627115c807f0b2a.png
+-rw-r--r--@ 1 jarradhenry  staff  1181909 Jul  7 03:08 $HOME/.codex/generated_images/019f3b9b-831c-7322-9e9d-47e0da9c8d21/ig_083c780fc41a38db016a4cb3a35bfc8197b353cfc2583a7f7f.png
+-rw-r--r--@ 1 jarradhenry  staff  1146562 Jul  7 03:03 $HOME/.codex/generated_images/019f3b96-82ba-7fd2-8ccd-68dfbfba8e01/ig_09501ab6407436e5016a4cb25a8ad88197bb63912ce6f5764d.png
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed

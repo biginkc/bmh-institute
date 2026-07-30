@@ -1,0 +1,41 @@
+#!/bin/zsh
+setopt pipefail
+# Lesson 6A "Discovery" stills — one lane per image: zsh gen_stills_6A.sh <key>
+# Fire each key as its own background bash call (all lanes in one turn).
+# Keys: office iceberg fork (Seedance start-images) · mask pyramid notices deciders (code-motion stills)
+set -u
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
+D="docs/design"
+OUT="course-assets/scenes/module-06"
+mkdir -p "$OUT"
+STYLE='STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. No floating hearts, sparkles, notes, thought bubbles, or motion marks. 16:9 composition, 1600x900.'
+# Notices override: allow the specific stress-word document headers (baked, judge for garbling).
+STYLETEXT='STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Confidently imperfect, hand-drawn. The ONLY text allowed is short bold BLACK UPPERCASE document headers spelled exactly and legibly: INVOICE, OVERDUE, TAX BILL, PAST DUE, FINAL NOTICE, NOTICE — one header per paper, no other words. No floating hearts, sparkles, notes, thought bubbles, or motion marks. 16:9 composition, 1600x900.'
+# Fork override: grey is an approved accent for the gloomy/bleak side only.
+STYLEGREY='STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black, plus muted grey for the gloomy side only) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. No floating hearts, sparkles, notes, thought bubbles, or motion marks. 16:9 composition, 1600x900.'
+
+gen() {
+  local file="$1"; local desc="$2"; local style="${3:-$STYLE}"
+  echo "=== GEN $file ==="
+  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+  codex exec -i "$D/style-ref-1.png" -i "$D/style-ref-2.png" -i "$D/cast-board.png" --skip-git-repo-check --sandbox workspace-write 2>&1 | tail -3
+  [ -f "$OUT/$file" ] && echo "OK $file" || echo "MISSING $file"
+}
+
+case "$1" in
+office)
+  gen "m06_L6A_office.png" "A bustling small real-estate office interior, wide flat front view. FIVE OR SIX distinct doodle people at simple desks: several wearing phone headsets and mid-conversation (one hand raised in a natural talking gesture), a couple of small curved signal arcs near a headset or two. ONE or TWO people walking between the desks carrying a closed folder, fully inside the frame. Desks hold simple monitors and a phone. Each person clearly DIFFERENT — different hair shape, different palette outfit color, different posture — NOT identical copies, no clones. Everyone fully inside the frame with room around them. Simple floor line. Busy but tidy. Objects: desks, monitors, chairs only. Nothing else in frame." ;;
+iceberg)
+  gen "m06_L6A_iceberg.png" "A single large ICEBERG centered in the frame. A small pointed white TIP rises just above the waterline; a much LARGER cream submerged mass spreads below, filling the lower two-thirds, with a few subtle black crack lines. The surface is marked ONLY by a single thin flat horizontal waterline band across the middle. IMPORTANT: the background stays the SAME plain cornflower blue both ABOVE and BELOW the waterline — do NOT fill the underwater area with a darker or different blue, do NOT shade the water; the cream iceberg simply sits on the one flat cornflower-blue field. Objects only, no people, NO magnifying glass, nothing held or hovering near it. Calm and clear. Generous cornflower-blue space at the top. Nothing else in frame." ;;
+fork)
+  gen "m06_L6A_fork.png" "A single flat cream road with a dashed centerline that SPLITS into a FORK of two diverging roads heading toward the horizon. The LEFT half is BRIGHT and hopeful: the left road leads to a small tidy house with a warm orange roof; a big yellow sun with rays sits above it in a clear bright sky with one or two soft cream clouds — a sunny cheerful backdrop. The RIGHT half is GLOOMY and GREY: the right road leads to a small drab GREY house sitting under a heavy grey storm cloud, with a washed-out grey sky patch behind it and a few grey rain streaks falling — a bleak backdrop. Make the bright-left vs grey-gloomy-right contrast obvious across the two halves. Simple ground and horizon line. Landscape and objects only, no people. NO arrows anywhere. Nothing else in frame." "$STYLEGREY" ;;
+mask)
+  gen "m06_L6A_mask.png" "EXACTLY ONE doodle homeowner standing centered, holding up on a short stick a smooth calm SMILING MASK in front of the lower half of their face — the mask shows a polished, pleasant, everything's-fine expression. Above the top edge of the mask, the person's OWN real eyes and brow are visibly worried and tense (the real story behind the polished answer). One hand grips the mask's handle. Big and centered in frame. EXACTLY ONE PERSON, no clone, no second person. Nothing else in frame." ;;
+dig)
+  gen "m06_L6A_dig.png" "A cut-away CROSS-SECTION of the ground, sliced open so we can see BELOW the surface. Across the top, a thin grassy surface line with a couple of small tufts. Beneath it, the earth is drawn as THREE OR FOUR stacked horizontal SOIL LAYERS in different flat palette fills (cream, then yellow, then orange bands), separated by wavy black lines. A doodle SHOVEL is planted into the ground, digging DOWN through the layers, with a short dotted dig-path trailing from the shovel down toward the bottom. At the very bottom, revealed in the deepest layer, a small open TREASURE CHEST overflowing with round yellow gold coins — the buried prize, the clear focal reveal. Objects only, no people. Generous cornflower-blue sky space above the surface line (leave room at top for a caption added later in code). Nothing else in frame." ;;
+notices)
+  gen "m06_L6A_notices.png" "A simple wooden TABLE viewed from a slight front angle, its surface covered with a messy overlapping PILE of paper documents — bills and overdue notices — that convey money stress. About six of the papers each have ONE short bold black uppercase HEADER word at the top, spelled clearly and legibly, one word per paper, chosen from: INVOICE, OVERDUE, TAX BILL, PAST DUE, FINAL NOTICE, NOTICE. Under each header a few short squiggly dash-lines stand in for the body text. A few papers also carry an ORANGE rubber-stamp mark (a plain orange circle or rectangle) and one or two small ORANGE exclamation marks. Papers and table only, no people. The cluttered table fills the lower half; generous cornflower-blue space above. Nothing else in frame." "$STYLETEXT" ;;
+deciders)
+  gen "m06_L6A_deciders.png" "EXACTLY FIVE distinct doodle people standing in a row facing the viewer, all with their ARMS CROSSED and a calm, evaluating, slightly skeptical expression (one eyebrow a touch raised, neutral mouth). Give them clearly DIFFERENT everyday looks — vary age, hair, and build: for example an older man with round glasses, a woman with short straight bob hair, a man with a short beard, a middle-aged man with a bald head, and a woman with a low ponytail. IMPORTANT: NONE of the five may resemble the show's host Andrea (a younger woman with big voluminous curly dark hair) — no character has big curly dark hair. NOT identical copies, no clones. Evenly spaced across a simple ground line, all five fully inside the frame. EXACTLY FIVE people, no sixth person, no clone. Nothing else in frame." ;;
+*) echo "unknown key $1"; exit 1 ;;
+esac

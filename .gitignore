@@ -75,3 +75,21 @@ course-assets/posters/*
 !course-assets/posters/redesign-history/
 !course-assets/posters/redesign-history/*.webp
 docs/course-production/oral-check-pilot-live-verification-receipt.json
+
+# Character generation anchors ARE versioned. They are approved on-model
+# reference stills passed as image refs to every future generation; without
+# them new art drifts off-model and prompting cannot recover the look. They
+# are not regenerable build output. Re-included by walking the path back in
+# (a bare negation cannot reach inside an excluded parent directory), so new
+# anchors can be `git add`ed normally — no -f required.
+!course-assets/scenes/
+course-assets/scenes/*
+!course-assets/scenes/*/
+course-assets/scenes/*/*
+!course-assets/scenes/*/_anchors/
+!course-assets/scenes/*/_anchors/**
+
+# Scene generation logs hold the exact prompt used to produce each still.
+# They ARE the regeneration recipe for scene art, so they are versioned.
+!course-assets/scenes/*/_logs/
+!course-assets/scenes/*/_logs/**

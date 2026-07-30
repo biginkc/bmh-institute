@@ -1,0 +1,2830 @@
+START b03 Mon Jul  6 14:02:07 CDT 2026
+2026-07-06T19:02:11.894455Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f38cf-2627-7810-b711-458c0e0ef3f1
+--------
+user
+Generate one image with gpt-image-2 and save it exactly to course-assets/scenes/module-10/m10_L10A_b03_not-ready.png as a PNG, 1600x900. Match the attached BMH course design references exactly.
+
+STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only using yellow, orange, cream, white, and black on cornflower-blue background. No gradients, no texture, no shadows, no realistic lighting, no perspective, no 3D. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No ambient doodles: no hearts, sparkles, notes, thought bubbles, or motion marks. 16:9 composition, 1600x900.
+
+Hard constraints:
+- Use the exact output path: course-assets/scenes/module-10/m10_L10A_b03_not-ready.png
+- Do not create files outside course-assets/scenes/module-10/.
+- Do not generate audio, video, animations, Remotion files, scripts, or lesson code.
+- Do not bake real labels, captions, paragraphs, or UI words into the image unless this prompt explicitly allows numerals/checkmarks.
+- Keep the composition clean and centered for a training-video still.
+
+COMPOSITION:
+One overwhelmed homeowner seller at a kitchen table, matching the attached seller reference identity: curly black hair, orange sweater, cream pants, yellow shoes, simple dot eyes, tiny nose. He sits at the table with a phone, a few mail envelopes, a property folder, and a small simple house photo. He looks thoughtful and burdened, not panicked. Composition weighted left of center with the bottom-right 420px pocket mostly open blue for an Andrea circle overlay. EXACTLY ONE PERSON. No clone, no second person, no extra people in background. NO words, NO letters, NO numbers anywhere.
+
+2026-07-06T19:02:12.130381Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-06T19:02:12.154149Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-06T19:02:12.160782Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-06T19:02:12.302921Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-06T19:02:12.447147Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill for the still, and I’ll do a quick local pass first so I don’t accidentally violate the repo’s asset conventions or write outside the requested folder.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,240p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+exec
+/bin/zsh -lc "sed -n '1,240p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'rg -n "BMH course still|course-assets|m10_L10A|module-10|seller|image" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+2:scope: Use for BMH course image or animation generation when role assignment, face details, or hairstyle continuity must match the approved handshake-reference characters before still approval or animation.
+3:applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, and Andrea character identities, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+5:## Task 1: Correct BMH course role mapping so seller, representative, and Andrea are not swapped, success
+13:- BMH course, character map, handshake reference, seller, BMH representative, Andrea, orange sweater, yellow top, headset, narrator, 4B [ad-hoc note]
+15:## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+23:- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+27:- The seller identity for BMH course scenes is the curly black-haired man in the orange sweater and cream pants on the right side of the handshake reference; seller/customer scenes should use him rather than Andrea [Task 1][ad-hoc note]
+29:- The seller nose should stay as the tiny centered two-stroke/comma-like mark from the handshake reference, not a protruding side-profile nose [Task 2][ad-hoc note]
+30:- The BMH representative hairstyle must stay black hair pulled into a back ponytail with the orange/yellow headband and orange headset; if a still changes the seller nose or representative hairstyle, reject or reroll before animation [Task 2][ad-hoc note]
+186:scope: Use for Sandra production inbox triage when the user wants live Sendillo-era seller leads surfaced into a reusable handoff file with direct links and an independent-review prompt.
+230:- The safest high-signal lead triggers in this workflow were: explicit price or offer interest, call request, appointment timing, or complex owner/seller situations; bare yes/no context-free replies and obvious negative dispositions should be excluded [Task 1]
+237:- symptom: bare "yes" or price language slips into the final handoff without enough context; cause: later thread context and disposition state were not considered; fix: require either clear seller/appointment/offer context or a stronger follow-up signal before inclusion [Task 1]
+274:- Sandra, appointments vs tasks, reviewable draft, Claude review, /follow-ups, seller commitments, list-day-week-month, quick create
+290:- The strongest recommended model was: tasks = future obligations, appointments = scheduled seller commitments, activities/history = past interactions [Task 2]
+292:- Internal reminders are the safer v1 default; seller-facing reminder automation and two-way calendar sync are later complexity [Task 2]
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+I found the relevant course memory: this seller identity needs the curly black hair, orange sweater, cream pants, yellow shoes, and the small centered nose from the approved references. I’m also checking the repo workflow rule before creating the image file, because this repo wants even small artifact writes tracked.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.Codex/get-shit-done/workflows/quick.md" in $HOME/Sites/BMH apps/BMH Institute
+ exited 1 in 0ms:
+sed: $HOME/.Codex/get-shit-done/workflows/quick.md: No such file or directory
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short --branch && pwd && rg --files course-assets/scenes/module-10 docs/design course-assets/scenes/module-05-lesson5B/_anchors | sort' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'find course-assets/scenes/module-10 -maxdepth 1 -type f -print 2>/dev/null | sort' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 116ms:
+course-assets/scenes/module-05-lesson5B/_anchors/seller.png
+course-assets/scenes/module-10/_logs/b02.log
+course-assets/scenes/module-10/_logs/b03.log
+course-assets/scenes/module-10/_logs/b04.log
+course-assets/scenes/module-10/_logs/b05.log
+course-assets/scenes/module-10/_logs/b07.log
+course-assets/scenes/module-10/_logs/b08.log
+course-assets/scenes/module-10/_logs/b09.log
+course-assets/scenes/module-10/_logs/b10.log
+course-assets/scenes/module-10/_logs/b11.log
+docs/design/_archive/cast-board-polished.png
+docs/design/_archive/char-andrea-polished.png
+docs/design/_archive/char-beth-polished.png
+docs/design/_archive/crowd-variety-1.png
+docs/design/_archive/crowd-variety-2.png
+docs/design/_archive/style-ref-duplicate.png
+docs/design/cast-board.png
+docs/design/object-board.png
+docs/design/style-ref-1.png
+docs/design/style-ref-2.png
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The built-in image tool normally drops a temporary output under Codex’s generated images folder, which conflicts with your “do not create files outside module-10” constraint. Since you explicitly requested `gpt-image-2`, I’m using the skill’s CLI/API path so the first persistent output can be the exact PNG path you named.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.codex/skills/.system/imagegen/references/cli.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+# CLI reference (`scripts/image_gen.py`)
+
+This file is for the fallback CLI mode only. Read it when the user explicitly asks to use `scripts/image_gen.py` / CLI / API / model controls, or after the user explicitly confirms that a transparent-output request should use the `gpt-image-1.5` true-transparency fallback path.
+
+`generate-batch` is a CLI subcommand in this fallback path. It is not a top-level mode of the skill.
+The word `batch` in a user request is not CLI opt-in by itself.
+
+## What this CLI does
+- `generate`: generate a new image from a prompt
+- `edit`: edit one or more existing images
+- `generate-batch`: run many generation jobs from a JSONL file after the user explicitly chooses CLI/API/model controls
+
+Real API calls require **network access** + `OPENAI_API_KEY`. `--dry-run` does not.
+
+## Quick start (works from any repo)
+Set a stable path to the skill CLI (default `CODEX_HOME` is `~/.codex`):
+
+```
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+export IMAGE_GEN="$CODEX_HOME/skills/.system/imagegen/scripts/image_gen.py"
+```
+
+Install dependencies into that environment with its package manager. In uv-managed environments, `uv pip install ...` remains the preferred path.
+
+## Quick start
+
+Dry-run (no API call; no network required; does not require the `openai` package):
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "Test" \
+  --out output/imagegen/test.png \
+  --dry-run
+```
+
+Notes:
+- One-off dry-runs print the API payload and the computed output path(s).
+- Repo-local finals should live under `output/imagegen/`.
+
+Generate (requires `OPENAI_API_KEY` + network):
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "A cozy alpine cabin at dawn" \
+  --size 1024x1024 \
+  --out output/imagegen/alpine-cabin.png
+```
+
+Edit:
+
+```bash
+python "$IMAGE_GEN" edit \
+  --image input.png \
+  --prompt "Replace only the background with a warm sunset" \
+  --out output/imagegen/sunset-edit.png
+```
+
+## Guardrails
+- Use the bundled CLI directly (`python "$IMAGE_GEN" ...`) after activating the correct environment.
+- Do **not** create one-off runners (for example `gen_images.py`) unless the user explicitly asks for a custom wrapper.
+- **Never modify** `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+- Do not silently downgrade from CLI `gpt-image-2` or built-in `image_gen` to CLI `gpt-image-1.5`; ask first unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+
+## Defaults
+- Model: `gpt-image-2`
+- Supported model family for this CLI: GPT Image models (`gpt-image-*`)
+- Size: `auto`
+- Quality: `medium`
+- Output format: `png`
+- Default one-off output path: `output/imagegen/output.png`
+- Background: unspecified unless `--background` is set
+
+## gpt-image-2 size and model guidance
+
+`gpt-image-2` is the default model for new CLI fallback work.
+
+- Use `--quality low` for fast drafts, thumbnails, and quick iterations.
+- Use `--quality medium`, `--quality high`, or `--quality auto` for final assets, dense text, diagrams, identity-sensitive edits, and high-resolution outputs.
+- Square images are typically fastest. Use `--size 1024x1024` for quick square drafts.
+- If the user asks for 4K-style output, use `--size 3840x2160` for landscape or `--size 2160x3840` for portrait.
+- Do not pass `--input-fidelity` with `gpt-image-2`; this model always uses high fidelity for image inputs.
+- Do not use `--background transparent` with `gpt-image-2`; the default transparent-image workflow uses built-in `image_gen` on a flat chroma-key background plus local removal. Use `gpt-image-1.5` only after the user explicitly confirms the true-transparent CLI fallback, unless they already requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+
+Popular `gpt-image-2` sizes:
+- `1024x1024`
+- `1536x1024`
+- `1024x1536`
+- `2048x2048`
+- `2048x1152`
+- `3840x2160`
+- `2160x3840`
+- `auto`
+
+`gpt-image-2` size constraints:
+- max edge `<= 3840px`
+- both edges multiples of `16px`
+- long edge to short edge ratio `<= 3:1`
+- total pixels between `655,360` and `8,294,400`
+- outputs above `2560x1440` total pixels are experimental
+
+Fast draft:
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "A product thumbnail of a matte ceramic mug on a stone surface" \
+  --quality low \
+  --size 1024x1024 \
+  --out output/imagegen/mug-draft.png
+```
+
+Final 2K landscape:
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "A polished landing-page hero image of a matte ceramic mug on a stone surface" \
+  --quality high \
+  --size 2048x1152 \
+  --out output/imagegen/mug-hero.png
+```
+
+4K landscape:
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "A detailed architectural visualization at golden hour" \
+  --size 3840x2160 \
+  --quality high \
+  --out output/imagegen/architecture-4k.png
+```
+
+True transparent fallback request:
+
+Ask for confirmation before using this command unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+
+```bash
+python "$IMAGE_GEN" generate \
+  --model gpt-image-1.5 \
+  --prompt "A clean product cutout on a transparent background" \
+  --background transparent \
+  --output-format png \
+  --out output/imagegen/product-cutout.png
+```
+
+When using this path, explain briefly that built-in `image_gen` plus chroma-key removal is the default transparent-image path, but this request needs true model-native transparency. `gpt-image-2` does not support `background=transparent`, so `gpt-image-1.5` is required for this confirmed fallback.
+
+## Quality, input fidelity, and masks (CLI fallback only)
+These are explicit CLI controls. They are not built-in `image_gen` tool arguments.
+
+- `--quality` works for `generate`, `edit`, and `generate-batch`: `low|medium|high|auto`
+- `--input-fidelity` is **edit-only** and validated as `low|high`; it is not supported for `gpt-image-2`
+- `--mask` is **edit-only**
+
+Example:
+
+```bash
+python "$IMAGE_GEN" edit \
+  --model gpt-image-1.5 \
+  --image input.png \
+  --prompt "Change only the background" \
+  --quality high \
+  --input-fidelity high \
+  --out output/imagegen/background-edit.png
+```
+
+Mask notes:
+- For multi-image edits, pass repeated `--image` flags. Their order is meaningful, so describe each image by index and role in the prompt.
+- The CLI accepts a single `--mask`.
+- Image and mask must be the same size and format and each under 50MB.
+- Masks must include an alpha channel.
+- If multiple input images are provided, the mask applies to the first image.
+- Masking is prompt-guided; do not promise exact pixel-perfect mask boundaries.
+- Use a PNG mask when possible; the script treats mask handling as best-effort and does not perform full preflight validation beyond file checks/warnings.
+- In the edit prompt, repeat invariants (`change only the background; keep the subject unchanged`) to reduce drift.
+
+## Output handling
+- Use `tmp/imagegen/` for temporary JSONL inputs or scratch files.
+- Use `output/imagegen/` for final outputs.
+- Reruns fail if a target file already exists unless you pass `--force`.
+- `--out-dir` changes one-off naming to `image_1.<ext>`, `image_2.<ext>`, and so on.
+- Downscaled copies use the default suffix `-web` unless you override it.
+
+## Common recipes
+
+Generate with augmentation fields:
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "A minimal hero image of a ceramic coffee mug" \
+  --use-case "product-mockup" \
+  --style "clean product photography" \
+  --composition "wide product shot with usable negative space for page copy" \
+  --constraints "no logos, no text" \
+  --out output/imagegen/mug-hero.png
+```
+
+Generate + also write a downscaled copy for fast web loading:
+
+```bash
+python "$IMAGE_GEN" generate \
+  --prompt "A cozy alpine cabin at dawn" \
+  --size 1024x1024 \
+  --downscale-max-dim 1024 \
+  --out output/imagegen/alpine-cabin.png
+```
+
+Generate multiple prompts concurrently (async batch):
+
+```bash
+mkdir -p tmp/imagegen output/imagegen/batch
+cat > tmp/imagegen/prompts.jsonl << 'EOF'
+{"prompt":"Cavernous hangar interior with a compact shuttle parked near the center","use_case":"stylized-concept","composition":"wide-angle, low-angle","lighting":"volumetric light rays through drifting fog","constraints":"no logos or trademarks; no watermark","size":"1536x1024"}
+{"prompt":"Gray wolf in profile in a snowy forest","use_case":"photorealistic-natural","composition":"eye-level","constraints":"no logos or trademarks; no watermark","size":"1024x1024"}
+EOF
+
+python "$IMAGE_GEN" generate-batch \
+  --input tmp/imagegen/prompts.jsonl \
+  --out-dir output/imagegen/batch \
+  --concurrency 5
+
+rm -f tmp/imagegen/prompts.jsonl
+```
+
+Notes:
+- `generate-batch` requires `--out-dir`.
+- generate-batch requires --out-dir.
+- Use `--concurrency` to control parallelism (default `5`).
+- Per-job overrides are supported in JSONL (for example `size`, `quality`, `background`, `output_format`, `output_compression`, `moderation`, `n`, `model`, `out`, and prompt-augmentation fields).
+- `--n` generates multiple variants for a single prompt; `generate-batch` is for many different prompts.
+- In batch mode, per-job `out` is treated as a filename under `--out-dir`.
+- For many requested deliverable assets, provide one prompt/job per distinct asset and use semantic filenames when possible.
+
+## CLI notes
+- Supported sizes depend on the model. `gpt-image-2` supports flexible constrained sizes; older GPT Image models support `1024x1024`, `1536x1024`, `1024x1536`, or `auto`.
+- True transparent CLI outputs require `output_format` to be `png` or `webp` and are not supported by `gpt-image-2`.
+- `--prompt-file`, `--output-compression`, `--moderation`, `--max-attempts`, `--fail-fast`, `--force`, and `--no-augment` are supported.
+- This CLI is intended for GPT Image models. Do not assume older non-GPT image-model behavior applies here.
+
+## See also
+- API parameter quick reference for fallback CLI mode: `references/image-api.md`
+- Prompt examples shared across both top-level modes: `references/sample-prompts.md`
+- Network/sandbox notes for fallback CLI mode: `references/codex-network.md`
+- Built-in-first transparent image workflow: `SKILL.md` and `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.codex/skills/.system/imagegen/references/image-api.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+# Image API quick reference
+
+This file is for the fallback CLI mode only. Use it when the user explicitly asks to use `scripts/image_gen.py` / CLI / API / model controls, or after the user explicitly confirms that a transparent-output request should use the `gpt-image-1.5` true-transparency fallback path.
+
+These parameters describe the Image API and bundled CLI fallback surface. Do not assume they are normal arguments on the built-in `image_gen` tool.
+
+## Scope
+- This fallback CLI is intended for GPT Image models (`gpt-image-2`, `gpt-image-1.5`, `gpt-image-1`, and `gpt-image-1-mini`).
+- The built-in `image_gen` tool and the fallback CLI do not expose the same controls.
+
+## Model summary
+
+| Model | Quality | Input fidelity | Resolutions | Recommended use |
+| --- | --- | --- | --- | --- |
+| `gpt-image-2` | `low`, `medium`, `high`, `auto` | Always high fidelity for image inputs; do not set `input_fidelity` | `auto` or flexible sizes that satisfy the constraints below | Default for new CLI/API workflows: high-quality generation and editing, text-heavy images, photorealism, compositing, identity-sensitive edits, and workflows where fewer retries matter |
+| `gpt-image-1.5` | `low`, `medium`, `high`, `auto` | `low`, `high` | `1024x1024`, `1024x1536`, `1536x1024`, `auto` | True transparent-background fallback and backward-compatible workflows |
+| `gpt-image-1` | `low`, `medium`, `high`, `auto` | `low`, `high` | `1024x1024`, `1024x1536`, `1536x1024`, `auto` | Legacy compatibility |
+| `gpt-image-1-mini` | `low`, `medium`, `high`, `auto` | `low`, `high` | `1024x1024`, `1024x1536`, `1536x1024`, `auto` | Cost-sensitive draft batches and lower-stakes previews |
+
+## gpt-image-2 sizes
+
+`gpt-image-2` accepts `auto` or any `WIDTHxHEIGHT` size that satisfies all constraints:
+
+- Maximum edge length must be less than or equal to `3840px`.
+- Both edges must be multiples of `16px`.
+- Long edge to short edge ratio must not exceed `3:1`.
+- Total pixels must be at least `655,360` and no more than `8,294,400`.
+
+Popular sizes:
+
+| Label | Size | Notes |
+| --- | --- | --- |
+| Square | `1024x1024` | Typical fast default |
+| Landscape | `1536x1024` | Standard landscape |
+| Portrait | `1024x1536` | Standard portrait |
+| 2K square | `2048x2048` | Larger square output |
+| 2K landscape | `2048x1152` | Widescreen output |
+| 4K landscape | `3840x2160` | Widescreen 4K output |
+| 4K portrait | `2160x3840` | Vertical 4K output |
+| Auto | `auto` | Default size |
+
+Square images are typically fastest to generate. For 4K-style output, use `3840x2160` or `2160x3840`.
+
+## Endpoints
+- Generate: `POST /v1/images/generations` (`client.images.generate(...)`)
+- Edit: `POST /v1/images/edits` (`client.images.edit(...)`)
+
+## Core parameters for GPT Image models
+- `prompt`: text prompt
+- `model`: image model
+- `n`: number of images (1-10)
+- `size`: `auto` by default for `gpt-image-2`; flexible `WIDTHxHEIGHT` sizes are allowed only for `gpt-image-2`; older GPT Image models use `1024x1024`, `1536x1024`, `1024x1536`, or `auto`
+- `quality`: `low`, `medium`, `high`, or `auto`
+- `background`: output transparency behavior (`transparent`, `opaque`, or `auto`) for generated output; this is not the same thing as the prompt's visual scene/backdrop
+- `output_format`: `png` (default), `jpeg`, `webp`
+- `output_compression`: 0-100 (jpeg/webp only)
+- `moderation`: `auto` (default) or `low`
+
+## Edit-specific parameters
+- `image`: one or more input images. For GPT Image models, you can provide up to 16 images.
+- `mask`: optional mask image
+- `input_fidelity`: `low` or `high` only for models that support it; do not set this for `gpt-image-2`
+
+Model-specific note for `input_fidelity`:
+- `gpt-image-2` always uses high fidelity for image inputs and does not support setting `input_fidelity`.
+- `gpt-image-1` and `gpt-image-1-mini` preserve all input images, but the first image gets richer textures and finer details.
+- `gpt-image-1.5` preserves the first 5 input images with higher fidelity.
+
+## Transparent backgrounds
+
+`gpt-image-2` does not currently support the Image API `background=transparent` parameter. The skill's default transparent-image path is built-in `image_gen` with a flat chroma-key background, followed by local alpha extraction with `python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py"`.
+
+Use CLI `gpt-image-1.5` with `background=transparent` and a transparent-capable output format such as `png` or `webp` only after the user explicitly confirms that fallback, unless they already requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. If the user asks for true/native transparency, the subject is too complex for clean chroma-key removal, or local background removal fails validation, explain the tradeoff and ask before switching.
+
+## Output
+- `data[]` list with `b64_json` per image
+- The bundled `scripts/image_gen.py` CLI decodes `b64_json` and writes output files for you.
+
+## Limits and notes
+- Input images and masks must be under 50MB.
+- Use the edits endpoint when the user requests changes to an existing image.
+- Masking is prompt-guided; exact shapes are not guaranteed.
+- Large sizes and high quality increase latency and cost.
+- Use `quality=low` for fast drafts, thumbnails, and quick iterations. Use `medium` or `high` for final assets, dense text, diagrams, identity-sensitive edits, or high-resolution outputs.
+- High `input_fidelity` can materially increase input token usage on models that support it.
+- If a request fails because a specific option is unsupported by the selected GPT Image model, retry manually without that option only when the option is not required by the user. If true transparent CLI output is required, ask before switching to `gpt-image-1.5` instead of dropping `background=transparent`, unless the user already explicitly chose that fallback.
+
+## Important boundary
+- `quality`, `input_fidelity`, explicit masks, `background`, `output_format`, and related parameters are fallback-only execution controls.
+- Do not assume they are built-in `image_gen` tool arguments.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.codex/skills/.system/imagegen/scripts/image_gen.py" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+#!/usr/bin/env python3
+"""Fallback CLI for explicit image generation or editing with GPT Image models.
+
+Used only when the user explicitly opts into CLI fallback mode, or when explicit
+transparent output requires the `gpt-image-1.5` fallback path.
+
+Defaults to gpt-image-2 and a structured prompt augmentation workflow.
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+import base64
+import json
+import os
+from pathlib import Path
+import re
+import sys
+import time
+from typing import Any, Dict, Iterable, List, Optional, Tuple
+
+from io import BytesIO
+
+DEFAULT_MODEL = "gpt-image-2"
+DEFAULT_SIZE = "auto"
+DEFAULT_QUALITY = "medium"
+DEFAULT_OUTPUT_FORMAT = "png"
+DEFAULT_CONCURRENCY = 5
+DEFAULT_DOWNSCALE_SUFFIX = "-web"
+DEFAULT_OUTPUT_PATH = "output/imagegen/output.png"
+GPT_IMAGE_MODEL_PREFIX = "gpt-image-"
+
+ALLOWED_LEGACY_SIZES = {"1024x1024", "1536x1024", "1024x1536", "auto"}
+ALLOWED_QUALITIES = {"low", "medium", "high", "auto"}
+ALLOWED_BACKGROUNDS = {"transparent", "opaque", "auto", None}
+ALLOWED_INPUT_FIDELITIES = {"low", "high", None}
+
+GPT_IMAGE_2_MODEL = "gpt-image-2"
+GPT_IMAGE_2_MIN_PIXELS = 655_360
+GPT_IMAGE_2_MAX_PIXELS = 8_294_400
+GPT_IMAGE_2_MAX_EDGE = 3840
+GPT_IMAGE_2_MAX_RATIO = 3.0
+
+MAX_IMAGE_BYTES = 50 * 1024 * 1024
+MAX_BATCH_JOBS = 500
+
+
+def _die(message: str, code: int = 1) -> None:
+    print(f"Error: {message}", file=sys.stderr)
+    raise SystemExit(code)
+
+
+def _warn(message: str) -> None:
+    print(f"Warning: {message}", file=sys.stderr)
+
+
+def _dependency_hint(package: str, *, upgrade: bool = False) -> str:
+    command = f"uv pip install {'-U ' if upgrade else ''}{package}"
+    return (
+        "Activate the repo-selected environment first, then install it with "
+        f"`{command}`. If this repo uses a local virtualenv, start with "
+        "`source .venv/bin/activate`; otherwise use this repo's configured shared fallback "
+        "environment. If your project declares dependencies, prefer that project's normal "
+        "`uv sync` flow."
+    )
+
+
+def _ensure_api_key(dry_run: bool) -> None:
+    if os.getenv("OPENAI_API_KEY"):
+        print("OPENAI_API_KEY is set.", file=sys.stderr)
+        return
+    if dry_run:
+        _warn("OPENAI_API_KEY is not set; dry-run only.")
+        return
+    _die("OPENAI_API_KEY is not set. Export it before running.")
+
+
+def _read_prompt(prompt: Optional[str], prompt_file: Optional[str]) -> str:
+    if prompt and prompt_file:
+        _die("Use --prompt or --prompt-file, not both.")
+    if prompt_file:
+        path = Path(prompt_file)
+        if not path.exists():
+            _die(f"Prompt file not found: {path}")
+        return path.read_text(encoding="utf-8").strip()
+    if prompt:
+        return prompt.strip()
+    _die("Missing prompt. Use --prompt or --prompt-file.")
+    return ""  # unreachable
+
+
+def _check_image_paths(paths: Iterable[str]) -> List[Path]:
+    resolved: List[Path] = []
+    for raw in paths:
+        path = Path(raw)
+        if not path.exists():
+            _die(f"Image file not found: {path}")
+        if path.stat().st_size > MAX_IMAGE_BYTES:
+            _warn(f"Image exceeds 50MB limit: {path}")
+        resolved.append(path)
+    return resolved
+
+
+def _normalize_output_format(fmt: Optional[str]) -> str:
+    if not fmt:
+        return DEFAULT_OUTPUT_FORMAT
+    fmt = fmt.lower()
+    if fmt not in {"png", "jpeg", "jpg", "webp"}:
+        _die("output-format must be png, jpeg, jpg, or webp.")
+    return "jpeg" if fmt == "jpg" else fmt
+
+
+def _parse_size(size: str) -> Optional[Tuple[int, int]]:
+    match = re.fullmatch(r"([1-9][0-9]*)x([1-9][0-9]*)", size)
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2))
+
+
+def _validate_gpt_image_2_size(size: str) -> None:
+    if size == "auto":
+        return
+
+    parsed = _parse_size(size)
+    if parsed is None:
+        _die("size must be auto or WIDTHxHEIGHT, for example 1024x1024.")
+
+    width, height = parsed
+    max_edge = max(width, height)
+    min_edge = min(width, height)
+    total_pixels = width * height
+
+    if max_edge > GPT_IMAGE_2_MAX_EDGE:
+        _die("gpt-image-2 size maximum edge length must be less than or equal to 3840px.")
+    if width % 16 != 0 or height % 16 != 0:
+        _die("gpt-image-2 size width and height must be multiples of 16px.")
+    if max_edge / min_edge > GPT_IMAGE_2_MAX_RATIO:
+        _die("gpt-image-2 size long edge to short edge ratio must not exceed 3:1.")
+    if total_pixels < GPT_IMAGE_2_MIN_PIXELS or total_pixels > GPT_IMAGE_2_MAX_PIXELS:
+        _die(
+            "gpt-image-2 size total pixels must be at least 655,360 and no more than 8,294,400."
+        )
+
+
+def _validate_size(size: str, model: str) -> None:
+    if model == GPT_IMAGE_2_MODEL:
+        _validate_gpt_image_2_size(size)
+        return
+
+    if size not in ALLOWED_LEGACY_SIZES:
+        _die(
+            "size must be one of 1024x1024, 1536x1024, 1024x1536, or auto for this GPT Image model."
+        )
+
+
+def _validate_quality(quality: str) -> None:
+    if quality not in ALLOWED_QUALITIES:
+        _die("quality must be one of low, medium, high, or auto.")
+
+
+def _validate_background(background: Optional[str]) -> None:
+    if background not in ALLOWED_BACKGROUNDS:
+        _die("background must be one of transparent, opaque, or auto.")
+
+
+def _validate_input_fidelity(input_fidelity: Optional[str]) -> None:
+    if input_fidelity not in ALLOWED_INPUT_FIDELITIES:
+        _die("input-fidelity must be one of low or high.")
+
+
+def _validate_model(model: str) -> None:
+    if not model.startswith(GPT_IMAGE_MODEL_PREFIX):
+        _die(
+            "model must be a GPT Image model (for example gpt-image-1.5, gpt-image-1, or gpt-image-1-mini)."
+        )
+
+
+def _validate_transparency(background: Optional[str], output_format: str) -> None:
+    if background == "transparent" and output_format not in {"png", "webp"}:
+        _die("transparent background requires output-format png or webp.")
+
+
+def _validate_model_specific_options(
+    *,
+    model: str,
+    background: Optional[str],
+    input_fidelity: Optional[str] = None,
+) -> None:
+    if model != GPT_IMAGE_2_MODEL:
+        return
+    if background == "transparent":
+        _die(
+            "transparent backgrounds are not supported in gpt-image-2, the latest model. "
+            "Use --model gpt-image-1.5 --background transparent --output-format png instead."
+        )
+    if input_fidelity is not None:
+        _die(
+            "input_fidelity is not supported in gpt-image-2 because image inputs always use high fidelity for this model."
+        )
+
+
+def _validate_generate_payload(payload: Dict[str, Any]) -> None:
+    model = str(payload.get("model", DEFAULT_MODEL))
+    _validate_model(model)
+    n = int(payload.get("n", 1))
+    if n < 1 or n > 10:
+        _die("n must be between 1 and 10")
+    size = str(payload.get("size", DEFAULT_SIZE))
+    quality = str(payload.get("quality", DEFAULT_QUALITY))
+    background = payload.get("background")
+    _validate_size(size, model)
+    _validate_quality(quality)
+    _validate_background(background)
+    _validate_model_specific_options(model=model, background=background)
+    oc = payload.get("output_compression")
+    if oc is not None and not (0 <= int(oc) <= 100):
+        _die("output_compression must be between 0 and 100")
+
+
+def _build_output_paths(
+    out: str,
+    output_format: str,
+    count: int,
+    out_dir: Optional[str],
+) -> List[Path]:
+    ext = "." + output_format
+
+    if out_dir:
+        out_base = Path(out_dir)
+        out_base.mkdir(parents=True, exist_ok=True)
+        return [out_base / f"image_{i}{ext}" for i in range(1, count + 1)]
+
+    out_path = Path(out)
+    if out_path.exists() and out_path.is_dir():
+        out_path.mkdir(parents=True, exist_ok=True)
+        return [out_path / f"image_{i}{ext}" for i in range(1, count + 1)]
+
+    if out_path.suffix == "":
+        out_path = out_path.with_suffix(ext)
+    elif output_format and out_path.suffix.lstrip(".").lower() != output_format:
+        _warn(
+            f"Output extension {out_path.suffix} does not match output-format {output_format}."
+        )
+
+    if count == 1:
+        return [out_path]
+
+    return [
+        out_path.with_name(f"{out_path.stem}-{i}{out_path.suffix}")
+        for i in range(1, count + 1)
+    ]
+
+
+def _augment_prompt(args: argparse.Namespace, prompt: str) -> str:
+    fields = _fields_from_args(args)
+    return _augment_prompt_fields(args.augment, prompt, fields)
+
+
+def _augment_prompt_fields(augment: bool, prompt: str, fields: Dict[str, Optional[str]]) -> str:
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find "$HOME" -path '"'*get-shit-done/workflows/quick.md' -print 2>/dev/null | head -10" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The quick-workflow file referenced by the local GSD skill is missing at the path it names, so I can’t honestly run that workflow from its source. I’m keeping the write tightly scoped to the requested asset path and leaving the existing dirty planning files alone.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "python - <<'PY'
+from PIL import Image
+for p in ['docs/design/style-ref-1.png','docs/design/style-ref-2.png','docs/design/cast-board.png','docs/design/object-board.png','course-assets/scenes/module-05-lesson5B/_anchors/seller.png']:
+    im=Image.open(p)
+    print(f'{p}: {im.size} {im.mode}')
+PY" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "ls -ld course-assets/scenes/module-10 docs/design course-assets/scenes/module-05-lesson5B/_anchors && find course-assets/scenes/module-10 -maxdepth 2 -type f -print | sort | sed -n '1,120p'" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '260,620p' $HOME/.codex/skills/.system/imagegen/scripts/image_gen.py" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+ exited 127 in 107ms:
+zsh:1: command not found: python
+
+ succeeded in 107ms:
+course-assets/scenes/module-10/_logs/b02.log
+course-assets/scenes/module-10/_logs/b03.log
+course-assets/scenes/module-10/_logs/b04.log
+course-assets/scenes/module-10/_logs/b05.log
+course-assets/scenes/module-10/_logs/b07.log
+course-assets/scenes/module-10/_logs/b08.log
+course-assets/scenes/module-10/_logs/b09.log
+course-assets/scenes/module-10/_logs/b10.log
+course-assets/scenes/module-10/_logs/b11.log
+
+ succeeded in 111ms:
+def _augment_prompt_fields(augment: bool, prompt: str, fields: Dict[str, Optional[str]]) -> str:
+    if not augment:
+        return prompt
+
+    sections: List[str] = []
+    if fields.get("use_case"):
+        sections.append(f"Use case: {fields['use_case']}")
+    sections.append(f"Primary request: {prompt}")
+    if fields.get("scene"):
+        sections.append(f"Scene/background: {fields['scene']}")
+    if fields.get("subject"):
+        sections.append(f"Subject: {fields['subject']}")
+    if fields.get("style"):
+        sections.append(f"Style/medium: {fields['style']}")
+    if fields.get("composition"):
+        sections.append(f"Composition/framing: {fields['composition']}")
+    if fields.get("lighting"):
+        sections.append(f"Lighting/mood: {fields['lighting']}")
+    if fields.get("palette"):
+        sections.append(f"Color palette: {fields['palette']}")
+    if fields.get("materials"):
+        sections.append(f"Materials/textures: {fields['materials']}")
+    if fields.get("text"):
+        sections.append(f"Text (verbatim): \"{fields['text']}\"")
+    if fields.get("constraints"):
+        sections.append(f"Constraints: {fields['constraints']}")
+    if fields.get("negative"):
+        sections.append(f"Avoid: {fields['negative']}")
+
+    return "\n".join(sections)
+
+
+def _fields_from_args(args: argparse.Namespace) -> Dict[str, Optional[str]]:
+    return {
+        "use_case": getattr(args, "use_case", None),
+        "scene": getattr(args, "scene", None),
+        "subject": getattr(args, "subject", None),
+        "style": getattr(args, "style", None),
+        "composition": getattr(args, "composition", None),
+        "lighting": getattr(args, "lighting", None),
+        "palette": getattr(args, "palette", None),
+        "materials": getattr(args, "materials", None),
+        "text": getattr(args, "text", None),
+        "constraints": getattr(args, "constraints", None),
+        "negative": getattr(args, "negative", None),
+    }
+
+
+def _print_request(payload: dict) -> None:
+    print(json.dumps(payload, indent=2, sort_keys=True))
+
+
+def _decode_and_write(images: List[str], outputs: List[Path], force: bool) -> None:
+    for idx, image_b64 in enumerate(images):
+        if idx >= len(outputs):
+            break
+        out_path = outputs[idx]
+        if out_path.exists() and not force:
+            _die(f"Output already exists: {out_path} (use --force to overwrite)")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_bytes(base64.b64decode(image_b64))
+        print(f"Wrote {out_path}")
+
+
+def _derive_downscale_path(path: Path, suffix: str) -> Path:
+    if suffix and not suffix.startswith("-") and not suffix.startswith("_"):
+        suffix = "-" + suffix
+    return path.with_name(f"{path.stem}{suffix}{path.suffix}")
+
+
+def _downscale_image_bytes(image_bytes: bytes, *, max_dim: int, output_format: str) -> bytes:
+    try:
+        from PIL import Image
+    except Exception:
+        _die(f"Downscaling requires Pillow. {_dependency_hint('pillow')}")
+
+    if max_dim < 1:
+        _die("--downscale-max-dim must be >= 1")
+
+    with Image.open(BytesIO(image_bytes)) as img:
+        img.load()
+        w, h = img.size
+        scale = min(1.0, float(max_dim) / float(max(w, h)))
+        target = (max(1, int(round(w * scale))), max(1, int(round(h * scale))))
+
+        resized = img if target == (w, h) else img.resize(target, Image.Resampling.LANCZOS)
+
+        fmt = output_format.lower()
+        if fmt == "jpg":
+            fmt = "jpeg"
+
+        if fmt == "jpeg":
+            if resized.mode in ("RGBA", "LA") or ("transparency" in getattr(resized, "info", {})):
+                bg = Image.new("RGB", resized.size, (255, 255, 255))
+                bg.paste(resized.convert("RGBA"), mask=resized.convert("RGBA").split()[-1])
+                resized = bg
+            else:
+                resized = resized.convert("RGB")
+
+        out = BytesIO()
+        resized.save(out, format=fmt.upper())
+        return out.getvalue()
+
+
+def _decode_write_and_downscale(
+    images: List[str],
+    outputs: List[Path],
+    *,
+    force: bool,
+    downscale_max_dim: Optional[int],
+    downscale_suffix: str,
+    output_format: str,
+) -> None:
+    for idx, image_b64 in enumerate(images):
+        if idx >= len(outputs):
+            break
+        out_path = outputs[idx]
+        if out_path.exists() and not force:
+            _die(f"Output already exists: {out_path} (use --force to overwrite)")
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+
+        raw = base64.b64decode(image_b64)
+        out_path.write_bytes(raw)
+        print(f"Wrote {out_path}")
+
+        if downscale_max_dim is None:
+            continue
+
+        derived = _derive_downscale_path(out_path, downscale_suffix)
+        if derived.exists() and not force:
+            _die(f"Output already exists: {derived} (use --force to overwrite)")
+        derived.parent.mkdir(parents=True, exist_ok=True)
+        resized = _downscale_image_bytes(raw, max_dim=downscale_max_dim, output_format=output_format)
+        derived.write_bytes(resized)
+        print(f"Wrote {derived}")
+
+
+def _create_client():
+    try:
+        from openai import OpenAI
+    except ImportError:
+        _die(f"openai SDK not installed in the active environment. {_dependency_hint('openai')}")
+    return OpenAI()
+
+
+def _create_async_client():
+    try:
+        from openai import AsyncOpenAI
+    except ImportError:
+        try:
+            import openai as _openai  # noqa: F401
+        except ImportError:
+            _die(
+                f"openai SDK not installed in the active environment. {_dependency_hint('openai')}"
+            )
+        _die(
+            "AsyncOpenAI not available in this openai SDK version. "
+            f"{_dependency_hint('openai', upgrade=True)}"
+        )
+    return AsyncOpenAI()
+
+
+def _slugify(value: str) -> str:
+    value = value.strip().lower()
+    value = re.sub(r"[^a-z0-9]+", "-", value)
+    value = re.sub(r"-{2,}", "-", value).strip("-")
+    return value[:60] if value else "job"
+
+
+def _normalize_job(job: Any, idx: int) -> Dict[str, Any]:
+    if isinstance(job, str):
+        prompt = job.strip()
+        if not prompt:
+            _die(f"Empty prompt at job {idx}")
+        return {"prompt": prompt}
+    if isinstance(job, dict):
+        if "prompt" not in job or not str(job["prompt"]).strip():
+            _die(f"Missing prompt for job {idx}")
+        return job
+    _die(f"Invalid job at index {idx}: expected string or object.")
+    return {}  # unreachable
+
+
+def _read_jobs_jsonl(path: str) -> List[Dict[str, Any]]:
+    p = Path(path)
+    if not p.exists():
+        _die(f"Input file not found: {p}")
+    jobs: List[Dict[str, Any]] = []
+    for line_no, raw in enumerate(p.read_text(encoding="utf-8").splitlines(), start=1):
+        line = raw.strip()
+        if not line or line.startswith("#"):
+            continue
+        try:
+            item: Any
+            if line.startswith("{"):
+                item = json.loads(line)
+            else:
+                item = line
+            jobs.append(_normalize_job(item, idx=line_no))
+        except json.JSONDecodeError as exc:
+            _die(f"Invalid JSON on line {line_no}: {exc}")
+    if not jobs:
+        _die("No jobs found in input file.")
+    if len(jobs) > MAX_BATCH_JOBS:
+        _die(f"Too many jobs ({len(jobs)}). Max is {MAX_BATCH_JOBS}.")
+    return jobs
+
+
+def _merge_non_null(dst: Dict[str, Any], src: Dict[str, Any]) -> Dict[str, Any]:
+    merged = dict(dst)
+    for k, v in src.items():
+        if v is not None:
+            merged[k] = v
+    return merged
+
+
+def _job_output_paths(
+    *,
+    out_dir: Path,
+    output_format: str,
+    idx: int,
+    prompt: str,
+    n: int,
+    explicit_out: Optional[str],
+) -> List[Path]:
+    out_dir.mkdir(parents=True, exist_ok=True)
+    ext = "." + output_format
+
+    if explicit_out:
+        base = Path(explicit_out)
+        if base.suffix == "":
+            base = base.with_suffix(ext)
+        elif base.suffix.lstrip(".").lower() != output_format:
+            _warn(
+                f"Job {idx}: output extension {base.suffix} does not match output-format {output_format}."
+            )
+        base = out_dir / base.name
+    else:
+        slug = _slugify(prompt[:80])
+        base = out_dir / f"{idx:03d}-{slug}{ext}"
+
+    if n == 1:
+        return [base]
+    return [
+        base.with_name(f"{base.stem}-{i}{base.suffix}")
+        for i in range(1, n + 1)
+    ]
+
+
+def _extract_retry_after_seconds(exc: Exception) -> Optional[float]:
+    # Best-effort: openai SDK errors vary by version. Prefer a conservative fallback.
+    for attr in ("retry_after", "retry_after_seconds"):
+        val = getattr(exc, attr, None)
+        if isinstance(val, (int, float)) and val >= 0:
+            return float(val)
+    msg = str(exc)
+    m = re.search(r"retry[- ]after[:= ]+([0-9]+(?:\\.[0-9]+)?)", msg, re.IGNORECASE)
+    if m:
+        try:
+            return float(m.group(1))
+        except Exception:
+            return None
+    return None
+
+
+def _is_rate_limit_error(exc: Exception) -> bool:
+    name = exc.__class__.__name__.lower()
+    if "ratelimit" in name or "rate_limit" in name:
+        return True
+    msg = str(exc).lower()
+    return "429" in msg or "rate limit" in msg or "too many requests" in msg
+
+
+def _is_transient_error(exc: Exception) -> bool:
+    if _is_rate_limit_error(exc):
+        return True
+    name = exc.__class__.__name__.lower()
+    if "timeout" in name or "timedout" in name or "tempor" in name:
+        return True
+    msg = str(exc).lower()
+    return "timeout" in msg or "timed out" in msg or "connection reset" in msg
+
+
+async def _generate_one_with_retries(
+    client: Any,
+    payload: Dict[str, Any],
+    *,
+    attempts: int,
+    job_label: str,
+) -> Any:
+    last_exc: Optional[Exception] = None
+    for attempt in range(1, attempts + 1):
+        try:
+            return await client.images.generate(**payload)
+        except Exception as exc:
+            last_exc = exc
+            if not _is_transient_error(exc):
+                raise
+            if attempt == attempts:
+                raise
+            sleep_s = _extract_retry_after_seconds(exc)
+            if sleep_s is None:
+                sleep_s = min(60.0, 2.0**attempt)
+            print(
+                f"{job_label} attempt {attempt}/{attempts} failed ({exc.__class__.__name__}); retrying in {sleep_s:.1f}s",
+                file=sys.stderr,
+            )
+            await asyncio.sleep(sleep_s)
+    raise last_exc or RuntimeError("unknown error")
+
+
+async def _run_generate_batch(args: argparse.Namespace) -> int:
+    jobs = _read_jobs_jsonl(args.input)
+    out_dir = Path(args.out_dir)
+
+    base_fields = _fields_from_args(args)
+    base_payload = {
+        "model": args.model,
+        "n": args.n,
+        "size": args.size,
+        "quality": args.quality,
+        "background": args.background,
+        "output_format": args.output_format,
+        "output_compression": args.output_compression,
+        "moderation": args.moderation,
+    }
+
+    if args.dry_run:
+        for i, job in enumerate(jobs, start=1):
+            prompt = str(job["prompt"]).strip()
+            fields = _merge_non_null(base_fields, job.get("fields", {}))
+            # Allow flat job keys as well (use_case, scene, etc.)
+            fields = _merge_non_null(fields, {k: job.get(k) for k in base_fields.keys()})
+            augmented = _augment_prompt_fields(args.augment, prompt, fields)
+
+            job_payload = dict(base_payload)
+            job_payload["prompt"] = augmented
+            job_payload = _merge_non_null(job_payload, {k: job.get(k) for k in base_payload.keys()})
+            job_payload = {k: v for k, v in job_payload.items() if v is not None}
+
+            _validate_generate_payload(job_payload)
+            effective_output_format = _normalize_output_format(job_payload.get("output_format"))
+            _validate_transparency(job_payload.get("background"), effective_output_format)
+            job_payload["output_format"] = effective_output_format
+
+            n = int(job_payload.get("n", 1))
+            outputs = _job_output_paths(
+                out_dir=out_dir,
+                output_format=effective_output_format,
+                idx=i,
+                prompt=prompt,
+                n=n,
+                explicit_out=job.get("out"),
+            )
+            downscaled = None
+            if args.downscale_max_dim is not None:
+                downscaled = [
+                    str(_derive_downscale_path(p, args.downscale_suffix)) for p in outputs
+                ]
+            _print_request(
+                {
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 13673ms:
+$HOME/.gemini/antigravity-backup/get-shit-done/workflows/quick.md
+$HOME/.gemini/antigravity-ide/get-shit-done/workflows/quick.md
+$HOME/.gemini/antigravity/get-shit-done/workflows/quick.md
+$HOME/.claude/get-shit-done/workflows/quick.md
+
+codex
+The target `module-10` folder exists and currently only has logs, so writing `m10_L10A_b03_not-ready.png` won’t overwrite an existing still. I’m going to use the local reference files as input images, not create prompt or scratch files.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '620,1040p' $HOME/.codex/skills/.system/imagegen/scripts/image_gen.py" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+                {
+                    "endpoint": "/v1/images/generations",
+                    "job": i,
+                    "outputs": [str(p) for p in outputs],
+                    "outputs_downscaled": downscaled,
+                    **job_payload,
+                }
+            )
+        return 0
+
+    client = _create_async_client()
+    sem = asyncio.Semaphore(args.concurrency)
+
+    any_failed = False
+
+    async def run_job(i: int, job: Dict[str, Any]) -> Tuple[int, Optional[str]]:
+        nonlocal any_failed
+        prompt = str(job["prompt"]).strip()
+        job_label = f"[job {i}/{len(jobs)}]"
+
+        fields = _merge_non_null(base_fields, job.get("fields", {}))
+        fields = _merge_non_null(fields, {k: job.get(k) for k in base_fields.keys()})
+        augmented = _augment_prompt_fields(args.augment, prompt, fields)
+
+        payload = dict(base_payload)
+        payload["prompt"] = augmented
+        payload = _merge_non_null(payload, {k: job.get(k) for k in base_payload.keys()})
+        payload = {k: v for k, v in payload.items() if v is not None}
+
+        n = int(payload.get("n", 1))
+        _validate_generate_payload(payload)
+        effective_output_format = _normalize_output_format(payload.get("output_format"))
+        _validate_transparency(payload.get("background"), effective_output_format)
+        payload["output_format"] = effective_output_format
+        outputs = _job_output_paths(
+            out_dir=out_dir,
+            output_format=effective_output_format,
+            idx=i,
+            prompt=prompt,
+            n=n,
+            explicit_out=job.get("out"),
+        )
+        try:
+            async with sem:
+                print(f"{job_label} starting", file=sys.stderr)
+                started = time.time()
+                result = await _generate_one_with_retries(
+                    client,
+                    payload,
+                    attempts=args.max_attempts,
+                    job_label=job_label,
+                )
+                elapsed = time.time() - started
+                print(f"{job_label} completed in {elapsed:.1f}s", file=sys.stderr)
+            images = [item.b64_json for item in result.data]
+            _decode_write_and_downscale(
+                images,
+                outputs,
+                force=args.force,
+                downscale_max_dim=args.downscale_max_dim,
+                downscale_suffix=args.downscale_suffix,
+                output_format=effective_output_format,
+            )
+            return i, None
+        except Exception as exc:
+            any_failed = True
+            print(f"{job_label} failed: {exc}", file=sys.stderr)
+            if args.fail_fast:
+                raise
+            return i, str(exc)
+
+    tasks = [asyncio.create_task(run_job(i, job)) for i, job in enumerate(jobs, start=1)]
+
+    try:
+        await asyncio.gather(*tasks)
+    except Exception:
+        for t in tasks:
+            if not t.done():
+                t.cancel()
+        raise
+
+    return 1 if any_failed else 0
+
+
+def _generate_batch(args: argparse.Namespace) -> None:
+    exit_code = asyncio.run(_run_generate_batch(args))
+    if exit_code:
+        raise SystemExit(exit_code)
+
+
+def _generate(args: argparse.Namespace) -> None:
+    prompt = _read_prompt(args.prompt, args.prompt_file)
+    prompt = _augment_prompt(args, prompt)
+
+    payload = {
+        "model": args.model,
+        "prompt": prompt,
+        "n": args.n,
+        "size": args.size,
+        "quality": args.quality,
+        "background": args.background,
+        "output_format": args.output_format,
+        "output_compression": args.output_compression,
+        "moderation": args.moderation,
+    }
+    payload = {k: v for k, v in payload.items() if v is not None}
+
+    output_format = _normalize_output_format(args.output_format)
+    _validate_transparency(args.background, output_format)
+    payload["output_format"] = output_format
+    output_paths = _build_output_paths(args.out, output_format, args.n, args.out_dir)
+    downscaled = None
+    if args.downscale_max_dim is not None:
+        downscaled = [str(_derive_downscale_path(p, args.downscale_suffix)) for p in output_paths]
+
+    if args.dry_run:
+        _print_request(
+            {
+                "endpoint": "/v1/images/generations",
+                "outputs": [str(p) for p in output_paths],
+                "outputs_downscaled": downscaled,
+                **payload,
+            }
+        )
+        return
+
+    print(
+        "Calling Image API (generation). This can take up to a couple of minutes.",
+        file=sys.stderr,
+    )
+    started = time.time()
+    client = _create_client()
+    result = client.images.generate(**payload)
+    elapsed = time.time() - started
+    print(f"Generation completed in {elapsed:.1f}s.", file=sys.stderr)
+
+    images = [item.b64_json for item in result.data]
+    _decode_write_and_downscale(
+        images,
+        output_paths,
+        force=args.force,
+        downscale_max_dim=args.downscale_max_dim,
+        downscale_suffix=args.downscale_suffix,
+        output_format=output_format,
+    )
+
+
+def _edit(args: argparse.Namespace) -> None:
+    prompt = _read_prompt(args.prompt, args.prompt_file)
+    prompt = _augment_prompt(args, prompt)
+
+    image_paths = _check_image_paths(args.image)
+    mask_path = Path(args.mask) if args.mask else None
+    if mask_path:
+        if not mask_path.exists():
+            _die(f"Mask file not found: {mask_path}")
+        if mask_path.suffix.lower() != ".png":
+            _warn(f"Mask should be a PNG with an alpha channel: {mask_path}")
+        if mask_path.stat().st_size > MAX_IMAGE_BYTES:
+            _warn(f"Mask exceeds 50MB limit: {mask_path}")
+
+    payload = {
+        "model": args.model,
+        "prompt": prompt,
+        "n": args.n,
+        "size": args.size,
+        "quality": args.quality,
+        "background": args.background,
+        "output_format": args.output_format,
+        "output_compression": args.output_compression,
+        "input_fidelity": args.input_fidelity,
+        "moderation": args.moderation,
+    }
+    payload = {k: v for k, v in payload.items() if v is not None}
+
+    output_format = _normalize_output_format(args.output_format)
+    _validate_transparency(args.background, output_format)
+    payload["output_format"] = output_format
+    _validate_input_fidelity(args.input_fidelity)
+    output_paths = _build_output_paths(args.out, output_format, args.n, args.out_dir)
+    downscaled = None
+    if args.downscale_max_dim is not None:
+        downscaled = [str(_derive_downscale_path(p, args.downscale_suffix)) for p in output_paths]
+
+    if args.dry_run:
+        payload_preview = dict(payload)
+        payload_preview["image"] = [str(p) for p in image_paths]
+        if mask_path:
+            payload_preview["mask"] = str(mask_path)
+        _print_request(
+            {
+                "endpoint": "/v1/images/edits",
+                "outputs": [str(p) for p in output_paths],
+                "outputs_downscaled": downscaled,
+                **payload_preview,
+            }
+        )
+        return
+
+    print(
+        f"Calling Image API (edit) with {len(image_paths)} image(s).",
+        file=sys.stderr,
+    )
+    started = time.time()
+    client = _create_client()
+
+    with _open_files(image_paths) as image_files, _open_mask(mask_path) as mask_file:
+        request = dict(payload)
+        request["image"] = image_files if len(image_files) > 1 else image_files[0]
+        if mask_file is not None:
+            request["mask"] = mask_file
+        result = client.images.edit(**request)
+
+    elapsed = time.time() - started
+    print(f"Edit completed in {elapsed:.1f}s.", file=sys.stderr)
+    images = [item.b64_json for item in result.data]
+    _decode_write_and_downscale(
+        images,
+        output_paths,
+        force=args.force,
+        downscale_max_dim=args.downscale_max_dim,
+        downscale_suffix=args.downscale_suffix,
+        output_format=output_format,
+    )
+
+
+def _open_files(paths: List[Path]):
+    return _FileBundle(paths)
+
+
+def _open_mask(mask_path: Optional[Path]):
+    if mask_path is None:
+        return _NullContext()
+    return _SingleFile(mask_path)
+
+
+class _NullContext:
+    def __enter__(self):
+        return None
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+
+class _SingleFile:
+    def __init__(self, path: Path):
+        self._path = path
+        self._handle = None
+
+    def __enter__(self):
+        self._handle = self._path.open("rb")
+        return self._handle
+
+    def __exit__(self, exc_type, exc, tb):
+        if self._handle:
+            try:
+                self._handle.close()
+            except Exception:
+                pass
+        return False
+
+
+class _FileBundle:
+    def __init__(self, paths: List[Path]):
+        self._paths = paths
+        self._handles: List[object] = []
+
+    def __enter__(self):
+        self._handles = [p.open("rb") for p in self._paths]
+        return self._handles
+
+    def __exit__(self, exc_type, exc, tb):
+        for handle in self._handles:
+            try:
+                handle.close()
+            except Exception:
+                pass
+        return False
+
+
+def _add_shared_args(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("--model", default=DEFAULT_MODEL)
+    parser.add_argument("--prompt")
+    parser.add_argument("--prompt-file")
+    parser.add_argument("--n", type=int, default=1)
+    parser.add_argument("--size", default=DEFAULT_SIZE)
+    parser.add_argument("--quality", default=DEFAULT_QUALITY)
+    parser.add_argument("--background")
+    parser.add_argument("--output-format")
+    parser.add_argument("--output-compression", type=int)
+    parser.add_argument("--moderation")
+    parser.add_argument("--out", default=DEFAULT_OUTPUT_PATH)
+    parser.add_argument("--out-dir")
+    parser.add_argument("--force", action="store_true")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--augment", dest="augment", action="store_true")
+    parser.add_argument("--no-augment", dest="augment", action="store_false")
+    parser.set_defaults(augment=True)
+
+    # Prompt augmentation hints
+    parser.add_argument("--use-case")
+    parser.add_argument("--scene")
+    parser.add_argument("--subject")
+    parser.add_argument("--style")
+    parser.add_argument("--composition")
+    parser.add_argument("--lighting")
+    parser.add_argument("--palette")
+    parser.add_argument("--materials")
+    parser.add_argument("--text")
+    parser.add_argument("--constraints")
+    parser.add_argument("--negative")
+
+    # Post-processing (optional): generate an additional downscaled copy for fast web loading.
+    parser.add_argument("--downscale-max-dim", type=int)
+    parser.add_argument("--downscale-suffix", default=DEFAULT_DOWNSCALE_SUFFIX)
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Fallback CLI for explicit image generation or editing via GPT Image models"
+    )
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    gen_parser = subparsers.add_parser("generate", help="Create a new image")
+    _add_shared_args(gen_parser)
+    gen_parser.set_defaults(func=_generate)
+
+    batch_parser = subparsers.add_parser(
+        "generate-batch",
+        help="Generate multiple prompts concurrently (JSONL input)",
+    )
+    _add_shared_args(batch_parser)
+    batch_parser.add_argument("--input", required=True, help="Path to JSONL file (one job per line)")
+    batch_parser.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY)
+    batch_parser.add_argument("--max-attempts", type=int, default=3)
+    batch_parser.add_argument("--fail-fast", action="store_true")
+    batch_parser.set_defaults(func=_generate_batch)
+
+    edit_parser = subparsers.add_parser("edit", help="Edit an existing image")
+    _add_shared_args(edit_parser)
+    edit_parser.add_argument("--image", action="append", required=True)
+    edit_parser.add_argument("--mask")
+    edit_parser.add_argument("--input-fidelity")
+    edit_parser.set_defaults(func=_edit)
+
+    args = parser.parse_args()
+    if args.n < 1 or args.n > 10:
+        _die("--n must be between 1 and 10")
+    if getattr(args, "concurrency", 1) < 1 or getattr(args, "concurrency", 1) > 25:
+        _die("--concurrency must be between 1 and 25")
+    if getattr(args, "max_attempts", 3) < 1 or getattr(args, "max_attempts", 3) > 10:
+        _die("--max-attempts must be between 1 and 10")
+    if args.output_compression is not None and not (0 <= args.output_compression <= 100):
+        _die("--output-compression must be between 0 and 100")
+    if args.command == "generate-batch" and not args.out_dir:
+        _die("generate-batch requires --out-dir")
+    if getattr(args, "downscale_max_dim", None) is not None and args.downscale_max_dim < 1:
+        _die("--downscale-max-dim must be >= 1")
+
+    _validate_model(args.model)
+    _validate_size(args.size, args.model)
+    _validate_quality(args.quality)
+    _validate_background(args.background)
+    _validate_model_specific_options(
+        model=args.model,
+        background=args.background,
+        input_fidelity=getattr(args, "input_fidelity", None),
+    )
+    _ensure_api_key(args.dry_run)
+
+    args.func(args)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+for p in ['docs/design/style-ref-1.png','docs/design/style-ref-2.png','docs/design/cast-board.png','docs/design/object-board.png','course-assets/scenes/module-05-lesson5B/_anchors/seller.png']:
+    im=Image.open(p)
+    print(f'{p}: {im.size} {im.mode}')
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse Completed
+ succeeded in 121ms:
+docs/design/style-ref-1.png: (1504, 1128) RGB
+docs/design/style-ref-2.png: (1504, 1128) RGB
+docs/design/cast-board.png: (1536, 1024) RGB
+docs/design/object-board.png: (1402, 1122) RGB
+course-assets/scenes/module-05-lesson5B/_anchors/seller.png: (720, 900) RGB
+
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The image CLI supports direct `gpt-image-2` generation to a specified output path, and `1600x900` is valid for the model. I’m going to run it as an edit with the style and seller references attached, because that gives the model the best chance of preserving the exact BMH character identity.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.claude/get-shit-done/workflows/quick.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+<purpose>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking). Quick mode spawns gsd-planner (quick mode) + gsd-executor(s), tracks tasks in `.planning/quick/`, and updates STATE.md's "Quick Tasks Completed" table.
+
+With `--full` flag: enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+With `--validate` flag: enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+With `--discuss` flag: lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md so the planner treats them as locked.
+
+With `--research` flag: spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls. Use when you're unsure how to approach a task.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+</purpose>
+
+<required_reading>
+Read all files referenced by the invoking prompt's execution_context before starting.
+</required_reading>
+
+<available_agent_types>
+Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gsd-phase-researcher — Researches technical approaches for a phase
+- gsd-planner — Creates detailed plans from phase scope
+- gsd-plan-checker — Reviews plan quality before execution
+- gsd-executor — Executes plan tasks, commits, creates SUMMARY.md
+- gsd-verifier — Verifies phase completion, checks quality gates
+- gsd-code-reviewer — Reviews source files for bugs, security issues, and code quality
+</available_agent_types>
+
+<process>
+**Step 1: Parse arguments and get task description**
+
+Parse `$ARGUMENTS` for:
+- `--full` flag → store `$FULL_MODE=true`, `$DISCUSS_MODE=true`, `$RESEARCH_MODE=true`, `$VALIDATE_MODE=true`
+- `--validate` flag → store `$VALIDATE_MODE=true`
+- `--discuss` flag → store `$DISCUSS_MODE=true`
+- `--research` flag → store `$RESEARCH_MODE=true`
+- Remaining text → use as `$DESCRIPTION` if non-empty
+
+After parsing, normalize: if `$DISCUSS_MODE` and `$RESEARCH_MODE` and `$VALIDATE_MODE` are all true, set `$FULL_MODE=true`. This ensures `--discuss --research --validate` is treated identically to `--full`.
+
+If `$DESCRIPTION` is empty after parsing, prompt user interactively:
+
+
+**Text mode (`workflow.text_mode: true` in config or `--text` flag):** Set `TEXT_MODE=true` if `--text` is present in `$ARGUMENTS` OR `text_mode` from init JSON is `true`. When TEXT_MODE is active, replace every `AskUserQuestion` call with a plain-text numbered list and ask the user to type their choice number. This is required for non-Claude runtimes (OpenAI Codex, Gemini CLI, etc.) where `AskUserQuestion` is not available.
+
+```
+AskUserQuestion(
+  header: "Quick Task",
+  question: "What do you want to do?",
+  followUp: null
+)
+```
+
+Store response as `$DESCRIPTION`.
+
+If still empty, re-prompt: "Please provide a task description."
+
+Display banner based on active flags:
+
+If `$FULL_MODE` (all phases enabled — `--full` or all granular flags):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (FULL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + research + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` and `$VALIDATE_MODE` (no research):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS + VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` and `$RESEARCH_MODE` (no validate):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS + RESEARCH)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + research enabled
+```
+
+If `$RESEARCH_MODE` and `$VALIDATE_MODE` (no discuss):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (RESEARCH + VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Research + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion phase enabled — surfacing gray areas before planning
+```
+
+If `$RESEARCH_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (RESEARCH)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Research phase enabled — investigating approaches before planning
+```
+
+If `$VALIDATE_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Plan checking + verification enabled
+```
+
+---
+
+**Step 2: Initialize**
+
+```bash
+if ! command -v gsd-sdk &>/dev/null; then
+  echo "⚠ gsd-sdk not found in PATH — /gsd-quick requires it."
+  echo ""
+  echo "Install the GSD SDK:"
+  echo "  npm install -g @gsd-build/sdk"
+  echo ""
+  echo "Or update GSD to get the latest packages:"
+  echo "  /gsd-update"
+  exit 1
+fi
+```
+
+```bash
+INIT=$(gsd-sdk query init.quick "$DESCRIPTION")
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+AGENT_SKILLS_PLANNER=$(gsd-sdk query agent-skills gsd-planner)
+AGENT_SKILLS_EXECUTOR=$(gsd-sdk query agent-skills gsd-executor)
+AGENT_SKILLS_CHECKER=$(gsd-sdk query agent-skills gsd-plan-checker)
+AGENT_SKILLS_VERIFIER=$(gsd-sdk query agent-skills gsd-verifier)
+```
+
+Parse JSON for: `planner_model`, `executor_model`, `checker_model`, `verifier_model`, `commit_docs`, `branch_name`, `quick_id`, `slug`, `date`, `timestamp`, `quick_dir`, `task_dir`, `roadmap_exists`, `planning_exists`.
+
+```bash
+USE_WORKTREES=$(gsd-sdk query config-get workflow.use_worktrees 2>/dev/null || echo "true")
+```
+
+If the project uses git submodules, worktree isolation is skipped:
+
+```bash
+if [ -f .gitmodules ]; then
+  echo "[worktree] Submodule project detected (.gitmodules exists) — falling back to sequential execution"
+  USE_WORKTREES=false
+fi
+```
+
+**If `roadmap_exists` is false:** Error — Quick mode requires an active project with ROADMAP.md. Run `/gsd-new-project` first.
+
+Quick tasks can run mid-phase - validation only checks ROADMAP.md exists, not phase status.
+
+---
+
+**Step 2.5: Handle quick-task branching**
+
+**If `branch_name` is empty/null:** Skip and continue on the current branch.
+
+**If `branch_name` is set:** Check out the quick-task branch before any planning commits:
+
+```bash
+git checkout -b "$branch_name" 2>/dev/null || git checkout "$branch_name"
+```
+
+All quick-task commits for this run stay on that branch. User handles merge/rebase afterward.
+
+---
+
+**Step 3: Create task directory**
+
+```bash
+mkdir -p "${task_dir}"
+```
+
+---
+
+**Step 4: Create quick task directory**
+
+Create the directory for this quick task:
+
+```bash
+QUICK_DIR=".planning/quick/${quick_id}-${slug}"
+mkdir -p "$QUICK_DIR"
+```
+
+Report to user:
+```
+Creating quick task ${quick_id}: ${DESCRIPTION}
+Directory: ${QUICK_DIR}
+```
+
+Store `$QUICK_DIR` for use in orchestration.
+
+---
+
+**Step 4.5: Discussion phase (only when `$DISCUSS_MODE`)**
+
+Skip this step entirely if NOT `$DISCUSS_MODE`.
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► DISCUSSING QUICK TASK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Surfacing gray areas for: ${DESCRIPTION}
+```
+
+**4.5a. Identify gray areas**
+
+Analyze `$DESCRIPTION` to identify 2-4 gray areas — implementation decisions that would change the outcome and that the user should weigh in on.
+
+Use the domain-aware heuristic to generate phase-specific (not generic) gray areas:
+- Something users **SEE** → layout, density, interactions, states
+- Something users **CALL** → responses, errors, auth, versioning
+- Something users **RUN** → output format, flags, modes, error handling
+- Something users **READ** → structure, tone, depth, flow
+- Something being **ORGANIZED** → criteria, grouping, naming, exceptions
+
+Each gray area should be a concrete decision point, not a vague category. Example: "Loading behavior" not "UX".
+
+**4.5b. Present gray areas**
+
+```
+AskUserQuestion(
+  header: "Gray Areas",
+  question: "Which areas need clarification before planning?",
+  options: [
+    { label: "${area_1}", description: "${why_it_matters_1}" },
+    { label: "${area_2}", description: "${why_it_matters_2}" },
+    { label: "${area_3}", description: "${why_it_matters_3}" },
+    { label: "All clear", description: "Skip discussion — I know what I want" }
+  ],
+  multiSelect: true
+)
+```
+
+If user selects "All clear" → skip to Step 5 (no CONTEXT.md written).
+
+**4.5c. Discuss selected areas**
+
+For each selected area, ask 1-2 focused questions via AskUserQuestion:
+
+```
+AskUserQuestion(
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'test -n "$OPENAI_API_KEY" && echo OPENAI_API_KEY_SET || echo OPENAI_API_KEY_MISSING; python3 - <<'"'PY'
+try:
+    import openai
+    print('openai_sdk', getattr(openai, '__version__', 'unknown'))
+except Exception as e:
+    print('openai_sdk_missing', e.__class__.__name__)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+OPENAI_API_KEY_MISSING
+openai_sdk_missing ModuleNotFoundError
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'python3 $HOME/.codex/skills/.system/imagegen/scripts/image_gen.py edit --model gpt-image-2 --size 1600x900 --quality medium --output-format png --image docs/design/style-ref-1.png --image docs/design/style-ref-2.png --image docs/design/cast-board.png --image docs/design/object-board.png --image course-assets/scenes/module-05-lesson5B/_anchors/seller.png --prompt "Create one clean 16:9 BMH course training-video still. Match the attached BMH course design references exactly. Use Image 1 and Image 2 for the flat sticker-sheet illustration style. Use Image 3 and Image 4 for the BMH character and object language. Use Image 5 as the identity anchor for the only person, the homeowner seller. Scene: one overwhelmed homeowner seller at a kitchen table. He has curly black hair, orange sweater, cream pants, yellow shoes, simple dot eyes, tiny centered two-stroke comma-like nose, minimal mouth, no skin-tone shading. He sits left of center at a simple kitchen table with a phone, a few blank mail envelopes, a plain property folder, and a small simple house photo. He looks thoughtful and burdened, not panicked. Style: flat sticker-sheet illustration, thick black hand-drawn outlines with slight wobble, rounded corners, flat fills only. Color palette: cornflower-blue background, yellow, orange, cream, white, and black only. Composition: clean centered training-video still, subject weighted left of center. Keep the bottom-right 420 px pocket mostly open cornflower blue for a future Andrea circle overlay. Exactly one person total. No clone, no second person, no extra people in background. No labels, captions, paragraphs, UI words, letters, numerals, symbols, watermarks, or readable marks anywhere. No hearts, sparkles, notes, thought bubbles, motion marks, ambient doodles, gradients, texture, shadows, realistic lighting, perspective, or 3D." --negative "extra people, duplicate seller, background people, words, letters, numbers, labels, captions, UI, readable text, hearts, sparkles, music notes, thought bubbles, motion marks, ambient doodles, gradients, texture, shadows, realistic lighting, perspective, 3D, skin-tone shading, panic expression" --out course-assets/scenes/module-10/m10_L10A_b03_not-ready.png' in $HOME/Sites/BMH apps/BMH Institute
+ exited 1 in 0ms:
+Error: gpt-image-2 size width and height must be multiples of 16px.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The first API dry run exposed a hard model constraint: `gpt-image-2` will not accept `1600x900` directly because the height is not a multiple of 16. The practical path is to generate at a nearby valid 16:9 size, then make the final PNG exactly `1600x900` inside the requested folder; I still need an API key and an available client path.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '260,620p' $HOME/.claude/get-shit-done/workflows/quick.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+AskUserQuestion(
+  header: "${area_name}",
+  question: "${specific_question_about_this_area}",
+  options: [
+    { label: "${concrete_choice_1}", description: "${what_this_means}" },
+    { label: "${concrete_choice_2}", description: "${what_this_means}" },
+    { label: "${concrete_choice_3}", description: "${what_this_means}" },
+    { label: "You decide", description: "Claude's discretion" }
+  ],
+  multiSelect: false
+)
+```
+
+Rules:
+- Options must be concrete choices, not abstract categories
+- Highlight recommended choice where you have a clear opinion
+- If user selects "Other" with freeform text, switch to plain text follow-up (per questioning.md freeform rule)
+- If user selects "You decide", capture as Claude's Discretion in CONTEXT.md
+- Max 2 questions per area — this is lightweight, not a deep dive
+
+Collect all decisions into `$DECISIONS`.
+
+**4.5d. Write CONTEXT.md**
+
+Write `${QUICK_DIR}/${quick_id}-CONTEXT.md` using the standard context template structure:
+
+```markdown
+# Quick Task ${quick_id}: ${DESCRIPTION} - Context
+
+**Gathered:** ${date}
+**Status:** Ready for planning
+
+<domain>
+## Task Boundary
+
+${DESCRIPTION}
+
+</domain>
+
+<decisions>
+## Implementation Decisions
+
+### ${area_1_name}
+- ${decision_from_discussion}
+
+### ${area_2_name}
+- ${decision_from_discussion}
+
+### Claude's Discretion
+${areas_where_user_said_you_decide_or_areas_not_discussed}
+
+</decisions>
+
+<specifics>
+## Specific Ideas
+
+${any_specific_references_or_examples_from_discussion}
+
+[If none: "No specific requirements — open to standard approaches"]
+
+</specifics>
+
+<canonical_refs>
+## Canonical References
+
+${any_specs_adrs_or_docs_referenced_during_discussion}
+
+[If none: "No external specs — requirements fully captured in decisions above"]
+
+</canonical_refs>
+```
+
+Note: Quick task CONTEXT.md omits `<code_context>` and `<deferred>` sections (no codebase scouting, no phase scope to defer to). Keep it lean. The `<canonical_refs>` section is included when external docs were referenced — omit it only if no external docs apply.
+
+Report: `Context captured: ${QUICK_DIR}/${quick_id}-CONTEXT.md`
+
+---
+
+**Step 4.75: Research phase (only when `$RESEARCH_MODE`)**
+
+Skip this step entirely if NOT `$RESEARCH_MODE`.
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► RESEARCHING QUICK TASK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Investigating approaches for: ${DESCRIPTION}
+```
+
+Spawn a single focused researcher (not 4 parallel researchers like full phases — quick tasks need targeted research, not broad domain surveys):
+
+```
+Task(
+  prompt="
+<research_context>
+
+**Mode:** quick-task
+**Task:** ${DESCRIPTION}
+**Output:** ${QUICK_DIR}/${quick_id}-RESEARCH.md
+
+<files_to_read>
+- .planning/STATE.md (Project state — what's already built)
+- .planning/PROJECT.md (Project context)
+- ./CLAUDE.md (if exists — project-specific guidelines)
+${DISCUSS_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-CONTEXT.md (User decisions — research should align with these)' : ''}
+</files_to_read>
+
+${AGENT_SKILLS_PLANNER}
+
+</research_context>
+
+<focus>
+This is a quick task, not a full phase. Research should be concise and targeted:
+1. Best libraries/patterns for this specific task
+2. Common pitfalls and how to avoid them
+3. Integration points with existing codebase
+4. Any constraints or gotchas worth knowing before planning
+
+Do NOT produce a full domain survey. Target 1-2 pages of actionable findings.
+</focus>
+
+<output>
+Write research to: ${QUICK_DIR}/${quick_id}-RESEARCH.md
+Use standard research format but keep it lean — skip sections that don't apply.
+Return: ## RESEARCH COMPLETE with file path
+</output>
+",
+  subagent_type="gsd-phase-researcher",
+  model="{planner_model}",
+  description="Research: ${DESCRIPTION}"
+)
+```
+
+After researcher returns:
+1. Verify research exists at `${QUICK_DIR}/${quick_id}-RESEARCH.md`
+2. Report: "Research complete: ${QUICK_DIR}/${quick_id}-RESEARCH.md"
+
+If research file not found, warn but continue: "Research agent did not produce output — proceeding to planning without research."
+
+---
+
+**Step 5: Spawn planner (quick mode)**
+
+**If `$VALIDATE_MODE`:** Use `quick-full` mode with stricter constraints.
+
+**If NOT `$VALIDATE_MODE`:** Use standard `quick` mode.
+
+```
+Task(
+  prompt="
+<planning_context>
+
+**Mode:** ${VALIDATE_MODE ? 'quick-full' : 'quick'}
+**Directory:** ${QUICK_DIR}
+**Description:** ${DESCRIPTION}
+
+<files_to_read>
+- .planning/STATE.md (Project State)
+- ./CLAUDE.md (if exists — follow project-specific guidelines)
+${DISCUSS_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-CONTEXT.md (User decisions — locked, do not revisit)' : ''}
+${RESEARCH_MODE ? '- ' + QUICK_DIR + '/' + quick_id + '-RESEARCH.md (Research findings — use to inform implementation choices)' : ''}
+</files_to_read>
+
+${AGENT_SKILLS_PLANNER}
+
+**Project skills:** Check .claude/skills/ or .agents/skills/ directory (if either exists) — read SKILL.md files, plans should account for project skill rules
+
+</planning_context>
+
+<constraints>
+- Create a SINGLE plan with 1-3 focused tasks
+- Quick tasks should be atomic and self-contained
+${RESEARCH_MODE ? '- Research findings are available — use them to inform library/pattern choices' : '- No research phase'}
+${VALIDATE_MODE ? '- Target ~40% context usage (structured for verification)' : '- Target ~30% context usage (simple, focused)'}
+${VALIDATE_MODE ? '- MUST generate `must_haves` in plan frontmatter (truths, artifacts, key_links)' : ''}
+${VALIDATE_MODE ? '- Each task MUST have `files`, `action`, `verify`, `done` fields' : ''}
+</constraints>
+
+<output>
+Write plan to: ${QUICK_DIR}/${quick_id}-PLAN.md
+Return: ## PLANNING COMPLETE with plan path
+</output>
+",
+  subagent_type="gsd-planner",
+  model="{planner_model}",
+  description="Quick plan: ${DESCRIPTION}"
+)
+```
+
+After planner returns:
+1. Verify plan exists at `${QUICK_DIR}/${quick_id}-PLAN.md`
+2. Extract plan count (typically 1 for quick tasks)
+3. Report: "Plan created: ${QUICK_DIR}/${quick_id}-PLAN.md"
+
+If plan not found, error: "Planner failed to create ${quick_id}-PLAN.md"
+
+---
+
+**Step 5.5: Plan-checker loop (only when `$VALIDATE_MODE`)**
+
+Skip this step entirely if NOT `$VALIDATE_MODE`.
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► CHECKING PLAN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Spawning plan checker...
+```
+
+Checker prompt:
+
+```markdown
+<verification_context>
+**Mode:** quick-full
+**Task Description:** ${DESCRIPTION}
+
+<files_to_read>
+- ${QUICK_DIR}/${quick_id}-PLAN.md (Plan to verify)
+</files_to_read>
+
+${AGENT_SKILLS_CHECKER}
+
+**Scope:** This is a quick task, not a full phase. Skip checks that require a ROADMAP phase goal.
+</verification_context>
+
+<check_dimensions>
+- Requirement coverage: Does the plan address the task description?
+- Task completeness: Do tasks have files, action, verify, done fields?
+- Key links: Are referenced files real?
+- Scope sanity: Is this appropriately sized for a quick task (1-3 tasks)?
+- must_haves derivation: Are must_haves traceable to the task description?
+
+Skip: cross-plan deps (single plan), ROADMAP alignment
+${DISCUSS_MODE ? '- Context compliance: Does the plan honor locked decisions from CONTEXT.md?' : '- Skip: context compliance (no CONTEXT.md)'}
+</check_dimensions>
+
+<expected_output>
+- ## VERIFICATION PASSED — all checks pass
+- ## ISSUES FOUND — structured issue list
+</expected_output>
+```
+
+```
+Task(
+  prompt=checker_prompt,
+  subagent_type="gsd-plan-checker",
+  model="{checker_model}",
+  description="Check quick plan: ${DESCRIPTION}"
+)
+```
+
+**Handle checker return:**
+
+- **`## VERIFICATION PASSED`:** Display confirmation, proceed to step 6.
+- **`## ISSUES FOUND`:** Display issues, check iteration count, enter revision loop.
+
+**Revision loop (max 2 iterations):**
+
+Track `iteration_count` (starts at 1 after initial plan + check).
+
+**If iteration_count < 2:**
+
+Display: `Sending back to planner for revision... (iteration ${N}/2)`
+
+Revision prompt:
+
+```markdown
+<revision_context>
+**Mode:** quick-full (revision)
+
+<files_to_read>
+- ${QUICK_DIR}/${quick_id}-PLAN.md (Existing plan)
+</files_to_read>
+
+${AGENT_SKILLS_PLANNER}
+
+**Checker issues:** ${structured_issues_from_checker}
+
+</revision_context>
+
+<instructions>
+Make targeted updates to address checker issues.
+Do NOT replan from scratch unless issues are fundamental.
+Return what changed.
+</instructions>
+```
+
+```
+Task(
+  prompt=revision_prompt,
+  subagent_type="gsd-planner",
+  model="{planner_model}",
+  description="Revise quick plan: ${DESCRIPTION}"
+)
+```
+
+After planner returns → spawn checker again, increment iteration_count.
+
+**If iteration_count >= 2:**
+
+Display: `Max iterations reached. ${N} issues remain:` + issue list
+
+Offer: 1) Force proceed, 2) Abort
+
+---
+
+**Step 5.6: Pre-dispatch plan commit (worktree mode only)**
+
+When `USE_WORKTREES !== "false"`, commit PLAN.md to the current branch **before** spawning the executor. This ensures the worktree inherits PLAN.md at its branch HEAD so the executor can read it via a worktree-rooted path — avoiding the main-repo path priming that triggers CC #36182 path-resolution drift.
+
+Skip this step entirely if `USE_WORKTREES === "false"` (non-worktree mode: PLAN.md is committed in Step 8 as usual).
+
+```bash
+if [ "${USE_WORKTREES}" != "false" ]; then
+  COMMIT_DOCS=$(gsd-sdk query config-get commit_docs 2>/dev/null || echo "true")
+  if [ "$COMMIT_DOCS" != "false" ]; then
+    git add "${QUICK_DIR}/${quick_id}-PLAN.md"
+    git commit --no-verify -m "docs(${quick_id}): pre-dispatch plan for ${DESCRIPTION}" -- "${QUICK_DIR}/${quick_id}-PLAN.md" || true
+  fi
+fi
+```
+
+---
+
+**Step 6: Spawn executor**
+
+Capture current HEAD before spawning (used for worktree branch check):
+```bash
+EXPECTED_BASE=$(git rev-parse HEAD)
+```
+
+Spawn gsd-executor with plan reference:
+
+```
+Task(
+  prompt="
+Execute quick task ${quick_id}.
+
+${USE_WORKTREES !== "false" ? `
+<worktree_branch_check>
+FIRST ACTION before any other work: verify this worktree branch is based on the correct commit.
+Run: git merge-base HEAD ${EXPECTED_BASE}
+If the result differs from ${EXPECTED_BASE}, hard-reset to the correct base (safe — runs before any agent work):
+  git reset --hard ${EXPECTED_BASE}
+Then verify: if [ "$(git rev-parse HEAD)" != "${EXPECTED_BASE}" ]; then echo "ERROR: Could not correct worktree base"; exit 1; fi
+This corrects a known issue where EnterWorktree creates branches from main instead of the feature branch HEAD (affects all platforms).
+</worktree_branch_check>
+` : ''}
+
+<files_to_read>
+- ${QUICK_DIR}/${quick_id}-PLAN.md (Plan)
+- .planning/STATE.md (Project state)
+- ./CLAUDE.md (Project instructions, if exists)
+- .claude/skills/ or .agents/skills/ (Project skills, if either exists — list skills, read SKILL.md for each, follow relevant rules during implementation)
+</files_to_read>
+
+${AGENT_SKILLS_EXECUTOR}
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "rg -n \"OPENAI_API_KEY|openai|gpt-image|image_gen\" package.json package-lock.json .env.example docs .planning 2>/dev/null | sed -n '1,160p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+docs/course-production/NEXT-SESSION.md:42:- **Codex `gpt-image-2` image pipeline PROVEN.** On-brand doodle scenes. **Claude judges vs refs — Codex must NOT self-grade.** 9 Module-1 scenes generated + judged in `course-assets/scenes/module-01/`.
+docs/course-production/scripts/gen_stills_3A.sh:19:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_stills_3A.sh:27:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. The woman wearing the phone headset (our BMH representative) must have the IDENTICAL face to the attached headset reference image: tiny dot eyes, small simple nose, simple friendly smile, same headset. COMPOSITION: $desc $STYLE" | \
+docs/course-production/ARCHITECTURE.md:3:**Locked 2026-07-03.** How still doodle scenes become finished module videos. The still art is already proven (Codex `gpt-image-2`, judged flat/on-brand). This doc covers the **motion** layer on top.
+docs/course-production/scripts/gen_stills_8A.sh:28:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly and keep the character IDENTICAL to the attached character reference. CHARACTER: $ident COMPOSITION: $desc $STYLE $NEG" | \
+.planning/quick/260703-generate-title-objections-scene-asset/PLAN.md:12:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260703-generate-title-objections-scene-asset/SUMMARY.md:12:- Tried the explicit local `gpt-image-2` CLI path first. Dry-run confirmed the intended payload, but the runtime had no `OPENAI_API_KEY` and no Python `openai` package, so the real CLI generation path was unavailable.
+docs/course-production/scripts/gen_stills_9A_v2.sh:17:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly, EXCEPT do not copy their noses — our current style uses NO noses. COMPOSITION: $desc $STYLE" | \
+docs/course-production/scripts/gen_stills_3B.sh:17:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_carol_argue.sh:10:echo "Generate one image with gpt-image-2 and save it to $OUT/$FILE (PNG, 1600x900). Match the attached style references exactly. This is a TWO-PERSON scene. LEFT person = Carol, the SAME character as the attached portrait m02_L2B_carol.png — IDENTICAL face and build: a woman in her sixties, short curly LIGHT-GREY hair, ROUND GLASSES, cream shirt, pale near-white cream face; now looking FRUSTRATED and mid-argument, one hand raised gesturing, the other holding up a single sheet of paper marked LIEN. RIGHT person = a CONTRACTOR (a NEW, different character, clearly NOT Carol): a man in a work CAP and a TOOL BELT, plain cream/orange work clothes, pale near-white cream face; he is ALSO ANGRY — brow furrowed, scowling mouth, one hand thrown out or jabbing a finger back toward Carol, arguing BACK at her (NOT apologizing, NOT sheepish). BOTH people are visibly ANGRY and mid-shout — this is a heated TWO-WAY argument, both scowling at each other. Between them on the ground is the abandoned half-finished repair: a leaning step LADDER and an open PAINT CAN with a brush. Keep the cornflower-blue background BEHIND them completely PLAIN and EMPTY — NO wall, NO gray patch, NO paint patch, nothing on the background. "$STYLE" One short caps word LIEN is allowed on the paper Carol holds; keep letters clean and legible; no other text anywhere. EXACTLY TWO people in the whole image (Carol on the left, the contractor on the right) — no clone, no third person, no duplicate, no reflection; each person has exactly one head and two arms." | \
+docs/course-production/scripts/gen_stills_2A_v4.sh:13:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_scenes_2B.sh:17:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly, and the person is the SAME character as the attached portrait $portrait — IDENTICAL face and build: $face SCENE: $scene The person is a full or half-length figure standing/seated within the scene (NOT a head-and-shoulders portrait). Weary, worn, honest emotional tone — no smiling. $STYLE $capsnote EXACTLY ONE PERSON in the whole image, no second person, no clone, no reflection of the person." | \
+docs/course-production/scripts/gen_stills_2B.sh:16:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+.planning/quick/260705-imq-generate-ray-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and attached style references because the local CLI path could not run without `OPENAI_API_KEY`.
+docs/course-production/scripts/gen_interrogation_5B.sh:11:Generate one image with gpt-image-2 and save it to $OUT/m05_L5B_interrogation.png (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: A dim basement interrogation room, comedic and exaggerated. On the LEFT, the BMH representative woman has the IDENTICAL face to the attached HEADSET reference image (tiny dot eyes, small nose, orange phone headset) but is dressed like a Men-in-Black agent: plain BLACK boxy suit and BLACK sunglasses, leaning in intimidatingly with one hand flat on a bare gray metal table. A single harsh cone of yellow light beams straight DOWN from a bare hanging bulb onto the table. On the RIGHT, sitting across the table, is the SAME seller as the attached SELLER reference image: IDENTICAL short dark curly hair, plain white face with tiny dot eyes, the SAME ORANGE sweater, cream pants and yellow shoes, but now NERVOUS: leaning back away from her, both hands up defensively, a few small sweat drops, worried open mouth. EXACTLY TWO clearly different people, no clone. Dim cornflower-blue basement walls, empty. Palette only. Nothing else in frame. $STYLE
+docs/course-production/scripts/gen_stills_9A.sh:14:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $STYLE" | \
+docs/course-production/scripts/gen_stills_TEMPLATE.sh:14:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_stills_4A.sh:14:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $STYLE" | \
+docs/course-production/scripts/gen_stills_1C.sh:20:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_stills_1C.sh:29:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $STYLE_LOGO" | \
+docs/course-production/scripts/gen_stills_1C.sh:94:  echo "Generate one image with gpt-image-2 and save it to $OUT/m01_LC_b12_not-buyer_v2.png (PNG, 1600x900). The LAST attached image is the approved final scene. Reproduce it EXACTLY — same signpost, same three arrow signs pointing the same directions, same rep with headset gesturing on the left, same homeowner on the right, same poses, colors and composition — with ONE change only: the three arrow signs now carry hand-lettered black capital words, TOP sign reads AGENT, MIDDLE sign reads WAIT, BOTTOM sign reads RENT, each word centered on its sign in the same wobbly hand-drawn style. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no shadows. The ONLY text allowed is the three capital words AGENT, WAIT, RENT — one per sign, no other letters, numbers, or words anywhere. 16:9 composition, 1600x900." | \
+docs/course-production/scripts/gen_beth_v2.sh:10:echo "Generate one image with gpt-image-2 and save it to $OUT/$FILE (PNG, 1600x900). Match the attached style references exactly, and the standing woman is the SAME character as the attached portrait m02_L2B_beth.png — IDENTICAL face and build: ONE doodle woman in her early forties, medium build, shoulder-length BLACK hair (NOT grey, NOT elderly), no glasses, white shirt, pale near-white cream face, quiet grieving tired expression. SCENE: Beth stands INSIDE her late mother's quiet LIVING ROOM. Simple flat brand-style room — a plain sofa, a small side table, a rug, a window — clean minimal flat doodle shapes. PROMINENTLY on the WALL BEHIND her hangs a large FRAMED MEMORIAL PORTRAIT of her late mother: a framed head-and-shoulders picture of an ELDERLY woman with short grey/white hair, round gentle face, pale cream face — clearly a photo of someone who has passed. Beth stands quietly, one hand at her side, subdued and grieving, looking around the empty room. Beth is a full or half-length standing figure (NOT a head-and-shoulders portrait). Weary, no smiling. "$STYLE" IMPORTANT: there is EXACTLY ONE living/real person in the scene (Beth). The ONLY other face allowed is the DRAWN portrait inside the picture frame on the wall (the late mother) — that is a framed picture, not a second live person. No other people, no clones, no reflections. No text or words anywhere; the framed photo shows a drawn face, not text." | \
+docs/course-production/scripts/_scene_logs/beth.log:3:I attempted the explicit `gpt-image-2` CLI path first, but the local shell had no `OPENAI_API_KEY` and no installed `openai` Python package. I used the built-in image generation path and flattened the selected result locally. Source image preserved under `~/.codex/generated_images/...`.
+.planning/quick/260705-imt-generate-m04-l4a-qualify-v2/SUMMARY.md:16:- The explicit CLI/API `gpt-image-2` path could not run in this shell because no `OPENAI_API_KEY` is configured locally and the Python `openai` package is not installed, so the image was generated with the built-in image tool and then flattened locally.
+.planning/quick/260706-generate-m05-l5b-conversation/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` style prompt and supplied style references.
+docs/course-production/scripts/gen_stills_5B.sh:17:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_stills_5B.sh:25:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. The woman wearing the phone headset (our BMH representative) must have the IDENTICAL face to the attached headset reference image: tiny dot eyes, small simple nose, same headset. COMPOSITION: $desc $STYLE" | \
+docs/course-production/scripts/_scene_logs/ray.log:3:Note: the local explicit `gpt-image-2` CLI path could not run because `OPENAI_API_KEY` is missing, so I used the established built-in image workflow and normalized the output locally. Drift surfaced but not changed because it is outside this image task: `_Active.md` and `mocs/MOC - v1.md` still reference Sandra PR #301 where newer vault context points to PR #306.
+docs/course-production/scripts/gen_stills_7B.sh:26:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached STYLE references for the art style and the CHARACTER anchors for the people. COMPOSITION: $desc $CAST $STYLE" | \
+.planning/quick/260704-generate-equal-status-v2-scene-asset/SUMMARY.md:13:- Used the built-in image workflow with the supplied character and style references after the explicit local `gpt-image-2` CLI path could not run because this shell had no `OPENAI_API_KEY` and the service-account token was unavailable.
+.planning/quick/260703-generate-reps-board-v2/SUMMARY.md:14:- The explicit CLI path for `gpt-image-2` could not run because `OPENAI_API_KEY` was not present in this shell.
+.planning/quick/260703-generate-ten-principles-board-v2/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied references and the requested gpt-image-2 prompt.
+.planning/quick/260706-generate-m08-l8a-b04-response/SUMMARY.md:13:- Checked the explicit local `gpt-image-2` CLI path first. It was unavailable because `OPENAI_API_KEY` is not exported, the Python OpenAI package is not installed, and the approved 1Password service-account token is not in Keychain.
+.planning/quick/260706-generate-m08-l8a-b04-response/SUMMARY.md:14:- Used the built-in image generation workflow with the requested `gpt-image-2` style prompt and supplied style and Marcus references, matching the existing course-production pattern.
+.planning/quick/260704-generate-cash-truth-v2-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied style references and requested gpt-image-2 prompt.
+docs/course-production/scripts/gen_stills_2A_v2.sh:19:  echo "Generate one image with gpt-image-2 and save it to $OUT/m02_L2A_office_andrea.png (PNG, 1600x900). The FIRST attached image is Andrea — reproduce her face and hair EXACTLY: same tiny dot eyes, small nose, simple smile, same dark curly hair. COMPOSITION: Full-body doodle illustration of Andrea standing in a simple office, warm and friendly, hands relaxed at her sides, front-facing. A simple office desk with a chair sits to one side. On the wall directly behind her is the B|M|H logo lockup reproduced from the last two attached logo references (serif capitals B, M, H separated by thin vertical divider bars, dark green badge). Andrea centered, her full body visible from head to feet with a little floor space beneath her, generous plain cornflower-blue space around her. STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no shadows, no perspective. The ONLY text allowed is the B M H logo lockup on the wall; its dark green badge is a permitted brand exception. No other letters, numbers, or words anywhere. 16:9 composition, 1600x900." | \
+docs/course-production/scripts/gen_stills_2A_v2.sh:26:  echo "Generate one image with gpt-image-2 and save it to $OUT/m02_L2A_b10_outofstate.png (PNG, 1600x900). Match the attached doodle style. COMPOSITION: The frame is split into two halves by one straight horizontal black line across the middle. TOP HALF is a cold snowy winter scene: a simple little cream house with an orange roof sitting in deep white snow, two simple pale mountain peaks behind it, and a few falling snowflakes. BOTTOM HALF is a warm sunny beach: ONE relaxed homeowner lounging back on a beach chair wearing big black sunglasses, arms behind the head, with a simple palm tree, a round sun, and a strip of sandy ground. The contrast reads as the owner relaxing far away in the sun while their property sits alone in the snow. Exactly one person, in the bottom beach half only. $STYLE_SCENIC" | \
+docs/course-production/scripts/gen_stills_2A_v2.sh:33:  echo "Generate one image with gpt-image-2 and save it to $OUT/m02_L2A_b18_angrycaller.png (PNG, 1600x900). Match the attached doodle style. COMPOSITION: ONE cast-board-style homeowner seated at a simple desk, visibly angry and fed up: eyebrows furrowed low, mouth in a hard frown. One hand is slamming down flat on the desk, the other hand is snatching up an old-fashioned corded phone handset toward the ear. A simple phone base with a cord sits on the desk in front of them. Exactly one person, no clone, no second person. Centered, generous plain cornflower-blue space around. $STYLE" | \
+docs/course-production/scripts/gen_stills_2A_v2.sh:40:  echo "Generate one image with gpt-image-2 and save it to $OUT/m02_L2A_b20_handshake.png (PNG, 1600x900). Match the attached doodle style. COMPOSITION: An extreme close-up of two hands clasped in a warm, firm handshake, filling most of the frame. Two forearms come in from the left and the right and meet in the center: the LEFT sleeve is cream, the RIGHT sleeve is orange, so they clearly read as two different people. Simple doodle hands with thick black outlines, flat fills, a couple of simple knuckle and finger lines. Centered on plain cornflower-blue. No faces, no bodies, just the two hands and forearms shaking. $STYLE" | \
+docs/course-production/scripts/gen_stills_5A.sh:17:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_stills_5A.sh:25:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. The woman wearing the phone headset (our BMH representative) must have the IDENTICAL face to the attached headset reference image: tiny dot eyes, small simple nose, simple friendly smile, same headset. COMPOSITION: $desc $STYLE" | \
+docs/course-production/scripts/gen_stills_7A.sh:22:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly and keep the character IDENTICAL to the attached character reference. CHARACTER: $ident COMPOSITION: $desc $STYLE $NEG" | \
+docs/course-production/scripts/gen_stills_6A.sh:19:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+docs/course-production/scripts/gen_stills_2A.sh:13:  echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $style" | \
+.planning/quick/260704-kf5-generate-car-plate-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and attached style references.
+.planning/quick/260704-generate-m03-l3a-devil-agent/PLAN.md:17:- Use the requested `gpt-image-2` image prompt path where available.
+docs/course-production/PLAYBOOK.md:22:## 1. Still generation (Codex `gpt-image-2`)
+docs/course-production/LESSON-2B-V2-SCENES-SPEC.md:41:Prompt = "Generate one image with gpt-image-2 … the person is the SAME character as the attached portrait m02_L2B_<seller>.png — IDENTICAL face: small dot eyes, tiny nose, simple features, same hair/build. SCENE: <situational description>. STYLE: <the gen_stills_2B.sh STYLE block>. EXACTLY ONE PERSON, no clone."
+docs/course-production/LESSON-2B-V2-SCENES-SPEC.md:77:- **Claude judges style; Codex/gpt-image-2 never self-grades.** Judge the SET side-by-side (v1 lesson).
+docs/course-production/README.md:21:Style block (from `../design/` refs) → Codex `gpt-image-2` generates each shotlist prompt to `course-assets/` → review → HeyGen composites Andrea over each background → module renders.
+docs/course-production/HANDOFF-lesson2A.md:28:- **Stills (Codex gpt-image-2):** `course-assets/scenes/module-02/m02_L2A_*.png`
+docs/course-production/HANDOFF-lesson2A.md:132:  behind her). NOTE: BMH logo TEXT garbles to "BNH" in gpt-image — fix by generating the plaque in OPEN
+docs/course-production/HANDOFF-lesson2A.md:205:- gpt-image garbles logo/long text (BMH->BNH). For the BMH plaque, gen it in open wall space and/or
+.planning/quick/260705-generate-m03-l3b-offer-recap/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260703-generate-title-prospect-scene-asset/PLAN.md:12:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260703-generate-title-process-scene-asset/PLAN.md:12:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260703-generate-rep-call-scene-asset/SUMMARY.md:13:- Tried the explicit local `gpt-image-2` CLI path first, but real CLI generation was unavailable because this shell has no `OPENAI_API_KEY`.
+.planning/quick/260703-generate-rep-call-scene-asset/SUMMARY.md:14:- The direct `1600x900` size is also not accepted by the CLI because `gpt-image-2` requires both edges to be multiples of 16, so any exact `1600x900` delivery needs local resize normalization.
+.planning/STATE.md:118:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LA_s10_title-objections.png` as a 1600 x 900 flat title-card scene with one speech bubble, an X, and a check mark. The explicit local `gpt-image-2` CLI path was unavailable because the runtime had no API key or Python OpenAI package, so generation used the built-in image workflow followed by local resize and palette flattening.
+.planning/STATE.md:121:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LA_s04a_rep-call.png` as a 1600 x 900 split-screen Priya and David call scene. Real `gpt-image-2` CLI generation was unavailable because the runtime had no API key, so generation used the built-in image workflow followed by local resize and palette flattening.
+.planning/STATE.md:122:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p02_alignment.png` as a 1600 x 900 flat principle-card image with two centered chairs facing the same direction. The explicit local `gpt-image-2` CLI path was unavailable because the runtime had no API key or Python OpenAI package, so generation used the built-in image workflow followed by local resize and palette flattening.
+.planning/STATE.md:126:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_s02_guide-not-buyer.png` as a 1600 x 900 flat guide-path scene with one figure leading another along a dotted path toward a flag on a gentle hill. The explicit local `gpt-image-2` CLI path was unavailable because the runtime had no API key or Python OpenAI package, so generation used the built-in image workflow followed by local resize, six-color palette flattening, and bottom-right presenter-area cleanup.
+.planning/STATE.md:128:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_story3_frozen.png` as a 1600 x 900 flat forked-trail scene with one uncertain cast-style woman, two unfinished dotted trails, and one small house on one trail. The explicit local `gpt-image-2` CLI path was unavailable because the runtime had no API key, so generation used the built-in image workflow followed by local resize, six-color palette flattening, and bottom-right presenter-area cleanup.
+.planning/STATE.md:129:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p10_same-lens.png` as a 1600 x 900 flat principle-card scene with two cast-style figures looking through one shared window frame toward a small bright house. Direct local `gpt-image-2` sizing was unavailable for exact 1600 x 900 because the model size requires multiples of 16, so generation used the built-in image workflow followed by local resize and six-color palette flattening.
+.planning/STATE.md:131:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_s07_ten-principles-board.png` as a 1600 x 900 flat ten-principles board with ten rounded tiles arranged 5x2, one dot per tile, and a five-color flattened palette. The generated image used the built-in image workflow with the requested gpt-image-2 prompt, followed by local resize, smoothing, and palette flattening.
+.planning/STATE.md:132:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_s07_ten-principles-board_v2.png` as a 1600 x 900 flat ten-commandments style tablet with one `10` header and ten rounded pseudo-text bars arranged two columns of five. The generated image used the built-in image workflow with the requested gpt-image-2 prompt, followed by local resize and five-color palette flattening.
+.planning/STATE.md:133:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p09_reps_v2.png` as a 1600 x 900 flat classroom chalkboard scene with rows of white tally groups and no text. The generated image used the built-in image workflow with the requested gpt-image-2 prompt, followed by local resize and five-color palette flattening.
+.planning/STATE.md:134:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p04_detach_v2.png` as a 1600 x 900 flat full-body headset character doing a relaxed shrug. The generated image used the built-in image workflow with the requested gpt-image-2 prompt, followed by local resize and six-color palette flattening.
+.planning/STATE.md:135:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/andrea_cafe.png` as a 1600 x 900 flat Andrea cafe scene with headset removed, large simple face, coffee cup, cafe counter, stools, pseudo-text menu bars, window, and plant. The generated image used the built-in image workflow with the requested gpt-image-2 prompt, followed by local resize and six-color palette flattening.
+.planning/STATE.md:136:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_s03_clarity-shift_v5.png` as a 1600 x 900 flat clarity-shift scene preserving the approved v4 image and adding complete yellow glasses temple arms at the outer hinges. The built-in image workflow was used with the requested gpt-image-2 prompt, then the final was corrected with a controlled overlay because the generated candidate changed the approved scene.
+.planning/STATE.md:137:- 2026-07-03 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p07_calendar_frame.png` as a 1600 x 900 flat calendar frame scene with spiral binding rings, an orange header, and a large blank cream page area for a later code-added day grid. The generated image used the built-in image workflow with the requested gpt-image-2 prompt, followed by local resize and six-color palette flattening.
+.planning/STATE.md:138:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p06_equal-status_v2.png` as a 1600 x 900 flat equal-status staredown scene with the same headset rep and seller facing each other at equal eye-line inside a simple boxing ring. The explicit local `gpt-image-2` CLI path was unavailable because this shell had no API key, so generation used the built-in image workflow followed by resize and six-color palette flattening.
+.planning/STATE.md:139:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LB_story2_landlord_poseB.png` as a 1600 x 900 pose B animation frame from the approved landlord kitchen scene. The built-in image workflow was used with the requested gpt-image-2 prompt, then the final was corrected as a constrained pixel edit so kitchen props remain registered and only the man area changes.
+.planning/STATE.md:140:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LB_p09_reps_v3.png` as a 1600 x 900 flat classroom chalkboard scene with the headset rep writing tally marks on the lower right side of a partially filled board. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:141:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b07_cash-road.png` as a 1600 x 900 flat open-doorway scene with a cream cash-bill path to a small house and a separate dashed road. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:142:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b07_cash-road_v2.png` as a 1600 x 900 flat open-doorway scene with one smiling headset rep holding a stack of cream cash bills in both arms. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:143:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b04_lowballers.png` as a 1600 x 900 flat lowballers scene with three identical crossed-arm investors on the left and a separated smiling waving BMH rep on the right. The built-in image workflow was used with the supplied references because the local explicit `gpt-image-2` CLI path was unavailable, followed by resize and six-color palette flattening.
+.planning/STATE.md:144:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b16_cash-truth.png` as a 1600 x 900 flat cash-bill path scene with one large magnifying glass enlarging the center bill. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:145:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b03_intel.png` as a 1600 x 900 flat single-rep listening scene with a headset, simple chair, pen, notepad, and open upper blue space for later text cards. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:146:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b11_movie.png` as a 1600 x 900 flat movie scene with one open clapperboard, one dashed arc, and one simple house window showing a bed with a pillow and blanket. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:147:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b17_perform.png` as a 1600 x 900 flat two-part contrast scene with a sly buyer holding a rolled contract and visibly crossed fingers on the left, plus a headset rep warmly shaking hands with a homeowner on the right. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:148:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b15_win-window.png` as a 1600 x 900 flat wall-calendar scene with blank rounded day cells, top spiral binding, and one rounded yellow horizontal window band. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize, six-color palette flattening, and disconnected artifact cleanup.
+.planning/STATE.md:149:- 2026-07-04 (quick task): Generated `course-assets/scenes/module-01/m01_LC_b08_123-stairs.png` as a 1600 x 900 flat three-step scene with alternating cream and yellow chunky side-view stairs and one small top-step flag. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:151:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02/m02_L2A_grid3_divorce.png` as a 1600 x 900 flat grid portrait with exactly one downcast ponytail person in a yellow shirt, one hand against the cheek, and clean crop-safe blue margins. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:152:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02/m02_L2A_b10_outofstate.png` as a 1600 x 900 flat horizontal split scene with a snowy empty property on top and exactly one relaxed beach homeowner on the bottom. The explicit local `gpt-image-2` CLI path was unavailable because this shell had no API key or Python OpenAI package, so generation used the built-in image workflow followed by resize and eight-color palette flattening.
+.planning/STATE.md:153:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02/m02_L2A_b18_angrycaller.png` as a 1600 x 900 flat angry-caller scene with exactly one homeowner at a desk, one hand flat on the desk, one hand holding a corded handset, and a phone base with cord. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:154:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02-lesson2B/m02_L2B_carol.png` as a 1600 x 900 flat centered Carol portrait with exactly one frustrated older woman, short curly light-gray hair, round glasses, a cream shirt, no text, no props, and no background doodles. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize and five-color palette flattening.
+.planning/STATE.md:155:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02-lesson2B/m02_L2B_carol_scene.png` as a 1600 x 900 flat Carol lien scene with exactly one frustrated Carol, one `LIEN` paper, a front door, unfinished wall patch, leaning ladder, open paint can, and brush. The built-in image workflow was used with the supplied references and requested gpt-image-2 prompt because the local CLI path had no API key, followed by resize and seven-color palette flattening.
+.planning/STATE.md:156:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02-lesson2B/m02_L2B_marcus.png` as a 1600 x 900 flat centered Marcus portrait with exactly one worried slim-faced man, fuller dark hair, a yellow shirt, near-white cream face and neck, no text, no props, and no background doodles. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by resize, padding, and seven-color palette flattening.
+.planning/STATE.md:157:- 2026-07-05 (quick task): Regenerated `course-assets/scenes/module-03/m03_L3A_peace.png` as a 1600 x 900 flat sold-house peace scene with exactly one relieved homeowner on the left, one house on the right, one `SOLD` yard sign, boxes and a dumbbell lifting away, simple ground line, open blue space, no name label, no extra text, and no extra people. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by crop, resize, and six-color palette flattening.
+.planning/STATE.md:158:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-03/m03_L3A_whiteboard.png` as a 1600 x 900 flat centered blank whiteboard on a two-leg easel, with one tiny house icon on the top-right frame and no text, marks, props, people, or background doodles. The built-in image workflow was used with the supplied references because the local explicit `gpt-image-2` CLI path had no API key or Python OpenAI package, followed by resize and six-color palette flattening.
+.planning/STATE.md:159:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-03/m03_L3A_house-disrepair.png` as a 1600 x 900 flat right-side disrepair house scene with empty blue space on the left, a sagging roof, jagged wall crack, one boarded-up window, leaning gutter, no people, no text, and no background doodles. The built-in image workflow was used with the requested gpt-image-2 prompt, followed by right-side composition cleanup and six-color palette flattening.
+.planning/STATE.md:160:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-03/m03_L3A_rep-wand.png` as a 1600 x 900 flat left-third headset representative wand scene with the right two thirds empty blue. The built-in image workflow was used with the supplied references and requested gpt-image-2 prompt, followed by resize, five-color palette flattening, and recomposition to keep all non-blue pixels inside `x=60..511`.
+.planning/STATE.md:162:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-03/m03_L3A_family-driveway.png` as a 1600 x 900 flat family driveway scene with exactly two adults and one child holding hands in front of one modest house, no text, no extra objects, no clones, and no visible driveway wedge. The built-in image workflow was used with the supplied references and requested gpt-image-2 prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:163:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-04/m04_L4A_v3_qualify.png` as a 1600 x 900 flat qualify scene with one left clipboard, four green checkmarks only, one right one-story house, one magnifying glass, no people, no text, and no extra decorative marks. The built-in image workflow was used with the supplied references and requested gpt-image-2 prompt, followed by resize and seven-color palette flattening.
+.planning/STATE.md:164:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02-lesson2B/m02_L2B_marcus_scene.png` as a 1600 x 900 flat Marcus dream-house scene with exactly one worried full-body Marcus standing hands-in-pockets on a driveway before one large elaborate multi-story house. The built-in image workflow was used with the supplied references after the explicit local `gpt-image-2` CLI path proved unavailable, followed by framing, resize, and seven-color palette flattening.
+.planning/STATE.md:165:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-02-lesson2B/m02_L2B_david_scene.png` as a 1600 x 900 flat corrected David scene with exactly one weary heavyset David, one very simple single-story rental house, one low roof, one door, one window, one plain phone at his side, and one readable `PAST DUE` door notice. The built-in image workflow was used with the supplied references after the explicit local `gpt-image-2` CLI path proved unavailable, followed by resize and seven-color palette flattening.
+.planning/STATE.md:166:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-05/m05_L5A_two-doors.png` as a 1600 x 900 flat two-door scene with one open orange left door, yellow glow, one closed cream right door, blank plaque, round doorknobs, no text, no people, and no extra props. The built-in image workflow was used with the supplied references after the explicit local `gpt-image-2` CLI path proved unavailable, followed by resize and six-color palette flattening.
+.planning/STATE.md:167:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-07/m07_L7A_b02_goodsign.png` as a 1600 x 900 flat Jim phone-call scene with exactly one Jim, a smartphone to one ear, an open mid-talking hand gesture, plain cornflower-blue background, no text, and no extra marks. The built-in image workflow was used with the supplied references after the explicit local `gpt-image-2` CLI path was unavailable, followed by resize, six-color palette flattening, and a tiny mouth-color correction.
+.planning/STATE.md:168:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-06/m06_L6A_mask.png` as a 1600 x 900 flat centered homeowner scene with exactly one person holding one smiling mask in front of the lower face, worried real eyes above the mask, no text, no clone, and no extra props. The built-in image workflow was used with the requested `gpt-image-2` prompt and supplied references, followed by resize and six-color palette flattening.
+.planning/STATE.md:169:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-06/m06_L6A_iceberg.png` as a 1600 x 900 flat centered iceberg scene with one small white tip above a clean water band, one much larger submerged cream mass, no people, no magnifying glass, no text, and no extra objects. The built-in image workflow was used with the requested `gpt-image-2` prompt and supplied references, followed by resize, water-band cleanup, and five-color palette flattening.
+.planning/STATE.md:170:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-06/m06_L6A_office.png` as a 1600 x 900 flat real-estate office scene with exactly five distinct people, three headset operators at desks, two folder walkers, simple desks with monitors and phones, chairs, a floor line, no text, no decorative marks, and no extra people. The built-in image workflow was used after the explicit local `gpt-image-2` CLI path was unavailable, followed by resize and six-color palette flattening.
+.planning/STATE.md:171:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-07/m07_L7A_b03_reframe.png` as a 1600 x 900 flat Jim connected-call scene with exactly one Jim, a smartphone to one ear, one gentle open-hand gesture, two or three phone signal arcs, plain cornflower-blue background, no text, no second person, and no extra decorative marks. The built-in image workflow was used with the supplied references after the explicit local `gpt-image-2` CLI path was unavailable, followed by resize and six-color palette flattening.
+.planning/STATE.md:172:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-07/m07_L7A_b04warm_jim.png` as a 1600 x 900 flat Jim kitchen-table scene with exactly one Jim seated in the right third, one phone flat on the table, open left-side cornflower-blue space, no text, no extra people, and no decorative marks. The built-in image workflow was used with the supplied references and requested `gpt-image-2` prompt, followed by resize and six-color palette flattening.
+.planning/STATE.md:173:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-07-lesson7B/m07_L7B_theme_asis.png` as a 1600 x 900 flat as-is theme scene with one friendly headset rep, both palms up, one centered worn house, wall cracks, one boarded window, and one closed toolbox. The built-in image workflow was used with the requested `gpt-image-2` prompt and supplied references, followed by resize and six-color palette flattening.
+.planning/STATE.md:174:- 2026-07-05 (quick task): Generated `course-assets/scenes/module-07-lesson7B/m07_L7B_theme_competition.png` as a 1600 x 900 flat competition theme scene with one center house, one overwhelmed seller, three crowding suitors with a briefcase, blank yard sign, and blank document, plus one separated headset BMH rep. The built-in image workflow was used with the requested `gpt-image-2` prompt and supplied references, followed by resize and six-color palette flattening.
+.planning/STATE.md:175:- 2026-07-06 (quick task): Generated `course-assets/scenes/module-09/m09_L9A_b06_carol_door.png` as a 1600 x 900 flat Carol front-door scene with exactly one Carol, grey bob haircut, crossed arms, a phone tucked against the crossed arm, a simple cream door and frame, no text, no ambient doodles, and a fully empty bottom-right 420 x 420 blue area. The built-in image workflow was used with the requested `gpt-image-2` prompt and supplied references, followed by resize and seven-color palette flattening.
+.planning/quick/260704-generate-too-high-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied style references and requested gpt-image-2 style prompt.
+.planning/quick/260705-generate-m05-l5a-two-doors/SUMMARY.md:13:- Direct local `gpt-image-2` CLI generation was unavailable because this shell had no `OPENAI_API_KEY` and no service-account token was present for a 1Password read.
+.planning/quick/260705-nni-generate-m06-l6a-deciders-scene-asset/SUMMARY.md:13:- Direct local `gpt-image-2` CLI generation was unavailable because this shell had no `OPENAI_API_KEY`.
+.planning/quick/260705-1bd-generate-m03-l3a-steps-board-no-markers/PLAN.md:17:- Use the requested `gpt-image-2` image generation path where available.
+.planning/quick/260704-generate-m02-l2a-grid6-repairs/PLAN.md:13:- Use the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260705-generate-m04-l4b-v4b-offer-handoff/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+docs/course-production/shotlists/module-05-lesson5A-scenecards.md:23:## Stills manifest (Codex gpt-image-2 → Claude judges → Jarrad approves)
+.planning/quick/260705-generate-m06-l6a-mask-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260706-generate-m05-l5a-breakdown/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` style prompt and supplied style references.
+.planning/quick/260704-generate-andrea-car-scene-asset/PLAN.md:13:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260704-generate-andrea-car-scene-asset/SUMMARY.md:12:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and the attached style and Andrea references.
+.planning/quick/260706-hbr-generate-m08-l8a-privacy-carol-scene/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` style prompt and supplied style references.
+.planning/quick/260705-ltt-generate-one-module-04-lesson-4b-slow-do/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260704-generate-m02-l2a-grid6-repairs/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+docs/course-production/shotlists/module-03-lesson3B-scenecards.md:31:- **Stills (Codex `gpt-image-2`, 1600×900, `course-assets/scenes/module-03-lesson3B/`):**
+.planning/quick/260704-twu-generate-m02-l2a-b06-motivated-scene-asset/SUMMARY.md:14:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260703-generate-frozen-story3-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied style references and the `gpt-image-2` prompt requirement.
+.planning/quick/260703-generate-frozen-story3-scene-asset/SUMMARY.md:14:- The explicit local `gpt-image-2` CLI path was unavailable because this shell had no `OPENAI_API_KEY`.
+.planning/quick/260705-generate-m03-l3b-relieved-seller-scene/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260704-tnm-generate-canyon-price-gap-course-scene-a/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied style references and requested `gpt-image-2` prompt.
+.planning/quick/260705-generate-m03-l3a-peace-scene-asset/PLAN.md:17:- Use the requested `gpt-image-2` image prompt path where available.
+.planning/quick/260705-generate-m05-l5a-card-handoff/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260703-generate-detach-character-v2/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied style references and the `gpt-image-2` prompt requirement.
+docs/course-production/MODULE-PRODUCTION-GUIDE.md:21:Still images: **Codex `gpt-image-2` generates, Claude judges** (generator never self-grades). Voice: **Elizabeth-Friendly** all narration; **Elizabeth-Excited** only for a finale beat.
+.planning/quick/260704-vog-generate-module-02-lesson-2b-david-portr/PLAN.md:17:- Use the requested `gpt-image-2` image prompt path where available.
+.planning/quick/260705-generate-m02-l2b-marcus-dream-house-scene/SUMMARY.md:16:- Tried the explicit local `gpt-image-2` CLI path first, but this shell had no `OPENAI_API_KEY` and no installed Python `openai` package. Used the built-in image workflow instead, matching the existing course asset fallback pattern.
+.planning/quick/260705-generate-m02-l2b-marcus-dream-house-scene/PLAN.md:19:- Use the requested `gpt-image-2` image prompt path where available.
+.planning/quick/260704-vog-generate-module-02-lesson-2b-david-portr/SUMMARY.md:13:- Used the image generation workflow with the requested `gpt-image-2` prompt and attached style references.
+.planning/quick/260705-generate-m02-l2b-marcus-underwater-scene/SUMMARY.md:13:- Used the image generation workflow with the requested `gpt-image-2` prompt and supplied references.
+.planning/quick/260705-generate-m06-l6a-notices/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260705-generate-m03-l3b-rundown-house/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260706-generate-m08-l8a-b07-leaseback/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` style prompt and supplied references.
+.planning/quick/260703-generate-title-offer-scene-asset/PLAN.md:12:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260705-generate-m02-l2b-beth-portrait/PLAN.md:17:- Use the requested `gpt-image-2` image prompt path where available.
+.planning/quick/260705-nn2-generate-m07-l7b-theme-competition/SUMMARY.md:21:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260705-generate-m02-l2b-david-portrait-v3/PLAN.md:17:- Use the requested `gpt-image-2` style prompt path where available.
+.planning/quick/260705-generate-m02-l2a-b18-angrycaller/PLAN.md:17:- Use the requested `gpt-image-2` image prompt path where available.
+.planning/quick/260704-jzs-generate-m01-lc-b11-movie-scene-asset/PLAN.md:13:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260705-generate-m02-l2a-b18-angrycaller/SUMMARY.md:13:- Used the image generation workflow with the requested `gpt-image-2` prompt and attached style references.
+.planning/quick/260704-jzs-generate-m01-lc-b11-movie-scene-asset/SUMMARY.md:12:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and the attached style references.
+.planning/quick/260705-generate-m02-l2b-david-portrait-v3/SUMMARY.md:13:- Used the built-in image generation workflow for the requested `gpt-image-2` style prompt.
+.planning/quick/260706-generate-m09-l9a-grace-call/PLAN.md:28:- Check the explicit local `gpt-image-2` CLI path first.
+.planning/quick/260704-generate-lowballers-scene-asset/SUMMARY.md:13:- Used the built-in image generation workflow with the supplied references because the local explicit `gpt-image-2` CLI path was unavailable without `OPENAI_API_KEY` or the OpenAI Python package.
+.planning/quick/260705-generate-m02-l2a-b10-outofstate-scene-asset/SUMMARY.md:14:- Tried the explicit local `gpt-image-2` CLI path first by checking runtime prerequisites. It was unavailable because this shell has no `OPENAI_API_KEY` and no Python OpenAI package.
+.planning/quick/260706-generate-m09-l9a-grace-call/SUMMARY.md:13:- Checked the explicit local `gpt-image-2` CLI path first.
+.planning/quick/260706-generate-m09-l9a-grace-call/SUMMARY.md:14:- The requested final 1600 x 900 size cannot be generated directly by the CLI because `gpt-image-2` requires generated dimensions to be multiples of 16. The valid 16:9 generation size would be 2048 x 1152 followed by resize.
+.planning/quick/260706-generate-m09-l9a-grace-call/SUMMARY.md:15:- CLI dry-run confirmed the intended `gpt-image-2` edit payload using `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, and `docs/design/cast-board.png`.
+.planning/quick/260706-generate-m09-l9a-grace-call/SUMMARY.md:16:- Real CLI generation was unavailable because `OPENAI_API_KEY` is not set in this shell.
+.planning/quick/260706-generate-m09-l9a-david-papers/SUMMARY.md:13:- Attempted the explicit `gpt-image-2` CLI path first; it was blocked because no `OPENAI_API_KEY` was set, the OpenAI Python package was unavailable, and the 1Password service-account token was not present in the keychain.
+.planning/quick/260705-generate-m04-l4a-v2-firstcontact/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and supplied style references.
+.planning/quick/260703-generate-consult-not-sell-scene-asset/PLAN.md:12:- Use the `gpt-image-2` image pipeline.
+.planning/quick/260705-imz-generate-carol-lien-scene/SUMMARY.md:13:- Used the built-in image generation workflow with the requested `gpt-image-2` prompt and attached style references.
+.planning/quick/260705-imz-generate-carol-lien-scene/SUMMARY.md:14:- The explicit local CLI path was unavailable because `OPENAI_API_KEY` is not set in this shell.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'command -v op || true; command -v uv || true; command -v node || true; node -v 2>/dev/null || true; npm ls openai --depth=0 2>/dev/null || true; python3 -m pip show openai 2>/dev/null || true' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 527ms:
+bmh-institute@0.1.0 $HOME/Sites/BMH apps/BMH Institute
+└── (empty)
+
+
+hook: PostToolUse Completed

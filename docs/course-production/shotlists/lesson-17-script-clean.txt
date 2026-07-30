@@ -1,0 +1,38 @@
+# Lesson 17 "Compensation Engine" - generic script v2 (2026-07-07)
+# Source: Slot 17 rewrite, revised after Claude/Fable critique pasted by Jarrad.
+# Master deviation: fixed dollar amounts, tiers, thresholds, ramp timelines, commission examples,
+# "no cap" language, and credit/entitlement implications are intentionally removed.
+# Do not generate audio/stills/clips from older Lesson 17 script text.
+
+# b01_intro
+Alright, let's talk about compensation.
+
+# b02_role_value
+The most important thing to understand is this: compensation here is designed around the value each role is responsible for creating. And that value looks different depending on the seat you're in.
+
+# b03_role_outcomes
+For some roles, the key outcome might be qualified conversations. For others, it might be clean handoffs, signed agreements, closed revenue, team performance, operational accuracy, or something else entirely. Some plans are more fixed, some are more performance-based. It depends on the role.
+
+# b04_no_universal_formula
+That means there is no one universal formula that applies to every person forever. Your specific plan lives in your current written agreement: your offer letter, your comp plan, or your role-specific sheet. That written document is the source of truth, not this video.
+
+# b05_scorecard_changes
+As the business changes, the scorecard can change. The company may adjust which outcomes matter most, how performance is measured, and how incentives are structured. That's normal. The point is not to memorize numbers. The point is to understand the engine.
+
+# b06_engine
+The engine is simple: know what your role owns, know how success is measured right now, and do the work consistently and visibly.
+
+# b07_current_plan
+If you ever have a question about your plan, what it covers, how it works, or what applies to you, go to two places: your current written plan and your manager. Not this video, not a hallway conversation, not what someone else's plan says.
+
+# b08_thrive
+The people who thrive here aren't guessing. They know their scorecard. They know which behaviors move the business forward. They keep clean notes, follow the process, and make their work easy to see.
+
+# b09_scoreboard
+So don't think of compensation as a mystery. Think of it as a scoreboard. Your role tells you what game you're playing.
+
+# b10_written_plan_scores
+Your written plan tells you how it's scored. Your job is to play that game clearly, consistently, and professionally.
+
+# b11_outro
+Next up: what a real day actually looks like here, how you run your day and how the team stays in sync.

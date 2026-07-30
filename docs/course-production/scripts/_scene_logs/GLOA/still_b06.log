@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b06_as-is-house.png ===
+Note: the explicit local `gpt-image-2` CLI path was blocked by missing `OPENAI_API_KEY` and missing OpenAI Python package, so I used the built-in image generation fallback and recorded that in `.planning/quick/260709-q4h-generate-glossary-asis-house/`. `course-assets/` is gitignored, so the PNG is saved locally but not tracked by git.
+
+
+OK mGLO_LGLOA_b06_as-is-house.png
