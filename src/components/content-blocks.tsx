@@ -12,6 +12,14 @@ import {
 
 import { cn } from "@/lib/utils";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import {
+  safeAuthoredUrl,
+  safeFlashcards,
+  safeRolePlayRuntimeUrl,
+  safeRuntimeCredential,
+  safeRuntimeUrl,
+  safeStoragePath,
+} from "@/lib/content-security/validate";
 import { RolePlayBlock } from "./role-play-block";
 import { VideoBlockPlayer } from "./video-block-player";
 import { FlashcardBlock, type Flashcard } from "./flashcard-block";
@@ -64,7 +72,7 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
     case "external_link":
       return (
         <ExternalLinkBlock
-          url={stringOr(block.content.url, "#")}
+          url={safeAuthoredUrl(block.content.url, "external_link")}
           label={stringOr(block.content.label, "Open link")}
           description={stringOr(block.content.description, null)}
           openInNewTab={boolOr(block.content.open_in_new_tab, true)}
@@ -75,8 +83,8 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
     case "image":
       return (
         <ImageBlock
-          signedUrl={stringOr(block.content.signed_url, null)}
-          filePath={stringOr(block.content.file_path, "")}
+          signedUrl={safeRuntimeUrl(block.content.signed_url)}
+          filePath={safeStoragePath(block.content.file_path) ?? ""}
           alt={stringOr(block.content.alt, "")}
           caption={stringOr(block.content.caption, null)}
         />
@@ -84,8 +92,8 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
     case "pdf":
       return (
         <PdfBlock
-          signedUrl={stringOr(block.content.signed_url, null)}
-          filePath={stringOr(block.content.file_path, null)}
+          signedUrl={safeRuntimeUrl(block.content.signed_url)}
+          filePath={safeStoragePath(block.content.file_path)}
           display={stringOr(block.content.display, "inline")}
           filename={stringOr(block.content.filename, null)}
         />
@@ -94,16 +102,16 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
       return (
         <AudioBlock
           source={stringOr(block.content.source, "upload")}
-          signedUrl={stringOr(block.content.signed_url, null)}
-          url={stringOr(block.content.url, null)}
-          filePath={stringOr(block.content.file_path, null)}
+          signedUrl={safeRuntimeUrl(block.content.signed_url)}
+          url={safeAuthoredUrl(block.content.url, "audio")}
+          filePath={safeStoragePath(block.content.file_path)}
         />
       );
     case "download":
       return (
         <DownloadBlock
-          signedUrl={stringOr(block.content.signed_url, null)}
-          filePath={stringOr(block.content.file_path, null)}
+          signedUrl={safeRuntimeUrl(block.content.signed_url)}
+          filePath={safeStoragePath(block.content.file_path)}
           filename={stringOr(block.content.filename, "file")}
           sizeBytes={
             typeof block.content.size_bytes === "number"
@@ -119,12 +127,12 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
           blockId={block.id}
           initialComplete={completed}
           source={stringOr(block.content.source, "upload")}
-          signedUrl={stringOr(block.content.signed_url, null)}
-          url={stringOr(block.content.url, null)}
-          filePath={stringOr(block.content.file_path, null)}
-          posterSignedUrl={stringOr(block.content.poster_signed_url, null)}
-          captionSignedUrl={stringOr(block.content.caption_signed_url, null)}
-          transcriptSignedUrl={stringOr(block.content.transcript_signed_url, null)}
+          signedUrl={safeRuntimeUrl(block.content.signed_url)}
+          url={safeAuthoredUrl(block.content.url, String(block.content.source ?? "generic"))}
+          filePath={safeStoragePath(block.content.file_path)}
+          posterSignedUrl={safeRuntimeUrl(block.content.poster_signed_url)}
+          captionSignedUrl={safeRuntimeUrl(block.content.caption_signed_url)}
+          transcriptSignedUrl={safeRuntimeUrl(block.content.transcript_signed_url)}
           title={stringOr(block.content.title, "")}
           partLabel={stringOr(block.content.part_label, "")}
         />
@@ -132,7 +140,7 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
     case "embed":
       return (
         <EmbedBlock
-          src={stringOr(block.content.iframe_src, "")}
+          src={safeAuthoredUrl(block.content.iframe_src, "embed") ?? ""}
           aspect={stringOr(block.content.aspect_ratio, "16:9")}
         />
       );
@@ -145,8 +153,8 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
             block.content.title,
             block.content.mode === "oral_check" ? "Talk with Andrea" : "Role play",
           )}
-          iframeSrc={stringOr(block.content.iframe_src, "")}
-          launchCredential={stringOr(block.content.launch_credential, "")}
+          iframeSrc={safeRolePlayRuntimeUrl(block.content.iframe_src, block.content.scenario_id) ?? ""}
+          launchCredential={safeRuntimeCredential(block.content.launch_credential) ?? ""}
           initialHeightPx={numberOr(block.content.height_px, 720)}
           initialComplete={completed}
         />
@@ -159,23 +167,7 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
 }
 
 function flashcardsOrEmpty(value: unknown): Flashcard[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((card) => {
-    if (
-      typeof card === "object" &&
-      card !== null &&
-      typeof (card as Record<string, unknown>).front === "string" &&
-      typeof (card as Record<string, unknown>).back === "string"
-    ) {
-      return [
-        {
-          front: (card as Record<string, string>).front,
-          back: (card as Record<string, string>).back,
-        },
-      ];
-    }
-    return [];
-  });
+  return safeFlashcards(value);
 }
 
 function stringOr<T extends string | null>(
@@ -246,11 +238,18 @@ function ExternalLinkBlock({
   description,
   openInNewTab,
 }: {
-  url: string;
+  url: string | null;
   label: string;
   description: string | null;
   openInNewTab: boolean;
 }) {
+  if (!url) {
+    return (
+      <div className="rounded-[var(--bmh-radius-md)] border border-dashed border-[var(--ink-300)] bg-[var(--ink-050)] p-6 text-center text-sm font-semibold text-[var(--text-muted)]">
+        Link unavailable.
+      </div>
+    );
+  }
   const isExternal = url.startsWith("http") || openInNewTab;
   const className =
     "group flex items-center gap-3 rounded-[var(--bmh-radius-md)] border border-[var(--border-card)] bg-[var(--surface-card)] px-4 py-4 font-[family-name:var(--font-body)] text-sm shadow-[var(--bmh-shadow-xs)] transition-all hover:-translate-y-0.5 hover:border-[var(--blue-300)] hover:shadow-[var(--shadow-pop)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--action)]";

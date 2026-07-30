@@ -1,0 +1,88 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import {
+  MAX_CONTENT_BLOCK_BYTES,
+  parseFlashcardText,
+  safeFlashcards,
+  safeRuntimeUrl,
+  validateAuthoredContent,
+} from "./validate";
+
+const STORAGE_ORIGIN = "https://test-project.supabase.co";
+
+beforeEach(() => {
+  vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", STORAGE_ORIGIN);
+});
+
+describe("authored content validation", () => {
+  it("requires absolute HTTPS URLs and exact media provider hosts", () => {
+    expect(validateAuthoredContent("external_link", { url: "/relative" }).ok).toBe(false);
+    expect(validateAuthoredContent("external_link", { url: "http://example.com/a" }).ok).toBe(false);
+    expect(validateAuthoredContent("embed", { iframe_src: "https://evil.example/embed" }).ok).toBe(false);
+    expect(validateAuthoredContent("embed", { iframe_src: "https://www.loom.com/embed/abc" }).ok).toBe(true);
+    expect(validateAuthoredContent("video", { source: "youtube", url: "https://youtube.com/watch?v=abc" }).ok).toBe(true);
+    expect(validateAuthoredContent("video", { source: "youtube", url: "https://youtube.com.evil.example/watch?v=abc" }).ok).toBe(false);
+  });
+
+  it("rejects forged runtime URLs and unsafe storage paths", () => {
+    expect(validateAuthoredContent("image", { signed_url: "https://evil.example/x" }).ok).toBe(false);
+    expect(validateAuthoredContent("image", { file_path: "https://evil.example/x" }).ok).toBe(false);
+    expect(validateAuthoredContent("image", { file_path: "courses/a/../secret" }).ok).toBe(false);
+    expect(validateAuthoredContent("image", { file_path: "courses/a/image.webp" }).ok).toBe(true);
+  });
+
+  it("accepts only signed content URLs from the configured storage origin", () => {
+    const valid = `${STORAGE_ORIGIN}/storage/v1/object/sign/content/courses/a/video.mp4?token=trusted`;
+    expect(safeRuntimeUrl(valid)).toBe(valid);
+    expect(safeRuntimeUrl("https://evil.example/storage/v1/object/sign/content/video.mp4?token=forged")).toBeNull();
+    expect(safeRuntimeUrl(`${STORAGE_ORIGIN}/storage/v1/object/public/content/video.mp4`)).toBeNull();
+    expect(safeRuntimeUrl(`${STORAGE_ORIGIN}/storage/v1/object/sign/content/video.mp4`)).toBeNull();
+  });
+
+  it("keeps role-play runtime credentials out of authored content", () => {
+    expect(validateAuthoredContent("role_play", {
+      scenario_id: "scenario-1",
+      iframe_src: "https://lab.bmhgroupkc.com/embed/role-play/scenario-1?token=a.b.c",
+      launch_credential: "a.b.c",
+    }).ok).toBe(false);
+  });
+
+  it("parses flashcards with line-specific errors and enforces bounds", () => {
+    expect(parseFlashcardText("Term | Definition\n\nNext | Answer")).toEqual({
+      ok: true,
+      cards: [
+        { front: "Term", back: "Definition" },
+        { front: "Next", back: "Answer" },
+      ],
+    });
+    expect(parseFlashcardText("missing separator")).toMatchObject({
+      ok: false,
+      errors: ["Line 1: expected `front | back` with exactly one separator."],
+    });
+    expect(parseFlashcardText(" | answer")).toMatchObject({
+      ok: false,
+      errors: ["Line 1: front is required."],
+    });
+    expect(validateAuthoredContent("flashcard", { cards: [] }).errors).toContain(
+      "Flashcards must contain between 1 and 100 cards.",
+    );
+    expect(validateAuthoredContent("flashcard", {
+      cards: [{ front: "a", back: "b".repeat(2001) }],
+    }).errors).toContain("Flashcard 1 back must be at most 2000 characters.");
+    expect(safeFlashcards([{ front: "  Term ", back: " Answer " }])).toEqual([
+      { front: "Term", back: "Answer" },
+    ]);
+    expect(safeFlashcards([{ front: "", back: "answer" }])).toEqual([]);
+  });
+
+  it("allows an empty draft external link while rejecting non-empty unsafe links", () => {
+    expect(validateAuthoredContent("external_link", { url: "" }).ok).toBe(true);
+    expect(validateAuthoredContent("external_link", { url: "   " }).ok).toBe(true);
+  });
+
+  it("caps the serialized authored block at 100KB", () => {
+    const result = validateAuthoredContent("text", { html: "x".repeat(MAX_CONTENT_BLOCK_BYTES) });
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContain("Content block payload must be at most 100KB.");
+  });
+});

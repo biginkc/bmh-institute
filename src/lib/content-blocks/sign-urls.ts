@@ -1,6 +1,7 @@
 import { createAdminClient } from "@/lib/supabase/admin";
 import type { ContentBlock } from "@/components/content-blocks";
 import { isGuideBlock } from "@/lib/content-blocks/learner-parts";
+import { safeStoragePath, stripUntrustedRuntimeFields } from "@/lib/content-security/validate";
 import {
   artworkRequestKey,
   artworkMimeMatchesPath,
@@ -27,10 +28,14 @@ export async function enrichBlocksWithSignedUrls(
 ): Promise<ContentBlock[]> {
   // Filter before collecting paths. This prevents a pre-pass request from ever
   // reaching the privileged storage signer with a learner-guide path.
+  const sanitizedBlocks = blocks.map((block) => {
+    const content = stripUntrustedRuntimeFields(block.content);
+    return { ...block, content };
+  });
   const authorizedBlocks =
     options.includeGuides === false
-      ? blocks.filter((block) => !isGuideBlock(block))
-      : blocks;
+      ? sanitizedBlocks.filter((block) => !isGuideBlock(block))
+      : sanitizedBlocks;
   const pathFields = [
     ["file_path", "signed_url"],
     ["poster_path", "poster_signed_url"],
@@ -38,9 +43,10 @@ export async function enrichBlocksWithSignedUrls(
     ["transcript_path", "transcript_signed_url"],
   ] as const;
   const paths = authorizedBlocks.flatMap((block) =>
-    pathFields
-      .map(([pathField]) => block.content?.[pathField])
-      .filter((path): path is string => typeof path === "string" && path.length > 0),
+    pathFields.flatMap(([pathField]) => {
+      const path = safeStoragePath(block.content?.[pathField]);
+      return path ? [path] : [];
+    }),
   );
 
   if (paths.length === 0) return authorizedBlocks;
@@ -51,8 +57,8 @@ export async function enrichBlocksWithSignedUrls(
     const content = { ...block.content };
     let changed = false;
     for (const [pathField, signedField] of pathFields) {
-      const path = content[pathField];
-      if (typeof path !== "string") continue;
+      const path = safeStoragePath(content[pathField]);
+      if (!path) continue;
       const signed = signedByPath.get(path);
       if (!signed) continue;
       content[signedField] = signed;
@@ -63,7 +69,12 @@ export async function enrichBlocksWithSignedUrls(
 }
 
 export async function signContentPaths(paths: string[]): Promise<Map<string, string>> {
-  const uniquePaths = Array.from(new Set(paths.filter(Boolean)));
+  const uniquePaths = Array.from(
+    new Set(paths.flatMap((path) => {
+      const safePath = safeStoragePath(path);
+      return safePath ? [safePath] : [];
+    })),
+  );
   if (uniquePaths.length === 0) return new Map();
   const supabase = createAdminClient();
   const { data, error } = await supabase.storage

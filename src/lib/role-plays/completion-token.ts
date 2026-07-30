@@ -1,5 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 
+import { getRolePlayBaseUrl } from "./base-url";
+
 const COMPLETION_TOKEN_ISSUER = "closer-lab";
 const COMPLETION_TOKEN_AUDIENCE = "bmh-institute";
 const COMPLETION_TOKEN_VERSION = 1;
@@ -86,13 +88,16 @@ function parseSummaryUrl(
   if (value === undefined) return null;
   if (typeof value !== "string" || !rolePlayBaseUrl) return false;
   try {
-    const configured = new URL(rolePlayBaseUrl);
+    const configuredOrigin = getRolePlayBaseUrl({
+      ...process.env,
+      NEXT_PUBLIC_ROLE_PLAY_BASE_URL: rolePlayBaseUrl,
+    });
+    if (!configuredOrigin) return false;
+
+    const configured = new URL(configuredOrigin);
     const candidate = new URL(value);
     if (
-      !["http:", "https:"].includes(configured.protocol) ||
-      !["http:", "https:"].includes(candidate.protocol) ||
-      configured.username ||
-      configured.password ||
+      candidate.protocol !== "https:" ||
       candidate.origin !== configured.origin ||
       candidate.username ||
       candidate.password ||

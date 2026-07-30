@@ -12,6 +12,7 @@ import {
   importStoragePrefix,
 } from "@/lib/artwork/paths";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import { validateAuthoredContent } from "@/lib/content-security/validate";
 
 export type ImportTable =
   | "role_groups"
@@ -171,16 +172,21 @@ export function buildImportPlan(
 
         for (const block of lesson.blocks ?? []) {
           blocks += 1;
+          const resolvedContent = resolveBlockContent(
+            block,
+            assets,
+            assetsByPath,
+            manifest.import_id,
+            options,
+          );
+          const contentSecurity = validateAuthoredContent(block.type, resolvedContent);
+          if (!contentSecurity.ok) {
+            throw new Error(`${block.source_key}.content: ${contentSecurity.errors.join(" ")}`);
+          }
           add("content_blocks", block.source_key, {
             lesson_id: lessonId,
             block_type: block.type,
-            content: resolveBlockContent(
-              block,
-              assets,
-              assetsByPath,
-              manifest.import_id,
-              options,
-            ),
+            content: contentSecurity.value,
             sort_order: block.sort_order,
             is_required_for_completion: block.required,
           });

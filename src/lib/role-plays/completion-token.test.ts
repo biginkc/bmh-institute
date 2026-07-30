@@ -9,7 +9,7 @@ const NEXT_SECRET = "the-next-completion-proof-secret-over-32-bytes";
 const EMBED_SECRET = "directional-embed-signing-secret-over-32-bytes";
 const NOW_SECONDS = 1_700_000_000;
 const ATTEMPT_ID = "dea00001-0000-4000-a000-000000000001";
-const BASE_URL = "https://lab.example.com";
+const BASE_URL = "https://lab.bmhgroupkc.com";
 const REVIEW_TOKEN = "A".repeat(43);
 
 function validPayload(): Record<string, unknown> {
@@ -331,9 +331,10 @@ describe("role-play completion token", () => {
 
   it.each([
     ["wrong origin", `https://evil.example/embed/review/${REVIEW_TOKEN}`],
+    ["http summary", `http://lab.bmhgroupkc.com/embed/review/${REVIEW_TOKEN}`],
     [
       "credentials",
-      `https://user@lab.example.com/embed/review/${REVIEW_TOKEN}`,
+      `https://user@lab.bmhgroupkc.com/embed/review/${REVIEW_TOKEN}`,
     ],
     ["member-only recording path", `${BASE_URL}/recordings/${ATTEMPT_ID}`],
     ["short review token", `${BASE_URL}/embed/review/short`],
@@ -343,6 +344,54 @@ describe("role-play completion token", () => {
     expect(verify({ ...validPayload(), summary_url: summaryUrl }).ok).toBe(
       false,
     );
+  });
+
+  it.each([
+    ["http configured origin", "http://lab.bmhgroupkc.com"],
+    ["configured trailing slash", `${BASE_URL}/`],
+    ["configured path", `${BASE_URL}/closer`],
+    ["configured query", `${BASE_URL}?token=secret`],
+    ["configured unsafe origin", "https://evil.example"],
+  ])("rejects a completion proof for an unsafe configured origin: %s", (_name, rolePlayBaseUrl) => {
+    const result = verifyRolePlayCompletionToken({
+      token: token(validPayload()),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      secret: SECRET,
+      rolePlayBaseUrl,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
+  });
+
+  it("rejects an attacker-controlled configured origin in production even when the signed summary matches it", () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("ROLE_PLAY_COMPLETION_VERIFY_SECRET", NEXT_SECRET);
+    vi.stubEnv("ROLE_PLAY_EMBED_SIGNING_SECRET", EMBED_SECRET);
+
+    const unsafeOrigin = "https://evil.example";
+    const result = verifyRolePlayCompletionToken({
+      token: token(
+        { ...validPayload(), summary_url: `${unsafeOrigin}/embed/review/${REVIEW_TOKEN}` },
+        undefined,
+        NEXT_SECRET,
+      ),
+      expected: {
+        userId: "user-1",
+        blockId: "block-1",
+        scenarioId: "scenario-1",
+        attemptId: ATTEMPT_ID,
+      },
+      rolePlayBaseUrl: unsafeOrigin,
+      now: new Date(NOW_SECONDS * 1000),
+    });
+
+    expect(result.ok).toBe(false);
   });
 
   it("rejects a summary URL when the trusted Closer Lab URL is unavailable", () => {
