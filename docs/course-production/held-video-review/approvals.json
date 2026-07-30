@@ -1,6 +1,6 @@
 {
   "schema_version": "1.0.0",
-  "updated_at": "2026-07-21",
+  "updated_at": "2026-07-30",
   "key_fields": [
     "source_key",
     "sha256"
@@ -115,6 +115,16 @@
       "approver": "Jarrad Henry",
       "date": "2026-07-17",
       "notes": "Jarrad approved this exact checksum-locked KPIs and Sales Telemetry v12 local policy cut after reviewing it on the verified local review surface."
+    },
+    {
+      "source_key": "video-slot-01-welcome",
+      "sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+      "candidate_local_path": "course-assets/review-lessonA/LESSON-1A-v11-VIDEO-ZERO-FINAL-AUDIO-QC.mp4",
+      "title": "Welcome",
+      "decision": "pending",
+      "approver": null,
+      "date": null,
+      "notes": null
     }
   ]
 }
