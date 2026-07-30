@@ -19,6 +19,7 @@ export type WritePathFixture = {
   textAssignmentLessonId: string;
   fileAssignmentId: string;
   fileAssignmentLessonId: string;
+  reviewerProgramIds: string[];
   admin: { id: string; email: string };
   learner: { id: string; email: string };
   unassigned: { id: string; email: string };
@@ -74,6 +75,33 @@ export async function createWritePathFixture(
     fullName: `${prefix} Unassigned`,
     systemRole: "learner",
   });
+
+  // The hosted TEST catalog can contain unreleased imported programs. The
+  // report completion RPC correctly requires an explicit reviewer grant for
+  // those lessons, even for an owner. Grant the disposable fixture owner
+  // access to that existing test catalog and remove the grants during cleanup;
+  // this keeps the E2E fixture aligned with the production authorization
+  // boundary instead of weakening the RPC or report page.
+  const { data: importedPrograms, error: importedProgramsError } = await admin
+    .from("programs")
+    .select("id")
+    .not("content_import_id", "is", null)
+    .eq("is_published", false);
+  if (importedProgramsError) throw importedProgramsError;
+  const reviewerProgramIds = (importedPrograms ?? []).map(
+    (program) => program.id,
+  );
+  if (reviewerProgramIds.length > 0) {
+    await admin
+      .from("course_import_reviewers_v1")
+      .insert(
+        reviewerProgramIds.map((programId) => ({
+          program_id: programId,
+          user_id: adminUser.id,
+        })),
+      )
+      .throwOnError();
+  }
 
   const roleGroupId = await insertOne(admin, "role_groups", {
     name: `${prefix} Role Group`,
@@ -257,6 +285,7 @@ export async function createWritePathFixture(
     textAssignmentLessonId,
     fileAssignmentId,
     fileAssignmentLessonId,
+    reviewerProgramIds,
     admin: adminUser,
     learner,
     unassigned,
@@ -270,6 +299,13 @@ export async function cleanupWritePathFixture(
   if (!fixture) return;
 
   await cleanupSubmissionStorage(admin, fixture.learner.id);
+  if (fixture.reviewerProgramIds.length > 0) {
+    await admin
+      .from("course_import_reviewers_v1")
+      .delete()
+      .in("program_id", fixture.reviewerProgramIds)
+      .eq("user_id", fixture.admin.id);
+  }
   await admin.from("programs").delete().eq("id", fixture.programId);
   await admin.from("courses").delete().eq("id", fixture.courseId);
   await admin
