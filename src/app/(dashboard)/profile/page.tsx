@@ -4,6 +4,7 @@ import { CalendarDays, Mail, ShieldCheck, UsersRound } from "lucide-react";
 import { Badge } from "@/components/bmh-ds/badge";
 import { Card } from "@/components/bmh-ds/card";
 import { createClient } from "@/lib/supabase/server";
+import { formatLearnerDate } from "@/lib/format-learner-date";
 
 import { UpdateNameForm } from "./profile-forms";
 
@@ -36,7 +37,7 @@ export default async function ProfilePage() {
   const systemRole = (profile?.system_role as string) ?? "learner";
   const status = (profile?.status as string) ?? "active";
   const joined = profile?.created_at
-    ? new Date(profile.created_at as string).toLocaleDateString()
+    ? formatLearnerDate(profile.created_at as string)
     : null;
 
   return (

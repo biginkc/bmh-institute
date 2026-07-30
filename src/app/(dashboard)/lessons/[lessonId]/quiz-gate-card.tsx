@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Badge } from "@/components/bmh-ds/badge";
 import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
+import { formatLearnerDateTime } from "@/lib/format-learner-date";
 
 export function QuizGateCard({
   state,
@@ -31,7 +32,7 @@ export function QuizGateCard({
     ? `You already passed this quiz with a score of ${bestScore ?? 0}%. You don't need to retake it.`
     : noAttempts
       ? `You've used all ${maxAttempts ?? attemptsUsed} attempts. Ask an admin to reset them if this blocks your progress.`
-      : `Your next attempt opens ${when ? when.toLocaleString() : "soon"}. Use the time to review the lesson.`;
+      : `Your next attempt opens ${when ? formatLearnerDateTime(when) : "soon"}. Use the time to review the lesson.`;
 
   return (
     <Card outline padding="lg">
