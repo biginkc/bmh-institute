@@ -118,6 +118,7 @@ async function runPostgres(pgBin, index) {
       "062_hugo_verified_identity_and_orphan_delete_guard.sql",
       "063_hugo_post_merge_security_closure.sql",
       "064_institute_app_owned_role_access.sql",
+      "065_hugo_lifecycle_ownership.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
@@ -169,7 +170,7 @@ async function runPostgres(pgBin, index) {
     return {
       postgres_major: major,
       migrations: migrations.length,
-      focused_sql_tests: 9,
+      focused_sql_tests: 10,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       role_group_delete_lifecycle_serialization:
         roleGroupDeleteSerialization,

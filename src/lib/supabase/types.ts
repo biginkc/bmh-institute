@@ -1804,6 +1804,14 @@ export type Database = {
         Args: { p_role_group_ids: string[]; p_user_id: string }
         Returns: undefined
       }
+      fn_set_user_role_and_groups: {
+        Args: {
+          p_role_group_ids: string[]
+          p_system_role: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       fn_settle_sandra_course_completion_delivery: {
         Args: {
           p_acknowledged: boolean
