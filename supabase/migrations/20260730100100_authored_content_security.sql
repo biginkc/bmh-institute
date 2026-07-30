@@ -19,23 +19,34 @@ begin
     where key in ('signed_url', 'poster_signed_url', 'caption_signed_url', 'transcript_signed_url')
   loop return false; end loop;
 
-  for v_url in select value from jsonb_each_text(p_content)
+  for v_url in select key from jsonb_object_keys(p_content) key
     where key in ('file_path', 'poster_path', 'caption_path', 'transcript_path')
   loop
-    if v_url ~* '^https?://' or v_url like '/%' or v_url ~ '(^|/)\.\.?(/|$)' then return false; end if;
+    if jsonb_typeof(p_content -> v_url) not in ('string', 'null') then return false; end if;
+    if coalesce(p_content ->> v_url, '') <> '' and (
+      length(btrim(p_content ->> v_url)) > 1024 or
+      btrim(p_content ->> v_url) like '/%' or
+      position(chr(92) in btrim(p_content ->> v_url)) > 0 or
+      btrim(p_content ->> v_url) like '%?%' or
+      btrim(p_content ->> v_url) like '%#%' or
+      btrim(p_content ->> v_url) ~ '(^|/)(\.|\.\.)(/|$)' or
+      btrim(p_content ->> v_url) ~ '^[a-z][a-z0-9+.-]*:'
+    ) then return false; end if;
   end loop;
 
+  if p_block_type = 'role_play' and
+     (p_content ? 'iframe_src' or p_content ? 'launch_credential') then return false; end if;
+
   if p_block_type = 'external_link' and p_content ? 'url' and
-     (p_content->>'url' !~ '^https://[^/@?#]+([/?#]|$)') then return false; end if;
+     jsonb_typeof(p_content->'url') not in ('string', 'null') then return false; end if;
+  if p_block_type = 'external_link' and coalesce(btrim(p_content->>'url'), '') <> '' and
+     (btrim(p_content->>'url') !~ '^https://[^/@?#]+([/?#]|$)') then return false; end if;
   if p_block_type = 'audio' and coalesce(p_content->>'url', '') <> '' and
      (p_content->>'url' !~ '^https://[^/@?#]+([/?#]|$)') then return false; end if;
   if p_block_type = 'embed' and coalesce(p_content->>'iframe_src', '') <> '' and
      (p_content->>'iframe_src' !~ '^https://(www\.)?(loom\.com|youtube\.com|youtube-nocookie\.com|youtu\.be|vimeo\.com)([/#?]|$)' and
       p_content->>'iframe_src' !~ '^https://player\.vimeo\.com([/#?]|$)' and
       p_content->>'iframe_src' !~ '^https://fast\.wistia\.net([/#?]|$)') then return false; end if;
-  if p_block_type = 'role_play' and coalesce(p_content->>'iframe_src', '') <> '' and
-     p_content->>'iframe_src' !~ '^https://[^/@?#]+([/?#]|$)' then return false; end if;
-
   if p_block_type = 'video' and coalesce(p_content->>'url', '') <> '' then
     v_url := p_content->>'url';
     v_source := p_content->>'source';

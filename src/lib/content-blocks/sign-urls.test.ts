@@ -9,7 +9,7 @@ vi.mock("@/lib/supabase/admin", () => ({
   })),
 }));
 
-import { enrichBlocksWithSignedUrls, signAuthorizedArtworkPaths } from "./sign-urls";
+import { enrichBlocksWithSignedUrls, signAuthorizedArtworkPaths, signContentPaths } from "./sign-urls";
 import { artworkRequestKey } from "@/lib/artwork/paths";
 
 const SHA = "a".repeat(64);
@@ -85,6 +85,19 @@ describe("enrichBlocksWithSignedUrls", () => {
 
     expect(block.content.signed_url).toBe("signed-authorized");
     expect(block.content).not.toHaveProperty("transcript_signed_url");
+  });
+
+  it("does not send unsafe storage paths to the signer", async () => {
+    createSignedUrls.mockResolvedValue({ data: [], error: null });
+
+    await signContentPaths([
+      "courses/training/video.mp4",
+      "../private.mp4",
+      "https://evil.example/video.mp4",
+      "courses/training/video.mp4?download=1",
+    ]);
+
+    expect(createSignedUrls).toHaveBeenCalledWith(["courses/training/video.mp4"], 3600);
   });
 
   it("withholds guide text and guide files before composite completion", async () => {

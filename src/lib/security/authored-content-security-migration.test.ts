@@ -16,4 +16,11 @@ describe("authored content security migration", () => {
     expect(sql).toMatch(/create trigger content_blocks_validate_authored_content/i);
     expect(sql).not.toMatch(/delete from public\.content_blocks|update public\.content_blocks[\s\S]*set content/i);
   });
+
+  it("matches runtime storage and draft-link rules", () => {
+    expect(sql).toContain("position(chr(92) in btrim(p_content ->> v_url)) > 0");
+    expect(sql).toContain("jsonb_object_keys(p_content)");
+    expect(sql).toMatch(/p_block_type = 'role_play'[\s\S]*iframe_src[\s\S]*launch_credential/);
+    expect(sql).toMatch(/external_link[\s\S]*coalesce\(btrim\(p_content->>'url'\), ''\) <> ''/);
+  });
 });

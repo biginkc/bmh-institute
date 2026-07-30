@@ -12,7 +12,14 @@ import {
 
 import { cn } from "@/lib/utils";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
-import { safeAuthoredUrl, safeRuntimeUrl, safeStoragePath } from "@/lib/content-security/validate";
+import {
+  safeAuthoredUrl,
+  safeFlashcards,
+  safeRolePlayRuntimeUrl,
+  safeRuntimeCredential,
+  safeRuntimeUrl,
+  safeStoragePath,
+} from "@/lib/content-security/validate";
 import { RolePlayBlock } from "./role-play-block";
 import { VideoBlockPlayer } from "./video-block-player";
 import { FlashcardBlock, type Flashcard } from "./flashcard-block";
@@ -146,8 +153,8 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
             block.content.title,
             block.content.mode === "oral_check" ? "Talk with Andrea" : "Role play",
           )}
-          iframeSrc={safeAuthoredUrl(block.content.iframe_src, "generic") ?? ""}
-          launchCredential={stringOr(block.content.launch_credential, "")}
+          iframeSrc={safeRolePlayRuntimeUrl(block.content.iframe_src, block.content.scenario_id) ?? ""}
+          launchCredential={safeRuntimeCredential(block.content.launch_credential) ?? ""}
           initialHeightPx={numberOr(block.content.height_px, 720)}
           initialComplete={completed}
         />
@@ -160,23 +167,7 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
 }
 
 function flashcardsOrEmpty(value: unknown): Flashcard[] {
-  if (!Array.isArray(value)) return [];
-  return value.flatMap((card) => {
-    if (
-      typeof card === "object" &&
-      card !== null &&
-      typeof (card as Record<string, unknown>).front === "string" &&
-      typeof (card as Record<string, unknown>).back === "string"
-    ) {
-      return [
-        {
-          front: (card as Record<string, string>).front,
-          back: (card as Record<string, string>).back,
-        },
-      ];
-    }
-    return [];
-  });
+  return safeFlashcards(value);
 }
 
 function stringOr<T extends string | null>(

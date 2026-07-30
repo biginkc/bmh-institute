@@ -613,7 +613,12 @@ async function attachRolePlayEmbeds(
   return blocks.map((block) => {
     if (block.block_type !== "role_play") return block;
     const scenarioId = stringOr(block.content.scenario_id, "");
-    if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) return block;
+    if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) {
+      const content = { ...block.content };
+      delete content.iframe_src;
+      delete content.launch_credential;
+      return { ...block, content };
+    }
     try {
       // Both mints share one `now` so the admission token, the launch
       // credential and Closer Lab's frame proof expire in lockstep.
@@ -651,7 +656,10 @@ async function attachRolePlayEmbeds(
         },
       };
     } catch {
-      return block;
+      const content = { ...block.content };
+      delete content.iframe_src;
+      delete content.launch_credential;
+      return { ...block, content };
     }
   });
 }

@@ -7,6 +7,11 @@ const MAX_TTL_SECONDS = 5 * 60;
 const MIN_SECRET_BYTES = 32;
 const MAX_ID_CHARS = 256;
 const MAX_LEARNER_NAME_CHARS = 256;
+const TRUSTED_PARENT_ORIGINS = new Set([
+  "https://institute.bmhgroupkc.com",
+  "http://localhost:3100",
+  "http://127.0.0.1:3100",
+]);
 
 export type RolePlayEmbedTokenInput = {
   userId: string;
@@ -103,7 +108,7 @@ export function normalizeParentOrigin(value: string): string {
   if (
     url.origin !== value || url.username || url.password || url.pathname !== "/" ||
     url.search || url.hash ||
-    (url.protocol !== "https:" && !(url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname)))
+    !TRUSTED_PARENT_ORIGINS.has(url.origin)
   ) {
     throw new Error("Role play embed token requires an exact parent origin.");
   }

@@ -50,7 +50,7 @@ describe("ContentBlockRenderer BMH treatments", () => {
     [
       "role_play",
       {
-        iframe_src: "https://practice.example.com/embed/role-play/scenario-1",
+        iframe_src: "https://lab.bmhgroupkc.com/embed/role-play/scenario-1?token=a.b.c",
         scenario_id: "scenario-1",
         title: "Agent opening role play",
       },
@@ -111,8 +111,8 @@ describe("ContentBlockRenderer BMH treatments", () => {
           id: "role-play-1",
           block_type: "role_play",
           content: {
-            iframe_src: "https://practice.example.com/embed/role-play/scenario-1",
-            launch_credential: "launch-credential-1",
+            iframe_src: "https://lab.bmhgroupkc.com/embed/role-play/scenario-1?token=a.b.c",
+            launch_credential: "a.b.c",
             scenario_id: "scenario-1",
             title: "Opening practice",
           },
@@ -133,8 +133,8 @@ describe("ContentBlockRenderer BMH treatments", () => {
           id: "role-play-oral-check-1",
           block_type: "role_play",
           content: {
-            iframe_src: "https://practice.example.com/embed/role-play/oral-check-1",
-            launch_credential: "launch-credential-1",
+            iframe_src: "https://lab.bmhgroupkc.com/embed/role-play/pending%3Aoral-check-real-estate-terms-glossary?token=a.b.c",
+            launch_credential: "a.b.c",
             scenario_id: "pending:oral-check-real-estate-terms-glossary",
             mode: "oral_check",
           },
@@ -155,8 +155,8 @@ describe("ContentBlockRenderer BMH treatments", () => {
           id: "role-play-oral-check-2",
           block_type: "role_play",
           content: {
-            iframe_src: "https://practice.example.com/embed/role-play/oral-check-2",
-            launch_credential: "launch-credential-1",
+            iframe_src: "https://lab.bmhgroupkc.com/embed/role-play/pending%3Aoral-check-bmh-offer-playbook?token=a.b.c",
+            launch_credential: "a.b.c",
             scenario_id: "pending:oral-check-bmh-offer-playbook",
             mode: "oral_check",
             title: "Talk with Andrea: The BMH Offer Playbook",

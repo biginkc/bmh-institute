@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_CONTENT_BLOCK_BYTES,
   parseFlashcardText,
+  safeFlashcards,
   validateAuthoredContent,
 } from "./validate";
 
@@ -21,6 +22,14 @@ describe("authored content validation", () => {
     expect(validateAuthoredContent("image", { file_path: "https://evil.example/x" }).ok).toBe(false);
     expect(validateAuthoredContent("image", { file_path: "courses/a/../secret" }).ok).toBe(false);
     expect(validateAuthoredContent("image", { file_path: "courses/a/image.webp" }).ok).toBe(true);
+  });
+
+  it("keeps role-play runtime credentials out of authored content", () => {
+    expect(validateAuthoredContent("role_play", {
+      scenario_id: "scenario-1",
+      iframe_src: "https://lab.bmhgroupkc.com/embed/role-play/scenario-1?token=a.b.c",
+      launch_credential: "a.b.c",
+    }).ok).toBe(false);
   });
 
   it("parses flashcards with line-specific errors and enforces bounds", () => {
@@ -45,6 +54,15 @@ describe("authored content validation", () => {
     expect(validateAuthoredContent("flashcard", {
       cards: [{ front: "a", back: "b".repeat(2001) }],
     }).errors).toContain("Flashcard 1 back must be at most 2000 characters.");
+    expect(safeFlashcards([{ front: "  Term ", back: " Answer " }])).toEqual([
+      { front: "Term", back: "Answer" },
+    ]);
+    expect(safeFlashcards([{ front: "", back: "answer" }])).toEqual([]);
+  });
+
+  it("allows an empty draft external link while rejecting non-empty unsafe links", () => {
+    expect(validateAuthoredContent("external_link", { url: "" }).ok).toBe(true);
+    expect(validateAuthoredContent("external_link", { url: "   " }).ok).toBe(true);
   });
 
   it("caps the serialized authored block at 100KB", () => {

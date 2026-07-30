@@ -29,6 +29,12 @@ const EMBED_HOSTS = new Set([
 const STORAGE_FIELDS = new Set([
   "file_path", "poster_path", "caption_path", "transcript_path",
 ]);
+const ROLE_PLAY_RUNTIME_FIELDS = new Set(["iframe_src", "launch_credential"]);
+const ROLE_PLAY_RUNTIME_ORIGINS = new Set([
+  "https://lab.bmhgroupkc.com",
+  "http://localhost:3200",
+  "http://127.0.0.1:3200",
+]);
 
 export function safeRuntimeUrl(value: unknown): string | null {
   if (typeof value !== "string") return null;
@@ -37,6 +43,33 @@ export function safeRuntimeUrl(value: unknown): string | null {
     return url.protocol === "https:" && url.hostname && !url.username && !url.password
       ? value
       : null;
+  } catch {
+    return null;
+  }
+}
+
+export function safeRuntimeCredential(value: unknown): string | null {
+  if (typeof value !== "string" || !/^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/u.test(value)) {
+    return null;
+  }
+  return value;
+}
+
+export function safeRolePlayRuntimeUrl(value: unknown, scenarioId: unknown): string | null {
+  if (typeof value !== "string" || typeof scenarioId !== "string" || !scenarioId) return null;
+  try {
+    const url = new URL(value);
+    const expectedPath = `/embed/role-play/${encodeURIComponent(scenarioId)}`;
+    const token = url.searchParams.get("token");
+    if (
+      !ROLE_PLAY_RUNTIME_ORIGINS.has(url.origin) ||
+      url.username ||
+      url.password ||
+      url.pathname !== expectedPath ||
+      url.searchParams.size !== 1 ||
+      !safeRuntimeCredential(token)
+    ) return null;
+    return value;
   } catch {
     return null;
   }
@@ -108,10 +141,15 @@ export function validateAuthoredContent(
     }
   }
 
+  if (blockType === "role_play") {
+    for (const key of ROLE_PLAY_RUNTIME_FIELDS) {
+      if (key in value) errors.push(`${key} is runtime-only and cannot be authored.`);
+    }
+  }
+
   validateUrlField(value, "external_link", "url", errors);
   validateUrlField(value, "audio", "url", errors);
   if (blockType === "embed") validateUrlField(value, "embed", "iframe_src", errors);
-  if (blockType === "role_play") validateUrlField(value, "generic", "iframe_src", errors);
   if (blockType === "video" && typeof value.url === "string" && value.url.trim()) {
     validateUrlField(value, String(value.source ?? ""), "url", errors);
   }
@@ -125,6 +163,17 @@ export function validateAuthoredContent(
     errors.push("Content block payload must be at most 100KB.");
   }
   return errors.length > 0 ? { ok: false, value, errors } : { ok: true, value, errors: [] };
+}
+
+/** Invalid legacy flashcards render as an inert block instead of partial data. */
+export function safeFlashcards(value: unknown): Flashcard[] {
+  const errors: string[] = [];
+  validateCards(value, errors);
+  if (errors.length > 0 || !Array.isArray(value)) return [];
+  return value.map((card) => ({
+    front: (card as Record<string, string>).front.trim(),
+    back: (card as Record<string, string>).back.trim(),
+  }));
 }
 
 function validateCards(raw: unknown, errors: string[]) {
@@ -160,6 +209,10 @@ function validateUrlField(
     return;
   }
   const raw = value[field].trim();
+  if (!raw) {
+    value[field] = "";
+    return;
+  }
   let parsed: URL;
   try { parsed = new URL(raw); } catch { errors.push(`${field} must be an absolute HTTPS URL.`); return; }
   if (parsed.protocol !== "https:" || !parsed.hostname || parsed.username || parsed.password) {
