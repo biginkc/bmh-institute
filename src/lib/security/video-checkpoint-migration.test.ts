@@ -31,6 +31,9 @@ describe("video resume checkpoint migration", () => {
     expect(checkpointFunction).toMatch(
       /last_observed_at\s*=\s*case[\s\S]*?then null[\s\S]*?updated_at\s*=\s*v_now/i,
     );
+    expect(checkpointFunction).toMatch(
+      /select checkpoint_client_updated_at\s*,\s*asset_version[\s\S]*?v_stored_asset_version[\s\S]*?distinct from v_asset_version[\s\S]*?v_existing_checkpoint_client_updated_at\s*:=\s*null/i,
+    );
     expect(checkpointFunction).not.toMatch(
       /last_observed_at\s*,[\s\S]*?p_client_updated_at[\s\S]*?v_asset_version/i,
     );
@@ -38,7 +41,13 @@ describe("video resume checkpoint migration", () => {
       /extract\(epoch from \(v_now - v_last_at\)\)/i,
     );
     expect(playbackFunction).toMatch(
-      /last_observed_position_seconds\s*,\s*last_observed_at[\s\S]*?v_position\s*,\s*v_now/i,
+      /last_observed_position_seconds\s*,\s*last_observed_at[\s\S]*?case when p_operation = 'observe' then v_observed_position else v_position end[\s\S]*?v_now/i,
+    );
+    expect(playbackFunction).toMatch(
+      /checkpoint_client_updated_at\s*=\s*case[\s\S]*?p_operation = 'observe'[\s\S]*?greatest/i,
+    );
+    expect(playbackFunction).toMatch(
+      /v_position\s*:=\s*greatest\([\s\S]*?v_resume_position[\s\S]*?v_observed_position/i,
     );
   });
 
@@ -52,5 +61,6 @@ describe("video resume checkpoint migration", () => {
     expect(raceTest).toMatch(/positive client clock skew/i);
     expect(raceTest).toMatch(/watched_ranges/i);
     expect(raceTest).toMatch(/user_block_progress/i);
+    expect(raceTest).toMatch(/asset replacement/i);
   });
 });
