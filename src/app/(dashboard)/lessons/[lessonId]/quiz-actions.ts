@@ -14,6 +14,7 @@ import {
 } from "@/lib/quizzes/score";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { withQuizTiming } from "@/lib/performance/quiz-timing";
 
 export type QuestionReveal =
   | {
@@ -41,6 +42,10 @@ export type QuizStartResult =
     }
   | { ok: false; error: string };
 
+export type QuizRestoreResult =
+  | { ok: true; attempt: Extract<QuizStartResult, { ok: true }> | null }
+  | { ok: false; error: string };
+
 export type QuizSubmitResult =
   | {
       ok: true;
@@ -58,6 +63,13 @@ export type QuizSubmitResult =
   | { ok: false; error: string };
 
 export async function startQuizAttempt(input: {
+  quizId: string;
+  lessonId: string;
+}): Promise<QuizStartResult> {
+  return withQuizTiming("start", () => startQuizAttemptInternal(input));
+}
+
+async function startQuizAttemptInternal(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizStartResult> {
@@ -127,6 +139,34 @@ export async function startQuizAttempt(input: {
   };
 }
 
+// Page-open recovery is deliberately read-only. A new attempt is created only
+// by startQuizAttempt after the learner presses Start quiz.
+export async function restoreQuizAttempt(input: {
+  quizId: string;
+  lessonId: string;
+}): Promise<QuizRestoreResult> {
+  const access = await authorizedQuizContext(input);
+  if (!access.ok) return access;
+  const { data: existing, error } = await withQuizTiming("resume", () =>
+    loadIncompleteAttempt(access.learner, access.userId, input.quizId),
+  );
+  if (error) return { ok: false, error: error.message };
+  if (!existing) return { ok: true, attempt: null };
+
+  const admin = adminClientResult();
+  if (!admin.ok) return admin;
+  const questionsResult = await loadAttemptQuestions(admin.client, input.quizId);
+  if (!questionsResult.ok) return questionsResult;
+  const restored = await withQuizTiming("resume", () =>
+    resumeAttempt(existing, questionsResult.questions),
+  );
+  if (!restored.ok) return restored;
+  return {
+    ok: true,
+    attempt: restored,
+  };
+}
+
 export async function answerQuizQuestion(input: {
   attemptId: string;
   questionId: string;
@@ -193,13 +233,13 @@ export async function answerQuizQuestion(input: {
     };
   }
 
-  const { data: recorded, error: recordError } = await learner.rpc(
-    "fn_record_quiz_answer",
-    {
+  const { data: recorded, error: recordError } = await withQuizTiming(
+    "answer",
+    async () => learner.rpc("fn_record_quiz_answer", {
       p_attempt_id: input.attemptId,
       p_question_id: input.questionId,
       p_selected: input.selected,
-    },
+    }),
   );
   if (recordError || !recorded?.[0]) {
     return {
@@ -279,18 +319,21 @@ export async function finalizeQuizAttempt(input: {
   const admin = adminClientResult();
   if (!admin.ok) return admin;
   const completedAt = new Date().toISOString();
-  const { data: updated, error: updateError } = await admin.client
-    .from("user_quiz_attempts")
-    .update({
-      score: result.result.score,
-      passed: result.result.passed,
-      completed_at: completedAt,
-    })
-    .eq("id", attempt.id)
-    .eq("user_id", user.id)
-    .is("completed_at", null)
-    .select("id")
-    .maybeSingle();
+  const { data: updated, error: updateError } = await withQuizTiming(
+    "finalize",
+    async () => admin.client
+      .from("user_quiz_attempts")
+      .update({
+        score: result.result.score,
+        passed: result.result.passed,
+        completed_at: completedAt,
+      })
+      .eq("id", attempt.id)
+      .eq("user_id", user.id)
+      .is("completed_at", null)
+      .select("id")
+      .maybeSingle(),
+  );
   if (updateError) return { ok: false, error: updateError.message };
   if (!updated) {
     const { data: landed, error: landedError } = await learner

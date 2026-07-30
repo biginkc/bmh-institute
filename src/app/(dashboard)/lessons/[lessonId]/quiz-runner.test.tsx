@@ -5,9 +5,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   answerQuizQuestion,
   finalizeQuizAttempt,
+  restoreQuizAttempt,
   startQuizAttempt,
 } from "./quiz-actions";
 import { QuizRunner, type QuizQuestion } from "./quiz-runner";
+import { QuizDeadlineError } from "@/lib/quizzes/with-timeout";
 
 const { refresh } = vi.hoisted(() => ({ refresh: vi.fn() }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh }) }));
@@ -16,6 +18,7 @@ vi.mock("./quiz-actions", () => ({
   startQuizAttempt: vi.fn(),
   answerQuizQuestion: vi.fn(),
   finalizeQuizAttempt: vi.fn(),
+  restoreQuizAttempt: vi.fn(),
 }));
 
 const questions: QuizQuestion[] = [
@@ -127,6 +130,8 @@ describe("<QuizRunner />", () => {
     vi.mocked(startQuizAttempt).mockReset();
     vi.mocked(answerQuizQuestion).mockReset();
     vi.mocked(finalizeQuizAttempt).mockReset();
+    vi.mocked(restoreQuizAttempt).mockReset();
+    vi.mocked(restoreQuizAttempt).mockResolvedValue({ ok: true, attempt: null });
     vi.mocked(startQuizAttempt).mockResolvedValue({
       ok: true,
       attemptId: "attempt-1",
@@ -282,6 +287,46 @@ describe("<QuizRunner />", () => {
     await user.click(screen.getByRole("button", { name: "Next" }));
     expect(await screen.findByRole("heading", { name: questions[1].question_text })).toBeVisible();
     expect(answerQuizQuestion).not.toHaveBeenCalled();
+  });
+
+  it("restores an existing incomplete attempt on page open without starting one", async () => {
+    vi.mocked(restoreQuizAttempt).mockResolvedValue({
+      ok: true,
+      attempt: {
+        attemptId: "attempt-existing",
+        questions: attemptQuestions,
+        resumed: true,
+        responses: { single: ["single-b"] },
+        reveals: [revealFor("single").reveal],
+      },
+    });
+    renderRunner();
+    expect(await screen.findByRole("heading", { name: questions[1].question_text })).toBeVisible();
+    expect(startQuizAttempt).not.toHaveBeenCalled();
+  });
+
+  it("reconciles a timed-out start by restoring the server-side attempt", async () => {
+    const user = userEvent.setup();
+    vi.mocked(startQuizAttempt).mockRejectedValue(
+      new QuizDeadlineError("start", 8_000),
+    );
+    vi.mocked(restoreQuizAttempt)
+      .mockResolvedValueOnce({ ok: true, attempt: null })
+      .mockResolvedValueOnce({
+        ok: true,
+        attempt: {
+          attemptId: "attempt-existing",
+          questions: attemptQuestions,
+          resumed: true,
+          responses: { single: ["single-b"] },
+          reveals: [revealFor("single").reveal],
+        },
+      });
+    renderRunner();
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    expect(await screen.findByRole("heading", { name: questions[1].question_text })).toBeVisible();
+    expect(startQuizAttempt).toHaveBeenCalledTimes(1);
+    expect(restoreQuizAttempt).toHaveBeenCalled();
   });
 
   it("advances through a sparse resumed answer without dead-ending", async () => {

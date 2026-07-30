@@ -185,6 +185,7 @@ vi.mock("@/lib/integrations/sandra/course-completed", () => ({
 import {
   answerQuizQuestion,
   finalizeQuizAttempt,
+  restoreQuizAttempt,
   startQuizAttempt,
 } from "./quiz-actions";
 
@@ -268,6 +269,12 @@ describe("quiz server actions", () => {
       expect(JSON.stringify(result.questions)).not.toContain("is_correct");
       expect(JSON.stringify(result.questions)).not.toContain("explanation");
     }
+  });
+
+  it("restores an incomplete attempt read-only without inserting on page open", async () => {
+    const result = await restoreQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" });
+    expect(result).toEqual({ ok: true, attempt: null });
+    expect(insertedAttempt).toBeNull();
   });
 
   it("resumes with persisted responses and reveals only answered questions", async () => {
