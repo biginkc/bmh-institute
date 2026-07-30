@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/card";
 import {
   buildLearnerLessonParts,
+  resolveLearnerPart,
   type LearnerLessonPart,
 } from "@/lib/content-blocks/learner-parts";
 import { prepareLearnerPart } from "@/lib/content-blocks/prepare-learner-part";
@@ -247,9 +248,13 @@ async function ContentCompositeLesson({
     compositeComplete: tile.complete,
     includeQuiz: tile.quizId !== null && tile.pairedQuizLessonId !== null,
   });
+  const resolution = resolveLearnerPart(parts, requestedPart);
+  if (!resolution.requestedPartValid && requestedPart !== null && resolution.canonicalPartId) {
+    redirect(`/lessons/${tile.id}?part=${encodeURIComponent(resolution.canonicalPartId)}`);
+  }
   const selected = await prepareLearnerPart({
     parts,
-    requestedPart,
+    requestedPart: resolution.part?.id ?? null,
     signBlocks: (blocks) =>
       withLessonTiming("selected-part-media-signing", () =>
         enrichBlocksWithSignedUrls(blocks),
@@ -313,6 +318,7 @@ async function ContentCompositeLesson({
             tile={tile}
             courseId={courseId}
             userId={userId}
+            locked={resolution.requestedPartLocked}
           />
           <div className="mt-6 border-t border-[var(--border-hairline)] pt-4">
             <h1 className="font-[family-name:var(--font-display)] text-xl font-extrabold text-[var(--ink-900)]">
@@ -369,13 +375,25 @@ async function PartBody({
   tile,
   courseId,
   userId,
+  locked,
 }: {
   part: LearnerLessonPart;
   tile: LearnerContentTile;
   courseId: string;
   userId: string;
+  locked?: boolean;
 }) {
   if (part.kind === "quiz") {
+    if (locked) {
+      return (
+        <Card>
+          <CardHeader>
+            <CardTitle>Quiz locked</CardTitle>
+            <CardDescription>Complete the lesson parts above before opening this checkpoint.</CardDescription>
+          </CardHeader>
+        </Card>
+      );
+    }
     if (!tile.quizId || !tile.pairedQuizLessonId) {
       return (
         <Card>

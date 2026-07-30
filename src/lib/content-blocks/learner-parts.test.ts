@@ -5,6 +5,7 @@ import {
   buildLearnerLessonParts,
   isGuideBlock,
   isObjectivesBlock,
+  resolveLearnerPart,
   selectLearnerPart,
 } from "./learner-parts";
 
@@ -258,6 +259,39 @@ describe("optional (not-required) parts", () => {
     });
 
     expect(parts.find((part) => part.id === "role-play-1")?.complete).toBe(true);
+  });
+
+  it("preserves a valid locked quiz request so the page can render an explicit lock", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "video")],
+      completedBlockIds: new Set<string>(),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+    expect(resolveLearnerPart(parts, "quiz")).toMatchObject({
+      requestedPart: "quiz",
+      requestedPartValid: true,
+      requestedPartLocked: true,
+      part: { id: "quiz", available: false },
+    });
+  });
+
+  it("canonicalizes an invalid part to the first safe available part", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "video")],
+      completedBlockIds: new Set<string>(),
+      quizComplete: false,
+      quizUnlocked: true,
+      compositeComplete: false,
+    });
+    expect(resolveLearnerPart(parts, "bogus")).toMatchObject({
+      requestedPart: "bogus",
+      requestedPartValid: false,
+      requestedPartLocked: false,
+      part: { id: "video-1" },
+      canonicalPartId: "video-1",
+    });
   });
 
   it("lands on the optional role play by default, not past it", () => {

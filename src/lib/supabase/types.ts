@@ -1744,6 +1744,16 @@ export type Database = {
         }
         Returns: Json
       }
+      fn_checkpoint_video_playback: {
+        Args: {
+          p_block_id: string
+          p_client_updated_at: string
+          p_duration_seconds: number
+          p_position_seconds: number
+          p_user_id: string
+        }
+        Returns: Json
+      }
       fn_release_course_import_v1: {
         Args: {
           p_confirmation: string

@@ -60,6 +60,7 @@ export function VideoBlockPlayer({
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
+  const [progressLoaded, setProgressLoaded] = useState(false);
   const [completed, setCompleted] = useState(initialComplete);
 
   useEffect(() => {
@@ -193,6 +194,23 @@ export function VideoBlockPlayer({
     [blockId, enqueueProgress],
   );
 
+  const sendKeepaliveCheckpoint = useCallback((el: HTMLVideoElement) => {
+    if (!Number.isFinite(el.currentTime) || !Number.isFinite(el.duration) || el.duration <= 0) return;
+    const body = JSON.stringify({
+      blockId,
+      positionSeconds: Math.max(0, Math.min(el.currentTime, el.duration)),
+      durationSeconds: el.duration,
+      clientUpdatedAt: Date.now(),
+    });
+    void fetch("/api/video-progress/checkpoint", {
+      method: "POST",
+      body,
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      keepalive: true,
+    }).catch(() => undefined);
+  }, [blockId]);
+
   useEffect(() => {
     let active = true;
     const video = videoRef.current;
@@ -223,24 +241,30 @@ export function VideoBlockPlayer({
       if (transitionedToComplete || result.reconciled) {
         requestRefreshWhenPlaybackSafe();
       }
+    }).finally(() => {
+      if (active) setProgressLoaded(true);
     });
     return () => {
       active = false;
       mountedRef.current = false;
       if (video && !video.paused) flushProgress(video);
+      if (video) sendKeepaliveCheckpoint(video);
     };
-  }, [blockId, flushProgress, requestRefreshWhenPlaybackSafe]);
+  }, [blockId, flushProgress, requestRefreshWhenPlaybackSafe, sendKeepaliveCheckpoint]);
 
   useEffect(() => {
     function flushWhenHidden() {
       if (document.visibilityState !== "hidden") return;
       const video = videoRef.current;
-      if (video) flushProgress(video);
+      if (video) {
+        flushProgress(video);
+        sendKeepaliveCheckpoint(video);
+      }
     }
     document.addEventListener("visibilitychange", flushWhenHidden);
     return () =>
       document.removeEventListener("visibilitychange", flushWhenHidden);
-  }, [flushProgress]);
+  }, [flushProgress, sendKeepaliveCheckpoint]);
 
   function onTimeUpdate(e: React.SyntheticEvent<HTMLVideoElement>) {
     const el = e.currentTarget;
@@ -368,7 +392,7 @@ export function VideoBlockPlayer({
         aria-live="polite"
         className="text-sm font-extrabold text-[var(--text-muted)]"
       >
-        {completed ? "Complete" : `${watchedPercent}% watched`}
+        {!progressLoaded ? "Loading progress…" : completed ? "Complete" : `${watchedPercent}% watched`}
       </p>
       {progressError ? (
         <p role="alert" className="text-sm font-bold text-[var(--danger)]">
