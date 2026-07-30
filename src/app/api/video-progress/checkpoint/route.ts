@@ -27,6 +27,6 @@ export async function POST(request: Request) {
     p_duration_seconds: payload.durationSeconds,
     p_checkpoint_sequence: payload.checkpointSequence,
   });
-  if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+  if (error) return NextResponse.json({ ok: false, error: "Video checkpoint could not be saved." }, { status: 400 });
   return NextResponse.json({ ok: true, ...(data as unknown as Record<string, unknown>) });
 }

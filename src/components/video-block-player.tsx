@@ -15,8 +15,14 @@ const PROGRESS_SAMPLE_SECONDS = 2;
 function setCheckpointSequence(
   sequenceRef: { current: number },
   value: unknown,
+  options: { reset?: boolean } = {},
 ) {
-  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) {
+  if (
+    typeof value === "number" &&
+    Number.isSafeInteger(value) &&
+    value >= 0 &&
+    (options.reset || value >= sequenceRef.current)
+  ) {
     sequenceRef.current = value;
   }
 }
@@ -71,6 +77,7 @@ export function VideoBlockPlayer({
   const [progressError, setProgressError] = useState<string | null>(null);
   const [watchedPercent, setWatchedPercent] = useState(0);
   const [progressLoaded, setProgressLoaded] = useState(initialComplete);
+  const progressLoadedRef = useRef(initialComplete);
   const [completed, setCompleted] = useState(initialComplete);
 
   useEffect(() => {
@@ -104,7 +111,7 @@ export function VideoBlockPlayer({
     if (!result?.ok) return false;
 
     resumePositionRef.current = result.positionSeconds;
-    setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
+    setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence, { reset: true });
     sampleStartRef.current = result.positionSeconds;
     setWatchedPercent(result.watchedPercent);
     const transitionedToComplete = result.completed && !completedRef.current;
@@ -138,7 +145,7 @@ export function VideoBlockPlayer({
         }
         if (!mountedRef.current) return;
         if (result?.ok) {
-          setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
+        setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
           if (Number.isFinite(result.positionSeconds)) {
             resumePositionRef.current = result.positionSeconds;
           }
@@ -210,7 +217,13 @@ export function VideoBlockPlayer({
   );
 
   const sendKeepaliveCheckpoint = useCallback((el: HTMLVideoElement) => {
-    if (!Number.isFinite(el.currentTime) || !Number.isFinite(el.duration) || el.duration <= 0) return;
+    if (
+      !progressLoadedRef.current ||
+      (!playbackStartedRef.current && el.currentTime <= 0) ||
+      !Number.isFinite(el.currentTime) ||
+      !Number.isFinite(el.duration) ||
+      el.duration <= 0
+    ) return;
     const body = JSON.stringify({
       blockId,
       positionSeconds: Math.max(0, Math.min(el.currentTime, el.duration)),
@@ -241,7 +254,7 @@ export function VideoBlockPlayer({
     mountedRef.current = true;
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
-      setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
+      setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence, { reset: true });
       const canRestorePosition =
         !playbackStartedRef.current && !hasRecordedProgressRef.current;
       if (canRestorePosition) {
@@ -267,7 +280,10 @@ export function VideoBlockPlayer({
         requestRefreshWhenPlaybackSafe();
       }
     }).finally(() => {
-      if (active) setProgressLoaded(true);
+      if (active) {
+        progressLoadedRef.current = true;
+        setProgressLoaded(true);
+      }
     });
     return () => {
       active = false;

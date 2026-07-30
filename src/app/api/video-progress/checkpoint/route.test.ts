@@ -69,11 +69,11 @@ describe("POST /api/video-progress/checkpoint", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
       ok: false,
-      error: "Video checkpoint does not match the lesson asset.",
+      error: "Video checkpoint could not be saved.",
     });
     expect(rpc).toHaveBeenCalledWith("fn_checkpoint_video_playback", expect.objectContaining({
       p_user_id: "user-1",
-      p_block_id: "block-1",
+      p_block_id: "06306306-3063-4063-8063-463063063063",
       p_checkpoint_sequence: 0,
     }));
   });
@@ -101,7 +101,7 @@ function checkpointRequest() {
   return new Request("http://localhost/api/video-progress/checkpoint", {
     method: "POST",
     body: JSON.stringify({
-      blockId: "block-1",
+      blockId: "06306306-3063-4063-8063-463063063063",
       positionSeconds: 42,
       durationSeconds: 100,
       checkpointSequence: 0,

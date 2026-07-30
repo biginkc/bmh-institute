@@ -104,6 +104,8 @@ jobs:
             echo "TEST_SUPABASE_DB_PASSWORD secret is required."
             exit 1
           fi
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
           echo "::add-mask::$ENCODED_PASSWORD"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
