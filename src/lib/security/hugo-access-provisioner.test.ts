@@ -137,6 +137,6 @@ describe("Hugo Institute access provisioner contract", () => {
       migration.match(
         /hashtextextended\('hugo-institute-privileged-lifecycle-v1', 0\)/g,
       ),
-    ).toHaveLength(4);
+    ).toHaveLength(3);
   });
 });

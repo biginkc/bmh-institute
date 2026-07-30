@@ -109,7 +109,7 @@ describe("saveUserSettings", () => {
     vi.clearAllMocks();
   });
 
-  it("saves Institute role groups when the role is unchanged", async () => {
+  it("saves Institute role and role groups through the lifecycle-locked RPC", async () => {
     const result = await saveUserSettings({
       userId: "learner-1",
       system_role: "learner",
@@ -119,31 +119,35 @@ describe("saveUserSettings", () => {
     expect(result).toEqual({ ok: true, newProgramTitles: [] });
     expect(rpcCalls).toEqual([
       {
-        name: "fn_set_user_role_groups",
+        name: "fn_set_user_role_and_groups",
         args: {
           p_user_id: "learner-1",
+          p_system_role: "learner",
           p_role_group_ids: ["group-1"],
         },
       },
     ]);
   });
 
-  it("rejects role changes before mutating role groups", async () => {
+  it("allows Institute role changes without changing lifecycle status", async () => {
     await expect(
       saveUserSettings({
         userId: "learner-1",
         system_role: "admin",
         role_group_ids: ["new-group"],
       }),
-    ).resolves.toEqual({
-      ok: false,
-      error:
-        "This role cannot be changed safely until Institute can keep Hugo access in sync without changing login status.",
+    ).resolves.toEqual({ ok: true, newProgramTitles: [] });
+    expect(rpcCalls[0]).toEqual({
+      name: "fn_set_user_role_and_groups",
+      args: {
+        p_user_id: "learner-1",
+        p_system_role: "admin",
+        p_role_group_ids: ["new-group"],
+      },
     });
-    expect(rpcCalls).toEqual([]);
   });
 
-  it("does not mutate anything when the target role cannot be read", async () => {
+  it("does not preflight a stale target role before the lifecycle-locked write", async () => {
     profileRoleError = { message: "profile role read failed" };
 
     await expect(
@@ -152,15 +156,13 @@ describe("saveUserSettings", () => {
         system_role: "learner",
         role_group_ids: ["new-group"],
       }),
-    ).resolves.toEqual({
-      ok: false,
-      error: "profile role read failed",
-    });
-    expect(rpcCalls).toEqual([]);
+    ).resolves.toEqual({ ok: true, newProgramTitles: [] });
+    expect(rpcCalls[0]?.name).toBe("fn_set_user_role_and_groups");
   });
 
   it("does not mutate anything when the target profile does not exist", async () => {
     profileRoleRow = null;
+    rpcError = { message: "User not found." };
 
     await expect(
       saveUserSettings({
@@ -172,7 +174,7 @@ describe("saveUserSettings", () => {
       ok: false,
       error: "User not found.",
     });
-    expect(rpcCalls).toEqual([]);
+    expect(rpcCalls[0]?.name).toBe("fn_set_user_role_and_groups");
   });
 
   it("does not mutate anything when current role groups cannot be read", async () => {
