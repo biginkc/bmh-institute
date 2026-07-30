@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_b16_drive.png ===
+Verified it is a `1600 x 900` PNG with only the locked colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, `#FFFFFF`. Visual check passes: shelf, blank docs, binders, ribbon, team lead, learner only. No text, logos, labels, or extra props.
+
+Note: the explicit local `gpt-image-2` CLI path was blocked by missing local API credentials, so I used the established built-in image generation workflow and recorded that in the quick-task summary. `course-assets/` is gitignored, so the PNG is saved locally but not tracked by git by default.
+OK mTECH_LTECHA_b16_drive.png

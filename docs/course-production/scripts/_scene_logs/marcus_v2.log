@@ -1,0 +1,6 @@
+=== GEN m02_L2B_marcus_scene.png ===
+
+Drift surfaced, not reconciled because it is outside this asset task:
+- `_Active.md` still references Sandra PR #301 where the newer decision record points to PR #306.
+- `mocs/MOC - v1.md` has the same stale PR #301 reference.
+OK m02_L2B_marcus_scene.png

@@ -1,0 +1,426 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_open",
+   "mode": "hero",
+   "durationInFrames": 372,
+   "voFrames": 342,
+   "badge": true,
+   "hero": "lessonTECHA/hero/hero_b01_alpha.mov"
+  },
+  {
+   "tag": "b02_why",
+   "mode": "scene",
+   "durationInFrames": 858,
+   "voFrames": 828,
+   "labels": [
+    {
+     "text": "STAY ORGANIZED",
+     "delay": 151
+    },
+    {
+     "text": "TRACK DEALS",
+     "delay": 195
+    },
+    {
+     "text": "TEAM COMMUNICATION",
+     "delay": 242
+    },
+    {
+     "text": "TOOLS MATTER",
+     "delay": 772
+    }
+   ],
+   "anim": "lessonTECHA/anim/anim_b02.mp4",
+   "loop": true,
+   "animFrames": 440,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b02_hub.png"
+  },
+  {
+   "tag": "b03_sandra",
+   "mode": "scene",
+   "durationInFrames": 499,
+   "voFrames": 469,
+   "labels": [
+    {
+     "text": "CENTER OF EVERYTHING",
+     "delay": 152
+    },
+    {
+     "text": "LEADS LIVE HERE",
+     "delay": 269
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_sandra.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "logoAnim": "lessonTECHA/logos/logoanim_b03_sandra.mp4",
+   "circle": "lessonTECHA/circle/circle_b03_alpha.mov",
+   "anim": "lessonTECHA/anim/anim_b03.mp4",
+   "loop": false,
+   "animFrames": 436,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b03_sandra.png"
+  },
+  {
+   "tag": "b04_sandra_wf",
+   "mode": "scene",
+   "durationInFrames": 1140,
+   "voFrames": 1110,
+   "labels": [
+    {
+     "text": "NEW LEAD",
+     "delay": 27
+    },
+    {
+     "text": "LOG NOTES",
+     "delay": 147
+    },
+    {
+     "text": "UPDATE THE STAGE",
+     "delay": 268
+    },
+    {
+     "text": "SINGLE SOURCE OF TRUTH",
+     "delay": 329
+    },
+    {
+     "text": "NOT IN SANDRA? IT DOES NOT EXIST",
+     "delay": 521
+    },
+    {
+     "text": "TEAM WALKTHROUGH LATER",
+     "delay": 844
+    },
+    {
+     "text": "NON-NEGOTIABLE",
+     "delay": 1063
+    }
+   ],
+   "anim": "lessonTECHA/anim/anim_b04.mp4",
+   "loop": true,
+   "animFrames": 439,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b04_sandra-workflow.png"
+  },
+  {
+   "tag": "b06_propstream",
+   "mode": "scene",
+   "durationInFrames": 1179,
+   "voFrames": 1149,
+   "labels": [
+    {
+     "text": "MOTIVATED SELLERS",
+     "delay": 89
+    },
+    {
+     "text": "PROPERTY DATA",
+     "delay": 208
+    },
+    {
+     "text": "FIND THEM FIRST",
+     "delay": 1104
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_propstream.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "anim": "lessonTECHA/anim/anim_b06.mp4",
+   "loop": true,
+   "animFrames": 440,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b06_propstream.png"
+  },
+  {
+   "tag": "b07_dealmachine",
+   "mode": "scene",
+   "durationInFrames": 921,
+   "voFrames": 891,
+   "labels": [
+    {
+     "text": "DRIVING FOR DOLLARS",
+     "delay": 245
+    },
+    {
+     "text": "TAG THE PROPERTY",
+     "delay": 472
+    },
+    {
+     "text": "STEADY PIPELINE",
+     "delay": 751
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_dealmachine.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "anim": "lessonTECHA/anim/anim_b07.mp4",
+   "loop": true,
+   "animFrames": 303,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b07_dealmachine.png"
+  },
+  {
+   "tag": "b08_dealsniper",
+   "mode": "scene",
+   "durationInFrames": 976,
+   "voFrames": 946,
+   "labels": [
+    {
+     "text": "MOVE FAST",
+     "delay": 455
+    },
+    {
+     "text": "READY TO MAKE AN OFFER",
+     "delay": 707
+    },
+    {
+     "text": "CONFIDENT DECISIONS",
+     "delay": 879
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_dealsniper.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "anim": "lessonTECHA/anim/anim_b08.mp4",
+   "loop": true,
+   "animFrames": 451,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b08_dealsniper.png"
+  },
+  {
+   "tag": "b09_dialpad",
+   "mode": "scene",
+   "durationInFrames": 463,
+   "voFrames": 433,
+   "labels": [
+    {
+     "text": "PHONE SYSTEM",
+     "delay": 77
+    },
+    {
+     "text": "ACTIVITY LOGGED",
+     "delay": 284
+    },
+    {
+     "text": "CALLS RECORDED",
+     "delay": 407
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_dialpad.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "circle": "lessonTECHA/circle/circle_b09_alpha.mov",
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b09_dialpad.png"
+  },
+  {
+   "tag": "b10_coaching",
+   "mode": "scene",
+   "durationInFrames": 708,
+   "voFrames": 678,
+   "labels": [
+    {
+     "text": "COACHING",
+     "delay": 113
+    },
+    {
+     "text": "REAL CONVERSATIONS",
+     "delay": 332
+    },
+    {
+     "text": "CALL VOLUME",
+     "delay": 449
+    },
+    {
+     "text": "MAKE YOUR DIALS",
+     "delay": 655
+    }
+   ],
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b10_coaching.png"
+  },
+  {
+   "tag": "b11_closerlab",
+   "mode": "scene",
+   "durationInFrames": 1022,
+   "voFrames": 992,
+   "labels": [
+    {
+     "text": "PRACTICE FIRST",
+     "delay": 293
+    },
+    {
+     "text": "FEEDBACK",
+     "delay": 469
+    },
+    {
+     "text": "PUT IN THE REPS",
+     "delay": 975
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_closerlab.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b11_closerlab.png"
+  },
+  {
+   "tag": "b12_tasks",
+   "mode": "scene",
+   "durationInFrames": 945,
+   "voFrames": 915,
+   "labels": [
+    {
+     "text": "TASKS LIVE IN SANDRA",
+     "delay": 5
+    },
+    {
+     "text": "NOTHING GETS DROPPED",
+     "delay": 563
+    },
+    {
+     "text": "CHECK DAILY",
+     "delay": 712
+    },
+    {
+     "text": "FLAG BLOCKERS IN SLACK",
+     "delay": 815
+    }
+   ],
+   "circle": "lessonTECHA/circle/circle_b12_alpha.mov",
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b12_tasks.png"
+  },
+  {
+   "tag": "b13_hubstaff",
+   "mode": "scene",
+   "durationInFrames": 533,
+   "voFrames": 503,
+   "labels": [
+    {
+     "text": "CLOCK IN",
+     "delay": 0
+    },
+    {
+     "text": "ACCURATE HOURS",
+     "delay": 306
+    },
+    {
+     "text": "CLOCK OUT",
+     "delay": 449
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_hubstaff.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b13_hubstaff.png"
+  },
+  {
+   "tag": "b14_slack",
+   "mode": "scene",
+   "durationInFrames": 504,
+   "voFrames": 474,
+   "labels": [
+    {
+     "text": "REACH YOUR MANAGER",
+     "delay": 168
+    },
+    {
+     "text": "KEEP NOTIFICATIONS ON",
+     "delay": 235
+    },
+    {
+     "text": "STAY CONNECTED",
+     "delay": 437
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_slack.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "anim": "lessonTECHA/anim/anim_b14.mp4",
+   "loop": true,
+   "animFrames": 439,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b14_slack.png"
+  },
+  {
+   "tag": "b15_institute",
+   "mode": "scene",
+   "durationInFrames": 558,
+   "voFrames": 528,
+   "labels": [
+    {
+     "text": "MODULES IN ORDER",
+     "delay": 277
+    },
+    {
+     "text": "QUIZZES",
+     "delay": 376
+    },
+    {
+     "text": "PROGRESS TRACKED",
+     "delay": 466
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_institute.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "circle": "lessonTECHA/circle/circle_b15_alpha.mov",
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b15_institute.png"
+  },
+  {
+   "tag": "b16_drive",
+   "mode": "scene",
+   "durationInFrames": 850,
+   "voFrames": 820,
+   "labels": [
+    {
+     "text": "SOPs",
+     "delay": 116
+    },
+    {
+     "text": "SCRIPTS",
+     "delay": 154
+    },
+    {
+     "text": "BOOKMARK WHAT MATTERS",
+     "delay": 460
+    },
+    {
+     "text": "ASK YOUR TEAM LEAD",
+     "delay": 605
+    }
+   ],
+   "logo": "lessonTECHA/logos/mTECH_LTECHA_logo_drive.png",
+   "logoFrame": 0,
+   "logoUntil": 240,
+   "anim": "lessonTECHA/anim/anim_b16.mp4",
+   "loop": true,
+   "animFrames": 440,
+   "still": "lessonTECHA/stills/mTECH_LTECHA_b16_drive.png"
+  },
+  {
+   "tag": "b17_recap",
+   "mode": "hero",
+   "durationInFrames": 833,
+   "voFrames": 773,
+   "closeFade": true,
+   "labels": [
+    {
+     "text": "WORK TOGETHER",
+     "delay": 199
+    },
+    {
+     "text": "FIND DEALS",
+     "delay": 238
+    },
+    {
+     "text": "MANAGE LEADS",
+     "delay": 272
+    },
+    {
+     "text": "COMMUNICATE AS A TEAM",
+     "delay": 312
+    },
+    {
+     "text": "NEXT: WHO SELLS TO US",
+     "delay": 779
+    }
+   ],
+   "hero": "lessonTECHA/hero/hero_b17_alpha.mov"
+  }
+ ],
+ "audio": "lessonTECHA/master.m4a",
+ "totalFrames": 12361
+}

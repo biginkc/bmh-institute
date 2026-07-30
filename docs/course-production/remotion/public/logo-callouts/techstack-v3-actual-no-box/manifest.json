@@ -1,0 +1,115 @@
+{
+  "version": "techstack-v3-actual-no-box",
+  "generatedAt": "2026-07-09T07:21:18.969Z",
+  "note": "No white cards or boxed logo backgrounds. Individual assets are transparent logo callouts with subtle sketch accents only.",
+  "tools": [
+    {
+      "slug": "sandra",
+      "name": "Sandra",
+      "source": "sandra-wordmark.png",
+      "sourceLabel": "local Sandra/public/brand/sandra-wordmark.png",
+      "sourceUrl": "local",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/sandra.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/sandra.png"
+    },
+    {
+      "slug": "propstream",
+      "name": "PropStream",
+      "source": "propstream.svg",
+      "sourceLabel": "official PropStream SVG",
+      "sourceUrl": "https://www.propstream.com/hubfs/2025-Web-Update/PS-Stacked-MonoLight.svg",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/propstream.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/propstream.png"
+    },
+    {
+      "slug": "dealmachine",
+      "name": "DealMachine",
+      "source": "dealmachine.svg",
+      "sourceLabel": "official DealMachine SVG",
+      "sourceUrl": "https://www.dealmachine.com/hubfs/Pictures/DealMachineLogo.svg",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/dealmachine.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/dealmachine.png"
+    },
+    {
+      "slug": "deal_sniper",
+      "name": "Deal Sniper",
+      "source": "deal_sniper.png",
+      "sourceLabel": "live Deal Sniper brand PNG",
+      "sourceUrl": "https://www.dealsniper.ai/deal_sniper_brand.png",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/deal_sniper.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/deal_sniper.png"
+    },
+    {
+      "slug": "dialpad",
+      "name": "Dialpad",
+      "source": "dialpad.svg",
+      "sourceLabel": "official Dialpad site SVG",
+      "sourceUrl": "https://www.dialpad.com/assets/images/logo/dark_dialpad.svg",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/dialpad.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/dialpad.png"
+    },
+    {
+      "slug": "closer_lab",
+      "name": "Closer Lab",
+      "source": "inline-local-brand-lockup",
+      "sourceLabel": "local Closer Lab BrandLockup / Mic2 mark",
+      "sourceUrl": "local",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/closer_lab.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/closer_lab.png"
+    },
+    {
+      "slug": "hubstaff",
+      "name": "Hubstaff",
+      "source": "hubstaff.svg",
+      "sourceLabel": "official Hubstaff site SVG",
+      "sourceUrl": "https://hubstaff.com/icons-cds/hubstaff-logo.svg",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/hubstaff.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/hubstaff.png"
+    },
+    {
+      "slug": "slack",
+      "name": "Slack",
+      "source": "slack.svg",
+      "sourceLabel": "official Slack media-kit SVG mark",
+      "sourceUrl": "https://a.slack-edge.com/38f0e7c/marketing/img/nav/logo.svg",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/slack.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/slack.png"
+    },
+    {
+      "slug": "bmh_institute",
+      "name": "BMH Institute",
+      "source": "inline-local-brand-lockup",
+      "sourceLabel": "local BMH Institute BrandLockup / GraduationCap mark",
+      "sourceUrl": "local",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/bmh_institute.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/bmh_institute.png"
+    },
+    {
+      "slug": "google_docs",
+      "name": "Google Docs",
+      "source": "google_docs.png",
+      "sourceLabel": "official Google product icon PNG",
+      "sourceUrl": "https://www.gstatic.com/images/branding/product/2x/docs_2020q4_96dp.png",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/google_docs.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/google_docs.png"
+    },
+    {
+      "slug": "google_drive",
+      "name": "Google Drive",
+      "source": "google_drive.png",
+      "sourceLabel": "official Google product icon PNG",
+      "sourceUrl": "https://www.gstatic.com/images/branding/product/2x/drive_2020q4_96dp.png",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/google_drive.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/google_drive.png"
+    },
+    {
+      "slug": "gmail",
+      "name": "Gmail",
+      "source": "gmail.png",
+      "sourceLabel": "official Google product icon PNG",
+      "sourceUrl": "https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_96dp.png",
+      "svg": "course-assets/logo-callouts/techstack-v3-actual-no-box/gmail.svg",
+      "png": "course-assets/logo-callouts/techstack-v3-actual-no-box/gmail.png"
+    }
+  ]
+}

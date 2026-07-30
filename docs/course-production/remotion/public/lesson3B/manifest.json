@@ -1,0 +1,166 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 627,
+   "badge": true,
+   "hero": "lesson3B/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_offer-recap",
+   "mode": "panel",
+   "durationInFrames": 677,
+   "push": true,
+   "stickers": [
+    {
+     "text": "As-is \u00b7 close fast \u00b7 no repairs, no commissions",
+     "delay": 164,
+     "bg": "white",
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson3B/stills/m03_L3B_s02_offer-recap.png"
+  },
+  {
+   "tag": "b03_ideal-seller",
+   "mode": "rows",
+   "durationInFrames": 1364,
+   "clip": 785,
+   "title": "IDEAL SELLER PROFILE",
+   "rowKind": "check",
+   "rowsTop": 205,
+   "rowStep": 112,
+   "rows": [
+    {
+     "label": "Motivated to sell",
+     "delay": 431
+    },
+    {
+     "label": "Sells within 30 days",
+     "delay": 736
+    },
+    {
+     "label": "Legal authority to sell",
+     "delay": 794
+    },
+    {
+     "label": "Not listed with an agent",
+     "delay": 936
+    },
+    {
+     "label": "Wants speed over top price",
+     "delay": 1053
+    },
+    {
+     "label": "Distressed / problem property",
+     "delay": 1169
+    }
+   ],
+   "still": "lesson3B/stills/m03_L3B_s03_ideal-seller.png"
+  },
+  {
+   "tag": "b04_not-a-fit",
+   "mode": "rows",
+   "durationInFrames": 644,
+   "clip": 785,
+   "title": "NOT A FIT",
+   "rowKind": "x",
+   "rowsTop": 250,
+   "rowStep": 130,
+   "rows": [
+    {
+     "label": "Already listed with an agent",
+     "delay": 127
+    },
+    {
+     "label": "Unrealistic price",
+     "delay": 179
+    },
+    {
+     "label": "Can't legally sell",
+     "delay": 379
+    },
+    {
+     "label": "Hazards over our budget",
+     "delay": 463
+    }
+   ],
+   "still": "lesson3B/stills/m03_L3B_s04_andrea-stop.png"
+  },
+  {
+   "tag": "b05_core-problems",
+   "mode": "panel",
+   "durationInFrames": 866,
+   "push": true,
+   "stickers": [
+    {
+     "text": "CAN'T AFFORD REPAIRS",
+     "delay": 440,
+     "bg": "white",
+     "role": "label",
+     "top": 110,
+     "left": 120
+    },
+    {
+     "text": "NEEDS CASH NOW",
+     "delay": 606,
+     "bg": "white",
+     "role": "label",
+     "top": 110,
+     "left": 1040
+    }
+   ],
+   "still": "lesson3B/stills/m03_L3B_s05_rundown-house.png"
+  },
+  {
+   "tag": "b06_seller-monologue",
+   "mode": "monologue",
+   "durationInFrames": 1164,
+   "video": "lesson3B/anim/char_b06_homeowner.mp4"
+  },
+  {
+   "tag": "b07_transformation",
+   "mode": "transform",
+   "durationInFrames": 1064,
+   "slideFrame": 185,
+   "stickers": [
+    {
+     "text": "SOLD AS-IS",
+     "delay": 386,
+     "bg": "white",
+     "role": "label",
+     "top": 110,
+     "left": 120
+    },
+    {
+     "text": "CASH IN HAND",
+     "delay": 931,
+     "bg": "white",
+     "role": "label",
+     "top": 110,
+     "left": 1050
+    },
+    {
+     "text": "NO BURDEN LEFT",
+     "delay": 995,
+     "bg": "white",
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ],
+   "still": "lesson3B/stills/m03_L3B_s05_rundown-house.png",
+   "still2": "lesson3B/stills/m03_L3B_s07_relieved-seller.png"
+  },
+  {
+   "tag": "b08_outro",
+   "mode": "hero",
+   "durationInFrames": 549,
+   "hero": "lesson3B/hero/hero_b08_outro.mp4"
+  }
+ ],
+ "audio": "lesson3B/master.m4a",
+ "totalFrames": 6955
+}

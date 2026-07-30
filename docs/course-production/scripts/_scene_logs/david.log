@@ -1,0 +1,6 @@
+=== GEN m02_L2B_david_scene.png ===
+
+I also added a narrow GSD record under `.planning/quick/260705-generate-m02-l2b-david-scene-asset/` and appended the matching STATE.md bullet. The asset itself is under ignored `course-assets/`, so Git status will not list the PNG.
+
+Out-of-scope vault drift still noted: the two Sandra PR `#301` vs `#306` references remain unreconciled.
+OK m02_L2B_david_scene.png

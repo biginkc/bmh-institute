@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b10_mls-board.png ===
+- Only the requested board, stand, arrows, and four text strings are present
+
+Note: the explicit local `gpt-image-2` CLI route was blocked because this session has no `OPENAI_API_KEY`, no OpenAI Python package, and no approved 1Password service token. I used the available image-generation path with the requested prompt and references, then resized and palette-flattened the result locally. `course-assets/` is git-ignored, so the PNG is saved locally but not tracked by default.
+OK mGLO_LGLOA_b10_mls-board.png

@@ -1,0 +1,299 @@
+{
+ "fps": 30,
+ "gapFrames": 30,
+ "beats": [
+  {
+   "tag": "b01_put_it_together",
+   "mode": "hero",
+   "durationInFrames": 731,
+   "voFrames": 701,
+   "labels": [],
+   "animationStatus": "not-required",
+   "badge": true,
+   "hero": "lesson18A/hero/hero_b01_put_it_together.mp4"
+  },
+  {
+   "tag": "b02_command_center_priorities",
+   "mode": "scene",
+   "durationInFrames": 953,
+   "voFrames": 923,
+   "labels": [
+    {
+     "text": "COMMAND CENTER",
+     "delay": 97,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "SORT PRIORITIES",
+     "delay": 484,
+     "place": "right",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson18A/stills/m18_L18A_b02_command-center-v2.png"
+  },
+  {
+   "tag": "b03_research_prep",
+   "mode": "researchPrep",
+   "durationInFrames": 840,
+   "voFrames": 810,
+   "labels": [
+    {
+     "text": "30-MINUTE PREP",
+     "delay": 20,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "10-15 TOP LEADS",
+     "delay": 10,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "DO YOUR HOMEWORK",
+     "delay": 728,
+     "place": "right",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "generated-multishot-required",
+   "still": "lesson18A/stills/m18_L18A_b03_research-prep-v2.png",
+   "hero": "lesson18A/hero/hero_b03_research_prep.mp4",
+   "anim": "lesson18A/anim/anim_b03_research_prep_v8.mp4",
+   "tail": "lesson18A/tails/b03_research_prep_tail.png",
+   "animFrames": 361
+  },
+  {
+   "tag": "b04_first_call_block",
+   "mode": "scene",
+   "durationInFrames": 984,
+   "voFrames": 954,
+   "labels": [
+    {
+     "text": "FOLLOW-UPS FIRST",
+     "delay": 163,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "60-80 DIALS",
+     "delay": 10,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "LOG NOTES NOW",
+     "delay": 778,
+     "place": "right",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson18A/stills/m18_L18A_b04_first-call-block-v2.png"
+  },
+  {
+   "tag": "b05_break_reset",
+   "mode": "scene",
+   "durationInFrames": 477,
+   "voFrames": 447,
+   "labels": [
+    {
+     "text": "15-MINUTE RESET",
+     "delay": 125,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "WATER + STRETCH",
+     "delay": 208,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson18A/stills/m18_L18A_b05_break-reset-v2.png"
+  },
+  {
+   "tag": "b06_second_block_lunch",
+   "mode": "secondBlock",
+   "durationInFrames": 856,
+   "voFrames": 826,
+   "labels": [
+    {
+     "text": "SECOND BLOCK",
+     "delay": 7,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "110-150 BY LUNCH",
+     "delay": 10,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "REAL FOOD",
+     "delay": 701,
+     "place": "right",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b07_admin_block",
+   "mode": "leadTicker",
+   "durationInFrames": 530,
+   "voFrames": 500,
+   "labels": [
+    {
+     "text": "ADMIN BLOCK",
+     "delay": 55,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "UPDATE STAGES",
+     "delay": 244,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "HANDOFF CHECKLISTS",
+     "delay": 399,
+     "place": "right",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson18A/stills/m18_L18A_b09_pipeline-review-v2.png"
+  },
+  {
+   "tag": "b08_final_call_block",
+   "mode": "finalPush",
+   "durationInFrames": 603,
+   "voFrames": 573,
+   "labels": [
+    {
+     "text": "FINAL PUSH",
+     "delay": 95,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "RE-DIALS",
+     "delay": 225,
+     "place": "right",
+     "role": "label"
+    },
+    {
+     "text": "150-200 TOTAL",
+     "delay": 10,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b09_pipeline_review",
+   "mode": "leadTicker",
+   "durationInFrames": 1198,
+   "voFrames": 1168,
+   "labels": [
+    {
+     "text": "PIPELINE REVIEW",
+     "delay": 56,
+     "place": "top",
+     "role": "label"
+    },
+    {
+     "text": "NEXT ACTION + DATE",
+     "delay": 739,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "TOMORROW READY",
+     "delay": 913,
+     "place": "right",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson18A/stills/m18_L18A_b09_pipeline-review-v2.png"
+  },
+  {
+   "tag": "b10_worked_the_day",
+   "mode": "workedDay",
+   "durationInFrames": 856,
+   "voFrames": 826,
+   "labels": [
+    {
+     "text": "WORKED THE DAY",
+     "delay": 11,
+     "place": "top",
+     "role": "title"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b11_control_consistency",
+   "mode": "consistency",
+   "durationInFrames": 618,
+   "voFrames": 588,
+   "labels": [],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b12_energy_management",
+   "mode": "scene",
+   "durationInFrames": 1176,
+   "voFrames": 1146,
+   "labels": [],
+   "animationStatus": "not-required",
+   "still": "lesson18A/stills/m18_L18A_b12_energy-management-v2.png"
+  },
+  {
+   "tag": "b13_one_call_humans",
+   "mode": "scene",
+   "durationInFrames": 1060,
+   "voFrames": 1030,
+   "labels": [],
+   "animationStatus": "local-full-frame-motion",
+   "still": "lesson18A/stills/m18_L18A_b13_one-call-humans.png",
+   "anim": "lesson18A/anim/anim_b13_one_call_humans.mp4",
+   "tail": "lesson18A/tails/b13_one_call_humans_tail.png",
+   "animFrames": 361
+  },
+  {
+   "tag": "b14_daily_sync_tease",
+   "mode": "hero",
+   "durationInFrames": 482,
+   "voFrames": 482,
+   "labels": [
+    {
+     "text": "CAPSTONE ROLEPLAY COMING",
+     "delay": 15,
+     "place": "top",
+     "role": "caption"
+    },
+    {
+     "text": "NEXT: DAILY MISSION CONTROL",
+     "delay": 406,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "hero": "lesson18A/hero/hero_b14_daily_sync_tease.mp4"
+  }
+ ],
+ "audio": "lesson18A/master.m4a",
+ "totalFrames": 11364,
+ "animationFallbacks": {}
+}

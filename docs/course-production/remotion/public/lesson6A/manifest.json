@@ -1,0 +1,92 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 428,
+   "voFrames": 398,
+   "badge": true,
+   "hero": "lesson6A/hero/hero_b01_intro.mp4",
+   "heroFrames": 398
+  },
+  {
+   "tag": "b02_qualify",
+   "mode": "video",
+   "durationInFrames": 691,
+   "voFrames": 661,
+   "label": "QUALIFICATION",
+   "labelDelay": 58,
+   "video": "lesson6A/anim/anim_office_15s.mp4",
+   "clipFrames": 451
+  },
+  {
+   "tag": "b03_discovery",
+   "mode": "bob",
+   "durationInFrames": 1088,
+   "voFrames": 1058,
+   "label": "DISCOVERY",
+   "labelDelay": 5,
+   "still": "lesson6A/stills/m06_L6A_iceberg_v2.png"
+  },
+  {
+   "tag": "b04_motivation",
+   "mode": "maskreveal",
+   "durationInFrames": 1120,
+   "voFrames": 1090,
+   "swapFrame": 370,
+   "label": "THE POLISHED ANSWER",
+   "labelDelay": 920,
+   "still": "lesson6A/stills/m06_L6A_mask.png",
+   "hero": "lesson6A/hero/hero_b04_front.mp4",
+   "heroFrames": 378
+  },
+  {
+   "tag": "b05_askwhy",
+   "mode": "scene",
+   "durationInFrames": 1202,
+   "voFrames": 1172,
+   "label": "THE REAL REASON",
+   "labelDelay": 52,
+   "still": "lesson6A/stills/m06_L6A_dig_v2.png"
+  },
+  {
+   "tag": "b06_financial",
+   "mode": "scene",
+   "durationInFrames": 1489,
+   "voFrames": 1459,
+   "label": "FINANCIAL BURDEN",
+   "labelDelay": 86,
+   "still": "lesson6A/stills/m06_L6A_notices.png"
+  },
+  {
+   "tag": "b07_whatif",
+   "mode": "video",
+   "durationInFrames": 1259,
+   "voFrames": 1229,
+   "label": "WHAT IF?",
+   "labelDelay": 168,
+   "video": "lesson6A/anim/anim_fork_15s.mp4",
+   "clipFrames": 451
+  },
+  {
+   "tag": "b08_decision",
+   "mode": "scene",
+   "durationInFrames": 1220,
+   "voFrames": 1190,
+   "label": "WHO SIGNS?",
+   "labelDelay": 179,
+   "still": "lesson6A/stills/m06_L6A_deciders.png"
+  },
+  {
+   "tag": "b09_outro",
+   "mode": "hero",
+   "durationInFrames": 877,
+   "voFrames": 877,
+   "hero": "lesson6A/hero/hero_b09_outro.mp4",
+   "heroFrames": 877
+  }
+ ],
+ "audio": "lesson6A/master.m4a",
+ "totalFrames": 9374
+}

@@ -1,0 +1,184 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 680,
+   "voFrames": 650,
+   "badge": true,
+   "hero": "lesson8A/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_weight",
+   "mode": "video",
+   "durationInFrames": 416,
+   "voFrames": 386,
+   "label": "SAME FRAMEWORK, MORE DEPTH",
+   "labelDelay": 252,
+   "labelPlace": "bottom",
+   "videos": [
+    "lesson8A/anim/anim_b02.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson8A/stills/b02_weight_tail.png"
+  },
+  {
+   "tag": "b03_underwater",
+   "mode": "video",
+   "durationInFrames": 527,
+   "voFrames": 497,
+   "label": "\"I OWE MORE THAN IT'S WORTH\"",
+   "labelDelay": 59,
+   "labelPlace": "bottom",
+   "videos": [
+    "lesson8A/anim/anim_b03.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson8A/stills/b03_underwater_tail.png"
+  },
+  {
+   "tag": "b04_response",
+   "mode": "video",
+   "durationInFrames": 680,
+   "voFrames": 650,
+   "circle": "lesson8A/circle/circle_b04.mp4",
+   "label": "GET THE FULL PICTURE",
+   "labelDelay": 89,
+   "labelPlace": "topright",
+   "videos": [
+    "lesson8A/anim/anim_b04.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson8A/stills/b04_response_tail.png"
+  },
+  {
+   "tag": "b05_tenants",
+   "mode": "video",
+   "durationInFrames": 544,
+   "voFrames": 514,
+   "label": "\"I HAVE TENANTS\"",
+   "labelDelay": 44,
+   "labelPlace": "topleft",
+   "caption": "YES \u2014 WE BUY WITH TENANTS",
+   "captionDelay": 141,
+   "videos": [
+    "lesson8A/anim/anim_b05.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson8A/stills/b05_tenants_tail.png"
+  },
+  {
+   "tag": "b06_squatters",
+   "mode": "video",
+   "durationInFrames": 729,
+   "voFrames": 699,
+   "label": "SQUATTERS",
+   "labelDelay": 22,
+   "labelPlace": "topleft",
+   "videos": [
+    "lesson8A/anim/anim_b06.mov"
+   ],
+   "videoFrames": [
+    435
+   ],
+   "still": "lesson8A/stills/b06_squatters_tail.png"
+  },
+  {
+   "tag": "b07_leaseback",
+   "mode": "video",
+   "durationInFrames": 1031,
+   "voFrames": 1001,
+   "circle": "lesson8A/circle/circle_b07.mp4",
+   "label": "\"CAN I STAY AFTER SELLING?\"",
+   "labelDelay": 347,
+   "labelPlace": "topright",
+   "caption": "LEASEBACK \u2014 STAY AS A TENANT",
+   "captionDelay": 503,
+   "videos": [
+    "lesson8A/anim/anim_b07.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson8A/stills/b07_leaseback_tail.png"
+  },
+  {
+   "tag": "b08_privacy",
+   "mode": "scene",
+   "durationInFrames": 837,
+   "voFrames": 807,
+   "caption": "A PRIVATE TRANSACTION",
+   "captionDelay": 767,
+   "pills": [
+    {
+     "text": "NO LISTING",
+     "delay": 586
+    },
+    {
+     "text": "NO SIGN",
+     "delay": 621
+    },
+    {
+     "text": "NO OPEN HOUSES",
+     "delay": 675
+    },
+    {
+     "text": "NO STRANGERS",
+     "delay": 709
+    }
+   ],
+   "pillsPlace": "topleft",
+   "still": "lesson8A/stills/m08_L8A_b08_privacy.png"
+  },
+  {
+   "tag": "b09_contract",
+   "mode": "video",
+   "durationInFrames": 811,
+   "voFrames": 781,
+   "circle": "lesson8A/circle/circle_b09.mp4",
+   "label": "\"WHAT IF I CHANGE MY MIND?\"",
+   "labelDelay": 85,
+   "labelPlace": "topright",
+   "pills": [
+    {
+     "text": "INSPECTION PERIOD",
+     "delay": 308
+    },
+    {
+     "text": "WALKED THROUGH FIRST",
+     "delay": 403
+    },
+    {
+     "text": "ATTORNEY REVIEW",
+     "delay": 588
+    }
+   ],
+   "pillsPlace": "right",
+   "videos": [
+    "lesson8A/anim/anim_b09.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson8A/stills/b09_contract_tail.png"
+  },
+  {
+   "tag": "b10_outro",
+   "mode": "hero",
+   "durationInFrames": 596,
+   "voFrames": 596,
+   "hero": "lesson8A/hero/hero_b10_outro.mp4"
+  }
+ ],
+ "audio": "lesson8A/master.m4a",
+ "totalFrames": 6851
+}

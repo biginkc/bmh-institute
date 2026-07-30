@@ -1,0 +1,349 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_reframe_close",
+   "mode": "hero",
+   "durationInFrames": 627,
+   "voFrames": 597,
+   "badge": true,
+   "overlays": [
+    {
+     "text": "CLOSING SHOULD BE THE EASIEST PART",
+     "delay": 518,
+     "place": "bottom"
+    }
+   ],
+   "hero": "lesson11A/hero/hero_b01_reframe_close.mp4"
+  },
+  {
+   "tag": "b02_formal_agreement",
+   "mode": "video",
+   "durationInFrames": 573,
+   "voFrames": 543,
+   "overlays": [
+    {
+     "text": "FORMAL AGREEMENT",
+     "delay": 397,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b02_formal_agreement.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b02_formal_agreement_tail.png"
+  },
+  {
+   "tag": "b03_handoff_role",
+   "mode": "video",
+   "durationInFrames": 524,
+   "voFrames": 494,
+   "overlays": [
+    {
+     "text": "HANDOFF",
+     "delay": 349,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b03_handoff_role.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b03_handoff_role_tail.png"
+  },
+  {
+   "tag": "b04_why_understand",
+   "mode": "video",
+   "durationInFrames": 782,
+   "voFrames": 752,
+   "overlays": [
+    {
+     "text": "SUPPORT",
+     "delay": 307,
+     "place": "bottom"
+    },
+    {
+     "text": "DISCOVERY",
+     "delay": 440,
+     "place": "bottom"
+    },
+    {
+     "text": "GROWTH",
+     "delay": 607,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b04_why_understand.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b04_why_understand_tail.png"
+  },
+  {
+   "tag": "b05_offer_range",
+   "mode": "video",
+   "durationInFrames": 500,
+   "voFrames": 470,
+   "overlays": [
+    {
+     "text": "OFFER RANGE",
+     "delay": 275,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b05_offer_range.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b05_offer_range_tail.png"
+  },
+  {
+   "tag": "b06_clean_offer",
+   "mode": "video",
+   "durationInFrames": 846,
+   "voFrames": 816,
+   "overlays": [
+    {
+     "text": "CLEAR HONEST OFFER",
+     "delay": 778,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b06_clean_offer.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b06_clean_offer_tail.png"
+  },
+  {
+   "tag": "b07_hoping_more",
+   "mode": "video",
+   "durationInFrames": 306,
+   "voFrames": 276,
+   "overlays": [
+    {
+     "text": "NOT A DEALBREAKER",
+     "delay": 247,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b07_hoping_more.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b07_hoping_more_tail.png"
+  },
+  {
+   "tag": "b08_close_gap",
+   "mode": "hero",
+   "durationInFrames": 688,
+   "voFrames": 658,
+   "overlays": [
+    {
+     "text": "ACKNOWLEDGE",
+     "delay": 207,
+     "place": "bottom"
+    },
+    {
+     "text": "REFRAME",
+     "delay": 350,
+     "place": "bottom"
+    },
+    {
+     "text": "ASK",
+     "delay": 403,
+     "place": "bottom"
+    },
+    {
+     "text": "CLOSE THE GAP",
+     "delay": 610,
+     "place": "bottom"
+    }
+   ],
+   "hero": "lesson11A/hero/hero_b08_close_gap.mp4"
+  },
+  {
+   "tag": "b09_respect",
+   "mode": "video",
+   "durationInFrames": 575,
+   "voFrames": 545,
+   "overlays": [
+    {
+     "text": "NOT ABOUT WINNING",
+     "delay": 155,
+     "place": "bottom"
+    },
+    {
+     "text": "BOTH SIDES FEEL RESPECTED",
+     "delay": 521,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b09_arm_wrestling_respect.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b09_respect_tail.png"
+  },
+  {
+   "tag": "b10_contract_signed",
+   "mode": "video",
+   "durationInFrames": 634,
+   "voFrames": 604,
+   "overlays": [
+    {
+     "text": "VERBAL YES",
+     "delay": 61,
+     "place": "bottom"
+    },
+    {
+     "text": "PURCHASE AGREEMENT",
+     "delay": 273,
+     "place": "bottom"
+    },
+    {
+     "text": "E-SIGN",
+     "delay": 444,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b10_contract_signed.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b10_contract_signed_tail.png"
+  },
+  {
+   "tag": "b11_transaction_work",
+   "mode": "video",
+   "durationInFrames": 1006,
+   "voFrames": 976,
+   "overlays": [
+    {
+     "text": "CLOSING LOGISTICS",
+     "delay": 363,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b11_transaction_work.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b11_transaction_work_tail.png"
+  },
+  {
+   "tag": "b12_sellers_remorse",
+   "mode": "video",
+   "durationInFrames": 651,
+   "voFrames": 621,
+   "overlays": [
+    {
+     "text": "SELLER'S REMORSE",
+     "delay": 182,
+     "place": "bottom"
+    },
+    {
+     "text": "FEEL HEARD",
+     "delay": 427,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b12_sellers_remorse.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b12_sellers_remorse_tail.png"
+  },
+  {
+   "tag": "b13_deal_risks",
+   "mode": "video",
+   "durationInFrames": 789,
+   "voFrames": 759,
+   "overlays": [
+    {
+     "text": "FAMILY INTERFERENCE",
+     "delay": 8,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b13_deal_risks.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b13_deal_risks_tail.png"
+  },
+  {
+   "tag": "b14_trust_beats_price",
+   "mode": "video",
+   "durationInFrames": 423,
+   "voFrames": 393,
+   "overlays": [
+    {
+     "text": "TRUST BEATS PRICE",
+     "delay": 281,
+     "place": "bottom"
+    }
+   ],
+   "videos": [
+    "lesson11A/anim/anim_b14_trust_beats_price.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson11A/stills/b14_trust_beats_price_tail.png"
+  },
+  {
+   "tag": "b15_your_impact",
+   "mode": "hero",
+   "durationInFrames": 792,
+   "voFrames": 762,
+   "overlays": [
+    {
+     "text": "YOU MADE THE DEAL POSSIBLE",
+     "delay": 184,
+     "place": "bottom"
+    }
+   ],
+   "hero": "lesson11A/hero/hero_b15_your_impact.mp4"
+  },
+  {
+   "tag": "b16_next_kpis",
+   "mode": "hero",
+   "durationInFrames": 165,
+   "voFrames": 165,
+   "overlays": [
+    {
+     "text": "NEXT: KPIs & SALES TELEMETRY",
+     "delay": 142,
+     "place": "bottom"
+    }
+   ],
+   "hero": "lesson11A/hero/hero_b16_next_kpis.mp4"
+  }
+ ],
+ "audio": "lesson11A/master.m4a",
+ "totalFrames": 9881
+}

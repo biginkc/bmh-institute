@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b12_listed-expired.png ===
+- sign text reads `FOR SALE` and `EXPIRED`
+
+Note: the explicit CLI `gpt-image-2` path was blocked because this shell has no `OPENAI_API_KEY` or service-account token available, so I used the built-in image generator and flattened/resized the selected output locally.
+OK mGLO_LGLOA_b12_listed-expired.png

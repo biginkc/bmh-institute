@@ -1,0 +1,314 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_career_path_opener",
+   "mode": "hero",
+   "durationInFrames": 536,
+   "voFrames": 506,
+   "labels": [],
+   "badge": true,
+   "hero": "lesson19/hero/hero_b01_career_path_opener.mp4"
+  },
+  {
+   "tag": "b02_foundation_role",
+   "mode": "still",
+   "durationInFrames": 383,
+   "voFrames": 353,
+   "labels": [
+    {
+     "text": "FOUNDATION",
+     "delay": 211,
+     "place": "bottom"
+    }
+   ],
+   "still": "lesson19/stills/m19_L19_b02_foundation-conveyor-v6.png"
+  },
+  {
+   "tag": "b03_clean_handoffs",
+   "mode": "still",
+   "durationInFrames": 502,
+   "voFrames": 472,
+   "labels": [
+    {
+     "text": "MASTER IT",
+     "delay": 8,
+     "place": "bottom"
+    },
+    {
+     "text": "UNDERSTAND SELLERS",
+     "delay": 41,
+     "place": "bottom"
+    },
+    {
+     "text": "KPIs CONSISTENTLY",
+     "delay": 168,
+     "place": "bottom"
+    }
+   ],
+   "still": "lesson19/stills/m19_L19_b03_clean-file-hug-v6b.png",
+   "circle": "lesson19/circle/circle_b03_clean_handoffs-v7.mp4"
+  },
+  {
+   "tag": "b04_readiness_checkpoint",
+   "mode": "checkpoint",
+   "durationInFrames": 339,
+   "voFrames": 309,
+   "labels": [
+    {
+     "text": "CONSISTENCY",
+     "delay": 54,
+     "place": "row"
+    },
+    {
+     "text": "90+ DAYS",
+     "delay": 121,
+     "place": "row"
+    },
+    {
+     "text": "SPOTLESS CRM",
+     "delay": 185,
+     "place": "row"
+    },
+    {
+     "text": "LEADERSHIP",
+     "delay": 243,
+     "place": "row"
+    },
+    {
+     "text": "MOVE UP",
+     "delay": 292,
+     "place": "row"
+    }
+   ]
+  },
+  {
+   "tag": "b05_complex_leads_mentor",
+   "mode": "still",
+   "durationInFrames": 810,
+   "voFrames": 780,
+   "labels": [
+    {
+     "text": "MENTOR OTHERS",
+     "delay": 532,
+     "place": "bottom"
+    },
+    {
+     "text": "MORE AUTONOMY",
+     "delay": 702,
+     "place": "bottom"
+    }
+   ],
+   "still": "lesson19/stills/m19_L19_b05_complex-lead-maze-v6.png"
+  },
+  {
+   "tag": "b06_deal_closer_level",
+   "mode": "still",
+   "durationInFrames": 660,
+   "voFrames": 630,
+   "labels": [],
+   "still": "lesson19/stills/m19_L19_b06_deal-conference-v6.png"
+  },
+  {
+   "tag": "b07_creative_deal_skill",
+   "mode": "hero",
+   "durationInFrames": 371,
+   "voFrames": 341,
+   "labels": [],
+   "hero": "lesson19/hero/hero_b07_creative_deal_skill-v7.mp4"
+  },
+  {
+   "tag": "b08_management_path",
+   "mode": "still",
+   "durationInFrames": 722,
+   "voFrames": 692,
+   "labels": [
+    {
+     "text": "BUILD THE TEAM",
+     "delay": 153,
+     "place": "b08callout"
+    },
+    {
+     "text": "HIRING",
+     "delay": 311,
+     "place": "b08callout"
+    },
+    {
+     "text": "TRAINING",
+     "delay": 338,
+     "place": "b08callout"
+    },
+    {
+     "text": "COACHING",
+     "delay": 365,
+     "place": "b08callout"
+    },
+    {
+     "text": "TEAM OUTPUT",
+     "delay": 602,
+     "place": "b08callout"
+    },
+    {
+     "text": "WHEN THEY WIN, YOU WIN",
+     "delay": 676,
+     "place": "b08callout"
+    }
+   ],
+   "still": "lesson19/stills/m19_L19_b08_priya-coaching-v6.png"
+  },
+  {
+   "tag": "b09_no_fixed_schedule",
+   "mode": "side",
+   "durationInFrames": 433,
+   "voFrames": 403,
+   "labels": [
+    {
+     "text": "NOT TIME",
+     "delay": 113,
+     "place": "row"
+    },
+    {
+     "text": "NO FIXED SCHEDULE",
+     "delay": 256,
+     "place": "row"
+    },
+    {
+     "text": "PERFORMANCE",
+     "delay": 352,
+     "place": "row"
+    },
+    {
+     "text": "READINESS",
+     "delay": 379,
+     "place": "row"
+    }
+   ],
+   "side": "lesson19/side/side_b09_no_fixed_schedule.mp4"
+  },
+  {
+   "tag": "b10_daily_performance_criteria",
+   "mode": "scorecard",
+   "durationInFrames": 691,
+   "voFrames": 661,
+   "labels": [
+    {
+     "text": "HIT NUMBERS",
+     "delay": 102,
+     "place": "score1"
+    },
+    {
+     "text": "CALLS SOUND GOOD",
+     "delay": 328,
+     "place": "score2"
+    },
+    {
+     "text": "CLEAN CRM",
+     "delay": 418,
+     "place": "score3"
+    },
+    {
+     "text": "NOTES + STAGE + NEXT ACTION",
+     "delay": 488,
+     "place": "score4"
+    },
+    {
+     "text": "NO LEADS WITH NO PLAN",
+     "delay": 640,
+     "place": "score5"
+    }
+   ],
+   "still": "lesson19/stills/m19_L19_b10_promotion-scorecard.png",
+   "circle": "lesson19/circle/circle_b10_daily_performance_criteria.mp4"
+  },
+  {
+   "tag": "b11_team_contribution_coachability",
+   "mode": "feedback",
+   "durationInFrames": 712,
+   "voFrames": 682,
+   "labels": [
+    {
+     "text": "HELP PEOPLE",
+     "delay": 94,
+     "place": "row"
+    },
+    {
+     "text": "SHARE WHAT'S WORKING",
+     "delay": 130,
+     "place": "row"
+    },
+    {
+     "text": "COACHABLE",
+     "delay": 244,
+     "place": "row"
+    },
+    {
+     "text": "FIX THE GAP",
+     "delay": 362,
+     "place": "row"
+    },
+    {
+     "text": "COME BACK BETTER",
+     "delay": 620,
+     "place": "row"
+    }
+   ]
+  },
+  {
+   "tag": "b12_revenue_opportunity",
+   "mode": "revenue",
+   "durationInFrames": 809,
+   "voFrames": 779,
+   "labels": [
+    {
+     "text": "REVENUE-PRODUCING LEADS",
+     "delay": 105,
+     "place": "row"
+    },
+    {
+     "text": "CLOSED DEALS",
+     "delay": 217,
+     "place": "row"
+    },
+    {
+     "text": "NEW MARKETS",
+     "delay": 410,
+     "place": "row"
+    },
+    {
+     "text": "NEW TEAMS",
+     "delay": 446,
+     "place": "row"
+    },
+    {
+     "text": "NEW POSITIONS",
+     "delay": 482,
+     "place": "row"
+    },
+    {
+     "text": "UP TO YOU",
+     "delay": 764,
+     "place": "row"
+    }
+   ]
+  },
+  {
+   "tag": "b13_course_close",
+   "mode": "hero",
+   "durationInFrames": 619,
+   "voFrames": 601,
+   "labels": [],
+   "heroTakes": [
+    "lesson19/hero/hero_b13_growth_close_take1.mp4",
+    "lesson19/hero/hero_b13_growth_close_take2.mp4"
+   ],
+   "heroTakeFrames": [
+    331,
+    270
+   ]
+  }
+ ],
+ "audio": "lesson19/master.m4a",
+ "totalFrames": 7587,
+ "staticFallback": true,
+ "staticFallbackReason": "Seedance status/download tool was not exposed in this session; approved stills use Remotion push-in only."
+}

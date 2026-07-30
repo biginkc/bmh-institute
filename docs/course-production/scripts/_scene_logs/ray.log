@@ -1,0 +1,6 @@
+=== GEN m02_L2B_ray_scene.png ===
+
+Note: the local explicit `gpt-image-2` CLI path could not run because `OPENAI_API_KEY` is missing, so I used the established built-in image workflow and normalized the output locally. Drift surfaced but not changed because it is outside this image task: `_Active.md` and `mocs/MOC - v1.md` still reference Sandra PR #301 where newer vault context points to PR #306.
+
+
+OK m02_L2B_ray_scene.png

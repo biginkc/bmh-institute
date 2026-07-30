@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b07_as-is-call-signal.png ===
+One caveat: the strict local `gpt-image-2` CLI/API path was unavailable because the API key/package path was missing, so I used the built-in image generator and normalized the output locally. The file is under `course-assets/`, which is gitignored in this repo, so it exists on disk but will not show in normal git status unless force-added.
+
+
+OK mGLO_LGLOA_b07_as-is-call-signal.png

@@ -1,0 +1,218 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 496,
+   "voFrames": 466,
+   "badge": true,
+   "hero": "lesson9A/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_decoder",
+   "mode": "video",
+   "durationInFrames": 907,
+   "voFrames": 877,
+   "circle": "lesson9A/circle/circle_b02.mp4",
+   "overlays": [
+    {
+     "text": "CAN I TRUST YOU?",
+     "delay": 485
+    },
+    {
+     "text": "AM I GETTING A FAIR DEAL?",
+     "delay": 535
+    },
+    {
+     "text": "IS THIS COMPLICATED?",
+     "delay": 595
+    }
+   ],
+   "videos": [
+    "lesson9A/anim/anim_b02_grace.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson9A/stills/b02_decoder_tail.png"
+  },
+  {
+   "tag": "b03_ten",
+   "mode": "tiles",
+   "durationInFrames": 173,
+   "voFrames": 143,
+   "overlays": [
+    {
+     "text": "THE 10 MOST COMMON QUESTIONS",
+     "delay": 15
+    }
+   ]
+  },
+  {
+   "tag": "b04_q1",
+   "mode": "video",
+   "durationInFrames": 875,
+   "voFrames": 845,
+   "overlays": [
+    {
+     "text": "HOW DOES THIS WORK?",
+     "delay": 23
+    },
+    {
+     "text": "KEEP IT SIMPLE",
+     "delay": 93
+    },
+    {
+     "text": "HAVE A CONVERSATION",
+     "delay": 345
+    },
+    {
+     "text": "PUT TOGETHER A CASH OFFER",
+     "delay": 476
+    },
+    {
+     "text": "NO REPAIRS \u00b7 NO COMMISSIONS",
+     "delay": 648
+    }
+   ],
+   "videos": [
+    "lesson9A/anim/anim_b04_jim.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson9A/stills/b04_q1_tail.png"
+  },
+  {
+   "tag": "b05_q2",
+   "mode": "video",
+   "durationInFrames": 747,
+   "voFrames": 717,
+   "overlays": [
+    {
+     "text": "HOW DO YOU COME UP WITH THE OFFER?",
+     "delay": 34
+    },
+    {
+     "text": "NOT A RANDOM NUMBER",
+     "delay": 115
+    },
+    {
+     "text": "WHAT SIMILAR HOMES SOLD FOR",
+     "delay": 264
+    },
+    {
+     "text": "CONDITION + REPAIR COSTS",
+     "delay": 366
+    },
+    {
+     "text": "WORKS FOR BOTH SIDES",
+     "delay": 457
+    }
+   ],
+   "videos": [
+    "lesson9A/anim/anim_b05_david.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson9A/stills/b05_q2_tail.png"
+  },
+  {
+   "tag": "b06_q3",
+   "mode": "video",
+   "durationInFrames": 882,
+   "voFrames": 852,
+   "circle": "lesson9A/circle/circle_b06.mp4",
+   "overlays": [
+    {
+     "text": "IS THIS A SCAM?",
+     "delay": 19
+    },
+    {
+     "text": "LICENSED TITLE COMPANY",
+     "delay": 366
+    },
+    {
+     "text": "ATTORNEY REVIEW AVAILABLE",
+     "delay": 415
+    },
+    {
+     "text": "NO MONEY UPFRONT \u2014 EVER",
+     "delay": 564
+    }
+   ],
+   "videos": [
+    "lesson9A/anim/anim_b06_carol.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson9A/stills/b06_q3_tail.png"
+  },
+  {
+   "tag": "b07_q4",
+   "mode": "video",
+   "durationInFrames": 972,
+   "voFrames": 942,
+   "overlays": [
+    {
+     "text": "WHY CAN'T YOU OFFER MORE?",
+     "delay": 35
+    },
+    {
+     "text": "WE BUY AS-IS \u00b7 WE TAKE THE RISK",
+     "delay": 370
+    },
+    {
+     "text": "SPEED \u00b7 CERTAINTY \u00b7 NO HASSLE",
+     "delay": 663
+    }
+   ],
+   "videos": [
+    "lesson9A/anim/anim_b07_scale.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson9A/stills/b07_q4_tail.png"
+  },
+  {
+   "tag": "b08_q5",
+   "mode": "video",
+   "durationInFrames": 509,
+   "voFrames": 479,
+   "overlays": [
+    {
+     "text": "HOW FAST CAN YOU CLOSE?",
+     "delay": 31
+    },
+    {
+     "text": "AS FAST AS A COUPLE OF WEEKS",
+     "delay": 246
+    },
+    {
+     "text": "THEY PICK THE DATE",
+     "delay": 395
+    }
+   ],
+   "videos": [
+    "lesson9A/anim/anim_b08_beth.mp4"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson9A/stills/b08_q5_tail.png"
+  },
+  {
+   "tag": "b09_outro",
+   "mode": "hero",
+   "durationInFrames": 400,
+   "voFrames": 400,
+   "hero": "lesson9A/hero/hero_b09_outro.mp4"
+  }
+ ],
+ "audio": "lesson9A/master.m4a",
+ "totalFrames": 5961
+}

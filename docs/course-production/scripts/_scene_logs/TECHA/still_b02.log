@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_b02_hub.png ===
+Saved the asset here: [course-assets/scenes/module-techstack/mTECH_LTECHA_b02_hub.png](</Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/scenes/module-techstack/mTECH_LTECHA_b02_hub.png>).
+
+Verified it is a PNG at `1600x900`. I also flattened it to the locked six-color palette and visually checked for no readable text, logos, labels, extra props, or ambient doodles. `course-assets/` is gitignored, so the PNG is saved on disk but does not appear in `git status`.
+OK mTECH_LTECHA_b02_hub.png

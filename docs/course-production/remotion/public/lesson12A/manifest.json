@@ -1,0 +1,299 @@
+{
+ "fps": 30,
+ "gapFrames": 30,
+ "beats": [
+  {
+   "tag": "b01_numbers_work",
+   "mode": "hero",
+   "durationInFrames": 456,
+   "voFrames": 426,
+   "labels": [],
+   "animationStatus": "not-required",
+   "badge": true,
+   "hero": "lesson12A/hero/hero_b01_numbers_work.mp4"
+  },
+  {
+   "tag": "b02_gaps_not_guesses",
+   "mode": "gap",
+   "durationInFrames": 651,
+   "voFrames": 621,
+   "labels": [
+    {
+     "text": "LOOK AT THE NUMBERS",
+     "delay": 445,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "FIND THE GAP",
+     "delay": 493,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "FIX IT",
+     "delay": 524,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b03_kpi_definition",
+   "mode": "gauges",
+   "durationInFrames": 735,
+   "voFrames": 705,
+   "labels": [
+    {
+     "text": "KEY PERFORMANCE INDICATOR",
+     "delay": 5,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "NEEDS FIXING",
+     "delay": 686,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b04_flying_blind",
+   "mode": "still",
+   "durationInFrames": 608,
+   "voFrames": 578,
+   "labels": [
+    {
+     "text": "BUSY IS NOT PRODUCTIVE",
+     "delay": 220,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "KPIs SEPARATE THEM",
+     "delay": 545,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson12A/stills/m12_L12A_b04_flying-blind_priya-standing-cane-redo.png"
+  },
+  {
+   "tag": "b05_six_metrics_funnel",
+   "mode": "pipeline",
+   "durationInFrames": 532,
+   "voFrames": 502,
+   "labels": [
+    {
+     "text": "6 METRICS",
+     "delay": 20,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "LEFT TO RIGHT",
+     "delay": 87,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "TRACE THE BREAK",
+     "delay": 484,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b06_dial_count",
+   "mode": "dial",
+   "durationInFrames": 660,
+   "voFrames": 630,
+   "labels": [
+    {
+     "text": "DIAL COUNT",
+     "delay": 42,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b07_dial_quality",
+   "mode": "dialQuality",
+   "durationInFrames": 1106,
+   "voFrames": 1076,
+   "labels": [],
+   "animationStatus": "higgsfield_unavailable_static_fallback",
+   "still": "lesson12A/stills/m12_L12A_b07_dial-quality_priya-phone-front-v5.png"
+  },
+  {
+   "tag": "b08_connection_rate",
+   "mode": "connection",
+   "durationInFrames": 841,
+   "voFrames": 811,
+   "labels": [
+    {
+     "text": "CONNECTION RATE",
+     "delay": 40,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "FLAG IT",
+     "delay": 745,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b09_quality_conversations",
+   "mode": "quality",
+   "durationInFrames": 992,
+   "voFrames": 962,
+   "labels": [],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b10_process_calls",
+   "mode": "process",
+   "durationInFrames": 1117,
+   "voFrames": 1087,
+   "labels": [
+    {
+     "text": "PROCESS CALLS",
+     "delay": 43,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "COACHING MOMENT",
+     "delay": 965,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b11_offers_made",
+   "mode": "offers",
+   "durationInFrames": 702,
+   "voFrames": 672,
+   "labels": [
+    {
+     "text": "LOOK INTO IT",
+     "delay": 644,
+     "place": "bottom",
+     "role": "label"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson12A/stills/m12_L12A_b11_offers-made.png"
+  },
+  {
+   "tag": "b12_contracts_signed",
+   "mode": "contracts",
+   "durationInFrames": 549,
+   "voFrames": 519,
+   "labels": [
+    {
+     "text": "CONTRACTS SIGNED",
+     "delay": 58,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b13_breakdown_map",
+   "mode": "breakdown",
+   "durationInFrames": 1149,
+   "voFrames": 1119,
+   "labels": [
+    {
+     "text": "PINPOINT THE BREAKDOWN",
+     "delay": 122,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b14_funnel_health",
+   "mode": "funnelHealth",
+   "durationInFrames": 320,
+   "voFrames": 290,
+   "labels": [
+    {
+     "text": "KEEP THE FUNNEL HEALTHY",
+     "delay": 120,
+     "place": "bottom",
+     "role": "caption"
+    },
+    {
+     "text": "YOU CONTROL: DIALS -> HANDOFF",
+     "delay": 182,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b16_coaching_questions",
+   "mode": "reportcard",
+   "durationInFrames": 780,
+   "voFrames": 750,
+   "labels": [
+    {
+     "text": "WHERE'S THE GAP?",
+     "delay": 66,
+     "place": "bottom",
+     "role": "label"
+    },
+    {
+     "text": "WHAT DO WE DO ABOUT IT?",
+     "delay": 92,
+     "place": "bottom",
+     "role": "caption"
+    }
+   ],
+   "animationStatus": "not-required",
+   "still": "lesson12A/stills/m12_L12A_b16_report-card.png"
+  },
+  {
+   "tag": "b17_embrace_numbers",
+   "mode": "hero",
+   "durationInFrames": 563,
+   "voFrames": 533,
+   "labels": [],
+   "animationStatus": "not-required",
+   "hero": "lesson12A/hero/hero_b17_embrace_numbers.mp4"
+  },
+  {
+   "tag": "b18_final_close",
+   "mode": "hero",
+   "durationInFrames": 302,
+   "voFrames": 302,
+   "labels": [],
+   "animationStatus": "not-required",
+   "hero": "lesson12A/hero/hero_b18_final_close.mp4"
+  }
+ ],
+ "audio": "lesson12A/master.m4a",
+ "totalFrames": 12063,
+ "animationFallbacks": {
+  "b07_dial_quality": "Higgsfield MCP media_upload and generate_video get_cost returned generic errors before job submission; used approved still with Remotion push-in."
+ }
+}

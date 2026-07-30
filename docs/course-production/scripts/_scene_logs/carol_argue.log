@@ -1,0 +1,5 @@
+
+Verification passed: PNG, `1600 x 900`, 7-color flat palette, plain cornflower-blue border/background. I also updated the existing GSD quick plan/summary to match the corrected no-wall/no-patch scene.
+
+Note: `course-assets/` is gitignored, so the asset exists locally but will not show in git status. Drift surfaced: the injected Sandra PR #301/#306 vault contradiction remains unresolved because `~/BMH-OS` is outside this sandbox’s writable roots.
+OK m02_L2B_carol_argue.png

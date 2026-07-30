@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b06_as-is-house.png ===
+Caveat: the explicit local `gpt-image-2` CLI route was blocked because this shell has no `OPENAI_API_KEY`, no service-account token in Keychain, and no OpenAI Python package. I used the built-in image generation path, then copied and flattened the output into the requested file.
+
+
+OK mGLO_LGLOA_b06_as-is-house.png

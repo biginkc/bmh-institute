@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_logo_dialpad.png ===
+One note: the local CLI `gpt-image-2` route had no `OPENAI_API_KEY` available in this shell, so I used the built-in image-generation path and then saved the final asset into the requested project path. `course-assets/` is gitignored, so the PNG is present locally but not tracked by git.
+
+
+OK mTECH_LTECHA_logo_dialpad.png

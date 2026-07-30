@@ -1,0 +1,433 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_open",
+   "mode": "hero",
+   "durationInFrames": 485,
+   "voFrames": 455,
+   "badge": true,
+   "hero": "lessonGLOA/hero/hero_b01_alpha.mov"
+  },
+  {
+   "tag": "b02_library",
+   "mode": "scene",
+   "durationInFrames": 780,
+   "voFrames": 750,
+   "labels": [
+    {
+     "text": "REFERENCE VIDEO",
+     "delay": 259
+    },
+    {
+     "text": "FAMILIARITY, NOT MEMORIZATION",
+     "delay": 471
+    }
+   ],
+   "circle": "lessonGLOA/circle/circle_b02_alpha.mov",
+   "anim": "lessonGLOA/anim/anim_b02.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b02_library.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b02_library-priya.png"
+  },
+  {
+   "tag": "b03_distressed",
+   "mode": "scene",
+   "durationInFrames": 631,
+   "voFrames": 601,
+   "labels": [
+    {
+     "text": "DISTRESSED PROPERTY",
+     "delay": 8
+    },
+    {
+     "text": "ROUGH SHAPE OR HARD SITUATION",
+     "delay": 80
+    }
+   ],
+   "anim": "lessonGLOA/anim/anim_b03.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b03_distressed.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b03_distressed-property.png"
+  },
+  {
+   "tag": "b04_car",
+   "mode": "scene",
+   "durationInFrames": 715,
+   "voFrames": 685,
+   "labels": [
+    {
+     "text": "NEEDS WORK",
+     "delay": 130
+    },
+    {
+     "text": "FIX IT UP",
+     "delay": 390
+    },
+    {
+     "text": "HELP THE SELLER MOVE ON",
+     "delay": 662
+    }
+   ],
+   "anim": "lessonGLOA/anim/anim_b04.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b04_car.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b04_roadside-car.png"
+  },
+  {
+   "tag": "b05_why",
+   "mode": "hero",
+   "durationInFrames": 518,
+   "voFrames": 488,
+   "labels": [
+    {
+     "text": "FIND THE SITUATION",
+     "delay": 302
+    },
+    {
+     "text": "RIGHT PERSON AT BMH",
+     "delay": 395
+    }
+   ],
+   "hero": "lessonGLOA/hero/hero_b05_alpha.mov"
+  },
+  {
+   "tag": "b06_asis",
+   "mode": "scene",
+   "durationInFrames": 383,
+   "voFrames": 353,
+   "labels": [
+    {
+     "text": "AS-IS",
+     "delay": 42
+    },
+    {
+     "text": "NO REPAIRS",
+     "delay": 175
+    },
+    {
+     "text": "EXACTLY THE WAY IT IS",
+     "delay": 300
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b06_as-is-house.png"
+  },
+  {
+   "tag": "b07_asis_call",
+   "mode": "scene",
+   "durationInFrames": 640,
+   "voFrames": 610,
+   "labels": [
+    {
+     "text": "NEEDS A LOT OF WORK",
+     "delay": 273
+    },
+    {
+     "text": "ANY CONDITION",
+     "delay": 589
+    }
+   ],
+   "circle": "lessonGLOA/circle/circle_b07_alpha.mov",
+   "anim": "lessonGLOA/anim/anim_b07.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b07_asis_call.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b07_as-is-call-signal.png"
+  },
+  {
+   "tag": "b08_offmarket",
+   "mode": "scene",
+   "durationInFrames": 472,
+   "voFrames": 442,
+   "labels": [
+    {
+     "text": "OFF-MARKET",
+     "delay": 11
+    },
+    {
+     "text": "NO SIGN. NO LISTING. NO AGENT.",
+     "delay": 176
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b08_off-market-home.png"
+  },
+  {
+   "tag": "b09_sweetspot",
+   "mode": "scene",
+   "durationInFrames": 468,
+   "voFrames": 438,
+   "labels": [
+    {
+     "text": "SWEET SPOT",
+     "delay": 19
+    },
+    {
+     "text": "BEFORE THE PUBLIC",
+     "delay": 139
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b09_bullseye.png"
+  },
+  {
+   "tag": "b10_mls",
+   "mode": "swap",
+   "durationInFrames": 723,
+   "voFrames": 693,
+   "labels": [
+    {
+     "text": "ON-MARKET",
+     "delay": 77
+    },
+    {
+     "text": "MLS",
+     "delay": 208
+    }
+   ],
+   "swapFrame": 208,
+   "hero": "lessonGLOA/hero/side_b10_alpha.mov",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b10_zillow-listing.png"
+  },
+  {
+   "tag": "b11_onmarket",
+   "mode": "scene",
+   "durationInFrames": 919,
+   "voFrames": 889,
+   "labels": [
+    {
+     "text": "WE DON'T TARGET ON-MARKET",
+     "delay": 46
+    },
+    {
+     "text": "FLAG IT",
+     "delay": 595
+    },
+    {
+     "text": "DON'T HANG UP",
+     "delay": 631
+    }
+   ],
+   "circle": "lessonGLOA/circle/circle_b11_alpha.mov",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b11_on-market-flag.png"
+  },
+  {
+   "tag": "b12_listed_expired",
+   "mode": "scene",
+   "durationInFrames": 640,
+   "voFrames": 610,
+   "labels": [
+    {
+     "text": "LISTED PROPERTY",
+     "delay": 7
+    },
+    {
+     "text": "EXPIRED LISTING",
+     "delay": 148
+    },
+    {
+     "text": "CAN BE GREAT LEADS",
+     "delay": 577
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b12_listed-expired.png"
+  },
+  {
+   "tag": "b13_dom",
+   "mode": "scene",
+   "durationInFrames": 452,
+   "voFrames": 422,
+   "labels": [
+    {
+     "text": "DOM = DAYS ON MARKET",
+     "delay": 4
+    },
+    {
+     "text": "HIGH DOM = MOTIVATION SIGNAL",
+     "delay": 340
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b13_dom-calendar.png"
+  },
+  {
+   "tag": "b14_fsbo",
+   "mode": "scene",
+   "durationInFrames": 500,
+   "voFrames": 470,
+   "labels": [
+    {
+     "text": "FSBO = FOR SALE BY OWNER",
+     "delay": 5
+    },
+    {
+     "text": "WITHOUT AN AGENT",
+     "delay": 122
+    },
+    {
+     "text": "WILLING TO TALK",
+     "delay": 356
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b14_fsbo.png"
+  },
+  {
+   "tag": "b15_garage_sale",
+   "mode": "swap",
+   "durationInFrames": 935,
+   "voFrames": 905,
+   "labels": [
+    {
+     "text": "WHOLESALING",
+     "delay": 217
+    },
+    {
+     "text": "PROFIT IS THE DIFFERENCE",
+     "delay": 792
+    }
+   ],
+   "swapFrame": 277,
+   "hero": "lessonGLOA/hero/side_b15_alpha.mov",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b15_garage-sale.png"
+  },
+  {
+   "tag": "b16_wholesale_re",
+   "mode": "scene",
+   "durationInFrames": 609,
+   "voFrames": 579,
+   "labels": [
+    {
+     "text": "GET IT UNDER CONTRACT",
+     "delay": 86
+    },
+    {
+     "text": "SELL THE CONTRACT",
+     "delay": 146
+    },
+    {
+     "text": "FACILITATE THE DEAL",
+     "delay": 540
+    }
+   ],
+   "anim": "lessonGLOA/anim/anim_b16.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b16_wholesale_re.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b16_contract-to-buyer.png"
+  },
+  {
+   "tag": "b17_assignment",
+   "mode": "scene",
+   "durationInFrames": 623,
+   "voFrames": 593,
+   "labels": [
+    {
+     "text": "ASSIGNMENT OF CONTRACT",
+     "delay": 94
+    },
+    {
+     "text": "END BUYER CLOSES",
+     "delay": 405
+    },
+    {
+     "text": "ASSIGNMENT FEE",
+     "delay": 466
+    }
+   ],
+   "anim": "lessonGLOA/anim/anim_b17.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b17_assignment.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b17_assignment.png"
+  },
+  {
+   "tag": "b18_double_close",
+   "mode": "scene",
+   "durationInFrames": 518,
+   "voFrames": 488,
+   "labels": [
+    {
+     "text": "DOUBLE CLOSE",
+     "delay": 119
+    },
+    {
+     "text": "BUY THEN SELL",
+     "delay": 196
+    },
+    {
+     "text": "PROTECTS PROFIT MARGIN",
+     "delay": 420
+    }
+   ],
+   "anim": "lessonGLOA/anim/anim_b18.mp4",
+   "animFrames": 435,
+   "tail": "lessonGLOA/tails/tail_b18_double_close.png",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b18_double-close.png"
+  },
+  {
+   "tag": "b19_subject_to",
+   "mode": "scene",
+   "durationInFrames": 530,
+   "voFrames": 500,
+   "labels": [
+    {
+     "text": "SUBJECT-TO",
+     "delay": 8
+    },
+    {
+     "text": "EXISTING MORTGAGE STAYS",
+     "delay": 163
+    },
+    {
+     "text": "LIKE CAR PAYMENTS",
+     "delay": 475
+    }
+   ],
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b19_subject-to.png"
+  },
+  {
+   "tag": "b20_seller_fin",
+   "mode": "scene",
+   "durationInFrames": 619,
+   "voFrames": 589,
+   "labels": [
+    {
+     "text": "SELLER FINANCING",
+     "delay": 19
+    },
+    {
+     "text": "SELLER ACTS AS THE BANK",
+     "delay": 91
+    },
+    {
+     "text": "SEVERAL WAYS TO STRUCTURE THIS",
+     "delay": 495
+    }
+   ],
+   "circle": "lessonGLOA/circle/circle_b20_alpha.mov",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b20_seller-financing.png"
+  },
+  {
+   "tag": "b21_recap",
+   "mode": "swap",
+   "durationInFrames": 1042,
+   "voFrames": 1012,
+   "labels": [
+    {
+     "text": "CORE TERMS COMPLETE",
+     "delay": 10
+    },
+    {
+     "text": "GET THEM TALKING",
+     "delay": 935
+    }
+   ],
+   "swapFrame": 230,
+   "hero": "lessonGLOA/hero/side_b21_alpha.mov",
+   "still": "lessonGLOA/stills/mGLO_LGLOA_b21_recap-board.png"
+  },
+  {
+   "tag": "b22_outro",
+   "mode": "hero",
+   "durationInFrames": 349,
+   "voFrames": 244,
+   "hero": "lessonGLOA/hero/hero_b22_alpha.mov"
+  }
+ ],
+ "audio": "lessonGLOA/master.m4a",
+ "totalFrames": 13551
+}

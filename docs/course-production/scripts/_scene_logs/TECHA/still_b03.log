@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_b03_sandra.png ===
+One constraint note: the local explicit `gpt-image-2` CLI path was unavailable because this shell has no API key/package setup, so I used the established built-in image generation fallback and recorded that in `.planning/quick/260710-1ep-generate-techstack-crm-dashboard/SUMMARY.md`. `course-assets/` is gitignored, so the PNG is saved locally but not tracked by git.
+
+
+OK mTECH_LTECHA_b03_sandra.png

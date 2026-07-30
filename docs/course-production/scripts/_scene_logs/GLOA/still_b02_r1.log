@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b02_library-priya.png ===
+- only shelves, abstract-marked books, and Priya are present
+
+I also corrected the existing quick-task summary for this asset. The image path is ignored by Git in this repo, matching the existing `course-assets/` setup.
+OK mGLO_LGLOA_b02_library-priya.png

@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b13_dom-calendar.png ===
+Verified PNG format at `1600 x 900`, flat 6-color palette, with only the calendar, `200 DAYS`, and the house listing card. Note: the direct CLI `gpt-image-2` path was blocked locally because `OPENAI_API_KEY` and the Python `openai` package were missing, so I used the built-in image workflow and logged that in the GSD quick summary.
+
+
+OK mGLO_LGLOA_b13_dom-calendar.png

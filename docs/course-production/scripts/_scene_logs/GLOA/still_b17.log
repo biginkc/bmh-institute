@@ -1,0 +1,5 @@
+=== GEN mGLO_LGLOA_b17_assignment.png ===
+Verified it is a 1600x900 PNG, flattened to the locked six-color palette, with no readable text or extra props. The explicit local `gpt-image-2` CLI path was unavailable because the API key/service token was missing, so I used the built-in image generation path and post-processed the result into the requested file.
+
+Note: `course-assets/` is gitignored, so the PNG is saved locally but not tracked by git.
+OK mGLO_LGLOA_b17_assignment.png

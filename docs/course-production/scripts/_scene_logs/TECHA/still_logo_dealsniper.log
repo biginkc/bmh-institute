@@ -1,0 +1,5 @@
+=== GEN mTECH_LTECHA_logo_dealsniper.png ===
+Used the built-in image workflow with the requested gpt-image-2 prompt path. The explicit local CLI route was not available because `OPENAI_API_KEY` is not set in this shell.
+
+
+OK mTECH_LTECHA_logo_dealsniper.png

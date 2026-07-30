@@ -1,0 +1,210 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 220,
+   "voFrames": 190,
+   "badge": true,
+   "hero": "lesson1C/hero/hero_b01_intro.mp4"
+  },
+  {
+   "tag": "b02_open-line",
+   "mode": "scene",
+   "durationInFrames": 496,
+   "voFrames": 466,
+   "label": "\u201cCatch me up to speed. Where are you at in the process?\u201d",
+   "labelDelay": 65,
+   "anim": "lesson1C/anim/anim_b02_open-line.mov",
+   "still": "lesson1C/stills/m01_LC_b02_open-line_clean.png"
+  },
+  {
+   "tag": "b03_intel",
+   "mode": "scene",
+   "durationInFrames": 485,
+   "voFrames": 455,
+   "extras": {
+    "q1": 79,
+    "q2": 188
+   },
+   "anim": "lesson1C/anim/anim_b03_intel.mov",
+   "still": "lesson1C/stills/m01_LC_b03_intel.png"
+  },
+  {
+   "tag": "b04_lowballers",
+   "mode": "scene",
+   "durationInFrames": 279,
+   "voFrames": 249,
+   "label": "BE THE DIFFERENT ONE",
+   "labelDelay": 227,
+   "still": "lesson1C/stills/m01_LC_b04_lowballers_v2.png"
+  },
+  {
+   "tag": "b05_timeline",
+   "mode": "scene",
+   "durationInFrames": 316,
+   "voFrames": 286,
+   "label": "TIMING + CERTAINTY",
+   "labelDelay": 190,
+   "still": "lesson1C/stills/m01_LC_b05_timeline.png"
+  },
+  {
+   "tag": "b06_anchor",
+   "mode": "scene",
+   "durationInFrames": 539,
+   "voFrames": 509,
+   "label": "\u201cDo you and your family have a number you are looking for?\u201d",
+   "labelDelay": 34,
+   "anim": "lesson1C/anim/anim_b06_anchor.mov",
+   "still": "lesson1C/stills/m01_LC_b06_anchor.png"
+  },
+  {
+   "tag": "b07_cash-road",
+   "mode": "scene",
+   "durationInFrames": 736,
+   "voFrames": 706,
+   "label": "\u201cIf I were making a cash offer, I would probably be around X.\u201d",
+   "labelDelay": 25,
+   "still": "lesson1C/stills/m01_LC_b07_cash-road_v3.png"
+  },
+  {
+   "tag": "b08_123",
+   "mode": "scene",
+   "durationInFrames": 357,
+   "voFrames": 327,
+   "extras": {
+    "step1": 98,
+    "step2": 184,
+    "step3": 268
+   },
+   "still": "lesson1C/stills/m01_LC_b08_123-stairs.png"
+  },
+  {
+   "tag": "b09_higher-offer",
+   "mode": "scene",
+   "durationInFrames": 790,
+   "voFrames": 760,
+   "label": "\u201cIs that offer cash, or are there contingencies attached?\u201d",
+   "labelDelay": 314,
+   "still": "lesson1C/stills/m01_LC_b09_higher-offer_v2_clean.png"
+  },
+  {
+   "tag": "b10_quiet",
+   "mode": "hero",
+   "durationInFrames": 919,
+   "voFrames": 889,
+   "hero": "lesson1C/hero/hero_b10_quiet.mp4"
+  },
+  {
+   "tag": "b11_movie",
+   "mode": "movie",
+   "durationInFrames": 1112,
+   "voFrames": 1082,
+   "label": "WRITE THE ENDING FIRST",
+   "labelDelay": 147,
+   "still": "lesson1C/stills/m01_LC_b11_movie.png"
+  },
+  {
+   "tag": "b12_not-buyer",
+   "mode": "scene",
+   "durationInFrames": 380,
+   "voFrames": 350,
+   "label": "\u201cI might not be your buyer \u2014 and that is okay.\u201d",
+   "labelDelay": 37,
+   "still": "lesson1C/stills/m01_LC_b12_not-buyer_v2.png"
+  },
+  {
+   "tag": "b13_too-high",
+   "mode": "hero",
+   "durationInFrames": 314,
+   "voFrames": 284,
+   "hero": "lesson1C/hero/hero_b13_too-high.mp4"
+  },
+  {
+   "tag": "b14_align",
+   "mode": "scene",
+   "durationInFrames": 307,
+   "voFrames": 277,
+   "label": "\u201cTotally get why you want that number.\u201d",
+   "labelDelay": 46,
+   "anim": "lesson1C/anim/anim_b14_align.mov",
+   "still": "lesson1C/stills/m01_LC_b14_align.png"
+  },
+  {
+   "tag": "b15_win-window",
+   "mode": "calendar",
+   "durationInFrames": 568,
+   "voFrames": 538,
+   "label": "\u201cWhat needs to be true for this to feel like a win?\u201d",
+   "labelDelay": 255,
+   "still": "lesson1C/stills/m01_LC_b15_win-window_v2.png"
+  },
+  {
+   "tag": "b16_cash-truth",
+   "mode": "scene",
+   "durationInFrames": 481,
+   "voFrames": 451,
+   "label": "\u201cIs that where others are?\u201d",
+   "labelDelay": 229,
+   "still": "lesson1C/stills/m01_LC_b16_cash-truth_v2.png"
+  },
+  {
+   "tag": "b17_perform",
+   "mode": "scene",
+   "durationInFrames": 533,
+   "voFrames": 503,
+   "label": "A NUMBER I CAN PERFORM ON",
+   "labelDelay": 325,
+   "still": "lesson1C/stills/m01_LC_b17_perform_v2.png"
+  },
+  {
+   "tag": "b18_headline",
+   "mode": "card",
+   "durationInFrames": 629,
+   "voFrames": 599,
+   "label": "Price is a headline. Terms are the story.",
+   "labelDelay": 363,
+   "still": "lesson1C/stills/m01_LC_b18_headline.png"
+  },
+  {
+   "tag": "b19_no-number",
+   "mode": "drive",
+   "durationInFrames": 684,
+   "voFrames": 654,
+   "label": "\u201cImagine you did know \u2014 what would that look like?\u201d",
+   "labelDelay": 144,
+   "hero": "lesson1C/hero/hero_b19_no-number.mp4",
+   "drive": {
+    "car": "lesson1C/stills/m01_LC_b19_car-plate_v2_alpha.png",
+    "strip": "lesson1C/stills/m01_LC_b19_scenery-strip_v2.png"
+   },
+   "switchFrame": 255
+  },
+  {
+   "tag": "b20_movie2",
+   "mode": "hero",
+   "durationInFrames": 812,
+   "voFrames": 782,
+   "hero": "lesson1C/hero/hero_b20_movie2.mp4"
+  },
+  {
+   "tag": "b21_deposition",
+   "mode": "scene",
+   "durationInFrames": 801,
+   "voFrames": 771,
+   "label": "\u201cI would rather point you to the right path.\u201d",
+   "labelDelay": 367,
+   "still": "lesson1C/stills/m01_LC_b21_canyon.png"
+  },
+  {
+   "tag": "b22_outro",
+   "mode": "hero",
+   "durationInFrames": 795,
+   "voFrames": 795,
+   "hero": "lesson1C/hero/hero_b22_outro.mp4"
+  }
+ ],
+ "audio": "lesson1C/master.m4a",
+ "totalFrames": 12553
+}

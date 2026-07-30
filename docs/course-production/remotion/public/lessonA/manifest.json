@@ -1,0 +1,128 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero-solo",
+   "hg": "lessonA/hg/b01_intro.mp4",
+   "durationInFrames": 569
+  },
+  {
+   "tag": "b02_sincerity",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b02_sincerity.mp4",
+   "durationInFrames": 275,
+   "still": "lessonA/stills/m01_LA_s02_bmh-building.png"
+  },
+  {
+   "tag": "b03_people-burden",
+   "mode": "corner-circle",
+   "hg": "lessonA/hg/b03_people-burden-canonical-blue.webm",
+   "durationInFrames": 447,
+   "still": "lessonA/stills/m01_LA_s03_people-burden-v2-white-skin.png"
+  },
+  {
+   "tag": "b04a_rep-call",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b04a_rep-call.mp4",
+   "durationInFrames": 466,
+   "still": "lessonA/stills/m01_LA_s04a_rep-call.png"
+  },
+  {
+   "tag": "b04b_hard-moments",
+   "mode": "vignettes",
+   "hg": "lessonA/hg/b04b_hard-moments.mp4",
+   "durationInFrames": 535
+  },
+  {
+   "tag": "b05_cash-asis",
+   "mode": "corner-circle",
+   "hg": "lessonA/hg/b05_cash-asis-canonical-blue.webm",
+   "durationInFrames": 603,
+   "still": "lessonA/stills/m01_LA_s05_cash-asis-v8-white-skin.png"
+  },
+  {
+   "tag": "b06_fulfilling-work",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b06_fulfilling-work.mp4",
+   "durationInFrames": 275,
+   "still": "lessonA/stills/m01_LA_s06-filling-work-canonical-blank.png"
+  },
+  {
+   "tag": "b07_title-prospect",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b07_title-prospect.mp4",
+   "durationInFrames": 144,
+   "still": "lessonA/stills/m01_LA_s07_title-prospect.png"
+  },
+  {
+   "tag": "b08_title-offer",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b08_title-offer.mp4",
+   "durationInFrames": 35,
+   "still": "lessonA/stills/m01_LA_s08_title-offer.png"
+  },
+  {
+   "tag": "b09_title-process",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b09_title-process.mp4",
+   "durationInFrames": 43,
+   "still": "lessonA/stills/m01_LA_s09_title-process.png"
+  },
+  {
+   "tag": "b10_title-objections",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b10_title-objections.mp4",
+   "durationInFrames": 48,
+   "still": "lessonA/stills/m01_LA_s10_title-objections.png"
+  },
+  {
+   "tag": "b11_training-montage",
+   "mode": "voice-only",
+   "hg": "lessonA/hg/b11_training-montage.mp4",
+   "durationInFrames": 275,
+   "still": "lessonA/stills/m01_LA_s11_training-montage_v2.png"
+  },
+  {
+   "tag": "b12_script-tool",
+   "mode": "corner-circle",
+   "hg": "lessonA/hg/b12_script-tool.mp4",
+   "durationInFrames": 965,
+   "still": "lessonA/stills/m01_LA_s12_script-tool_v2.png"
+  },
+  {
+   "tag": "b13_guide-path",
+   "mode": "corner-circle",
+   "hg": "lessonA/hg/b13_guide-path.mp4",
+   "durationInFrames": 365,
+   "still": "lessonA/stills/m01_LA_s13_guide-path.png"
+  },
+  {
+   "tag": "b14_philosophy",
+   "mode": "hero-solo",
+   "hg": "lessonA/hg/b14_philosophy.mp4",
+   "durationInFrames": 854
+  },
+  {
+   "tag": "b15_consult-not-sell",
+   "mode": "corner-circle",
+   "hg": "lessonA/hg/b15_consult-not-sell.mp4",
+   "durationInFrames": 667,
+   "still": "lessonA/stills/m01_LA_s15_consult-not-sell.png"
+  },
+  {
+   "tag": "b16_mission",
+   "mode": "hero-solo",
+   "hg": "lessonA/hg/b16_mission.mp4",
+   "durationInFrames": 544
+  },
+  {
+   "tag": "b17_send-off",
+   "mode": "hero-office",
+   "hg": "lessonA/hg/b17_send-off_v2.mp4",
+   "durationInFrames": 184
+  }
+ ],
+ "missing": [],
+ "totalFrames": 7294
+}

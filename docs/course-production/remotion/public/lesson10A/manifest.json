@@ -1,0 +1,302 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 496,
+   "voFrames": 466,
+   "badge": true,
+   "hero": "lesson10A/hero/hero_b01_intro.mp4",
+   "animationStatus": "not-required"
+  },
+  {
+   "tag": "b02_deals_happen",
+   "mode": "scene",
+   "durationInFrames": 603,
+   "voFrames": 573,
+   "still": "lesson10A/stills/m10_L10A_b02_touch-squares.png",
+   "animationStatus": "not-required",
+   "stickers": [
+    {
+     "text": "FIRST CALL",
+     "delay": 52,
+     "role": "label",
+     "top": 328,
+     "left": 360
+    },
+    {
+     "text": "SECOND CALL",
+     "delay": 100,
+     "role": "label",
+     "top": 328,
+     "left": 875
+    },
+    {
+     "text": "THIRD CALL",
+     "delay": 134,
+     "role": "label",
+     "top": 756,
+     "left": 365
+    },
+    {
+     "text": "SEVENTH CALL",
+     "delay": 184,
+     "role": "label",
+     "top": 756,
+     "left": 870
+    }
+   ]
+  },
+  {
+   "tag": "b03_not_ready",
+   "mode": "scene",
+   "durationInFrames": 1406,
+   "voFrames": 1376,
+   "still": "lesson10A/stills/m10_L10A_b03_not-ready.png",
+   "video": "lesson10A/anim/anim_b03_seedance_2_0.mp4",
+   "videoFrames": 451,
+   "tailFrame": "lesson10A/tails/anim_b03_seedance_2_0_tail.png",
+   "animationStatus": "seedance_2_0",
+   "stickers": [
+    {
+     "text": "NOT READY TODAY DOES NOT MEAN NOT INTERESTED",
+     "delay": 665,
+     "role": "caption",
+     "bottomCenter": true
+    },
+    {
+     "text": "BE THERE WHEN THEY'RE READY",
+     "delay": 1246,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b04_fifth_touch",
+   "mode": "scene",
+   "durationInFrames": 688,
+   "voFrames": 658,
+   "still": "lesson10A/stills/m10_L10A_b04_persist-squares.png",
+   "animationStatus": "not-required",
+   "stickers": [
+    {
+     "text": "MOST QUIT AFTER TWO",
+     "delay": 196,
+     "role": "caption",
+     "bottomCenter": true
+    },
+    {
+     "text": "FIVE OR MORE TOUCHES",
+     "delay": 302,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b05_day_1_to_30",
+   "mode": "calendar",
+   "durationInFrames": 1330,
+   "voFrames": 1300,
+   "still": "lesson10A/stills/m10_L10A_b05_calendar-checks.png",
+   "animationStatus": "not-required",
+   "calendarMarks": [
+    {
+     "text": "DAY 1",
+     "delay": 159,
+     "day": 1
+    },
+    {
+     "text": "DAY 2",
+     "delay": 387,
+     "day": 2
+    },
+    {
+     "text": "DAY 4",
+     "delay": 602,
+     "day": 4
+    },
+    {
+     "text": "DAY 7",
+     "delay": 766,
+     "day": 7
+    },
+    {
+     "text": "DAY 14",
+     "delay": 905,
+     "day": 14
+    },
+    {
+     "text": "DAY 21",
+     "delay": 1069,
+     "day": 21
+    },
+    {
+     "text": "DAY 30",
+     "delay": 1180,
+     "day": 30
+    }
+   ]
+  },
+  {
+   "tag": "b06_monthly_cadence",
+   "mode": "hero",
+   "durationInFrames": 787,
+   "voFrames": 757,
+   "hero": "lesson10A/hero/hero_b06_monthly_cadence.mov",
+   "heroAlpha": true,
+   "animationStatus": "not-required",
+   "stickers": [
+    {
+     "text": "MONTHLY CADENCE",
+     "delay": 71,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b07_second_call",
+   "mode": "scene",
+   "durationInFrames": 1171,
+   "voFrames": 1141,
+   "still": "lesson10A/stills/m10_L10A_b07_second-call.png",
+   "animationStatus": "not-required",
+   "stickers": [
+    {
+     "text": "REFERENCE THE LAST CONVERSATION",
+     "delay": 997,
+     "role": "caption",
+     "bottomCenter": true
+    },
+    {
+     "text": "WE TALKED A FEW DAYS AGO",
+     "delay": 650,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b08_bring_new",
+   "mode": "scene",
+   "durationInFrames": 919,
+   "voFrames": 889,
+   "still": "lesson10A/stills/m10_L10A_b08_newspaper-clipping.png",
+   "animationStatus": "static-pending-seedance",
+   "stickers": [
+    {
+     "text": "BRING SOMETHING NEW",
+     "delay": 98,
+     "role": "label",
+     "bottomCenter": true
+    },
+    {
+     "text": "NOT JUST CHECKING IN",
+     "delay": 165,
+     "role": "caption",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b09_silent_seller",
+   "mode": "scene",
+   "durationInFrames": 687,
+   "voFrames": 657,
+   "still": "lesson10A/stills/m10_L10A_b09_ghost-sheet-seller.png",
+   "animationStatus": "static-pending-seedance",
+   "stickers": [
+    {
+     "text": "GHOST TEXTS",
+     "delay": 455,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b10_ghost_texts",
+   "mode": "messages",
+   "durationInFrames": 1388,
+   "voFrames": 1358,
+   "still": "lesson10A/stills/m10_L10A_b10_phone-messages.png",
+   "animationStatus": "not-required",
+   "messageMarks": [
+    {
+     "text": "CASUAL CHECK-IN",
+     "delay": 25,
+     "slot": 0
+    },
+    {
+     "text": "ASSUMPTIVE",
+     "delay": 334,
+     "slot": 1
+    },
+    {
+     "text": "VALUE ADD",
+     "delay": 707,
+     "slot": 2
+    },
+    {
+     "text": "YES OR NO",
+     "delay": 1049,
+     "slot": 3
+    }
+   ]
+  },
+  {
+   "tag": "b11_when_to_stop",
+   "mode": "scene",
+   "durationInFrames": 1408,
+   "voFrames": 1378,
+   "still": "lesson10A/stills/m10_L10A_b11_crossroads-stop.png",
+   "animationStatus": "not-required",
+   "stopSignText": true
+  },
+  {
+   "tag": "b12_daily_priority",
+   "mode": "hero",
+   "durationInFrames": 1254,
+   "voFrames": 1224,
+   "hero": "lesson10A/hero/hero_b12_daily_priority.mov",
+   "heroAlpha": true,
+   "animationStatus": "not-required",
+   "stickers": [
+    {
+     "text": "FOLLOW-UPS FIRST",
+     "delay": 346,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ]
+  },
+  {
+   "tag": "b13_outro",
+   "mode": "hero",
+   "durationInFrames": 994,
+   "voFrames": 994,
+   "hero": "lesson10A/hero/hero_b13_outro.mp4",
+   "animationStatus": "not-required",
+   "stickers": [
+    {
+     "text": "PROBATE LEAD - ST. LOUIS",
+     "delay": 535,
+     "role": "caption",
+     "bottomCenter": true
+    },
+    {
+     "text": "NEXT: ONE FLOW",
+     "delay": 969,
+     "role": "label",
+     "bottomCenter": true
+    }
+   ]
+  }
+ ],
+ "audio": "lesson10A/master.m4a",
+ "totalFrames": 13131,
+ "selectedModel": "seedance_2_0"
+}

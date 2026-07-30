@@ -1,0 +1,119 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01",
+   "mode": "hero",
+   "durationInFrames": 784,
+   "voFrames": 754,
+   "badge": true,
+   "hero": "lesson2B/hero/andrea_b01.mp4"
+  },
+  {
+   "tag": "b02_david",
+   "mode": "seller",
+   "durationInFrames": 2465,
+   "voFrames": 2435,
+   "label": "DAVID   \u00b7   Tired Landlord   \u00b7   Kansas City",
+   "labelDelay": 234,
+   "lineStart": 965,
+   "lineEnd": 2156,
+   "hasTag": true,
+   "still": "lesson2B/stills/m02_L2B_david.png",
+   "scene": "lesson2B/stills/m02_L2B_david_scene.png",
+   "clip": "lesson2B/clips/seller_david_test.mp4"
+  },
+  {
+   "tag": "b03_beth",
+   "mode": "seller",
+   "durationInFrames": 1266,
+   "voFrames": 1236,
+   "label": "BETH   \u00b7   Inherited Estate   \u00b7   St. Louis",
+   "labelDelay": 29,
+   "lineStart": 657,
+   "lineEnd": 1064,
+   "hasTag": true,
+   "still": "lesson2B/stills/m02_L2B_beth.png",
+   "scene": "lesson2B/stills/m02_L2B_beth_scene.png",
+   "clip": "lesson2B/clips/seller_beth.mp4"
+  },
+  {
+   "tag": "b04_ray",
+   "mode": "seller",
+   "durationInFrames": 1627,
+   "voFrames": 1597,
+   "label": "RAY   \u00b7   Behind on Payments   \u00b7   Dayton",
+   "labelDelay": 33,
+   "lineStart": 397,
+   "lineEnd": 1597,
+   "hasTag": false,
+   "still": "lesson2B/stills/m02_L2B_ray.png",
+   "scene": "lesson2B/stills/m02_L2B_ray_scene.png",
+   "clip": "lesson2B/clips/seller_ray.mp4"
+  },
+  {
+   "tag": "b05_carol",
+   "mode": "seller",
+   "durationInFrames": 1210,
+   "voFrames": 1180,
+   "label": "CAROL   \u00b7   Title Lien   \u00b7   Lake of the Ozarks",
+   "labelDelay": 21,
+   "lineStart": 367,
+   "lineEnd": 665,
+   "hasTag": true,
+   "still": "lesson2B/stills/m02_L2B_carol.png",
+   "scene": "lesson2B/stills/m02_L2B_carol_scene.png",
+   "clip": "lesson2B/clips/seller_carol.mp4",
+   "tagClip": "lesson2B/anim/anim_carol_argue.mov",
+   "tagClipFrames": 451,
+   "tagHold": "lesson2B/stills/m02_L2B_carol_argue.png"
+  },
+  {
+   "tag": "b06_marcus",
+   "mode": "seller",
+   "durationInFrames": 1222,
+   "voFrames": 1192,
+   "label": "MARCUS   \u00b7   Underwater   \u00b7   Kansas City",
+   "labelDelay": 31,
+   "lineStart": 299,
+   "lineEnd": 670,
+   "hasTag": true,
+   "still": "lesson2B/stills/m02_L2B_marcus.png",
+   "scene": "lesson2B/stills/m02_L2B_marcus_scene.png",
+   "clip": "lesson2B/clips/seller_marcus.mp4"
+  },
+  {
+   "tag": "b07_recap",
+   "mode": "grid",
+   "durationInFrames": 700,
+   "voFrames": 670,
+   "label": "FAST   \u00b7   CERTAIN   \u00b7   SIMPLE",
+   "labelDelay": 578,
+   "grid": [
+    "lesson2B/stills/m02_L2B_david.png",
+    "lesson2B/stills/m02_L2B_beth.png",
+    "lesson2B/stills/m02_L2B_ray.png",
+    "lesson2B/stills/m02_L2B_carol.png",
+    "lesson2B/stills/m02_L2B_marcus.png"
+   ]
+  },
+  {
+   "tag": "b08_you",
+   "mode": "hero",
+   "durationInFrames": 596,
+   "voFrames": 566,
+   "label": "PROVIDE OPTIONS",
+   "labelDelay": 340,
+   "hero": "lesson2B/hero/andrea_b08.mp4"
+  },
+  {
+   "tag": "b09_outro",
+   "mode": "hero",
+   "durationInFrames": 863,
+   "voFrames": 863,
+   "hero": "lesson2B/hero/andrea_b09.mp4"
+  }
+ ],
+ "audio": "lesson2B/master.m4a",
+ "totalFrames": 10733
+}

@@ -1,0 +1,240 @@
+{
+ "fps": 30,
+ "beats": [
+  {
+   "tag": "b01_intro",
+   "mode": "hero",
+   "durationInFrames": 960,
+   "voFrames": 952,
+   "badge": true,
+   "hero": "lesson2A/hero/hero_b01_intro.mov"
+  },
+  {
+   "tag": "b03_situations",
+   "mode": "grid",
+   "durationInFrames": 503,
+   "voFrames": 476,
+   "grid": [
+    "lesson2A/stills/m02_L2A_grid1_inherited.png",
+    "lesson2A/stills/m02_L2A_grid2_landlord.png",
+    "lesson2A/stills/m02_L2A_grid3_divorce.png",
+    "lesson2A/stills/m02_L2A_grid4_relocating.png",
+    "lesson2A/stills/m02_L2A_grid5_payments.png",
+    "lesson2A/stills/m02_L2A_grid6_repairs.png"
+   ]
+  },
+  {
+   "tag": "b04_inherited",
+   "mode": "scene",
+   "durationInFrames": 782,
+   "voFrames": 755,
+   "label": "INHERITED PROPERTY",
+   "labelDelay": 4,
+   "still": "lesson2A/stills/m02_L2A_grid1_inherited.png"
+  },
+  {
+   "tag": "b05_financial",
+   "mode": "scene",
+   "durationInFrames": 789,
+   "voFrames": 762,
+   "label": "FINANCIAL PRESSURE",
+   "labelDelay": 4,
+   "still": "lesson2A/stills/m02_L2A_grid5_payments.png"
+  },
+  {
+   "tag": "b06_landlord",
+   "mode": "scene",
+   "durationInFrames": 663,
+   "voFrames": 636,
+   "label": "TIRED LANDLORD",
+   "labelDelay": 5,
+   "still": "lesson2A/stills/m02_L2A_grid2_landlord.png"
+  },
+  {
+   "tag": "b07_condition",
+   "mode": "anim",
+   "durationInFrames": 768,
+   "voFrames": 741,
+   "label": "PROPERTY CONDITION",
+   "labelDelay": 4,
+   "videos": [
+    "lesson2A/anim/anim_b03_profile.mov"
+   ],
+   "videoFrames": [
+    451
+   ],
+   "still": "lesson2A/stills/m02_L2A_b03_profile.png"
+  },
+  {
+   "tag": "b08_divorce",
+   "mode": "scene",
+   "durationInFrames": 673,
+   "voFrames": 646,
+   "label": "DIVORCE",
+   "labelDelay": 5,
+   "still": "lesson2A/stills/m02_L2A_grid3_divorce.png"
+  },
+  {
+   "tag": "b09_life",
+   "mode": "scene",
+   "durationInFrames": 735,
+   "voFrames": 708,
+   "label": "LIFE HAPPENS",
+   "labelDelay": 62,
+   "still": "lesson2A/stills/m02_L2A_grid4_relocating.png"
+  },
+  {
+   "tag": "b10_outofstate",
+   "mode": "scene",
+   "durationInFrames": 623,
+   "voFrames": 596,
+   "label": "OUT-OF-STATE OWNER",
+   "labelDelay": 4,
+   "still": "lesson2A/stills/m02_L2A_b10_outofstate.png"
+  },
+  {
+   "tag": "b11_vs",
+   "mode": "vs",
+   "durationInFrames": 274,
+   "voFrames": 247,
+   "extras": {
+    "fork": 224
+   },
+   "still": "lesson2A/stills/m02_L2A_b12_motivated_stand.png",
+   "still2": "lesson2A/stills/m02_L2A_b13_curious_stand.png"
+  },
+  {
+   "tag": "b12_motivated",
+   "mode": "scene",
+   "durationInFrames": 558,
+   "voFrames": 531,
+   "label": "MOTIVATED",
+   "labelDelay": 10,
+   "labelTop": true,
+   "still": "lesson2A/stills/m02_L2A_b12_motivated_stand.png"
+  },
+  {
+   "tag": "b13_unmotivated",
+   "mode": "scene",
+   "durationInFrames": 600,
+   "voFrames": 573,
+   "label": "JUST CURIOUS",
+   "labelDelay": 68,
+   "labelTop": true,
+   "still": "lesson2A/stills/m02_L2A_b13_curious_stand.png"
+  },
+  {
+   "tag": "b14_notobvious",
+   "mode": "scene",
+   "durationInFrames": 630,
+   "voFrames": 603,
+   "label": "NOT ALWAYS OBVIOUS",
+   "labelDelay": 94,
+   "still": "lesson2A/stills/m02_L2A_b14_overshoulder.png"
+  },
+  {
+   "tag": "b15_phrases",
+   "mode": "cascade",
+   "durationInFrames": 817,
+   "voFrames": 790,
+   "labels": [
+    {
+     "text": "\u201cI inherited this house\u201d",
+     "delay": 195
+    },
+    {
+     "text": "\u201cI can\u2019t afford to fix it up\u201d",
+     "delay": 367
+    },
+    {
+     "text": "\u201cI\u2019m behind on payments\u201d",
+     "delay": 410
+    },
+    {
+     "text": "\u201cMy tenants trashed the place\u201d",
+     "delay": 460
+    },
+    {
+     "text": "\u201cGoing through a divorce\u201d",
+     "delay": 544
+    },
+    {
+     "text": "\u201cI need to sell fast\u201d",
+     "delay": 622
+    }
+   ]
+  },
+  {
+   "tag": "b16_writedown",
+   "mode": "scene",
+   "durationInFrames": 281,
+   "voFrames": 254,
+   "still": "lesson2A/stills/m02_L2A_b16_notes.png"
+  },
+  {
+   "tag": "b17_disqualifiers",
+   "mode": "herolabels",
+   "durationInFrames": 1276,
+   "voFrames": 1269,
+   "labels": [
+    {
+     "text": "Listed with a Realtor",
+     "delay": 338
+    },
+    {
+     "text": "Not the owner",
+     "delay": 561
+    },
+    {
+     "text": "No equity",
+     "delay": 874
+    },
+    {
+     "text": "Commercial or vacant",
+     "delay": 1140
+    }
+   ],
+   "hero": "lesson2A/hero/hero_b17_disqualifiers.mov"
+  },
+  {
+   "tag": "b18_empathy",
+   "mode": "anim",
+   "durationInFrames": 1027,
+   "voFrames": 1000,
+   "videos": [
+    "lesson2A/anim/anim_b18_angrycaller_1.mov",
+    "lesson2A/anim/anim_b18_angrycaller_2.mov"
+   ],
+   "videoFrames": [
+    451,
+    451
+   ],
+   "still": "lesson2A/stills/m02_L2A_b18_angrycaller.png"
+  },
+  {
+   "tag": "b19_different",
+   "mode": "hero",
+   "durationInFrames": 528,
+   "voFrames": 520,
+   "hero": "lesson2A/hero/hero_b19_different.mov"
+  },
+  {
+   "tag": "b20_trust",
+   "mode": "scene",
+   "durationInFrames": 512,
+   "voFrames": 485,
+   "label": "THEY TRUST US",
+   "labelDelay": 237,
+   "still": "lesson2A/stills/m02_L2A_b20_handshake.png"
+  },
+  {
+   "tag": "b21_outro",
+   "mode": "hero",
+   "durationInFrames": 201,
+   "voFrames": 201,
+   "hero": "lesson2A/hero/hero_b21_outro.mov"
+  }
+ ],
+ "audio": "lesson2A/master.m4a",
+ "totalFrames": 13200
+}
