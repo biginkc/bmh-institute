@@ -443,7 +443,7 @@ export async function cleanupWritePathFixture(
 
 async function captureCleanupError(
   errors: unknown[],
-  operation: () => Promise<unknown>,
+  operation: () => PromiseLike<unknown>,
 ): Promise<void> {
   try {
     await operation();
