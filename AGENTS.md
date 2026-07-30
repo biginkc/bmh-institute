@@ -54,6 +54,17 @@ Always work in a git worktree for code, docs, config, and planning changes. Do n
 - Migrations: `supabase/migrations/NNN_name.sql` applied in order
 - RLS enabled on every table; learner reads scoped by role groups and program/course access
 - Seeds are dev-only; promote your profile to `system_role = 'owner'` manually after first sign-in
+- **Never run `supabase db push --include-all` (or any equivalent blind re-apply) against
+  production without first running `node scripts/migration-rehearsal/check-migration-safety.mjs`
+  against the same connection and getting a clean exit.** `--include-all` re-applies any
+  migration missing from `supabase_migrations.schema_migrations` in filename order, with no
+  concept of whether a later migration already superseded it. On 2026-07-30 that re-applied an
+  old, already-superseded migration straight to production and reverted 6 hardened Hugo
+  lifecycle functions for hours. A missing history row is not proof a migration's content is
+  missing — read the live schema/function definitions before assuming it is safe to re-run. The
+  "pre-user production boundary" permission above covers writes and canaries; it does not cover
+  bypassing this gate. If the gate fails, stop and report — do not repair history or force the
+  push to make it pass.
 
 ## Writing style
 

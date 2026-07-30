@@ -307,11 +307,18 @@ command must succeed before either push command can start:
 
 ```bash
 node -e 'const u=new URL(process.env.TEST_SUPABASE_DB_URL); const ok=u.protocol==="postgresql:"&&u.username==="postgres.jvaabkchkihkjllehmft"&&u.password&&u.hostname==="aws-1-us-west-1.pooler.supabase.com"&&u.port==="5432"&&u.pathname==="/postgres"&&!u.search&&!u.hash; if(!ok) process.exit(1)'
+node scripts/migration-rehearsal/check-migration-safety.mjs
 supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --dry-run
 # Stop unless the dry run lists only the expected pending TEST migrations.
 supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --yes
 npm run test:course-import-provider
 ```
+
+Run `check-migration-safety.mjs` again with the production `PGHOST`/`PGUSER`/etc before any
+production `db push --include-all`, not just the TEST one above. It refuses closed on
+placeholder (`migration repair`) history rows and on any pending migration older than the
+newest one already recorded — see `scripts/migration-rehearsal/README.md` for why, and the
+2026-07-30 production incident this closes off.
 
 The provider acceptance wrapper refuses to start unless the HTTP URL, direct
 database URL, anon key, and service-role key are present. The HTTP and database

@@ -70,6 +70,38 @@ bash scripts/migration-rehearsal/print-production-repair-commands.sh
 
 Run the printed commands only after the equivalence report and full rehearsal pass. The history repair updates only `supabase_migrations.schema_migrations`. It does not apply or revert schema SQL. The printed order intentionally marks 001 through 010 applied first, removes the ten legacy rows second, then requires `migration list` and `db push --dry-run` proof before the actual push.
 
+## Mandatory safety gate before any `--include-all` push against a linked project
+
+`check-migration-safety.mjs` is a preflight gate, added after the 2026-07-30 production
+incident where an automated reconciliation loop re-applied an old, already-superseded
+migration (`20260728091000_hugo_access_provisioner.sql`) directly to production because it
+had no row in `supabase_migrations.schema_migrations`. `--include-all` re-applies anything
+missing from history, in filename order, with no notion that a later migration already
+touched the same objects. That re-apply reverted 6 hardened Hugo lifecycle functions and
+locked out a real user for hours.
+
+Run it against the exact connection you are about to push to, before the dry run:
+
+```sh
+export PGHOST=... PGPORT=... PGDATABASE=... PGUSER=... PGPASSWORD=... PGSSLMODE=require
+node scripts/migration-rehearsal/check-migration-safety.mjs
+```
+
+It fails closed (nonzero exit, no SQL executed) in two cases, and only these two:
+
+1. Any row in `schema_migrations` has `statements IS NULL` (a placeholder row from
+   `migration repair`, e.g. the repair sequence in `print-production-repair-commands.sh`).
+   These rows do not prove any real content is live at that version, so history cannot be
+   trusted while they exist.
+2. Any locally pending migration (a file on disk with no matching `schema_migrations` row)
+   has a version number older than the newest version already recorded in history. That
+   is the exact out-of-order re-apply shape that caused the incident above.
+
+A clean exit means it is safe to move on to a reviewed `supabase db push --include-all
+--dry-run`. It is not a substitute for reading that dry-run output. `print-production-repair-commands.sh`
+bakes the gate invocation into its printed sequence directly before the real production push;
+do not skip it when running those commands by hand or via an automated agent loop.
+
 ## Run migrations 039 through 045 integration coverage against BMH Institute test
 
 The integration file is not a local-only test. It creates and removes test users and course-import rows. It also opens direct PostgreSQL sessions for contention coverage. The authorized target is only `bmh-institute-test`, project ref `jvaabkchkihkjllehmft`.
