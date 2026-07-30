@@ -8,6 +8,7 @@ type Query = PromiseLike<QueryResult> & {
   is: (...args: unknown[]) => Query;
   order: (...args: unknown[]) => Query;
   limit: (...args: unknown[]) => Query;
+  abortSignal: (signal: AbortSignal) => Query;
   select: (...args: unknown[]) => Query;
   maybeSingle: () => Promise<QueryResult>;
   single: () => Promise<QueryResult>;
@@ -21,6 +22,7 @@ function query(data: unknown, error: DbError = null): Query {
   value.is = () => value;
   value.order = () => value;
   value.limit = () => value;
+  value.abortSignal = () => value;
   value.select = () => value;
   value.maybeSingle = async () => result;
   value.single = async () => result;
@@ -82,12 +84,12 @@ let finalizeReads: number;
 let recordRpcData: unknown;
 let recordRpcError: DbError;
 
-const rpc = vi.fn(async (name: string) => {
+const rpc = vi.fn((name: string) => {
   if (name === "fn_lesson_is_unlocked") {
-    return { data: unlocked, error: null };
+    return query(unlocked);
   }
   if (name === "fn_record_quiz_answer") {
-    return { data: recordRpcData, error: recordRpcError };
+    return query(recordRpcData, recordRpcError);
   }
   throw new Error(`Unexpected RPC: ${name}`);
 });
@@ -140,11 +142,10 @@ const adminClient = {
     if (table === "questions") {
       return {
         select: () => ({
-          eq: () => ({ order: async () => ({ data: availableQuestions, error: null }) }),
-          in: async (_column: string, ids: string[]) => ({
-            data: availableQuestions.filter((question) => ids.includes(question.id)),
-            error: null,
-          }),
+          eq: () => ({ order: () => query(availableQuestions) }),
+          in: (_column: string, ids: string[]) => query(
+            availableQuestions.filter((question) => ids.includes(question.id)),
+          ),
         }),
       };
     }

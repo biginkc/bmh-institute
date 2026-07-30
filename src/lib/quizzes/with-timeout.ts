@@ -20,21 +20,27 @@ export class QuizDeadlineError extends Error {
 
 export async function withQuizDeadline<T>(
   stage: QuizDeadlineStage,
-  operation: () => Promise<T>,
+  operation: (signal: AbortSignal) => Promise<T>,
   timeoutMs = QUIZ_DEADLINES[stage],
 ): Promise<T> {
+  const controller = new AbortController();
   let timer: ReturnType<typeof setTimeout> | undefined;
   try {
     return await Promise.race([
-      operation(),
+      operation(controller.signal),
       new Promise<never>((_, reject) => {
         timer = setTimeout(
-          () => reject(new QuizDeadlineError(stage, timeoutMs)),
+          () => {
+            const error = new QuizDeadlineError(stage, timeoutMs);
+            controller.abort(error);
+            reject(error);
+          },
           timeoutMs,
         );
       }),
     ]);
   } finally {
     if (timer) clearTimeout(timer);
+    if (!controller.signal.aborted) controller.abort();
   }
 }

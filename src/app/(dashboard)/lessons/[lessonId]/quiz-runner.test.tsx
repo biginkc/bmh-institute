@@ -306,6 +306,71 @@ describe("<QuizRunner />", () => {
     expect(startQuizAttempt).not.toHaveBeenCalled();
   });
 
+  it("does not let a late page-open restore replace a newer started attempt", async () => {
+    const user = userEvent.setup();
+    let resolveRestore!: (value: Awaited<ReturnType<typeof restoreQuizAttempt>>) => void;
+    vi.mocked(restoreQuizAttempt).mockImplementationOnce(
+      () => new Promise((resolve) => { resolveRestore = resolve; }),
+    );
+    renderRunner();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    expect(await screen.findByRole("heading", { name: questions[0].question_text })).toBeVisible();
+
+    resolveRestore({
+      ok: true,
+      attempt: {
+        ok: true,
+        attemptId: "stale-attempt",
+        questions: attemptQuestions,
+        resumed: true,
+        responses: { single: ["single-b"] },
+        reveals: [revealFor("single").reveal],
+      },
+    });
+    await waitFor(() => expect(
+      screen.getByRole("heading", { name: questions[0].question_text }),
+    ).toBeVisible());
+    expect(screen.queryByRole("heading", { name: questions[1].question_text })).not.toBeInTheDocument();
+  });
+
+  it("does not let a late page-open restore replace a completed result", async () => {
+    const user = userEvent.setup();
+    let resolveRestore!: (value: Awaited<ReturnType<typeof restoreQuizAttempt>>) => void;
+    vi.mocked(restoreQuizAttempt).mockImplementationOnce(
+      () => new Promise((resolve) => { resolveRestore = resolve; }),
+    );
+    vi.mocked(startQuizAttempt).mockResolvedValue({
+      ok: true,
+      attemptId: "attempt-complete",
+      questions: [attemptQuestions[0]],
+      resumed: false,
+      responses: {},
+      reveals: [],
+    });
+    renderRunner();
+
+    await user.click(screen.getByRole("button", { name: "Start quiz" }));
+    await user.click(await screen.findByLabelText("Ask one clear question"));
+    await user.click(screen.getByRole("button", { name: "Check answer" }));
+    await user.click(await screen.findByRole("button", { name: "Finish" }));
+    expect(await screen.findByRole("heading", { name: "Passed" })).toBeVisible();
+
+    resolveRestore({
+      ok: true,
+      attempt: {
+        ok: true,
+        attemptId: "stale-attempt",
+        questions: attemptQuestions,
+        resumed: true,
+        responses: { single: ["single-b"] },
+        reveals: [revealFor("single").reveal],
+      },
+    });
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Passed" })).toBeVisible());
+    expect(screen.queryByRole("heading", { name: questions[1].question_text })).not.toBeInTheDocument();
+  });
+
   it("reconciles a timed-out start by restoring the server-side attempt", async () => {
     const user = userEvent.setup();
     vi.mocked(startQuizAttempt).mockRejectedValue(

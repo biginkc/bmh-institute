@@ -67,26 +67,26 @@ export async function startQuizAttempt(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizStartResult> {
-  return withQuizDeadline("start", () =>
-    withQuizTiming("start", () => startQuizAttemptInternal(input)),
+  return withQuizDeadline("start", (signal) =>
+    withQuizTiming("start", () => startQuizAttemptInternal(input, signal)),
   );
 }
 
 async function startQuizAttemptInternal(input: {
   quizId: string;
   lessonId: string;
-}): Promise<QuizStartResult> {
-  const auth = await authenticatedQuizContext(input);
+}, signal: AbortSignal): Promise<QuizStartResult> {
+  const auth = await authenticatedQuizContext(input, signal);
   if (!auth.ok) return auth;
 
   const { learner, userId, quiz } = auth;
   const { data: existing, error: existingError } =
-    await loadIncompleteAttempt(learner, userId, input.quizId);
+    await loadIncompleteAttempt(learner, userId, input.quizId, signal);
   if (existingError) return { ok: false, error: existingError.message };
 
   const admin = adminClientResult();
   if (!admin.ok) return admin;
-  const questionsResult = await loadAttemptQuestions(admin.client, input.quizId);
+  const questionsResult = await loadAttemptQuestions(admin.client, input.quizId, signal);
   if (!questionsResult.ok) return questionsResult;
 
   if (existing) {
@@ -113,6 +113,7 @@ async function startQuizAttemptInternal(input: {
       answer_orders: selection.answerOrders,
       responses: {},
     })
+    .abortSignal(signal)
     .select("id")
     .single();
   if (attemptError || !attempt) {
@@ -121,6 +122,7 @@ async function startQuizAttemptInternal(input: {
         learner,
         userId,
         input.quizId,
+        signal,
       );
       if (winner) {
         return resumeAttempt(winner, questionsResult.questions);
@@ -148,28 +150,29 @@ export async function restoreQuizAttempt(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizRestoreResult> {
-  return withQuizDeadline("resume", () =>
-    withQuizTiming("resume", () => restoreQuizAttemptInternal(input)),
+  return withQuizDeadline("resume", (signal) =>
+    withQuizTiming("resume", () => restoreQuizAttemptInternal(input, signal)),
   );
 }
 
 async function restoreQuizAttemptInternal(input: {
   quizId: string;
   lessonId: string;
-}): Promise<QuizRestoreResult> {
-  const access = await authorizedQuizContext(input);
+}, signal: AbortSignal): Promise<QuizRestoreResult> {
+  const access = await authorizedQuizContext(input, signal);
   if (!access.ok) return access;
   const { data: existing, error } = await loadIncompleteAttempt(
     access.learner,
     access.userId,
     input.quizId,
+    signal,
   );
   if (error) return { ok: false, error: error.message };
   if (!existing) return { ok: true, attempt: null };
 
   const admin = adminClientResult();
   if (!admin.ok) return admin;
-  const questionsResult = await loadAttemptQuestions(admin.client, input.quizId);
+  const questionsResult = await loadAttemptQuestions(admin.client, input.quizId, signal);
   if (!questionsResult.ok) return questionsResult;
   const restored = await resumeAttempt(existing, questionsResult.questions);
   if (!restored.ok) return restored;
@@ -184,14 +187,14 @@ export async function answerQuizQuestion(input: {
   questionId: string;
   selected: string[];
 }): Promise<QuizAnswerResult> {
-  return withQuizDeadline("answer", () => answerQuizQuestionInternal(input));
+  return withQuizDeadline("answer", (signal) => answerQuizQuestionInternal(input, signal));
 }
 
 async function answerQuizQuestionInternal(input: {
   attemptId: string;
   questionId: string;
   selected: string[];
-}): Promise<QuizAnswerResult> {
+}, signal: AbortSignal): Promise<QuizAnswerResult> {
   const learner = await createClient();
   const {
     data: { user },
@@ -205,12 +208,14 @@ async function answerQuizQuestionInternal(input: {
     )
     .eq("id", input.attemptId)
     .eq("user_id", user.id)
+    .abortSignal(signal)
     .maybeSingle();
   if (attemptError || !attempt) {
     return { ok: false, error: attemptError?.message ?? "Attempt not found." };
   }
   const access = await authorizedQuizContext(
     { quizId: attempt.quiz_id, lessonId: attempt.lesson_id },
+    signal,
     learner,
     user.id,
   );
@@ -229,7 +234,7 @@ async function answerQuizQuestionInternal(input: {
 
   const admin = adminClientResult();
   if (!admin.ok) return admin;
-  const questionsResult = await loadPrivateQuestions(admin.client, [input.questionId]);
+  const questionsResult = await loadPrivateQuestions(admin.client, [input.questionId], signal);
   if (!questionsResult.ok) return questionsResult;
   const question = questionsResult.questions[0];
   if (!question) {
@@ -255,11 +260,12 @@ async function answerQuizQuestionInternal(input: {
 
   const { data: recorded, error: recordError } = await withQuizTiming(
     "answer",
-    async () => learner.rpc("fn_record_quiz_answer", {
-      p_attempt_id: input.attemptId,
-      p_question_id: input.questionId,
-      p_selected: input.selected,
-    }),
+    async () =>
+      learner.rpc("fn_record_quiz_answer", {
+        p_attempt_id: input.attemptId,
+        p_question_id: input.questionId,
+        p_selected: input.selected,
+      }).abortSignal(signal),
   );
   if (recordError || !recorded?.[0]) {
     return {
@@ -284,12 +290,12 @@ async function answerQuizQuestionInternal(input: {
 export async function finalizeQuizAttempt(input: {
   attemptId: string;
 }): Promise<QuizSubmitResult> {
-  return withQuizDeadline("finalize", () => finalizeQuizAttemptInternal(input));
+  return withQuizDeadline("finalize", (signal) => finalizeQuizAttemptInternal(input, signal));
 }
 
 async function finalizeQuizAttemptInternal(input: {
   attemptId: string;
-}): Promise<QuizSubmitResult> {
+}, signal: AbortSignal): Promise<QuizSubmitResult> {
   const learner = await createClient();
   const {
     data: { user },
@@ -303,6 +309,7 @@ async function finalizeQuizAttemptInternal(input: {
     )
     .eq("id", input.attemptId)
     .eq("user_id", user.id)
+    .abortSignal(signal)
     .maybeSingle();
   if (attemptError || !attempt) {
     return { ok: false, error: attemptError?.message ?? "Attempt not found." };
@@ -310,6 +317,7 @@ async function finalizeQuizAttemptInternal(input: {
 
   const access = await authorizedQuizContext(
     { quizId: attempt.quiz_id, lessonId: attempt.lesson_id },
+    signal,
     learner,
     user.id,
   );
@@ -357,6 +365,7 @@ async function finalizeQuizAttemptInternal(input: {
       .eq("id", attempt.id)
       .eq("user_id", user.id)
       .is("completed_at", null)
+      .abortSignal(signal)
       .select("id")
       .maybeSingle(),
   );
@@ -369,6 +378,7 @@ async function finalizeQuizAttemptInternal(input: {
       )
       .eq("id", attempt.id)
       .eq("user_id", user.id)
+      .abortSignal(signal)
       .maybeSingle();
     if (landedError || !landed?.completed_at) {
       return {
@@ -532,20 +542,23 @@ function buildSubmitResult({
 
 async function authenticatedQuizContext(
   input: { quizId: string; lessonId: string },
+  signal: AbortSignal,
   existingLearner?: Awaited<ReturnType<typeof createClient>>,
   existingUserId?: string,
 ) {
   const access = await authorizedQuizContext(
     input,
+    signal,
     existingLearner,
     existingUserId,
   );
   if (!access.ok) return access;
-  return quizEligibilityContext(access);
+  return quizEligibilityContext(access, signal);
 }
 
 async function authorizedQuizContext(
   input: { quizId: string; lessonId: string },
+  signal: AbortSignal,
   existingLearner?: Awaited<ReturnType<typeof createClient>>,
   existingUserId?: string,
 ) {
@@ -565,17 +578,19 @@ async function authorizedQuizContext(
         .from("lessons")
         .select("quiz_id")
         .eq("id", input.lessonId)
+        .abortSignal(signal)
         .maybeSingle(),
       learner.rpc("fn_lesson_is_unlocked", {
         p_user_id: userId,
         p_lesson_id: input.lessonId,
-      }),
+      }).abortSignal(signal),
       learner
         .from("quizzes")
         .select(
           "id, passing_score, max_attempts, retake_cooldown_hours, questions_per_attempt, randomize_questions, randomize_answers, show_correct_answers_after",
         )
         .eq("id", input.quizId)
+        .abortSignal(signal)
         .maybeSingle(),
     ]);
   if (lesson?.quiz_id !== input.quizId) {
@@ -594,13 +609,14 @@ async function authorizedQuizContext(
 async function quizEligibilityContext(access: Extract<
   Awaited<ReturnType<typeof authorizedQuizContext>>,
   { ok: true }
->) {
+>, signal: AbortSignal) {
   const { learner, userId, quiz } = access;
   const { data: priorAttempts, error: priorAttemptsError } = await learner
     .from("user_quiz_attempts")
     .select("passed, score, completed_at")
     .eq("user_id", userId)
-    .eq("quiz_id", quiz.id);
+    .eq("quiz_id", quiz.id)
+    .abortSignal(signal);
   if (priorAttemptsError) {
     return {
       ok: false as const,
@@ -647,6 +663,7 @@ function adminClientResult():
 async function loadAttemptQuestions(
   admin: ReturnType<typeof createAdminClient>,
   quizId: string,
+  signal: AbortSignal,
 ): Promise<
   | { ok: true; questions: AttemptQuestion[] }
   | { ok: false; error: string }
@@ -667,7 +684,8 @@ async function loadAttemptQuestions(
     `,
     )
     .eq("quiz_id", quizId)
-    .order("sort_order");
+    .order("sort_order")
+    .abortSignal(signal);
   if (error || !data) {
     return { ok: false, error: error?.message ?? "Questions not found." };
   }
@@ -686,6 +704,7 @@ async function loadAttemptQuestions(
 async function loadPrivateQuestions(
   admin: ReturnType<typeof createAdminClient>,
   questionIds: string[],
+  signal: AbortSignal,
 ): Promise<
   | { ok: true; questions: PrivateQuestion[] }
   | { ok: false; error: string }
@@ -704,7 +723,8 @@ async function loadPrivateQuestions(
       )
     `,
     )
-    .in("id", questionIds);
+    .in("id", questionIds)
+    .abortSignal(signal);
   if (error || !data) {
     return { ok: false, error: error?.message ?? "Questions not found." };
   }
@@ -715,6 +735,7 @@ async function loadIncompleteAttempt(
   learner: Awaited<ReturnType<typeof createClient>>,
   userId: string,
   quizId: string,
+  signal: AbortSignal,
 ) {
   return learner
     .from("user_quiz_attempts")
@@ -724,6 +745,7 @@ async function loadIncompleteAttempt(
     .is("completed_at", null)
     .order("started_at", { ascending: false })
     .limit(1)
+    .abortSignal(signal)
     .maybeSingle();
 }
 

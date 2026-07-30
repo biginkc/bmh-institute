@@ -71,6 +71,13 @@ type RunnerAction =
       responses: Record<string, string[]>;
       reveals: QuestionReveal[];
     }
+  | {
+      type: "restored";
+      attemptId: string;
+      questions: QuizQuestion[];
+      responses: Record<string, string[]>;
+      reveals: QuestionReveal[];
+    }
   | { type: "start_error" }
   | { type: "toggle"; question: QuizQuestion; optionId: string }
   | { type: "checking" }
@@ -89,6 +96,13 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
   if (action.type === "start") return { status: "starting" };
   if (action.type === "start_error") return { status: "idle" };
   if (action.type === "reset") return { status: "idle" };
+  if (action.type === "restored") {
+    // A page-open read is stale once the learner has started or completed a
+    // newer run. It must never replace that newer state when it eventually
+    // resolves.
+    if (state.status !== "idle") return state;
+    return runnerReducer(state, { ...action, type: "started" });
+  }
   if (action.type === "started") {
     const answers = Object.fromEntries(
       action.reveals.map((reveal) => [reveal.questionId, revealToAnswer(reveal)]),
@@ -209,6 +223,7 @@ export function QuizRunner({
   retakeCooldownHours: number;
 }) {
   const [state, dispatch] = useReducer(runnerReducer, { status: "idle" });
+  const restoreRequestRef = useRef(0);
   const [completedAttempts, updateCompletedAttempts] = useReducer(
     (count: number) => count + 1,
     attemptsUsed,
@@ -268,11 +283,18 @@ export function QuizRunner({
 
   useEffect(() => {
     let active = true;
+    const requestId = restoreRequestRef.current + 1;
+    restoreRequestRef.current = requestId;
     void withQuizDeadline("resume", () => restoreQuizAttempt({ quizId, lessonId }))
       .then((response) => {
-        if (!active || !response.ok || !response.attempt) return;
+        if (
+          !active ||
+          requestId !== restoreRequestRef.current ||
+          !response.ok ||
+          !response.attempt
+        ) return;
         dispatch({
-          type: "started",
+          type: "restored",
           attemptId: response.attempt.attemptId,
           questions: response.attempt.questions,
           responses: response.attempt.responses,
@@ -335,6 +357,7 @@ export function QuizRunner({
   }
 
   async function beginAttempt() {
+    restoreRequestRef.current += 1;
     await loadAttempt(true);
   }
 
@@ -443,6 +466,7 @@ export function QuizRunner({
         }
         attemptsExhausted={!state.result.passed && attemptsExhausted}
         onRetake={() => {
+          restoreRequestRef.current += 1;
           updateCompletedAttempts();
           dispatch({ type: "reset" });
         }}
