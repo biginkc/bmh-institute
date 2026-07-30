@@ -34,5 +34,14 @@ describe("transactional admin deletion contract", () => {
     expect(migration).toMatch(/delete from public\.assignments/);
     expect(migration).toMatch(/delete from public\.user_role_groups/);
     expect(migration).toMatch(/immutable/);
+    expect(migration).toMatch(/course_access access[\s\S]*courses course[\s\S]*course\.content_import_id/);
+    const lockBlock = migration.slice(migration.indexOf("-- Lock the target"));
+    expect(lockBlock.indexOf("for update")).toBeGreaterThanOrEqual(0);
+    expect(lockBlock.indexOf("for update")).toBeLessThan(lockBlock.indexOf("v_preview :="));
+    expect(lockBlock).toMatch(/user_lesson_completions[\s\S]*for update/);
+    expect(lockBlock).toMatch(/assignment_submissions[\s\S]*for update/);
+    expect(lockBlock).toMatch(/user_quiz_attempts[\s\S]*for update/);
+    expect(lockBlock).toMatch(/user_block_progress[\s\S]*for update/);
+    expect(lockBlock).toMatch(/user_video_completion_history[\s\S]*for update/);
   });
 });

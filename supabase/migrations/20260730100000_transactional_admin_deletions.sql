@@ -74,6 +74,10 @@ begin
       select 1 from public.program_access access
       join public.programs program on program.id = access.program_id
       where access.role_group_id = p_entity_id and program.content_import_id is not null
+    ) or exists (
+      select 1 from public.course_access access
+      join public.courses course on course.id = access.course_id
+      where access.role_group_id = p_entity_id and course.content_import_id is not null
     ) into v_imported;
     select exists (
       select 1 from public.user_role_groups membership
@@ -173,6 +177,45 @@ begin
     return jsonb_build_object('code', 'invalid_target');
   end if;
   perform pg_advisory_xact_lock(hashtextextended('admin-delete:' || p_entity_type || ':' || p_entity_id::text, 0));
+
+  -- Lock the target and every activity row consulted by the guards before
+  -- evaluating them. The preview is therefore a transaction-local recheck.
+  if p_entity_type = 'module' then
+    perform 1 from public.modules where id = p_entity_id for update;
+    perform 1 from public.lessons where module_id = p_entity_id for update;
+    perform 1 from public.user_lesson_completions where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;
+    perform 1 from public.assignment_submissions where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;
+    perform 1 from public.user_quiz_attempts where quiz_id in (select quiz_id from public.lessons where module_id = p_entity_id and quiz_id is not null) for update;
+    perform 1 from public.user_block_progress where block_id in (select id from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id)) for update;
+    perform 1 from public.user_video_completion_history where block_id in (select id from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id)) for update;
+  elsif p_entity_type = 'lesson' then
+    perform 1 from public.lessons where id = p_entity_id for update;
+    perform 1 from public.content_blocks where lesson_id = p_entity_id for update;
+    perform 1 from public.user_lesson_completions where lesson_id = p_entity_id for update;
+    perform 1 from public.assignment_submissions where lesson_id = p_entity_id for update;
+    perform 1 from public.user_quiz_attempts where quiz_id = (select quiz_id from public.lessons where id = p_entity_id) for update;
+    perform 1 from public.user_course_resume where last_lesson_id = p_entity_id for update;
+    perform 1 from public.user_block_progress where block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
+    perform 1 from public.user_video_completion_history where block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
+  elsif p_entity_type = 'role_group' then
+    perform 1 from public.role_groups where id = p_entity_id for update;
+    perform 1 from public.program_access where role_group_id = p_entity_id for update;
+    perform 1 from public.course_access where role_group_id = p_entity_id for update;
+    perform 1 from public.user_role_groups where role_group_id = p_entity_id for update;
+    perform 1 from public.user_quiz_attempts where user_id in (select user_id from public.user_role_groups where role_group_id = p_entity_id) for update;
+    perform 1 from public.assignment_submissions where user_id in (select user_id from public.user_role_groups where role_group_id = p_entity_id) for update;
+  elsif p_entity_type = 'block' then
+    perform 1 from public.content_blocks where id = p_entity_id for update;
+    perform 1 from public.user_block_progress where block_id = p_entity_id for update;
+    perform 1 from public.user_video_completion_history where block_id = p_entity_id for update;
+  elsif p_entity_type = 'question' then
+    perform 1 from public.questions where id = p_entity_id for update;
+    perform 1 from public.user_quiz_attempts where quiz_id = (select quiz_id from public.questions where id = p_entity_id) for update;
+  else
+    perform 1 from public.answer_options where id = p_entity_id for update;
+    perform 1 from public.user_quiz_attempts where quiz_id = (select question.quiz_id from public.questions question join public.answer_options option on option.question_id = question.id where option.id = p_entity_id) for update;
+  end if;
+
   v_preview := public.fn_admin_preview_deletion_v1(p_entity_type, p_entity_id);
   if v_preview->>'code' <> 'ready' then return v_preview; end if;
 
