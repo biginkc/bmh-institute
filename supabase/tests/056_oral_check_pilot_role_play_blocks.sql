@@ -78,7 +78,7 @@ $$;
 
 -- A minimal published release for the same import_id (structurally real,
 -- but a fresh local database can never reproduce production's EXACT
--- 44-block, 19-lesson catalog byte-for-byte, so its computed live hash can
+-- 44-lesson catalog byte-for-byte, so its computed live hash can
 -- never equal the hardcoded production hash pin -- see the migration's
 -- header comment). This proves the fail-closed CAS check itself: a
 -- production-shaped release that is NOT the exact expected state must

@@ -364,6 +364,30 @@ try {
       "supabase/tests/059_oral_check_pilot_apply_fail_closed.sql",
     ),
   );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/065_oral_check_objections_role_play_blocks.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/066_oral_check_objections_role_play_rollback.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/067_oral_check_objections_apply_ordering_gate.sql",
+    ),
+  );
+  psqlFile(
+    resolve(
+      root,
+      "supabase/tests/068_oral_check_objections_apply_fail_closed.sql",
+    ),
+  );
   psqlText(`
     do $$
     begin
