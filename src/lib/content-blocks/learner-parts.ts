@@ -223,6 +223,31 @@ export function selectLearnerPart(
   );
 }
 
+export type LearnerPartResolution = {
+  part: LearnerLessonPart | null;
+  requestedPart: string | null;
+  requestedPartValid: boolean;
+  requestedPartLocked: boolean;
+  canonicalPartId: string | null;
+};
+
+/** Resolve routing without letting an unknown value or a forged locked part skip work. */
+export function resolveLearnerPart(
+  parts: LearnerLessonPart[],
+  requestedPartId: string | null,
+): LearnerPartResolution {
+  const requested = parts.find((part) => part.id === requestedPartId);
+  const fallback = selectLearnerPart(parts, null);
+  const part = requested && !requested.available ? requested : requested ?? fallback;
+  return {
+    part,
+    requestedPart: requestedPartId,
+    requestedPartValid: Boolean(requested),
+    requestedPartLocked: Boolean(requested && !requested.available),
+    canonicalPartId: part?.id ?? null,
+  };
+}
+
 function partLabel(base: string, index: number, count: number): string {
   if (count <= 1) return base;
   return `${base} ${String.fromCharCode(64 + index)}`;
