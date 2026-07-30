@@ -1,14 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-const migration = readFileSync(
-  resolve(
-    process.cwd(),
-    "supabase/migrations/20260729150000_bound_quiz_answer_recording.sql",
-  ),
-  "utf8",
-);
+const migrationDirectory = resolve(process.cwd(), "supabase/migrations");
 const additiveMigration = readFileSync(
   resolve(
     process.cwd(),
@@ -19,9 +13,13 @@ const additiveMigration = readFileSync(
 
 describe("quiz answer recording timeout migration", () => {
   it("preserves the original identity and avoids PR137's migration id", () => {
-    expect(
-      existsSync(resolve(process.cwd(), "supabase/migrations/20260729150000_bound_quiz_answer_recording.sql")),
-    ).toBe(true);
+    const migrationNames = readdirSync(migrationDirectory).filter((name) =>
+      name.endsWith(".sql"),
+    );
+    expect(migrationNames.filter((name) => /^2026.*quiz_answer_recording/.test(name))).toEqual([
+      "20260729220000_quiz_answer_recording_session_timeout.sql",
+    ]);
+    expect(existsSync(resolve(migrationDirectory, "20260729150000_bound_quiz_answer_recording.sql"))).toBe(false);
     expect(
       existsSync(resolve(process.cwd(), "supabase/migrations/20260729210000_bound_quiz_answer_recording.sql")),
     ).toBe(false);
@@ -31,11 +29,9 @@ describe("quiz answer recording timeout migration", () => {
     ).toBe(true);
   });
 
-  it("bounds lock waits and statement execution for answer checks", () => {
-    const timeoutSettings = /alter function public\.fn_record_quiz_answer\(uuid, uuid, text\[\]\)\s+set lock_timeout = '5s';[\s\S]*alter function public\.fn_record_quiz_answer\(uuid, uuid, text\[\]\)\s+set statement_timeout = '8s';/i;
-    expect(migration).toMatch(timeoutSettings);
-    expect(additiveMigration).toMatch(
-      timeoutSettings,
-    );
+  it("bounds lock waits and removes the ineffective function statement timeout", () => {
+    expect(additiveMigration).toMatch(/set lock_timeout = '5s'/i);
+    expect(additiveMigration).toMatch(/reset statement_timeout/i);
+    expect(additiveMigration).not.toMatch(/^\s*set statement_timeout/im);
   });
 });

@@ -169,7 +169,11 @@ const adminClient = {
 };
 
 const { revalidatePath } = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
+const { schedulePostCommitEffect } = vi.hoisted(() => ({
+  schedulePostCommitEffect: vi.fn(),
+}));
 vi.mock("next/cache", () => ({ revalidatePath }));
+vi.mock("@/lib/actions/post-commit-effect", () => ({ schedulePostCommitEffect }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => learnerClient),
 }));
@@ -189,7 +193,7 @@ import {
   restoreQuizAttempt,
   startQuizAttempt,
 } from "./quiz-actions";
-import { QUIZ_DEADLINES } from "@/lib/quizzes/with-timeout";
+import { QUIZ_SERVER_DEADLINES } from "@/lib/quizzes/with-timeout";
 
 describe("quiz server actions", () => {
   beforeEach(() => {
@@ -277,6 +281,28 @@ describe("quiz server actions", () => {
     const result = await restoreQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" });
     expect(result).toEqual({ ok: true, attempt: null });
     expect(insertedAttempt).toBeNull();
+  });
+
+  it("does not restore an incomplete attempt after eligibility is exhausted", async () => {
+    priorAttempts = [
+      { passed: false, score: 20, completed_at: "2026-07-29T00:00:00.000Z" },
+      { passed: false, score: 30, completed_at: "2026-07-29T01:00:00.000Z" },
+      { passed: false, score: 40, completed_at: "2026-07-29T02:00:00.000Z" },
+    ];
+    incompleteAttempt = {
+      id: "attempt-stale",
+      question_order: ["q-1"],
+      answer_orders: { "q-1": ["q1-good", "q1-bad"] },
+      responses: {},
+      answer_results: {},
+    };
+
+    await expect(
+      restoreQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "You've used all of your attempts on this quiz.",
+    });
   });
 
   it("resumes with persisted responses and reveals only answered questions", async () => {
@@ -708,14 +734,14 @@ describe("quiz server actions", () => {
     try {
       learnerClient.auth.getUser = () => new Promise(() => {});
       const pending = finalizeQuizAttempt({ attemptId: "attempt-1" });
-      const rejection = expect(pending).rejects.toMatchObject({
-        name: "QuizDeadlineError",
-        stage: "finalize",
+      const result = expect(pending).resolves.toEqual({
+        ok: false,
+        error: "That took too long. Try again.",
       });
 
-      await vi.advanceTimersByTimeAsync(QUIZ_DEADLINES.finalize);
+      await vi.advanceTimersByTimeAsync(QUIZ_SERVER_DEADLINES.finalize);
 
-      await rejection;
+      await result;
       expect(updatedAttempt).toBeNull();
     } finally {
       learnerClient.auth.getUser = async () => ({ data: { user: currentUser }, error: null });
@@ -754,12 +780,10 @@ describe("quiz server actions", () => {
         score: 100,
         passed: true,
       });
-      expect(emitSandraCourseCompletedForLesson).toHaveBeenCalledWith(learnerClient, {
-        userId: "user-1",
-        lessonId: "lesson-1",
-      });
-
-      await vi.advanceTimersByTimeAsync(QUIZ_DEADLINES.finalize);
+      expect(schedulePostCommitEffect).toHaveBeenCalledWith(
+        "quiz Sandra completion",
+        expect.any(Function),
+      );
     } finally {
       vi.useRealTimers();
     }

@@ -187,14 +187,11 @@ describe("quiz attempt contention on migrated TEST", () => {
       const migrationState = await runPsql(`
         select version
         from supabase_migrations.schema_migrations
-        where version in ('20260729150000', '20260729220000')
+        where version = '20260729220000'
         order by version;
       `);
       expect(migrationState.code).toBe(0);
-      expect(migrationState.stdout.trim().split(/\s+/)).toEqual([
-        "20260729150000",
-        "20260729220000",
-      ]);
+      expect(migrationState.stdout.trim().split(/\s+/)).toEqual(["20260729220000"]);
 
       const functionSettings = await runPsql(`
         select array_to_string(proconfig, ',')
@@ -205,7 +202,7 @@ describe("quiz attempt contention on migrated TEST", () => {
       `);
       expect(functionSettings.code).toBe(0);
       expect(functionSettings.stdout).toMatch(/lock_timeout=5s/);
-      expect(functionSettings.stdout).toMatch(/statement_timeout=8s/);
+      expect(functionSettings.stdout).not.toMatch(/statement_timeout=8s/);
 
       const lockAttempt = await admin
         .from("user_quiz_attempts")

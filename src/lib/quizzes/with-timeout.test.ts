@@ -2,12 +2,19 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   QUIZ_DEADLINES,
+  QUIZ_SERVER_DEADLINES,
   QuizDeadlineError,
   withQuizDeadline,
   withQuizSignal,
 } from "./with-timeout";
 
 describe("quiz deadlines", () => {
+  it("keeps browser deadlines outside server and database bounds", () => {
+    for (const stage of ["start", "resume", "answer", "finalize"] as const) {
+      expect(QUIZ_DEADLINES[stage]).toBeGreaterThan(QUIZ_SERVER_DEADLINES[stage]);
+    }
+    expect(QUIZ_SERVER_DEADLINES.answer).toBeGreaterThan(5_000);
+  });
   it.each([
     ["start", QUIZ_DEADLINES.start],
     ["resume", QUIZ_DEADLINES.resume],

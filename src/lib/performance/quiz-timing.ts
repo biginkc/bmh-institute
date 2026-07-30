@@ -1,6 +1,7 @@
 export type QuizTimingStage = "start" | "resume" | "answer" | "finalize";
 
 export function logQuizTiming(stage: QuizTimingStage, durationMs: number): void {
+  if (process.env.BMH_QUIZ_TIMING_LOGS !== "1") return;
   console.info(JSON.stringify({
     event: "bmh_quiz_stage_timing",
     stage,

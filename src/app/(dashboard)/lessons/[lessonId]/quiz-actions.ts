@@ -14,8 +14,14 @@ import {
 } from "@/lib/quizzes/score";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { schedulePostCommitEffect } from "@/lib/actions/post-commit-effect";
 import { withQuizTiming } from "@/lib/performance/quiz-timing";
-import { withQuizDeadline, withQuizSignal } from "@/lib/quizzes/with-timeout";
+import {
+  QuizDeadlineError,
+  QUIZ_SERVER_DEADLINES,
+  withQuizDeadline,
+  withQuizSignal,
+} from "@/lib/quizzes/with-timeout";
 
 export type QuestionReveal =
   | {
@@ -67,9 +73,14 @@ export async function startQuizAttempt(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizStartResult> {
-  return withQuizDeadline("start", (signal) =>
-    withQuizTiming("start", () => startQuizAttemptInternal(input, signal)),
-  );
+  try {
+    return await withQuizDeadline("start", (signal) =>
+      withQuizTiming("start", () => startQuizAttemptInternal(input, signal)),
+      QUIZ_SERVER_DEADLINES.start,
+    );
+  } catch (error) {
+    return quizDeadlineResult(error);
+  }
 }
 
 async function startQuizAttemptInternal(input: {
@@ -150,16 +161,21 @@ export async function restoreQuizAttempt(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizRestoreResult> {
-  return withQuizDeadline("resume", (signal) =>
-    withQuizTiming("resume", () => restoreQuizAttemptInternal(input, signal)),
-  );
+  try {
+    return await withQuizDeadline("resume", (signal) =>
+      withQuizTiming("resume", () => restoreQuizAttemptInternal(input, signal)),
+      QUIZ_SERVER_DEADLINES.resume,
+    );
+  } catch (error) {
+    return quizDeadlineResult(error);
+  }
 }
 
 async function restoreQuizAttemptInternal(input: {
   quizId: string;
   lessonId: string;
 }, signal: AbortSignal): Promise<QuizRestoreResult> {
-  const access = await authorizedQuizContext(input, signal);
+  const access = await authenticatedQuizContext(input, signal);
   if (!access.ok) return access;
   const { data: existing, error } = await loadIncompleteAttempt(
     access.learner,
@@ -187,7 +203,15 @@ export async function answerQuizQuestion(input: {
   questionId: string;
   selected: string[];
 }): Promise<QuizAnswerResult> {
-  return withQuizDeadline("answer", (signal) => answerQuizQuestionInternal(input, signal));
+  try {
+    return await withQuizDeadline(
+      "answer",
+      (signal) => answerQuizQuestionInternal(input, signal),
+      QUIZ_SERVER_DEADLINES.answer,
+    );
+  } catch (error) {
+    return quizDeadlineResult(error);
+  }
 }
 
 async function answerQuizQuestionInternal(input: {
@@ -290,7 +314,15 @@ async function answerQuizQuestionInternal(input: {
 export async function finalizeQuizAttempt(input: {
   attemptId: string;
 }): Promise<QuizSubmitResult> {
-  return withQuizDeadline("finalize", (signal) => finalizeQuizAttemptInternal(input, signal));
+  try {
+    return await withQuizDeadline(
+      "finalize",
+      (signal) => finalizeQuizAttemptInternal(input, signal),
+      QUIZ_SERVER_DEADLINES.finalize,
+    );
+  } catch (error) {
+    return quizDeadlineResult(error);
+  }
 }
 
 async function finalizeQuizAttemptInternal(input: {
@@ -393,12 +425,19 @@ async function finalizeQuizAttemptInternal(input: {
   }
 
   if (result.result.passed) {
-    void withQuizDeadline("finalize", () =>
-      emitSandraCourseCompletedForLesson(learner, {
-        userId: user.id,
-        lessonId: attempt.lesson_id,
-      }),
-    ).catch(() => undefined);
+    // The database trigger has already recorded a durable pending delivery.
+    // Run the provider kick after the action response is committed, without
+    // making a successful quiz completion depend on provider latency.
+    schedulePostCommitEffect("quiz Sandra completion", () =>
+      withQuizDeadline(
+        "finalize",
+        () => emitSandraCourseCompletedForLesson(learner, {
+          userId: user.id,
+          lessonId: attempt.lesson_id,
+        }),
+        QUIZ_SERVER_DEADLINES.finalize,
+      ),
+    );
   }
 
   return buildSubmitResult({
@@ -408,6 +447,15 @@ async function finalizeQuizAttemptInternal(input: {
     answerResults,
     revealPolicy: access.quiz.show_correct_answers_after,
   });
+}
+
+function quizDeadlineResult<T extends { ok: false; error: string }>(
+  error: unknown,
+): T {
+  if (error instanceof QuizDeadlineError) {
+    return { ok: false, error: `That took too long. Try again.` } as T;
+  }
+  throw error;
 }
 
 async function resumeAttempt(

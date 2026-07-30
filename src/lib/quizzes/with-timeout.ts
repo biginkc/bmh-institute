@@ -1,6 +1,17 @@
 export type QuizDeadlineStage = "start" | "resume" | "answer" | "finalize";
 
+// The browser gets a little longer than the server so a server-side timeout
+// can be serialized into a useful result instead of being masked by the
+// browser's own watchdog. The answer RPC's lock bound is 5s, the server bound
+// is 8s, and these client bounds are deliberately outside both.
 export const QUIZ_DEADLINES: Readonly<Record<QuizDeadlineStage, number>> = {
+  start: 12_000,
+  resume: 12_000,
+  answer: 12_000,
+  finalize: 14_000,
+};
+
+export const QUIZ_SERVER_DEADLINES: Readonly<Record<QuizDeadlineStage, number>> = {
   start: 8_000,
   resume: 8_000,
   answer: 8_000,
