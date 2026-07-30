@@ -25,6 +25,7 @@ const originMainToHeadMigrations = [
   "20260730200000_hugo_institute_lifecycle_contract.sql",
   "20260730210000_hugo_institute_lifecycle_contract_forward.sql",
   "20260730220000_institute_last_owner_guard.sql",
+  "20260730230000_replace_released_imported_welcome_video.sql",
 ];
 const requestedBin = process.argv.find((value) => value.startsWith("--pg-bin="))
   ?.slice("--pg-bin=".length);

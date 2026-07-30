@@ -38,8 +38,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install media and PDF inspection tools
-        run: sudo apt-get update && sudo apt-get install --yes ffmpeg poppler-utils
+      - name: Install media, PDF, and PostgreSQL inspection tools
+        run: sudo apt-get update && sudo apt-get install --yes ffmpeg poppler-utils postgresql
 
       - name: Run typecheck, unit, and RTL tests
         run: npm run verify
@@ -49,6 +49,9 @@ jobs:
 
       - name: Run artwork production workflow tests
         run: npm run test:artwork-production
+
+      - name: Run released Welcome video replacement lifecycle
+        run: npm run test:welcome-video-replacement:postgres
 
   e2e:
     name: Seeded Playwright E2E

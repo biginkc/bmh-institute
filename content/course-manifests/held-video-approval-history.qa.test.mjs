@@ -131,6 +131,140 @@ test("held-video approval history follows the feature parent of a GitHub-style s
   }
 });
 
+test("held-video approval history accepts a valid pending-to-approved feature lineage through a GitHub-style synthetic merge", async () => {
+  const repoRoot = await mkdtemp(path.join(tmpdir(), "bmh-held-video-valid-merge-"));
+  const ledgerPath = path.join(repoRoot, "approvals.json");
+  const canonicalLedger = JSON.parse(await readFile(new URL(
+    "../../docs/course-production/held-video-review/approvals.json",
+    import.meta.url,
+  ), "utf8"));
+  const manifest = JSON.parse(await readFile(new URL(
+    "./bmh-employee-training.v1.json",
+    import.meta.url,
+  ), "utf8"));
+  const candidates = JSON.parse(await readFile(new URL(
+    "../../docs/course-production/held-video-review/local-policy-candidates.json",
+    import.meta.url,
+  ), "utf8"));
+  const approvedRecord = canonicalLedger.records.find(
+    (record) =>
+      record.source_key === "video-slot-01-welcome" &&
+      record.sha256 ===
+        "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+  );
+  assert.ok(approvedRecord, "the approved Video Zero record must exist");
+  const baseLedger = structuredClone(canonicalLedger);
+  baseLedger.records = baseLedger.records.filter(
+    (record) =>
+      !(
+        record.source_key === approvedRecord.source_key &&
+        record.sha256 === approvedRecord.sha256
+      ),
+  );
+  const pendingLedger = structuredClone(baseLedger);
+  pendingLedger.updated_at = approvedRecord.date;
+  pendingLedger.records.push({
+    ...approvedRecord,
+    decision: "pending",
+    approver: null,
+    date: null,
+    notes: null,
+  });
+  const currentReviewAssets = [
+    ...manifest.assets
+      .filter((asset) => asset.kind === "video")
+      .map((asset) => ({
+        source_key: asset.source_key,
+        checksum_sha256: asset.checksum_sha256,
+        local_path: asset.local_path,
+        approval_status: asset.approval_status,
+      })),
+    ...candidates.candidates.map((candidate) => ({
+      source_key: candidate.source_key,
+      checksum_sha256: candidate.sha256,
+      local_path: candidate.local_path,
+      approval_status:
+        candidate.approval_status === "approved_exact_cut"
+          ? "approved"
+          : "hold",
+    })),
+  ];
+  const git = (...args) => execFileSync("git", args, {
+    cwd: repoRoot,
+    encoding: "utf8",
+    stdio: "pipe",
+  });
+
+  try {
+    git("init", "--initial-branch=main");
+    git("config", "user.name", "BMH Course QA");
+    git("config", "user.email", "course-qa@example.invalid");
+    await mkdir(
+      path.join(repoRoot, "content/course-manifests"),
+      { recursive: true },
+    );
+    await mkdir(
+      path.join(repoRoot, "docs/course-production/held-video-review"),
+      { recursive: true },
+    );
+    await writeFile(ledgerPath, `${JSON.stringify(baseLedger, null, 2)}\n`);
+    await writeFile(
+      path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json"),
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+    await writeFile(
+      path.join(
+        repoRoot,
+        "docs/course-production/held-video-review/local-policy-candidates.json",
+      ),
+      `${JSON.stringify(candidates, null, 2)}\n`,
+    );
+    git("add", ".");
+    git("commit", "-m", "base approval ledger");
+
+    git("switch", "-c", "feature");
+    await writeFile(ledgerPath, `${JSON.stringify(pendingLedger, null, 2)}\n`);
+    git("add", "approvals.json");
+    git("commit", "-m", "register pending Video Zero candidate");
+    await writeFile(
+      ledgerPath,
+      `${JSON.stringify(canonicalLedger, null, 2)}\n`,
+    );
+    git("add", "approvals.json");
+    git("commit", "-m", "approve Video Zero candidate");
+
+    git("switch", "main");
+    await writeFile(path.join(repoRoot, "main.txt"), "main advanced\n");
+    git("add", "main.txt");
+    git("commit", "-m", "advance main");
+    git("merge", "--no-ff", "feature", "-m", "GitHub-style pull request merge");
+    assert.equal(
+      git("rev-list", "--parents", "-n", "1", "HEAD")
+        .trim()
+        .split(/\s+/).length,
+      3,
+    );
+    assert.equal(
+      git("show", "HEAD:approvals.json"),
+      git("show", "HEAD^2:approvals.json"),
+      "the synthetic merge must preserve the feature ledger exactly",
+    );
+
+    const mergeLedger = JSON.parse(await readFile(ledgerPath, "utf8"));
+    assert.deepEqual(
+      await validateHeldVideoApprovalHistory({
+        ledger: mergeLedger,
+        currentReviewAssets,
+        repoRoot,
+        ledgerPath,
+      }),
+      [],
+    );
+  } finally {
+    await rm(repoRoot, { recursive: true, force: true });
+  }
+});
+
 test("held-video approval history rejects a rewrite committed by an ordinary feature merge", async () => {
   const repoRoot = await mkdtemp(path.join(tmpdir(), "bmh-held-video-feature-merge-"));
   const ledgerPath = path.join(repoRoot, "approvals.json");

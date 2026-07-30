@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-30",
+  "authorization_source": "Jarrad Henry requested a transcript check and approved the corrected Video Zero master for release",
+  "records": [
+    {
+      "video_source_key": "video-slot-01-welcome",
+      "video_sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+      "caption_sha256": "bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation"
+    }
+  ],
+  "technical_qa": {
+    "video_duration_seconds": 318.351,
+    "video_size_bytes": 74404741,
+    "video_dimensions": "1600x900",
+    "video_codec": "h264",
+    "video_frames": 9547,
+    "audio_codec": "aac",
+    "audio_sample_rate_hz": 48000,
+    "audio_channels": 2,
+    "caption_cues": 100,
+    "caption_max_lines": 2,
+    "caption_max_characters_per_line": 50,
+    "caption_max_characters_per_second": 21,
+    "caption_text_matches_verified_transcript": true,
+    "required_phrase_present": "Solve the problem, and the profit follows. Every time.",
+    "full_decode_clean": true,
+    "ending_loudness_lufs": -17.8,
+    "preceding_loudness_lufs": -17.8
+  }
+}

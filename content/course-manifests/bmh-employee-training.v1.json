@@ -15,11 +15,11 @@
     {
       "source_key": "video-slot-01-welcome",
       "kind": "video",
-      "local_path": "course-assets/review-lessonA/LESSON-1A-v7.mp4",
-      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-01-welcome.493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72.mp4",
+      "local_path": "course-assets/review-lessonA/LESSON-1A-v11-VIDEO-ZERO-FINAL-AUDIO-QC.mp4",
+      "storage_path": "courses/bmh-employee-training/v1/videos/video-slot-01-welcome.06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b.mp4",
       "mime_type": "video/mp4",
-      "checksum_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
-      "size_bytes": 35190296,
+      "checksum_sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+      "size_bytes": 74404741,
       "approval_status": "approved"
     },
     {
@@ -306,10 +306,10 @@
       "source_key": "caption-video-slot-01-welcome",
       "kind": "caption",
       "local_path": "course-assets/captions/video-slot-01-welcome.vtt",
-      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-01-welcome.54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11.vtt",
+      "storage_path": "courses/bmh-employee-training/v1/captions/video-slot-01-welcome.bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939.vtt",
       "mime_type": "text/vtt",
-      "checksum_sha256": "54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11",
-      "size_bytes": 5636,
+      "checksum_sha256": "bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939",
+      "size_bytes": 7629,
       "approval_status": "approved"
     },
     {
@@ -1325,7 +1325,7 @@
                       "caption_asset_key": "caption-video-slot-01-welcome",
                       "title": "Welcome and the Service Playbook",
                       "part_label": "Part A",
-                      "duration_seconds": 246.186
+                      "duration_seconds": 318.351
                     }
                   },
                   {

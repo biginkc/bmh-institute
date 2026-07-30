@@ -1,23 +1,23 @@
 # Held videos
 
-Updated: 2026-07-21
+Updated: 2026-07-30
 
 ## Review rule
 
-Nine exact cuts are approved: Terms v10, KPIs v12, and seven source cuts
-directly authorized by Jarrad Henry on 2026-07-21. No approvable corrected
+Ten exact cuts are approved: the current Welcome v11, Terms v10, KPIs v12,
+and seven other source cuts directly authorized by Jarrad Henry. No approvable corrected
 candidate remains on this review surface. Two historical source records remain
 `changes_requested`; a future replacement must receive a new checksum-keyed
 ledger record.
 
 The review surface preserves both approved local-policy cuts and all nine
-original source-evidence records. All nine use H264 video at 1600 by 900 in yuv420p plus AAC
+current source-evidence videos. All nine use H264 video at 1600 by 900 in yuv420p plus AAC
 48 kHz stereo audio.
 Use the fail-closed local review server documented in
 `held-video-review/README.md`; the checked-in HTML is explicitly unverified.
 The server hashes every exact file before listening, displays its verification
 time and held-set SHA lock, and stops if a locked file's stat identity changes.
-All nine approved exact cuts have checksum-approved learner captions. Internal
+All nine current learner-facing cuts have checksum-approved learner captions. Internal
 review transcripts are checksum-locked evidence and are not learner-facing
 assets.
 The machine-readable approval record is
@@ -28,7 +28,7 @@ cuts remain in `held-video-recuts/` as optional future replacement material.
 
 | Slot | Candidate | Duration | Size | SHA-256 | Current decision / next action |
 |---|---|---:|---:|---|---|
-| Welcome | `course-assets/review-lessonA/LESSON-1A-v7.mp4` | 246.186 seconds | 35,190,296 bytes | `493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72` | Approved exact cut with checksum-approved learner captions |
+| Welcome | `course-assets/review-lessonA/LESSON-1A-v11-VIDEO-ZERO-FINAL-AUDIO-QC.mp4` | 318.351 seconds | 74,404,741 bytes | `06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b` | Approved exact cut with checksum-approved learner captions |
 | Mindset | `course-assets/review-lessonB/LESSON-1B-v4.mp4` | 362.688 seconds | 107,220,021 bytes | `b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da` | Approved exact cut with checksum-approved learner captions |
 | Objection Scripts Playbook | `course-assets/review-lesson7B/LESSON-7B-v5.mp4` | 1,508.757 seconds | 572,011,027 bytes | `59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb` | Approved exact cut with checksum-approved learner captions |
 | Closing and Deal Engineering | `course-assets/review-lesson11A/LESSON-11A-v4.mp4` | 329.429 seconds | 55,329,810 bytes | `6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2` | Approved exact cut with checksum-approved learner captions |
@@ -43,7 +43,8 @@ The Terms Glossary v10 and KPIs v12 local-policy cuts were approved by Jarrad on
 2026-07-17. Their exact SHA-256 values are
 `6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769`.
 and `3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a`.
-The seven directly approved source checksums and the rejected source checksums
+The current Welcome checksum, seven other directly approved source checksums,
+and the rejected source checksums
 remain in the append-only approval history.
 
 For every future replacement, record the exact SHA-256, approval date, and

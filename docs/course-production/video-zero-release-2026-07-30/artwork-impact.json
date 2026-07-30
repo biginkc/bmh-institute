@@ -1,0 +1,34 @@
+{
+  "schema_version": "bmh-artwork-pilot-media-replacement-evidence/v1",
+  "asset_key": "video-slot-01-welcome",
+  "status": "verified_no_artwork_change",
+  "historical": {
+    "local_path": "course-assets/review-lessonA/LESSON-1A-v7.mp4",
+    "checksum_sha256": "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+    "size_bytes": 35190296,
+    "duration_seconds": 246.186
+  },
+  "current": {
+    "local_path": "course-assets/review-lessonA/LESSON-1A-v11-VIDEO-ZERO-FINAL-AUDIO-QC.mp4",
+    "checksum_sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+    "size_bytes": 74404741,
+    "duration_seconds": 318.351
+  },
+  "historical_contact_sheet": {
+    "path": "docs/course-production/thumbnail-pilots/references/v7-video-stills/orientation-contact-sheet.jpg",
+    "checksum_sha256": "838ef332a6a2b35b13908bc8651df7770979777613fd87fef96d09917fb9ebda"
+  },
+  "artwork_impact": {
+    "lesson_mapping_unchanged": true,
+    "poster_unchanged": true,
+    "pilot_artwork_unchanged": true,
+    "historical_generation_lineage_preserved": true,
+    "release_replacement_does_not_modify_artwork": true
+  },
+  "release_binding": {
+    "path": "docs/course-production/video-zero-release-2026-07-30/README.md",
+    "checksum_sha256": "6997993901d79abec0a542dad342b67e990cfda6b7b3b7abbce484b5e782b7b3",
+    "approved_master_sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+    "scope": "media-only replacement evidence; no artwork approval asserted"
+  }
+}

@@ -10,6 +10,7 @@ on:
       - "scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts"
       - "scripts/course-content/build-manifest.mjs"
       - "scripts/course-content/revise-released-quizzes.ts"
+      - "scripts/course-content/test-welcome-video-replacement-postgres.mjs"
       - "scripts/course-content/validate-manifest.mjs"
       - "scripts/fixture-boundary/**"
       - "scripts/sign-fixture-cleanup-evidence.ts"
@@ -91,6 +92,15 @@ jobs:
           psql --set ON_ERROR_STOP=1 --file supabase/tests/064_institute_app_owned_role_access.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/065_hugo_lifecycle_ownership.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/066_institute_last_owner_guard.sql
+
+      - name: Run released Welcome video replacement lifecycle
+        env:
+          WELCOME_VIDEO_REPLACEMENT_EXTERNAL_PG: "1"
+          PGDATABASE: welcome_video_replacement_pg${{ matrix.postgres }}
+        run: |
+          createdb "$PGDATABASE"
+          trap 'dropdb --if-exists "$PGDATABASE"' EXIT
+          node scripts/course-content/test-welcome-video-replacement-postgres.mjs
 
       - name: Rehearse released quiz forward revision and rollback
         run: |
