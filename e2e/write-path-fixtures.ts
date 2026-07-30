@@ -27,6 +27,20 @@ export type WritePathFixture = {
 
 type InsertResult = { id: string };
 
+type FixtureCleanupState = {
+  prefix: string;
+  reviewerProgramIds: string[];
+  admin?: { id: string; email: string };
+  learner?: { id: string; email: string };
+  unassigned?: { id: string; email: string };
+  roleGroupId?: string;
+  programId?: string;
+  courseId?: string;
+  quizId?: string;
+  textAssignmentId?: string;
+  fileAssignmentId?: string;
+};
+
 const TEST_PROJECT_REF = "jvaabkchkihkjllehmft";
 
 export function writePathAdminClient(): SupabaseClient {
@@ -52,7 +66,33 @@ export function writePathAdminClient(): SupabaseClient {
 export async function createWritePathFixture(
   admin: SupabaseClient,
 ): Promise<WritePathFixture> {
+  const cleanupState: FixtureCleanupState = {
+    prefix: "unknown",
+    reviewerProgramIds: [],
+  };
+  try {
+    return await createWritePathFixtureBody(admin, cleanupState);
+  } catch (error) {
+    const cleanupErrors = await cleanupPartialWritePathFixture(
+      admin,
+      cleanupState,
+    );
+    if (cleanupErrors.length > 0) {
+      throw new AggregateError(
+        [error, ...cleanupErrors],
+        "Failed to create and clean up a disposable write-path fixture.",
+      );
+    }
+    throw error;
+  }
+}
+
+async function createWritePathFixtureBody(
+  admin: SupabaseClient,
+  cleanupState: FixtureCleanupState,
+): Promise<WritePathFixture> {
   const prefix = `E2E-WRITE-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`;
+  cleanupState.prefix = prefix;
   const password =
     process.env.E2E_SEED_PASSWORD?.trim() ||
     `BMHWritePath-${crypto.randomUUID()}!1`;
@@ -68,6 +108,7 @@ export async function createWritePathFixture(
   const reviewerProgramIds = (importedPrograms ?? []).map(
     (program) => program.id,
   );
+  cleanupState.reviewerProgramIds = reviewerProgramIds;
 
   const adminUser = await createFixtureUser(admin, {
     email: `${prefix.toLowerCase()}-admin@bmh-institute.test`,
@@ -75,18 +116,21 @@ export async function createWritePathFixture(
     fullName: `${prefix} Admin`,
     systemRole: "owner",
   });
+  cleanupState.admin = adminUser;
   const learner = await createFixtureUser(admin, {
     email: `${prefix.toLowerCase()}-learner@bmh-institute.test`,
     password,
     fullName: `${prefix} Learner`,
     systemRole: "learner",
   });
+  cleanupState.learner = learner;
   const unassigned = await createFixtureUser(admin, {
     email: `${prefix.toLowerCase()}-unassigned@bmh-institute.test`,
     password,
     fullName: `${prefix} Unassigned`,
     systemRole: "learner",
   });
+  cleanupState.unassigned = unassigned;
 
   // The hosted TEST catalog can contain unreleased imported programs. The
   // report completion RPC correctly requires an explicit reviewer grant for
@@ -141,6 +185,7 @@ export async function createWritePathFixture(
     name: `${prefix} Role Group`,
     description: "Disposable write-path E2E role group.",
   });
+  cleanupState.roleGroupId = roleGroupId;
   await admin
     .from("user_role_groups")
     .insert({ user_id: learner.id, role_group_id: roleGroupId })
@@ -154,6 +199,7 @@ export async function createWritePathFixture(
     certificate_enabled: true,
     sort_order: 9999,
   });
+  cleanupState.programId = programId;
   const courseId = await insertOne(admin, "courses", {
     title: `${prefix} Course`,
     description: "Disposable write-path E2E course.",
@@ -161,6 +207,7 @@ export async function createWritePathFixture(
     certificate_enabled: true,
     sort_order: 9999,
   });
+  cleanupState.courseId = courseId;
   await admin
     .from("program_access")
     .insert({ program_id: programId, role_group_id: roleGroupId })
@@ -218,6 +265,7 @@ export async function createWritePathFixture(
     retake_cooldown_hours: 0,
     show_correct_answers_after: "after_pass",
   });
+  cleanupState.quizId = quizId;
   const questionId = await insertOne(admin, "questions", {
     quiz_id: quizId,
     question_text: "What should a BMH Group VA confirm before ending a call?",
@@ -268,6 +316,7 @@ export async function createWritePathFixture(
       },
     ],
   });
+  cleanupState.textAssignmentId = textAssignmentId;
   const textAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
     title: `${prefix} Text Assignment Lesson`,
@@ -291,6 +340,7 @@ export async function createWritePathFixture(
       },
     ],
   });
+  cleanupState.fileAssignmentId = fileAssignmentId;
   const fileAssignmentLessonId = await insertOne(admin, "lessons", {
     module_id: moduleId,
     title: `${prefix} File Assignment Lesson`,
@@ -377,7 +427,7 @@ export async function cleanupWritePathFixture(
       .throwOnError(),
   );
   await captureCleanupError(cleanupErrors, () =>
-    deleteFixtureUsers(admin, [
+    deleteFixtureUsersAndThrow(admin, [
       fixture.admin.id,
       fixture.learner.id,
       fixture.unassigned.id,
@@ -399,6 +449,87 @@ async function captureCleanupError(
     await operation();
   } catch (error) {
     errors.push(error);
+  }
+}
+
+async function cleanupPartialWritePathFixture(
+  admin: SupabaseClient,
+  state: FixtureCleanupState,
+): Promise<unknown[]> {
+  const errors: unknown[] = [];
+  if (state.learner) {
+    await captureCleanupError(errors, () =>
+      cleanupSubmissionStorage(admin, state.learner!.id),
+    );
+  }
+  if (state.admin && state.reviewerProgramIds.length > 0) {
+    for (const programId of state.reviewerProgramIds) {
+      await captureCleanupError(errors, () =>
+        admin
+          .rpc("fn_set_unreleased_import_reviewer_v1", {
+            p_program_id: programId,
+            p_user_id: state.admin!.id,
+            p_allowed: false,
+          })
+          .throwOnError(),
+      );
+    }
+  }
+  if (state.programId) {
+    await captureCleanupError(errors, () =>
+      admin.from("programs").delete().eq("id", state.programId!).throwOnError(),
+    );
+  }
+  if (state.courseId) {
+    await captureCleanupError(errors, () =>
+      admin.from("courses").delete().eq("id", state.courseId!).throwOnError(),
+    );
+  }
+  const assignmentIds = [state.textAssignmentId, state.fileAssignmentId].filter(
+    (id): id is string => Boolean(id),
+  );
+  if (assignmentIds.length > 0) {
+    await captureCleanupError(errors, () =>
+      admin.from("assignments").delete().in("id", assignmentIds).throwOnError(),
+    );
+  }
+  if (state.quizId) {
+    await captureCleanupError(errors, () =>
+      admin.from("quizzes").delete().eq("id", state.quizId!).throwOnError(),
+    );
+  }
+  if (state.roleGroupId) {
+    await captureCleanupError(errors, () =>
+      admin
+        .from("role_groups")
+        .delete()
+        .eq("id", state.roleGroupId!)
+        .throwOnError(),
+    );
+  }
+  const userIds = [
+    state.admin?.id,
+    state.learner?.id,
+    state.unassigned?.id,
+  ].filter((id): id is string => Boolean(id));
+  if (userIds.length > 0) {
+    await captureCleanupError(errors, async () => {
+      await deleteFixtureUsersAndThrow(admin, userIds);
+    });
+  }
+  return errors;
+}
+
+async function deleteFixtureUsersAndThrow(
+  admin: SupabaseClient,
+  userIds: string[],
+): Promise<void> {
+  const userErrors = await deleteFixtureUsers(admin, userIds);
+  if (userErrors.length > 0) {
+    throw new AggregateError(
+      userErrors,
+      "Failed to delete one or more fixture users.",
+    );
   }
 }
 
@@ -457,15 +588,28 @@ async function createFixtureUser(
   if (error || !data.user) {
     throw error ?? new Error(`Failed to create ${input.email}`);
   }
-  await admin
-    .from("profiles")
-    .update({
-      full_name: input.fullName,
-      system_role: input.systemRole,
-      status: "active",
-    })
-    .eq("id", data.user.id)
-    .throwOnError();
+  try {
+    await admin
+      .from("profiles")
+      .update({
+        full_name: input.fullName,
+        system_role: input.systemRole,
+        status: "active",
+      })
+      .eq("id", data.user.id)
+      .throwOnError();
+  } catch (profileError) {
+    const { error: deleteError } = await admin.auth.admin.deleteUser(
+      data.user.id,
+    );
+    if (deleteError) {
+      throw new AggregateError(
+        [profileError, deleteError],
+        `Failed to initialize and roll back ${input.email}.`,
+      );
+    }
+    throw profileError;
+  }
   return { id: data.user.id, email: input.email };
 }
 
