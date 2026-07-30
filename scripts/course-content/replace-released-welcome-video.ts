@@ -21,6 +21,7 @@ import {
   type CourseImportAsset,
 } from "../../src/lib/course-import/manifest";
 import { buildImportPlan } from "../../src/lib/course-import/operations";
+import { assertWelcomeVideoReplacementNotRolledBack } from "../../src/lib/course-import/welcome-video-replacement-policy";
 
 const EXPECTED_IMPORT_ID = "bmh-employee-training-v1";
 const VIDEO_KEY = "video-slot-01-welcome";
@@ -369,11 +370,7 @@ async function assertReplacementWasNotRolledBack(
       `Production welcome rollback audit could not be read: ${rollback.error.message}.`,
     );
   }
-  if (rollback.data.length > 0) {
-    throw new Error(
-      "Production welcome replacement was previously rolled back and is terminal; refusing retry before upload.",
-    );
-  }
+  assertWelcomeVideoReplacementNotRolledBack(rollback.data);
 }
 
 async function rollbackExisting(input: {

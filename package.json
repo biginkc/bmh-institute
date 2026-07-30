@@ -9,6 +9,7 @@
     "course:video-posters:capture-preflight": "tsx scripts/course-content/capture-video-poster-production-preflight.ts",
     "course:captions:replace": "tsx scripts/course-content/replace-released-video-captions.ts",
     "course:welcome-video:replace": "tsx scripts/course-content/replace-released-welcome-video.ts",
+    "test:welcome-video-replacement:postgres": "node scripts/course-content/test-welcome-video-replacement-postgres.mjs",
     "course:content-blocks:revise": "tsx scripts/course-content/revise-released-content-blocks.ts",
     "course:content-blocks:prepare": "tsx scripts/course-content/revise-released-content-blocks.ts prepare-assets",
     "dev": "next dev --webpack -p 3100",

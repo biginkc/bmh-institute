@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
+import { assertWelcomeVideoReplacementNotRolledBack } from "./welcome-video-replacement-policy";
 
 const source = readFileSync(
   resolve(
@@ -94,7 +95,16 @@ describe("released welcome video replacement CLI policy", () => {
       /from\("content_import_welcome_video_rollback_records"\)[\s\S]*client_payload_sha256[\s\S]*approval_evidence_sha256/,
     );
     expect(source).toMatch(
-      /previously rolled back and is terminal; refusing retry before upload/,
+      /assertWelcomeVideoReplacementNotRolledBack\(rollback\.data\)/,
+    );
+  });
+
+  it("makes rollback terminal as a directly tested runtime policy", () => {
+    expect(() => assertWelcomeVideoReplacementNotRolledBack([])).not.toThrow();
+    expect(() =>
+      assertWelcomeVideoReplacementNotRolledBack([{ id: "rollback-1" }]),
+    ).toThrow(
+      "Production welcome replacement was previously rolled back and is terminal; refusing retry before upload.",
     );
   });
 

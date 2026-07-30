@@ -486,6 +486,22 @@ async function validatePilotMediaReplacement({
   evidence,
   asset,
 }) {
+  const immutableReplacementKey = [
+    replacement.asset_key,
+    replacement.historical?.checksum_sha256,
+    replacement.current?.checksum_sha256,
+    replacement.historical_contact_sheet?.checksum_sha256,
+  ].join(":");
+  const independentlyBoundReplacement =
+    "video-slot-01-welcome:" +
+    "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72:" +
+    "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b:" +
+    "838ef332a6a2b35b13908bc8651df7770979777613fd87fef96d09917fb9ebda";
+  if (immutableReplacementKey !== independentlyBoundReplacement) {
+    throw new Error(
+      `${asset.source_key} pilot media replacement is not independently checksum-bound`,
+    );
+  }
   assertExactKeys(
     replacement,
     [

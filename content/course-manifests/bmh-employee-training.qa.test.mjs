@@ -33,6 +33,10 @@ const VIDEO_ZERO_CAPTION_EVIDENCE_URL = new URL(
   "../../docs/course-production/caption-evidence/video-zero-caption-validation-2026-07-30.json",
   import.meta.url,
 );
+const VIDEO_ZERO_TRANSCRIPT_BINDING_URL = new URL(
+  "../../docs/course-production/video-zero-release-2026-07-30/transcript-binding.json",
+  import.meta.url,
+);
 
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
@@ -85,6 +89,25 @@ test("Video Zero caption text is checksum-bound to the verified transcript", asy
     normalizeSpokenText(captionSpokenText(caption)),
     normalizeSpokenText(transcript.toString("utf8")),
   );
+});
+
+test("Video Zero release independently binds the approved master, caption, and verified transcript", async () => {
+  const binding = JSON.parse(
+    await readFile(VIDEO_ZERO_TRANSCRIPT_BINDING_URL, "utf8"),
+  );
+  assert.deepEqual(binding, {
+    schema_version: 1,
+    video_source_key: "video-slot-01-welcome",
+    video_sha256:
+      "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+    caption_sha256:
+      "bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939",
+    transcript_sha256:
+      "c5b4ec1c6756206f0ccde04ba2353f2d2566c8185ffa402f40339eef3c3d64ed",
+    verified_phrase: "Solve the problem, and the profit follows. Every time.",
+    approved_by: "Jarrad Henry",
+    approved_at: "2026-07-30",
+  });
 });
 
 test("the draft contains the locked course structure", async () => {

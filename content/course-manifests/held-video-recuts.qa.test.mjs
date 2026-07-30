@@ -733,6 +733,24 @@ test("the real manifest generator keeps a direct approved checksum ahead of a pe
     () => currentReviewedVideoRecord("video-slot-17-compensation", ledger),
     /multiple approved corrected cuts.*explicit supersession/,
   );
+  for (const currentLocalPath of [
+    ledger.records.find(
+      (record) =>
+        record.source_key === "video-slot-17-compensation" &&
+        record.sha256 ===
+          "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
+    ).candidate_local_path,
+    replacement.candidate_local_path,
+  ]) {
+    assert.throws(
+      () =>
+        currentReviewedVideoRecord("video-slot-17-compensation", ledger, {
+          currentLocalPath,
+        }),
+      /multiple approved corrected cuts.*explicit supersession/,
+      `configured path ${currentLocalPath} must not bypass the explicit supersession gate`,
+    );
+  }
 });
 
 test("generated scripts contain the exact locked final transition", async () => {
