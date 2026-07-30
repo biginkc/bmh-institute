@@ -92,14 +92,40 @@ export async function createWritePathFixture(
     (program) => program.id,
   );
   if (reviewerProgramIds.length > 0) {
-    for (const programId of reviewerProgramIds) {
-      await admin
-        .rpc("fn_set_unreleased_import_reviewer_v1", {
-          p_program_id: programId,
-          p_user_id: adminUser.id,
-          p_allowed: true,
-        })
-        .throwOnError();
+    const grantedReviewerProgramIds: string[] = [];
+    try {
+      for (const programId of reviewerProgramIds) {
+        await admin
+          .rpc("fn_set_unreleased_import_reviewer_v1", {
+            p_program_id: programId,
+            p_user_id: adminUser.id,
+            p_allowed: true,
+          })
+          .throwOnError();
+        grantedReviewerProgramIds.push(programId);
+      }
+    } catch (error) {
+      const rollbackErrors: unknown[] = [];
+      for (const programId of grantedReviewerProgramIds) {
+        try {
+          await admin
+            .rpc("fn_set_unreleased_import_reviewer_v1", {
+              p_program_id: programId,
+              p_user_id: adminUser.id,
+              p_allowed: false,
+            })
+            .throwOnError();
+        } catch (rollbackError) {
+          rollbackErrors.push(rollbackError);
+        }
+      }
+      if (rollbackErrors.length > 0) {
+        throw new AggregateError(
+          [error, ...rollbackErrors],
+          "Failed to create and roll back disposable reviewer grants.",
+        );
+      }
+      throw error;
     }
   }
 
@@ -298,16 +324,25 @@ export async function cleanupWritePathFixture(
 ): Promise<void> {
   if (!fixture) return;
 
-  await cleanupSubmissionStorage(admin, fixture.learner.id);
+  const cleanupErrors: unknown[] = [];
+  try {
+    await cleanupSubmissionStorage(admin, fixture.learner.id);
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
   if (fixture.reviewerProgramIds.length > 0) {
     for (const programId of fixture.reviewerProgramIds) {
-      await admin
-        .rpc("fn_set_unreleased_import_reviewer_v1", {
-          p_program_id: programId,
-          p_user_id: fixture.admin.id,
-          p_allowed: false,
-        })
-        .throwOnError();
+      try {
+        await admin
+          .rpc("fn_set_unreleased_import_reviewer_v1", {
+            p_program_id: programId,
+            p_user_id: fixture.admin.id,
+            p_allowed: false,
+          })
+          .throwOnError();
+      } catch (error) {
+        cleanupErrors.push(error);
+      }
     }
   }
   await admin.from("programs").delete().eq("id", fixture.programId);
@@ -321,6 +356,12 @@ export async function cleanupWritePathFixture(
   await admin.auth.admin.deleteUser(fixture.admin.id);
   await admin.auth.admin.deleteUser(fixture.learner.id);
   await admin.auth.admin.deleteUser(fixture.unassigned.id);
+  if (cleanupErrors.length > 0) {
+    throw new AggregateError(
+      cleanupErrors,
+      "Failed to clean up one or more disposable fixture resources.",
+    );
+  }
 }
 
 async function cleanupSubmissionStorage(
