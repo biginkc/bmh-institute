@@ -23,10 +23,15 @@ describe("quiz answer recording timeout migration", () => {
     expect(
       existsSync(resolve(process.cwd(), "supabase/migrations/20260729210000_bound_quiz_answer_recording.sql")),
     ).toBe(false);
-    expect(
-      "20260729220000_quiz_answer_recording_session_timeout.sql" >
-        "20260729205000_institute_app_owned_role_access.sql",
-    ).toBe(true);
+    const instituteMigration = migrationNames.find((name) =>
+      name.startsWith("20260729205000_institute_app_owned_role_access"),
+    );
+    const timeoutMigration = migrationNames.find((name) =>
+      name.startsWith("20260729220000_quiz_answer_recording_session_timeout"),
+    );
+    expect(instituteMigration).toBeDefined();
+    expect(timeoutMigration).toBeDefined();
+    expect(timeoutMigration!.localeCompare(instituteMigration!)).toBeGreaterThan(0);
   });
 
   it("bounds lock waits and removes the ineffective function statement timeout", () => {
