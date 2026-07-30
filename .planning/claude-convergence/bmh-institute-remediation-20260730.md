@@ -26,6 +26,7 @@
 - Iteration 2: repair waves completed and independently reviewed. Quiz, lifecycle, security, deletion, and routing repository gates pass; hosted TEST SQL credentials and real production Chrome remain outstanding. Claude returned NEXT_STEP: let PR #138 CI finish, then integrate serially; hold/rebase PR #137 because its seeded Playwright role-group assignment flow currently times out after Save Changes.
 - Iteration 3: PR #138 merged at `227a6cee` with all CI and seeded E2E checks green. Hugo lifecycle branch rebased onto that main, passed 234 tests plus migration replay/typecheck/lint, and opened as Hugo PR #7. Hugo PR CI is currently pending; Institute lifecycle must wait for that merge before rebasing.
 - Integration checkpoint: Hugo PR #7 has all checks green. Rollback point before merge: Hugo `origin/main` `ecf6e7217db394fd963587ca763567c3fd550105`.
+- Iteration 4: Hugo PR #7 merged at `b37abba64620347e264b2c0e4ef7256e05ccfc21`. Institute lifecycle rebased onto Institute main `227a6cee`, passed 1,275 unit + 167 RTL tests, typecheck, lint, and migration rehearsals, then opened as Institute PR #139. Its hosted checks are queued.
 - Integration order: amended #138 -> Hugo lifecycle -> Institute lifecycle -> PR #137 reconsideration -> learner routing/video -> security -> deletion -> consolidated Chrome acceptance.
 - The broader 886-question/course acceptance campaign remains separate and must not be called complete by this tranche.
 
