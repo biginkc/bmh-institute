@@ -110,24 +110,3 @@
   durability concern and is not hidden inside this migration.
 - Current verdict: the five requested gates pass. PR #137 remains open for
   Claude review and is not merged.
-
-### Iteration 4
-
-- PR #137 CI exposed a regression in the atomic RPC actor check. Its seeded
-  Institute admin has an active admin profile but no Hugo grant row.
-- Test-first proof changed SQL test 065 to enable grant enforcement and keep
-  the actor grant absent. Before the migration edit, the PostgreSQL harness
-  failed because the RPC returned `NOT_ADMIN` before the UUID self-role guard.
-- Removed only the `fn_hugo_access_is_active(p_actor_id)` predicate from the
-  actor authorization check. The locked profile role/status read, active
-  owner/admin gate, UUID self-role comparison, and atomic role plus role-group
-  write remain unchanged.
-- Local verification passed on PostgreSQL 17 with 87 migrations and 11 focused
-  SQL tests. PostgreSQL 15 and 16 are unavailable locally.
-- `npm test` passed 205 files and 1,253 tests. Typecheck passed. Lint passed
-  with 0 errors and 13 inherited warnings. RTL passed 41 files and 163 tests.
-- Two scoped manual-review lanes covered SQL authorization/atomicity and test
-  realism/duplication. Both returned no findings. Fallow reported no introduced
-  issues in the PR changed files.
-- Local Playwright was intentionally not run. `E2E_SEED_PASSWORD` is absent in
-  this sandbox, so PR CI is the only valid seeded browser confirmation.

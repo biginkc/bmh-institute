@@ -35,7 +35,8 @@ begin
     for update;
   if not found
      or v_actor_status <> 'active'
-     or v_actor_role not in ('owner', 'admin') then
+     or v_actor_role not in ('owner', 'admin')
+     or not coalesce(public.fn_hugo_access_is_active(p_actor_id), false) then
     return jsonb_build_object('ok', false, 'code', 'NOT_ADMIN');
   end if;
 
