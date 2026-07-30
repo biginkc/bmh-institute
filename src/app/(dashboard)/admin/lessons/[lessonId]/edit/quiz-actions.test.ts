@@ -15,6 +15,7 @@ let createdQuestionId = "question-1";
 let lastOptionSortOrder: number | null = 4;
 let lessonContentImportId: string | null = null;
 let courseContentImportId: string | null = null;
+let deletionResult: { code: string } = { code: "deleted" };
 let insertedAnswerOptions: unknown[] = [];
 let updateCalls: Array<{
   patch: Record<string, unknown>;
@@ -128,6 +129,15 @@ vi.mock("@/lib/supabase/admin", () => ({
   }),
 }));
 
+vi.mock("@/lib/release-control/admin-deletion-actions", () => ({
+  deleteAdminEntity: vi.fn(async () =>
+    deletionResult.code === "deleted"
+      ? { ok: true }
+      : { ok: false, error: "Imported content is protected. Use the exact import rollback workflow." },
+  ),
+  previewAdminDeletion: vi.fn(async () => ({ code: "ready" })),
+}));
+
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 import {
@@ -147,6 +157,7 @@ describe("admin quiz answer option actions", () => {
     lastOptionSortOrder = 4;
     lessonContentImportId = null;
     courseContentImportId = null;
+    deletionResult = { code: "deleted" };
     insertedAnswerOptions = [];
     updateCalls = [];
     authenticatedRpcCalls.length = 0;
@@ -257,20 +268,12 @@ describe("admin quiz answer option actions", () => {
     });
 
     expect(result).toEqual({ ok: true });
-    expect(adminFromCalls).toEqual([
-      "answer_options",
-      "lessons",
-      "questions",
-      "modules",
-      "courses",
-      "answer_options",
-    ]);
-    expect(learnerFromCalls).not.toContain("answer_options");
-    expect(calls).toContain("delete:option-1");
+    expect(adminFromCalls).toEqual([]);
   });
 
   it("refuses to delete an answer option owned by an imported course", async () => {
     courseContentImportId = "bmh-institute-v1";
+    deletionResult = { code: "imported_protected" };
 
     const result = await deleteAnswerOption({
       optionId: "option-1",
@@ -280,7 +283,7 @@ describe("admin quiz answer option actions", () => {
     expect(result).toEqual({
       ok: false,
       error:
-        "Imported course content can only be deleted with the exact course-import rollback operation.",
+        "Imported content is protected. Use the exact import rollback workflow.",
     });
     expect(calls).not.toContain("delete:option-1");
   });

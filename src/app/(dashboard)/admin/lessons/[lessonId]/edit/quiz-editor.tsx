@@ -5,6 +5,8 @@ import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
+import { DestructiveConfirmation } from "@/components/destructive-confirmation";
+import { deletionImpact, deletionMessage, type DeletionPreview } from "@/lib/release-control/admin-deletions";
 import { Label } from "@/components/ui/label";
 
 import {
@@ -12,6 +14,8 @@ import {
   createQuestion,
   deleteAnswerOption,
   deleteQuestion,
+  previewAnswerOptionDeletion,
+  previewQuestionDeletion,
   moveQuestion,
   updateAnswerOption,
   updateQuestion,
@@ -329,6 +333,7 @@ function QuestionCard({
   const [explanation, setExplanation] = useState(question.explanation ?? "");
   const [points, setPoints] = useState(question.points);
   const [newOption, setNewOption] = useState("");
+  const [confirmation, setConfirmation] = useState<DeletionPreview | null>(null);
 
   function onSave() {
     startTransition(async () => {
@@ -345,12 +350,20 @@ function QuestionCard({
   }
 
   function onDelete() {
-    if (!confirm("Delete this question?")) return;
     startTransition(async () => {
-      const result = await deleteQuestion({
-        questionId: question.id,
-        lessonId,
-      });
+      const preview = await previewQuestionDeletion(question.id);
+      if (preview.code !== "ready") {
+        toast.error(deletionMessage(preview.code));
+        return;
+      }
+      setConfirmation(preview);
+    });
+  }
+
+  function confirmDelete() {
+    setConfirmation(null);
+    startTransition(async () => {
+      const result = await deleteQuestion({ questionId: question.id, lessonId });
       if (!result.ok) toast.error(result.error);
       else toast.success("Question removed.");
     });
@@ -514,6 +527,15 @@ function QuestionCard({
           ) : null}
         </div>
       </div>
+      {confirmation ? (
+        <DestructiveConfirmation
+          title="Delete this question?"
+          description="The question and all of its answer options will be removed."
+          impact={deletionImpact(confirmation)}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </Card>
   );
 }
@@ -535,6 +557,7 @@ function OptionRow({
 }) {
   const [text, setText] = useState(option.option_text);
   const [correct, setCorrect] = useState(option.is_correct);
+  const [confirmation, setConfirmation] = useState<DeletionPreview | null>(null);
   const isRadio = questionType !== "multi_select";
 
   function save(nextCorrect = correct) {
@@ -560,12 +583,20 @@ function OptionRow({
       toast.error("True/False options can't be deleted.");
       return;
     }
-    if (!confirm("Delete this option?")) return;
     startTransition(async () => {
-      const result = await deleteAnswerOption({
-        optionId: option.id,
-        lessonId,
-      });
+      const preview = await previewAnswerOptionDeletion(option.id);
+      if (preview.code !== "ready") {
+        toast.error(deletionMessage(preview.code));
+        return;
+      }
+      setConfirmation(preview);
+    });
+  }
+
+  function confirmDelete() {
+    setConfirmation(null);
+    startTransition(async () => {
+      const result = await deleteAnswerOption({ optionId: option.id, lessonId });
       if (!result.ok) toast.error(result.error);
       else toast.success("Option removed.");
     });
@@ -598,6 +629,15 @@ function OptionRow({
           <Trash2 className="size-4 accent-[var(--action)]" />
         </IconButton>
       )}
+      {confirmation ? (
+        <DestructiveConfirmation
+          title="Delete this option?"
+          description="This answer option will be removed from the question."
+          impact={deletionImpact(confirmation)}
+          onCancel={() => setConfirmation(null)}
+          onConfirm={confirmDelete}
+        />
+      ) : null}
     </li>
   );
 }

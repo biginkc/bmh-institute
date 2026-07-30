@@ -21,6 +21,8 @@ vi.mock("./quiz-actions", () => ({
   createQuestion: vi.fn(async () => ({ ok: true })),
   deleteAnswerOption: vi.fn(async () => ({ ok: true })),
   deleteQuestion: vi.fn(async () => ({ ok: true })),
+  previewAnswerOptionDeletion: vi.fn(async () => ({ code: "ready" })),
+  previewQuestionDeletion: vi.fn(async () => ({ code: "ready" })),
   moveQuestion: vi.fn(async () => ({ ok: true })),
   updateAnswerOption: vi.fn(async () => ({ ok: true })),
   updateQuestion: vi.fn(async () => ({ ok: true })),
@@ -157,8 +159,9 @@ describe("<QuizEditor />", () => {
       }),
     );
 
-    const confirm = vi.spyOn(globalThis, "confirm").mockReturnValue(true);
     await user.click(screen.getAllByRole("button", { name: "Delete option" })[1]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() =>
       expect(deleteAnswerOption).toHaveBeenCalledWith({
         optionId: "option-2",
@@ -166,12 +169,13 @@ describe("<QuizEditor />", () => {
       }),
     );
     await user.click(screen.getAllByRole("button", { name: "Delete question" })[0]);
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Delete" }));
     await waitFor(() =>
       expect(deleteQuestion).toHaveBeenCalledWith({
         questionId: "question-1",
         lessonId: "lesson-1",
       }),
     );
-    confirm.mockRestore();
   });
 });

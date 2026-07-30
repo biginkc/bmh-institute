@@ -12,6 +12,7 @@ vi.mock("sonner", () => ({
 vi.mock("./actions", () => ({
   createRoleGroup: vi.fn(async () => ({ ok: true })),
   deleteRoleGroup: vi.fn(async () => ({ ok: true })),
+  previewRoleGroupDeletion: vi.fn(async () => ({ code: "ready", members: 1, access_grants: 1 })),
   updateRoleGroup: vi.fn(async () => ({ ok: true })),
 }));
 
@@ -49,5 +50,17 @@ describe("<RoleGroupsEditor />", () => {
     expect(screen.getByRole("columnheader", { name: "Role group" }).style.textTransform).toBe(
       "uppercase",
     );
+  });
+
+  it("uses an accessible in-app confirmation instead of native confirm", async () => {
+    const user = userEvent.setup();
+    render(
+      <RoleGroupsEditor initial={[{ id: "group-1", name: "Acquisitions", description: null }]} />,
+    );
+    await user.click(screen.getByRole("button", { name: "Delete role group" }));
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/learner assignments/i)).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

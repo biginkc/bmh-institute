@@ -12,6 +12,11 @@ import {
 } from "@/lib/release-control/admin-guards";
 import { createClient } from "@/lib/supabase/server";
 import {
+  deleteAdminEntity,
+  previewAdminDeletion,
+} from "@/lib/release-control/admin-deletion-actions";
+import type { DeletionPreview } from "@/lib/release-control/admin-deletions";
+import {
   parseCourseInput,
   type CourseInput,
   type ParseResult,
@@ -226,16 +231,15 @@ export async function deleteModule(input: {
   moduleId: string;
   courseId: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("modules")
-    .delete()
-    .eq("id", input.moduleId);
-  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
-  revalidatePath(`/admin/courses/${input.courseId}/edit`);
-  revalidatePath("/dashboard");
-  return { ok: true };
+  return deleteAdminEntity({
+    entityType: "module",
+    entityId: input.moduleId,
+    revalidatePaths: [`/admin/courses/${input.courseId}/edit`, "/dashboard"],
+  });
+}
+
+export async function previewModuleDeletion(moduleId: string): Promise<DeletionPreview> {
+  return previewAdminDeletion({ entityType: "module", entityId: moduleId });
 }
 
 export async function moveModule(input: {
@@ -345,37 +349,15 @@ export async function deleteLesson(input: {
   lessonId: string;
   courseId: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
-  await requireAdmin();
-  const supabase = await createClient();
+  return deleteAdminEntity({
+    entityType: "lesson",
+    entityId: input.lessonId,
+    revalidatePaths: [`/admin/courses/${input.courseId}/edit`, "/dashboard"],
+  });
+}
 
-  // Grab the lesson's backing quiz/assignment (if any) so we can clean up
-  // the orphan after the lesson row is gone. ON DELETE RESTRICT on the
-  // FK means we can't delete the quiz while the lesson still references it.
-  const { data: lesson } = await supabase
-    .from("lessons")
-    .select("quiz_id, assignment_id")
-    .eq("id", input.lessonId)
-    .maybeSingle();
-
-  const { error } = await supabase
-    .from("lessons")
-    .delete()
-    .eq("id", input.lessonId);
-  if (error) return { ok: false, error: normalizeReleaseControlError(error.message) };
-
-  if (lesson?.quiz_id) {
-    await supabase.from("quizzes").delete().eq("id", lesson.quiz_id);
-  }
-  if (lesson?.assignment_id) {
-    await supabase
-      .from("assignments")
-      .delete()
-      .eq("id", lesson.assignment_id);
-  }
-
-  revalidatePath(`/admin/courses/${input.courseId}/edit`);
-  revalidatePath("/dashboard");
-  return { ok: true };
+export async function previewLessonDeletion(lessonId: string): Promise<DeletionPreview> {
+  return previewAdminDeletion({ entityType: "lesson", entityId: lessonId });
 }
 
 export async function moveLesson(input: {

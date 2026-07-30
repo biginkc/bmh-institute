@@ -3,12 +3,10 @@
 import { revalidatePath } from "next/cache";
 
 import { requireAdmin } from "@/lib/auth/guard";
-import {
-  importedDeletionError,
-  normalizeReleaseControlError,
-} from "@/lib/release-control/admin-guards";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import { deleteAdminEntity, previewAdminDeletion } from "@/lib/release-control/admin-deletion-actions";
+import type { DeletionPreview } from "@/lib/release-control/admin-deletions";
 
 export type ActionResult =
   | { ok: true }
@@ -148,18 +146,15 @@ export async function deleteQuestion(input: {
   questionId: string;
   lessonId: string;
 }): Promise<ActionResult> {
-  await requireAdmin();
-  const supabase = await createClient();
-  const { error } = await supabase
-    .from("questions")
-    .delete()
-    .eq("id", input.questionId);
-  if (error) {
-    return { ok: false, error: normalizeReleaseControlError(error.message) };
-  }
-  revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
-  revalidatePath(`/lessons/${input.lessonId}`);
-  return { ok: true };
+  return deleteAdminEntity({
+    entityType: "question",
+    entityId: input.questionId,
+    revalidatePaths: [`/admin/lessons/${input.lessonId}/edit`, `/lessons/${input.lessonId}`],
+  });
+}
+
+export async function previewQuestionDeletion(questionId: string): Promise<DeletionPreview> {
+  return previewAdminDeletion({ entityType: "question", entityId: questionId });
 }
 
 export async function moveQuestion(input: {
@@ -262,87 +257,15 @@ export async function deleteAnswerOption(input: {
   optionId: string;
   lessonId: string;
 }): Promise<ActionResult> {
-  await requireAdmin();
-  const admin = getAdminClientResult();
-  if (!admin.ok) return admin;
-  const supabase = admin.supabase;
-  const imported = await importedAnswerOptionId(
-    supabase,
-    input.optionId,
-    input.lessonId,
-  );
-  if (!imported.ok) return imported;
-  if (imported.contentImportId) {
-    return {
-      ok: false,
-      error: importedDeletionError(imported.contentImportId)!,
-    };
-  }
-  const { error } = await supabase
-    .from("answer_options")
-    .delete()
-    .eq("id", input.optionId);
-  if (error) {
-    return { ok: false, error: normalizeReleaseControlError(error.message) };
-  }
-  revalidatePath(`/admin/lessons/${input.lessonId}/edit`);
-  revalidatePath(`/lessons/${input.lessonId}`);
-  return { ok: true };
+  return deleteAdminEntity({
+    entityType: "option",
+    entityId: input.optionId,
+    revalidatePaths: [`/admin/lessons/${input.lessonId}/edit`, `/lessons/${input.lessonId}`],
+  });
 }
 
-async function importedAnswerOptionId(
-  supabase: ReturnType<typeof createAdminClient>,
-  optionId: string,
-  lessonId: string,
-): Promise<
-  | { ok: true; contentImportId: string | null }
-  | { ok: false; error: string }
-> {
-  const [option, lesson] = await Promise.all([
-    supabase
-      .from("answer_options")
-      .select("question_id")
-      .eq("id", optionId)
-      .maybeSingle(),
-    supabase
-      .from("lessons")
-      .select("quiz_id, module_id, content_import_id")
-      .eq("id", lessonId)
-      .maybeSingle(),
-  ]);
-  if (option.error || lesson.error || !option.data || !lesson.data?.quiz_id) {
-    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
-  }
-
-  const question = await supabase
-    .from("questions")
-    .select("quiz_id")
-    .eq("id", option.data.question_id)
-    .maybeSingle();
-  if (question.error || question.data?.quiz_id !== lesson.data.quiz_id) {
-    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
-  }
-  if (lesson.data.content_import_id) {
-    return { ok: true, contentImportId: lesson.data.content_import_id };
-  }
-
-  const moduleRow = await supabase
-    .from("modules")
-    .select("course_id")
-    .eq("id", lesson.data.module_id)
-    .maybeSingle();
-  if (moduleRow.error || !moduleRow.data) {
-    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
-  }
-  const course = await supabase
-    .from("courses")
-    .select("content_import_id")
-    .eq("id", moduleRow.data.course_id)
-    .maybeSingle();
-  if (course.error || !course.data) {
-    return { ok: false, error: "Couldn't verify the answer option's catalog ownership." };
-  }
-  return { ok: true, contentImportId: course.data.content_import_id };
+export async function previewAnswerOptionDeletion(optionId: string): Promise<DeletionPreview> {
+  return previewAdminDeletion({ entityType: "option", entityId: optionId });
 }
 
 function getAdminClientResult():
