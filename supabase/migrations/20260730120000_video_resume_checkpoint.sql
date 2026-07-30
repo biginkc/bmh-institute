@@ -1,13 +1,13 @@
 -- Unload-safe resume checkpoint. This path never records watched coverage or completion credit.
 alter table public.user_video_progress
-  add column if not exists checkpoint_client_updated_at timestamptz;
+  add column if not exists checkpoint_sequence bigint not null default 0;
 
 create or replace function public.fn_checkpoint_video_playback(
   p_user_id uuid,
   p_block_id uuid,
   p_position_seconds numeric,
   p_duration_seconds numeric,
-  p_client_updated_at timestamptz
+  p_checkpoint_sequence bigint
 )
 returns jsonb
 language plpgsql
@@ -19,14 +19,15 @@ declare
   v_content jsonb;
   v_asset_version text;
   v_stored_asset_version text;
-  v_existing_checkpoint_client_updated_at timestamptz;
+  v_existing_checkpoint_sequence bigint;
+  v_checkpoint_sequence bigint;
   v_now timestamptz := clock_timestamp();
 begin
   if p_user_id is distinct from auth.uid()
     or not exists (select 1 from public.profiles where id = auth.uid() and status = 'active') then
     raise exception 'Active learner authentication required.';
   end if;
-  if p_client_updated_at is null or p_client_updated_at > v_now + interval '5 minutes'
+  if p_checkpoint_sequence is null or p_checkpoint_sequence < 0
     or p_position_seconds is null or p_position_seconds < 0
     or p_duration_seconds is null or p_duration_seconds <= 0 then
     raise exception 'Video checkpoint contains invalid timing data.';
@@ -41,21 +42,30 @@ begin
   end if;
   if not public.fn_lesson_is_unlocked(p_user_id, v_lesson_id) then raise exception 'Complete the prerequisite lessons first.'; end if;
   perform pg_catalog.pg_advisory_xact_lock(pg_catalog.hashtextextended(p_user_id::text || ':' || p_block_id::text, 0));
-  select checkpoint_client_updated_at, asset_version
-    into v_existing_checkpoint_client_updated_at, v_stored_asset_version
+  select checkpoint_sequence, asset_version
+    into v_existing_checkpoint_sequence, v_stored_asset_version
   from public.user_video_progress
     where user_id = p_user_id and block_id = p_block_id for update;
   -- Asset replacement starts a new progress identity. Clear the old
-  -- ordering marker before stale-checking so a timestamp from the previous
+  -- ordering sequence before stale-checking so a sequence from the previous
   -- asset cannot block the first checkpoint for the replacement.
   if v_stored_asset_version is not null
     and v_stored_asset_version is distinct from v_asset_version then
-    v_existing_checkpoint_client_updated_at := null;
+    v_existing_checkpoint_sequence := 0;
+    p_checkpoint_sequence := 0;
   end if;
-  if v_existing_checkpoint_client_updated_at is not null
-    and v_existing_checkpoint_client_updated_at >= p_client_updated_at then
-    return jsonb_build_object('saved', false, 'stale', true);
+  v_existing_checkpoint_sequence := coalesce(v_existing_checkpoint_sequence, 0);
+  if v_existing_checkpoint_sequence <> p_checkpoint_sequence then
+    return jsonb_build_object(
+      'saved', false,
+      'stale', true,
+      'checkpointSequence', v_existing_checkpoint_sequence
+    );
   end if;
+  -- The caller sends the last server-issued sequence it has observed. The
+  -- transaction owns the next sequence, so ordering never depends on a
+  -- browser clock or on a database timestamp.
+  v_checkpoint_sequence := greatest(v_existing_checkpoint_sequence, p_checkpoint_sequence) + 1;
   insert into public.user_video_progress (
     user_id,
     block_id,
@@ -65,7 +75,7 @@ begin
     last_observed_position_seconds,
     last_observed_at,
     asset_version,
-    checkpoint_client_updated_at,
+    checkpoint_sequence,
     updated_at
   ) values (
     p_user_id,
@@ -76,7 +86,7 @@ begin
     0,
     null,
     v_asset_version,
-    p_client_updated_at,
+    v_checkpoint_sequence,
     v_now
   )
   on conflict (user_id, block_id) do update set
@@ -93,14 +103,19 @@ begin
         then null
       else user_video_progress.last_observed_at
     end,
-    checkpoint_client_updated_at = excluded.checkpoint_client_updated_at,
+    checkpoint_sequence = excluded.checkpoint_sequence,
     asset_version = excluded.asset_version,
     updated_at = v_now;
-  return jsonb_build_object('saved', true, 'stale', false, 'positionSeconds', p_position_seconds);
+  return jsonb_build_object(
+    'saved', true,
+    'stale', false,
+    'positionSeconds', p_position_seconds,
+    'checkpointSequence', v_checkpoint_sequence
+  );
 end;
 $$;
-revoke all on function public.fn_checkpoint_video_playback(uuid, uuid, numeric, numeric, timestamptz) from public, anon;
-grant execute on function public.fn_checkpoint_video_playback(uuid, uuid, numeric, numeric, timestamptz) to authenticated;
+revoke all on function public.fn_checkpoint_video_playback(uuid, uuid, numeric, numeric, bigint) from public, anon;
+grant execute on function public.fn_checkpoint_video_playback(uuid, uuid, numeric, numeric, bigint) to authenticated;
 
 -- A checkpoint can arrive before an already queued observation. Keep the
 -- checkpoint position as a resume hint without treating it as trusted
@@ -130,7 +145,7 @@ declare
   v_last_at timestamptz;
   v_asset_version text;
   v_stored_asset_version text;
-  v_checkpoint_client_updated_at timestamptz;
+  v_checkpoint_sequence bigint;
   v_resume_position numeric;
   v_now timestamptz := clock_timestamp();
   v_span numeric;
@@ -187,13 +202,13 @@ begin
          last_observed_position_seconds,
          last_observed_at,
          asset_version,
-         checkpoint_client_updated_at
+         checkpoint_sequence
     into v_resume_position,
          v_ranges,
          v_last_position,
          v_last_at,
          v_stored_asset_version,
-         v_checkpoint_client_updated_at
+         v_checkpoint_sequence
   from public.user_video_progress
   where user_id = p_user_id and block_id = p_block_id
   for update;
@@ -202,8 +217,9 @@ begin
     v_resume_position := null;
     v_last_position := null;
     v_last_at := null;
-    v_checkpoint_client_updated_at := null;
+    v_checkpoint_sequence := 0;
   end if;
+  v_checkpoint_sequence := coalesce(v_checkpoint_sequence, 0);
   v_ranges := coalesce(v_ranges, '[]'::jsonb);
 
   if p_operation = 'observe' then
@@ -226,8 +242,8 @@ begin
         v_last_at is null
         and p_observed_from > 1
         and (
-          v_checkpoint_client_updated_at is null
-          or (
+          v_checkpoint_sequence = 0
+          and (
             abs(p_observed_from - coalesce(v_resume_position, 0)) > 1
             and abs(p_observed_to - coalesce(v_resume_position, 0)) > 1
           )
@@ -256,6 +272,8 @@ begin
   else
     v_position := least(v_duration, p_position_seconds);
   end if;
+
+  v_checkpoint_sequence := v_checkpoint_sequence + 1;
 
   with parsed as (
     select greatest(0, (entry ->> 0)::numeric) as range_start,
@@ -297,12 +315,12 @@ begin
   insert into public.user_video_progress (
     user_id, block_id, position_seconds, duration_seconds, watched_ranges,
     last_observed_position_seconds, last_observed_at, asset_version,
-    checkpoint_client_updated_at, updated_at
+    checkpoint_sequence, updated_at
   ) values (
     p_user_id, p_block_id, v_position, v_duration, v_ranges,
     case when p_operation = 'observe' then v_observed_position else v_position end,
     v_now, v_asset_version,
-    case when p_operation = 'observe' then v_now else null end,
+    v_checkpoint_sequence,
     v_now
   ) on conflict (user_id, block_id) do update set
     position_seconds = case
@@ -316,16 +334,7 @@ begin
     watched_ranges = excluded.watched_ranges,
     last_observed_position_seconds = excluded.last_observed_position_seconds,
     last_observed_at = excluded.last_observed_at,
-    checkpoint_client_updated_at = case
-      when user_video_progress.asset_version is distinct from excluded.asset_version
-        then excluded.checkpoint_client_updated_at
-      when p_operation = 'observe'
-        then greatest(
-          coalesce(user_video_progress.checkpoint_client_updated_at, '-infinity'::timestamptz),
-          excluded.checkpoint_client_updated_at
-        )
-      else user_video_progress.checkpoint_client_updated_at
-    end,
+    checkpoint_sequence = excluded.checkpoint_sequence,
     asset_version = excluded.asset_version,
     updated_at = v_now;
 
@@ -351,7 +360,8 @@ begin
     'positionSeconds', v_position,
     'watchedRanges', v_ranges,
     'watchedPercent', round(least(1, v_watched / v_duration) * 100)::integer,
-    'completed', v_completed
+    'completed', v_completed,
+    'checkpointSequence', v_checkpoint_sequence
   );
 end;
 $$;

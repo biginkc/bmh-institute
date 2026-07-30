@@ -89,6 +89,7 @@ const TRUSTED_STATE = {
   watchedRanges: [[0, 10]],
   watchedPercent: 10,
   completed: false,
+  checkpointSequence: 0,
 };
 
 describe("atomic video progress actions", () => {
@@ -144,7 +145,7 @@ describe("atomic video progress actions", () => {
       blockId: "video-1",
       positionSeconds: 50,
       durationSeconds: 100,
-    })).resolves.toEqual({ ok: true, positionSeconds: 50 });
+    })).resolves.toEqual({ ok: true, positionSeconds: 50, checkpointSequence: 0 });
 
     expect(rpcSpy).toHaveBeenCalledWith("fn_record_video_playback", expect.objectContaining({
       p_operation: "seek",

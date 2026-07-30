@@ -29,12 +29,14 @@ export type VideoProgressResult =
       watchedRanges: WatchedRange[];
       watchedPercent: number;
       completed: boolean;
+      checkpointSequence: number;
       reconciled?: boolean;
     }
   | { ok: false; error: string };
 
 export type VideoSeekResult =
-  { ok: true; positionSeconds: number } | { ok: false; error: string };
+  { ok: true; positionSeconds: number; checkpointSequence: number } |
+  { ok: false; error: string };
 
 export async function loadVideoProgress(
   blockId: string,
@@ -64,7 +66,7 @@ export async function loadVideoProgress(
     learner
       .from("user_video_progress")
       .select(
-        "position_seconds, duration_seconds, watched_ranges, asset_version",
+        "position_seconds, duration_seconds, watched_ranges, asset_version, checkpoint_sequence",
       )
       .eq("user_id", user.id)
       .eq("block_id", blockId)
@@ -109,6 +111,9 @@ export async function loadVideoProgress(
       progressMatchesAsset &&
         completionResult.data?.asset_version === currentAssetVersion,
     ),
+    checkpointSequence: progressMatchesAsset
+      ? nonNegativeSafeIntegerOrZero(progress?.checkpoint_sequence)
+      : 0,
   };
 }
 
@@ -143,7 +148,11 @@ export async function recordVideoSeek(input: {
   const trusted = parseTrustedVideoState(data);
   if (!trusted)
     return { ok: false, error: "Video progress could not be saved." };
-  return { ok: true, positionSeconds: trusted.positionSeconds };
+  return {
+    ok: true,
+    positionSeconds: trusted.positionSeconds,
+    checkpointSequence: trusted.checkpointSequence,
+  };
 }
 
 export async function recordVideoProgress(input: {
@@ -195,6 +204,7 @@ export async function recordVideoProgress(input: {
     watchedRanges: trusted.watchedRanges,
     watchedPercent: trusted.watchedPercent,
     completed: trusted.completed,
+    checkpointSequence: trusted.checkpointSequence,
   };
 }
 
@@ -310,6 +320,12 @@ function numberOrZero(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
+function nonNegativeSafeIntegerOrZero(value: unknown) {
+  return typeof value === "number" && Number.isSafeInteger(value) && value >= 0
+    ? value
+    : 0;
+}
+
 function durationFromContent(value: unknown) {
   if (!value || typeof value !== "object" || Array.isArray(value)) return 0;
   return numberOrZero((value as Record<string, unknown>).duration_seconds);
@@ -335,6 +351,7 @@ function parseTrustedVideoState(value: unknown): {
   watchedRanges: WatchedRange[];
   watchedPercent: number;
   completed: boolean;
+  checkpointSequence: number;
 } | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const state = value as Record<string, unknown>;
@@ -345,7 +362,9 @@ function parseTrustedVideoState(value: unknown): {
     !Number.isFinite(state.positionSeconds) ||
     typeof state.watchedPercent !== "number" ||
     !Number.isFinite(state.watchedPercent) ||
-    typeof state.completed !== "boolean"
+    typeof state.completed !== "boolean" ||
+    !Number.isSafeInteger(state.checkpointSequence) ||
+    (state.checkpointSequence as number) < 0
   ) {
     return null;
   }
@@ -355,6 +374,7 @@ function parseTrustedVideoState(value: unknown): {
     watchedRanges: ranges,
     watchedPercent: state.watchedPercent,
     completed: state.completed,
+    checkpointSequence: state.checkpointSequence as number,
   };
 }
 
