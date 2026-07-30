@@ -12,6 +12,7 @@ import { join, resolve } from "node:path";
 
 import {
   verifyAuthInsertLifecycleSerialization,
+  verifyConcurrentOwnerDemotionSerialization,
   verifyRoleAndLifecycleTwoSessionSerialization,
   verifyRoleGroupDeleteLifecycleSerialization,
   verifyRoleGroupTruncateLifecycleSerialization,
@@ -189,6 +190,8 @@ async function runPostgres(pgBin, index) {
         binary("psql"),
         env,
       );
+    const concurrentOwnerDemotionSerialization =
+      await verifyConcurrentOwnerDemotionSerialization(binary("psql"), env);
 
     psqlText(binary, env, concurrencyFixtureSql);
     const outcomes = await Promise.all([
@@ -232,7 +235,9 @@ async function runPostgres(pgBin, index) {
       role_group_truncate_lifecycle_serialization:
         roleGroupTruncateSerialization,
       role_and_lifecycle_two_session_serialization:
-        roleAndLifecycleTwoSessionSerialization,
+      roleAndLifecycleTwoSessionSerialization,
+      concurrent_owner_demotion_serialization:
+        concurrentOwnerDemotionSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };
   } finally {

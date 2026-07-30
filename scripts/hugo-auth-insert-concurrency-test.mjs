@@ -32,6 +32,9 @@ const roleLifecycleGrantOperationId =
   "00000000-0000-4000-8000-000000000474";
 const roleLifecycleSuspendOperationId =
   "00000000-0000-4000-8000-000000000475";
+const ownerDemotionAId = "00000000-0000-4000-8000-000000000480";
+const ownerDemotionBId = "00000000-0000-4000-8000-000000000481";
+const ownerDemotionAdminId = "00000000-0000-4000-8000-000000000482";
 
 export async function verifyAuthInsertLifecycleSerialization({
   psqlPath,
@@ -431,6 +434,116 @@ export async function verifyRoleAndLifecycleTwoSessionSerialization(
   }
 
   return "institute_role_edit_committed_before_hugo_suspension_snapshot";
+}
+
+export async function verifyConcurrentOwnerDemotionSerialization(
+  psqlPath,
+  env,
+) {
+  psqlExec(
+    psqlPath,
+    env,
+    `
+      set request.jwt.claim.role = 'service_role';
+      insert into auth.users (
+        id, email, email_confirmed_at, raw_app_meta_data,
+        raw_user_meta_data, created_at, updated_at
+      ) values
+        ('${ownerDemotionAId}', 'owner-demotion-a@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+        ('${ownerDemotionBId}', 'owner-demotion-b@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now()),
+        ('${ownerDemotionAdminId}', 'owner-demotion-admin@example.invalid', now(), '{}'::jsonb, '{}'::jsonb, now(), now());
+      update public.profiles
+      set system_role = 'owner', status = 'active'
+      where id in ('${ownerDemotionAId}', '${ownerDemotionBId}');
+      -- Keep the fixture's owner population exactly two, even if a future
+      -- migration seeds an unrelated owner profile.
+      update public.profiles
+      set system_role = 'admin'
+      where system_role = 'owner'
+        and id not in ('${ownerDemotionAId}', '${ownerDemotionBId}');
+      update public.profiles
+      set system_role = 'admin', status = 'active'
+      where id = '${ownerDemotionAdminId}';
+    `,
+  );
+
+  const firstDemotion = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      set local request.jwt.claim.role = 'authenticated';
+      set local request.jwt.claim.sub = '${ownerDemotionAdminId}';
+      update public.profiles
+      set system_role = 'admin'
+      where id = '${ownerDemotionAId}';
+      select pg_sleep(2);
+      commit;
+    `,
+  );
+  await waitForAdvisoryLock(
+    psqlPath,
+    env,
+    firstDemotion,
+    "first concurrent owner demotion",
+  );
+
+  let secondSettled = false;
+  const secondDemotion = runPsqlAsync(
+    psqlPath,
+    env,
+    `
+      begin;
+      set local request.jwt.claim.role = 'authenticated';
+      set local request.jwt.claim.sub = '${ownerDemotionAdminId}';
+      update public.profiles
+      set system_role = 'admin'
+      where id = '${ownerDemotionBId}';
+      commit;
+    `,
+  ).finally(() => {
+    secondSettled = true;
+  });
+
+  await delay(250);
+  if (secondSettled) {
+    await Promise.allSettled([firstDemotion, secondDemotion]);
+    throw new Error(
+      "Concurrent owner demotion did not wait on the global owner invariant lock.",
+    );
+  }
+
+  await firstDemotion;
+  let secondError;
+  try {
+    await secondDemotion;
+  } catch (error) {
+    secondError = error;
+  }
+  if (!secondError) {
+    throw new Error(
+      "Concurrent owner demotion unexpectedly removed the final owner.",
+    );
+  }
+  if (
+    !String(secondError).includes("At least one Institute owner must remain") &&
+    !String(secondError).includes("Cannot remove the final usable Institute owner")
+  ) {
+    throw secondError;
+  }
+
+  const remainingOwners = psqlScalar(
+    psqlPath,
+    env,
+    "select count(*)::text from public.profiles where system_role = 'owner';",
+  );
+  if (remainingOwners !== "1") {
+    throw new Error(
+      `Concurrent owner demotion left an unsafe owner count: ${remainingOwners}`,
+    );
+  }
+
+  return "concurrent_owner_demotions_serialized_with_one_owner_remaining";
 }
 
 async function verifyInsertSerialization(psqlPath, env) {

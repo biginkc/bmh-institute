@@ -86,6 +86,12 @@ jobs:
       - name: Apply and adversarially verify every migration
         run: node scripts/fixture-boundary/run-controller-gate-pr-harness.mjs
 
+      - name: Run Hugo and Institute lifecycle ownership Postgres acceptance
+        run: |
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/064_institute_app_owned_role_access.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/065_hugo_lifecycle_ownership.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/066_institute_last_owner_guard.sql
+
       - name: Rehearse released quiz forward revision and rollback
         run: |
           npx tsx scripts/course-content/build-released-quiz-revision-rehearsal-sql.ts > "$RUNNER_TEMP/released-quiz-rehearsal.sql"
