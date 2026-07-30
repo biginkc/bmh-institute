@@ -11,6 +11,7 @@ import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 
 import { COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE } from "../../dashboard-events";
+import { withQuizAnswerTimeout } from "@/lib/quizzes/with-timeout";
 
 import {
   answerQuizQuestion,
@@ -306,11 +307,11 @@ export function QuizRunner({
     dispatch({ type: "checking" });
     let response: Awaited<ReturnType<typeof answerQuizQuestion>>;
     try {
-      response = await answerQuizQuestion({
+      response = await withQuizAnswerTimeout(answerQuizQuestion({
         attemptId: run.attemptId,
         questionId: question.id,
         selected,
-      });
+      }));
     } catch {
       dispatch({
         type: "check_error",
