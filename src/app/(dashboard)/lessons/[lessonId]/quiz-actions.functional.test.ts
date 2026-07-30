@@ -189,6 +189,7 @@ import {
   restoreQuizAttempt,
   startQuizAttempt,
 } from "./quiz-actions";
+import { QUIZ_DEADLINES } from "@/lib/quizzes/with-timeout";
 
 describe("quiz server actions", () => {
   beforeEach(() => {
@@ -702,6 +703,26 @@ describe("quiz server actions", () => {
     });
   });
 
+  it("bounds a hung auth lookup under the typed finalize deadline", async () => {
+    vi.useFakeTimers();
+    try {
+      learnerClient.auth.getUser = () => new Promise(() => {});
+      const pending = finalizeQuizAttempt({ attemptId: "attempt-1" });
+      const rejection = expect(pending).rejects.toMatchObject({
+        name: "QuizDeadlineError",
+        stage: "finalize",
+      });
+
+      await vi.advanceTimersByTimeAsync(QUIZ_DEADLINES.finalize);
+
+      await rejection;
+      expect(updatedAttempt).toBeNull();
+    } finally {
+      learnerClient.auth.getUser = async () => ({ data: { user: currentUser }, error: null });
+      vi.useRealTimers();
+    }
+  });
+
   it("finalizes only persisted responses and does not rewrite them", async () => {
     const result = await finalizeQuizAttempt({ attemptId: "attempt-1" });
 
@@ -715,6 +736,32 @@ describe("quiz server actions", () => {
         questionNumber: 1,
         explanation: "Because one is correct.",
       }]);
+    }
+  });
+
+  it("returns successful completion without waiting for Sandra writeback", async () => {
+    vi.useFakeTimers();
+    try {
+      const { emitSandraCourseCompletedForLesson } = await import(
+        "@/lib/integrations/sandra/course-completed"
+      );
+      vi.mocked(emitSandraCourseCompletedForLesson).mockImplementationOnce(
+        () => new Promise(() => {}),
+      );
+
+      await expect(finalizeQuizAttempt({ attemptId: "attempt-1" })).resolves.toMatchObject({
+        ok: true,
+        score: 100,
+        passed: true,
+      });
+      expect(emitSandraCourseCompletedForLesson).toHaveBeenCalledWith(learnerClient, {
+        userId: "user-1",
+        lessonId: "lesson-1",
+      });
+
+      await vi.advanceTimersByTimeAsync(QUIZ_DEADLINES.finalize);
+    } finally {
+      vi.useRealTimers();
     }
   });
 

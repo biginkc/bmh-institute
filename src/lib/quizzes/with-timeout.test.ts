@@ -4,6 +4,7 @@ import {
   QUIZ_DEADLINES,
   QuizDeadlineError,
   withQuizDeadline,
+  withQuizSignal,
 } from "./with-timeout";
 
 describe("quiz deadlines", () => {
@@ -62,5 +63,21 @@ describe("quiz deadlines", () => {
     const error = new QuizDeadlineError("finalize", QUIZ_DEADLINES.finalize);
     expect(error.stage).toBe("finalize");
     expect(error.timeoutMs).toBe(QUIZ_DEADLINES.finalize);
+  });
+
+  it("stops waiting for a non-abortable operation when the typed signal aborts", async () => {
+    vi.useFakeTimers();
+    try {
+      const controller = new AbortController();
+      const pending = withQuizSignal(controller.signal, () => new Promise<never>(() => {}));
+      const error = new QuizDeadlineError("finalize", QUIZ_DEADLINES.finalize);
+      const rejection = expect(pending).rejects.toBe(error);
+
+      controller.abort(error);
+
+      await rejection;
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

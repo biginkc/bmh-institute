@@ -15,7 +15,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { withQuizTiming } from "@/lib/performance/quiz-timing";
-import { withQuizDeadline } from "@/lib/quizzes/with-timeout";
+import { withQuizDeadline, withQuizSignal } from "@/lib/quizzes/with-timeout";
 
 export type QuestionReveal =
   | {
@@ -198,7 +198,7 @@ async function answerQuizQuestionInternal(input: {
   const learner = await createClient();
   const {
     data: { user },
-  } = await learner.auth.getUser();
+  } = await getQuizUser(learner, signal);
   if (!user) return { ok: false, error: "You must be signed in." };
 
   const { data: attempt, error: attemptError } = await learner
@@ -299,7 +299,7 @@ async function finalizeQuizAttemptInternal(input: {
   const learner = await createClient();
   const {
     data: { user },
-  } = await learner.auth.getUser();
+  } = await getQuizUser(learner, signal);
   if (!user) return { ok: false, error: "You must be signed in." };
 
   const { data: attempt, error: attemptError } = await learner
@@ -393,10 +393,12 @@ async function finalizeQuizAttemptInternal(input: {
   }
 
   if (result.result.passed) {
-    await emitSandraCourseCompletedForLesson(learner, {
-      userId: user.id,
-      lessonId: attempt.lesson_id,
-    });
+    void withQuizDeadline("finalize", () =>
+      emitSandraCourseCompletedForLesson(learner, {
+        userId: user.id,
+        lessonId: attempt.lesson_id,
+      }),
+    ).catch(() => undefined);
   }
 
   return buildSubmitResult({
@@ -567,7 +569,7 @@ async function authorizedQuizContext(
   if (!userId) {
     const {
       data: { user },
-    } = await learner.auth.getUser();
+    } = await getQuizUser(learner, signal);
     if (!user) return { ok: false as const, error: "You must be signed in." };
     userId = user.id;
   }
@@ -645,6 +647,13 @@ async function quizEligibilityContext(access: Extract<
   }
 
   return access;
+}
+
+function getQuizUser(
+  learner: Awaited<ReturnType<typeof createClient>>,
+  signal: AbortSignal,
+) {
+  return withQuizSignal(signal, () => learner.auth.getUser());
 }
 
 function adminClientResult():
