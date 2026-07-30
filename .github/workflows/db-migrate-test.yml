@@ -187,6 +187,7 @@ jobs:
           export PGSSLMODE="require"
           psql --set ON_ERROR_STOP=1 --file supabase/tests/031_versioned_video_completion_and_submission_evidence.sql
           psql --set ON_ERROR_STOP=1 --file supabase/tests/034_import_release_and_fixture_dependency_guards.sql
+          psql --set ON_ERROR_STOP=1 --file supabase/tests/063_video_checkpoint_ordering.sql
           psql --set ON_ERROR_STOP=1 --set fixture_cleanup_hosted_nonmutating=on --file supabase/tests/036_controller_verified_fixture_cleanup_gate_hosted.sql
 
       - name: Run Hugo and Institute lifecycle ownership Postgres acceptance

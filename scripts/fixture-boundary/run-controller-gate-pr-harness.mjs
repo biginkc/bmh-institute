@@ -336,6 +336,9 @@ try {
       "supabase/tests/062_hugo_verified_identity_and_orphan_delete_guard.sql",
     ),
   );
+  psqlFile(
+    resolve(root, "supabase/tests/063_video_checkpoint_ordering.sql"),
+  );
   await verifyAuthInsertLifecycleSerialization({
     psqlPath: binary("psql"),
     env: pgEnv,

@@ -92,9 +92,10 @@ do $$
 declare
   v_ranges jsonb;
   v_last_at timestamptz;
+  v_position numeric;
 begin
-  select watched_ranges, last_observed_at
-    into v_ranges, v_last_at
+  select watched_ranges, last_observed_at, position_seconds
+    into v_ranges, v_last_at, v_position
   from public.user_video_progress
   where user_id = '06306306-3063-4063-8063-063063063063'
     and block_id = '06306306-3063-4063-8063-463063063063';
@@ -103,6 +104,9 @@ begin
   end if;
   if v_last_at is null or v_last_at > clock_timestamp() then
     raise exception 'positive client clock skew became the observation baseline: %', v_last_at;
+  end if;
+  if v_position <> 4 then
+    raise exception 'checkpoint-first arrival regressed the final resume position: %', v_position;
   end if;
   if exists (
     select 1 from public.user_block_progress
@@ -129,6 +133,31 @@ select public.fn_record_video_playback(
   0,
   2
 );
+
+-- An observation must establish a server-time ordering marker. A delayed
+-- older checkpoint cannot regress the resume position after it arrives.
+select public.fn_checkpoint_video_playback(
+  '06306306-3063-4063-8063-063063063063',
+  '06306306-3063-4063-8063-463063063063',
+  8,
+  100,
+  clock_timestamp() - interval '1 hour'
+);
+
+do $$
+declare
+  v_position numeric;
+begin
+  select position_seconds into v_position
+  from public.user_video_progress
+  where user_id = '06306306-3063-4063-8063-063063063063'
+    and block_id = '06306306-3063-4063-8063-463063063063';
+  if v_position <> 2 then
+    raise exception 'observation did not block a delayed checkpoint regression: %', v_position;
+  end if;
+end;
+$$;
+
 select public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-063063063063',
   '06306306-3063-4063-8063-463063063063',
@@ -163,6 +192,44 @@ begin
 end;
 $$;
 
+-- Replacing the authored asset starts a new progress identity before stale
+-- ordering is evaluated. An old marker from the prior asset must not reject
+-- the first checkpoint for the replacement, and it must not carry coverage.
+update public.content_blocks
+set content = '{"file_path":"tests/video-checkpoint-ordering-v2.mp4","duration_seconds":100}'::jsonb
+where id = '06306306-3063-4063-8063-463063063063';
+
+select public.fn_checkpoint_video_playback(
+  '06306306-3063-4063-8063-063063063063',
+  '06306306-3063-4063-8063-463063063063',
+  6,
+  100,
+  clock_timestamp() - interval '1 hour'
+);
+
+do $$
+declare
+  v_ranges jsonb;
+  v_position numeric;
+  v_asset_version text;
+begin
+  select watched_ranges, position_seconds, asset_version
+    into v_ranges, v_position, v_asset_version
+  from public.user_video_progress
+  where user_id = '06306306-3063-4063-8063-063063063063'
+    and block_id = '06306306-3063-4063-8063-463063063063';
+  if v_position <> 6 then
+    raise exception 'replacement checkpoint was rejected as stale: %', v_position;
+  end if;
+  if v_ranges <> '[]'::jsonb then
+    raise exception 'asset replacement carried watched coverage forward: %', v_ranges;
+  end if;
+  if v_asset_version <> 'tests/video-checkpoint-ordering-v2.mp4#duration=100' then
+    raise exception 'replacement checkpoint kept the prior asset version: %', v_asset_version;
+  end if;
+end;
+$$;
+
 -- A late older checkpoint must remain stale even when database updated_at is
 -- newer because the client-ordering field is independent of server time.
 select public.fn_checkpoint_video_playback(
@@ -170,7 +237,7 @@ select public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-463063063063',
   9,
   100,
-  clock_timestamp() - interval '1 hour'
+  clock_timestamp() - interval '2 hours'
 );
 
 do $$
@@ -181,7 +248,7 @@ begin
   from public.user_video_progress
   where user_id = '06306306-3063-4063-8063-063063063063'
     and block_id = '06306306-3063-4063-8063-463063063063';
-  if v_position <> 4 then
+  if v_position <> 6 then
     raise exception 'stale checkpoint overwrote a newer resume position: %', v_position;
   end if;
 end;
