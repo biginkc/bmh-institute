@@ -26,12 +26,14 @@ begin
   ), 'request_hash must be NOT NULL';
   select pg_get_functiondef(p.oid) into v_definition
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.proname = 'hugo_apply_access_unhashed';
+  where n.nspname = 'public'
+    and p.proname = 'hugo_apply_access_unhashed_legacy_20260730';
   assert v_definition !~* 'insert\s+into\s+public\.hugo_access_operations\s+values\s*\(',
     'the private apply implementation must not use implicit journal columns';
   select proacl into v_acl
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.proname = 'hugo_apply_access_unhashed';
+  where n.nspname = 'public'
+    and p.proname = 'hugo_apply_access_unhashed_legacy_20260730';
   assert not exists (
     select 1 from unnest(v_acl) item where item::text like 'service_role=X%'
   ), 'the unhashed implementation must not be directly executable';

@@ -38,9 +38,6 @@ export async function saveUserSettings(
   }
 
   const supabase = await createClient();
-  const roleCheck = await confirmSystemRoleIsUnchanged(supabase, input);
-  if (!roleCheck.ok) return roleCheck;
-
   // Current role_groups so we can diff for the enrollment email.
   const { data: existingRgs, error: existingRoleGroupsError } = await supabase
     .from("user_role_groups")
@@ -116,37 +113,13 @@ export async function saveUserSettings(
   return { ok: true, newProgramTitles };
 }
 
-async function confirmSystemRoleIsUnchanged(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  input: UserSettingsInput,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { data: targetProfile, error: targetProfileError } = await supabase
-    .from("profiles")
-    .select("system_role")
-    .eq("id", input.userId)
-    .maybeSingle();
-  if (targetProfileError) {
-    return { ok: false, error: targetProfileError.message };
-  }
-  if (!targetProfile) {
-    return { ok: false, error: "User not found." };
-  }
-  if (targetProfile.system_role !== input.system_role) {
-    return {
-      ok: false,
-      error:
-        "This role cannot be changed safely until Institute can keep Hugo access in sync without changing login status.",
-    };
-  }
-  return { ok: true };
-}
-
 async function persistInstituteSettings(
   supabase: Awaited<ReturnType<typeof createClient>>,
   input: UserSettingsInput,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  const { error: saveErr } = await supabase.rpc("fn_set_user_role_groups", {
+  const { error: saveErr } = await supabase.rpc("fn_set_user_role_and_groups", {
     p_user_id: input.userId,
+    p_system_role: input.system_role,
     p_role_group_ids: input.role_group_ids,
   });
   if (saveErr) {
