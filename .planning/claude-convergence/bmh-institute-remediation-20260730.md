@@ -34,8 +34,26 @@
 - Iteration 9: Fresh PR checks for `fe4667a` reached the seeded E2E job, but TEST setup failed before browser execution because `20260730200000_hugo_institute_lifecycle_contract.sql` requires `hugo_apply_access_unhashed`, which the shared TEST catalog did not contain. Added an idempotent preflight to apply `20260728113000_hugo_access_operation_payload_hash.sql` only when that prerequisite function is absent, pushed as `ec1b97e`. Merge remains held pending fresh exact-head checks.
 - Iteration 10: The `ec1b97e` retry proved the shared TEST catalog also lacked the prerequisite `hugo_access_operations` table; applying the hash migration alone was invalid. Updated CI to provision `20260728091000_hugo_access_provisioner.sql` when that table is absent, then apply the hash migration conditionally, pushed as `8443b3d`. The prior run mutated no lifecycle state after the setup failure; fresh exact-head checks are required.
 - Iteration 11: Exact-head validation run `30524637094` passed Verify, Hugo/Institute migration setup, canary reconciliation, seeding, and cleanup. Seeded Playwright reached 12 tests: 10 passed, 1 skipped, and 1 failed in the unrelated `pilot-monitoring` report heading (`/admin/reports` did not render `Learner monitoring`). The lifecycle cohort setup path was not among the failed tests; merge remains held pending the authoritative PR checks and manual classification of the unrelated failure.
+- Iteration 12: The persistent goal was restored after accidental deletion. Claude CLI preflight is available and authenticated; no secret-free Claude verdict was captured yet, so no Claude convergence claim is made. The current next action is to classify the pilot-monitoring failure against the mainline baseline, then keep implementation lanes concurrent while preserving serial promotion and production Chrome gates.
 - Integration order: amended #138 -> Hugo lifecycle -> Institute lifecycle -> PR #137 reconsideration -> learner routing/video -> security -> deletion -> consolidated Chrome acceptance.
 - The broader 886-question/course acceptance campaign remains separate and must not be called complete by this tranche.
+
+## Concurrent execution lanes
+
+- Lane 0, integration control: lifecycle PR #139 and its CI/test-environment classification; do not merge while required checks are red. PR #137 is an overlapping open PR and is not an integration dependency; compare against #139, then close or explicitly re-scope it before promotion.
+- Lane 1, quiz: retain merged #138 as the code baseline; run focused retry/lock/privacy checks, then isolated production Chrome completion of the existing 51-question attempt.
+- Lane 2, lifecycle: after #139 is green and reviewed, rebase as needed, record rollback point, merge, apply the approved migration serially, and run isolated suspend/reactivate/revoke Chrome acceptance.
+- Lane 3, routing/video/inventory: rebase `routing-video-20260730` onto the newest main after lifecycle promotion; verify deep links, locked/invalid parts, truthful progress, checkpoint ordering, inventory, and clean isolated video resume.
+- Lane 4, editor security: rebase `content-security-20260730` after routing promotion; run editor/server/import/database/renderer validation and unsafe legacy-content checks.
+- Lane 5, deletion integrity: rebase `deletion-integrity-20260730` after security promotion; run all six in-app dialogs, typed confirmations, transactional row checks, refusal guards, and race tests.
+- Lane 6, acceptance/evidence: maintain the coverage ledger, isolated Chrome profiles, fixture IDs/cleanup receipts, deployment/migration receipts, and requirement-by-requirement evidence packet. This lane is concurrent for preparation but serial for production execution.
+
+## Claude convergence contract
+
+- Every lane iteration sends Claude a secret-free packet containing exact head SHA, diff scope, tests, findings, blockers, acceptance-gate status, and one narrow question.
+- Claude returns exactly one verdict: `NEXT_STEP`, `RESEARCH_NEEDED`, `DONE`, `BLOCKED`, or `LOOP_REASSESS`, with proposed action, scope, expected verification, and hard-gate risk.
+- Codex adversarially verifies Claude's proposal before acting; valid findings are fixed and the exposing checks rerun.
+- Claude `DONE` is only a readiness transition. Codex must still complete manual review, rollback-point recording, serial merge/deploy, and isolated production Chrome proof before closing the goal.
 
 ## Constraints
 
