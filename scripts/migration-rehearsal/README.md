@@ -68,7 +68,7 @@ This script only prints commands. It does not run them.
 bash scripts/migration-rehearsal/print-production-repair-commands.sh
 ```
 
-Run the printed commands only after the equivalence report and full rehearsal pass. The history repair updates only `supabase_migrations.schema_migrations`. It does not apply or revert schema SQL. The printed order intentionally marks 001 through 010 applied first, removes the ten legacy rows second, then requires `migration list` and `db push --dry-run` proof before the actual push.
+Run the printed commands only after the equivalence report and full rehearsal pass. The history repair updates only `supabase_migrations.schema_migrations`. It does not apply or revert schema SQL. The printed order intentionally marks 001 through 010 applied first, removes the ten legacy rows second, then requires `migration list` and a dry run before the actual push. The printed sequence contains no bare `supabase db push --include-all`; the only push line is `guarded-db-push.sh`.
 
 ## Mandatory safety gate before any `--include-all` push against a linked project
 
@@ -80,27 +80,75 @@ missing from history, in filename order, with no notion that a later migration a
 touched the same objects. That re-apply reverted 6 hardened Hugo lifecycle functions and
 locked out a real user for hours.
 
-Run it against the exact connection you are about to push to, before the dry run:
+### Always push through the wrapper
 
 ```sh
 export PGHOST=... PGPORT=... PGDATABASE=... PGUSER=... PGPASSWORD=... PGSSLMODE=require
-node scripts/migration-rehearsal/check-migration-safety.mjs
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production --dry-run
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production
 ```
 
-It fails closed (nonzero exit, no SQL executed) in two cases, and only these two:
+`guarded-db-push.sh` runs the gate and then the push, under `set -euo pipefail`, from one
+connection definition. A non-zero gate exit ends the script and the push is never reached.
+Do not run `supabase db push --include-all` directly against a linked project — a gate that
+merely sits next to the dangerous command in a runbook is a suggestion, not a gate, and that
+is precisely how the incident happened. CI (`.github/workflows/db-migrate-test.yml`) pushes
+through the same wrapper for the same reason.
 
-1. Any row in `schema_migrations` has `statements IS NULL` (a placeholder row from
-   `migration repair`, e.g. the repair sequence in `print-production-repair-commands.sh`).
-   These rows do not prove any real content is live at that version, so history cannot be
-   trusted while they exist.
-2. Any locally pending migration (a file on disk with no matching `schema_migrations` row)
-   has a version number older than the newest version already recorded in history. That
-   is the exact out-of-order re-apply shape that caused the incident above.
+The gate can also be run on its own for inspection:
 
-A clean exit means it is safe to move on to a reviewed `supabase db push --include-all
---dry-run`. It is not a substitute for reading that dry-run output. `print-production-repair-commands.sh`
-bakes the gate invocation into its printed sequence directly before the real production push;
-do not skip it when running those commands by hand or via an automated agent loop.
+```sh
+node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production
+```
+
+### What it refuses on
+
+Everything indeterminate fails closed. The script header carries the complete exit-path
+enumeration (`E00`–`E23`); each refusal prints its code. In summary it refuses when:
+
+- the database is unreachable, credentials are missing or wrong, the query errors, the
+  connection times out, or `supabase_migrations.schema_migrations` is absent or empty;
+- the migrations directory is missing, is not a directory, or contains **zero** `.sql`
+  files (an empty or mistyped path used to print `OK`);
+- a version string is malformed, over 14 digits, duplicated after normalisation, or ordered
+  ambiguously relative to the string order `supabase db push` will actually use;
+- `schema_migrations` contains a placeholder row (`statements IS NULL`) that is **not** in
+  the acknowledged baseline for `--target`;
+- any locally pending migration is **older** than the newest version already recorded in
+  history — the exact out-of-order re-apply shape that caused the incident.
+
+Version identity is normalised, so remote `1` and local `001_x.sql` are recognised as the
+same migration. Legacy short-numeric versions and 14-digit timestamps are treated as two
+ordered namespaces (all legacy sorts before all timestamps), not one number line.
+
+### The placeholder baseline
+
+`supabase migration repair` creates rows with `statements IS NULL`. They assert a version is
+applied without recording what was applied, so history stops being proof of what is live.
+Refusing on *any* such row self-deadlocks: the production repair sequence creates them, and
+Institute production already carries 8 (Sandra carries 36 of 127).
+
+`placeholder-baseline.json` records, per target, the placeholder **versions** a human has
+already reconciled against the live schema. A placeholder in that list is accepted; one that
+is not stops the push. Adding a version is a reviewed commit, never a runtime flag, so an
+automated loop cannot acknowledge the very row that should have stopped it. When the gate
+refuses with `E21` it prints the exact paste-ready array.
+
+Each baseline entry also pins a `project_ref`. The gate refuses if the live connection does
+not carry that ref, which stops the "checked TEST, pushed PRODUCTION" mixup.
+
+### Proving the gate still works
+
+```sh
+npm run test:migration-gate:postgres
+```
+
+Spins one disposable local PostgreSQL cluster (`LC_ALL=C` plus a short socket path, to avoid
+the "postmaster became multithreaded" startup flake) and runs the real gate against 30
+scenarios: the pass case, the 2026-07-30 incident replay, empty and missing migrations
+directories, `001`/`1` and `0001`/`001` formatting collisions, mixed legacy/timestamp
+schemes, acknowledged versus new placeholder rows, unreachable and silent databases, and
+every malformed-input path. It never touches a hosted project.
 
 ## Run migrations 039 through 045 integration coverage against BMH Institute test
 

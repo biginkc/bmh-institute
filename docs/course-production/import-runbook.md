@@ -307,17 +307,25 @@ command must succeed before either push command can start:
 
 ```bash
 node -e 'const u=new URL(process.env.TEST_SUPABASE_DB_URL); const ok=u.protocol==="postgresql:"&&u.username==="postgres.jvaabkchkihkjllehmft"&&u.password&&u.hostname==="aws-1-us-west-1.pooler.supabase.com"&&u.port==="5432"&&u.pathname==="/postgres"&&!u.search&&!u.hash; if(!ok) process.exit(1)'
-node scripts/migration-rehearsal/check-migration-safety.mjs
-supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --dry-run
+
+# The wrapper runs the migration safety gate and the push from one connection
+# definition; a non-zero gate exit stops it before anything is written.
+export PGHOST="aws-1-us-west-1.pooler.supabase.com" PGPORT="5432" PGDATABASE="postgres"
+export PGUSER="postgres.jvaabkchkihkjllehmft" PGSSLMODE="require"
+export PGPASSWORD="$(node -e 'process.stdout.write(decodeURIComponent(new URL(process.env.TEST_SUPABASE_DB_URL).password))')"
+
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test --dry-run
 # Stop unless the dry run lists only the expected pending TEST migrations.
-supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --yes
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test
 npm run test:course-import-provider
 ```
 
-Run `check-migration-safety.mjs` again with the production `PGHOST`/`PGUSER`/etc before any
-production `db push --include-all`, not just the TEST one above. It refuses closed on
-placeholder (`migration repair`) history rows and on any pending migration older than the
-newest one already recorded — see `scripts/migration-rehearsal/README.md` for why, and the
+Never substitute a direct `supabase db push --include-all` for the wrapper, on TEST or on
+production. Use `--target=institute-production` (and the production `PG*` values) for the
+production run. The gate refuses closed on unacknowledged `migration repair` placeholder
+rows, on any pending migration older than the newest one already recorded, and on every
+indeterminate state (unreachable database, empty migrations directory, malformed versions,
+timeout) — see `scripts/migration-rehearsal/README.md` for the full list, and the
 2026-07-30 production incident this closes off.
 
 The provider acceptance wrapper refuses to start unless the HTTP URL, direct
