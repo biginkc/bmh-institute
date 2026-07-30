@@ -322,12 +322,28 @@ async function validateHeldVideoApprovalCommitHistory(
       );
       continue;
     }
-    for (const parent of ancestry.parents) {
-      const previous = await readLedgerAtRevision(
-        repoRoot,
+    const parentLedgers = await Promise.all(
+      ancestry.parents.map(async (parent) => ({
         parent,
-        relativeLedgerPath,
-      );
+        result: await readLedgerAtRevision(
+          repoRoot,
+          parent,
+          relativeLedgerPath,
+        ),
+      })),
+    );
+    const preservedMergeParent =
+      ancestry.parents.length > 1 && next.status === "ok"
+        ? parentLedgers.find(
+            ({ result }) =>
+              result.status === "ok" &&
+              JSON.stringify(result.ledger) === JSON.stringify(next.ledger),
+          )
+        : null;
+    const transitionParents = preservedMergeParent
+      ? [preservedMergeParent]
+      : parentLedgers;
+    for (const { result: previous } of transitionParents) {
       if (previous.status === "unavailable" || previous.status === "invalid") {
         errors.push(
           "Held-video approval history could not read a ledger transition parent.",

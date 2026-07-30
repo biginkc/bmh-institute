@@ -6,6 +6,13 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "../..");
+const externalMode = process.env.WELCOME_VIDEO_REPLACEMENT_EXTERNAL_PG;
+if (externalMode !== undefined && externalMode !== "1") {
+  throw new Error(
+    "WELCOME_VIDEO_REPLACEMENT_EXTERNAL_PG must be absent or exactly 1.",
+  );
+}
+const useExternalPostgres = externalMode === "1";
 const explicitPgBin = process.argv
   .find((value) => value.startsWith("--pg-bin="))
   ?.slice(9);
@@ -27,25 +34,43 @@ if (!explicitPgBin) {
     // The explicit and known installation paths above remain authoritative.
   }
 }
-const pgBin = pgBinCandidates.find(
-  (directory) => directory && existsSync(join(directory, "postgres")),
-);
+const pgBin = useExternalPostgres
+  ? null
+  : pgBinCandidates.find(
+      (directory) => directory && existsSync(join(directory, "postgres")),
+    );
 
-if (!pgBin) throw new Error("PostgreSQL binaries were not found.");
+if (!useExternalPostgres && !pgBin) {
+  throw new Error("PostgreSQL binaries were not found.");
+}
 
-const cluster = mkdtempSync(join(tmpdir(), "bmhi-video-zero-pg-"));
-const socket = join(cluster, "socket");
+const cluster = useExternalPostgres
+  ? null
+  : mkdtempSync(join(tmpdir(), "bmhi-video-zero-pg-"));
+const socket = cluster === null ? null : join(cluster, "socket");
 const port = String(58500 + (process.pid % 500));
-const env = {
-  ...process.env,
-  LC_ALL: "C",
-  LANG: "C",
-  PGHOST: socket,
-  PGPORT: port,
-  PGDATABASE: "postgres",
-  PGUSER: "postgres",
-};
-const binary = (name) => join(pgBin, name);
+const env = useExternalPostgres
+  ? { ...process.env, LC_ALL: "C", LANG: "C" }
+  : {
+      ...process.env,
+      LC_ALL: "C",
+      LANG: "C",
+      PGHOST: socket,
+      PGPORT: port,
+      PGDATABASE: "postgres",
+      PGUSER: "postgres",
+    };
+if (
+  useExternalPostgres &&
+  (!["127.0.0.1", "localhost"].includes(env.PGHOST ?? "") ||
+    env.PGUSER !== "postgres" ||
+    !/^welcome_video_replacement_pg(?:15|16|17)$/.test(env.PGDATABASE ?? ""))
+) {
+  throw new Error(
+    "External Welcome-video PostgreSQL must use local postgres and a version-keyed disposable database.",
+  );
+}
+const binary = (name) => (pgBin === null ? name : join(pgBin, name));
 
 const priorVideoPath =
   "courses/bmh-employee-training/v1/videos/video-slot-01-welcome.493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72.mp4";
@@ -117,40 +142,42 @@ const payloadSql = quoteJson([replacement]);
 let started = false;
 
 try {
-  execFileSync(
-    binary("initdb"),
-    [
-      "-D",
-      cluster,
-      "--auth-local=trust",
-      "--auth-host=reject",
-      "-U",
-      "postgres",
-      "--no-locale",
-      "--encoding=UTF8",
-    ],
-    { stdio: "ignore" },
-  );
-  execFileSync("mkdir", ["-p", socket]);
-  execFileSync(
-    binary("pg_ctl"),
-    [
-      "-D",
-      cluster,
-      "-o",
-      `-F -c listen_addresses='' -p ${port} -k ${socket}`,
-      "-w",
-      "start",
-    ],
-    { env, stdio: "ignore" },
-  );
-  started = true;
+  if (cluster !== null && socket !== null) {
+    execFileSync(
+      binary("initdb"),
+      [
+        "-D",
+        cluster,
+        "--auth-local=trust",
+        "--auth-host=reject",
+        "-U",
+        "postgres",
+        "--no-locale",
+        "--encoding=UTF8",
+      ],
+      { stdio: "ignore" },
+    );
+    execFileSync("mkdir", ["-p", socket]);
+    execFileSync(
+      binary("pg_ctl"),
+      [
+        "-D",
+        cluster,
+        "-o",
+        `-F -c listen_addresses='' -p ${port} -k ${socket}`,
+        "-w",
+        "start",
+      ],
+      { env, stdio: "ignore" },
+    );
+    started = true;
+  }
 
   psqlText(bootstrapSql());
   psqlFile(
     resolve(
       root,
-      "supabase/migrations/20260730010000_replace_released_imported_welcome_video.sql",
+      "supabase/migrations/20260730230000_replace_released_imported_welcome_video.sql",
     ),
   );
   psqlText(lifecycleSql());
@@ -178,7 +205,9 @@ try {
     );
     started = false;
   }
-  rmSync(cluster, { recursive: true, force: true });
+  if (cluster !== null) {
+    rmSync(cluster, { recursive: true, force: true });
+  }
 }
 
 function psqlText(sql) {
@@ -203,9 +232,15 @@ function quoteJson(value) {
 
 function bootstrapSql() {
   return `
+    ${
+      useExternalPostgres
+        ? ""
+        : `
     create role anon nologin;
     create role authenticated nologin;
     create role service_role nologin bypassrls;
+        `
+    }
     create extension pgcrypto;
     create schema auth;
     create function auth.role() returns text language sql stable as $$
