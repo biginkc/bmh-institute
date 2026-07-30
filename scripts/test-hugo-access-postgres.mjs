@@ -22,6 +22,7 @@ const upgradeRehearsal = process.argv.includes("--upgrade-rehearsal");
 const originMainToHeadMigrations = [
   "20260729210000_institute_role_group_lifecycle_lock.sql",
   "20260730200000_hugo_institute_lifecycle_contract.sql",
+  "20260730210000_hugo_institute_lifecycle_contract_forward.sql",
 ];
 const requestedBin = process.argv.find((value) => value.startsWith("--pg-bin="))
   ?.slice("--pg-bin=".length);

@@ -41,7 +41,7 @@ const roleLockMigration = readFileSync(
 const lifecycleMigration = readFileSync(
   resolve(
     process.cwd(),
-    "supabase/migrations/20260730200000_hugo_institute_lifecycle_contract.sql",
+    "supabase/migrations/20260730210000_hugo_institute_lifecycle_contract_forward.sql",
   ),
   "utf8",
 );

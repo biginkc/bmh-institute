@@ -85,6 +85,8 @@ do $$
 begin
   assert (select status from public.profiles where id = '00000000-0000-4000-8000-000000000165') = 'suspended',
     'revoked access must remain denied';
+  assert (select system_role from public.profiles where id = '00000000-0000-4000-8000-000000000165') = 'admin',
+    'revocation must preserve the Institute-owned system role';
   assert (select count(*) from public.user_role_groups where user_id = '00000000-0000-4000-8000-000000000165') = 1,
     'revoke must preserve Institute-owned memberships';
   assert (select desired_status from public.hugo_access_grants where user_id = '00000000-0000-4000-8000-000000000165') = 'revoked',
