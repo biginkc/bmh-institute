@@ -80,6 +80,7 @@ type VideoRow = {
 };
 type StorageInfo = {
   size?: number;
+  contentType?: string;
   metadata?: Record<string, unknown>;
   user_metadata?: Record<string, unknown>;
 };
@@ -857,7 +858,10 @@ async function verifyStorageObject(
     metadata.courseImportId ??
     metadata["course-import-id"];
   const storedMime =
-    metadata.mimetype ?? metadata.contentType ?? metadata.content_type;
+    info.contentType ??
+    metadata.mimetype ??
+    metadata.contentType ??
+    metadata.content_type;
   const mimeMatches =
     typeof storedMime === "string" && storedMime.startsWith(expected.mimeType);
   if (
