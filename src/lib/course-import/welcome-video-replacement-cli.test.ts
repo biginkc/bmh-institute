@@ -58,6 +58,9 @@ describe("released welcome video replacement CLI policy", () => {
   it("preflights catalog and storage, audits the call, and verifies paths plus duration", () => {
     expect(source).toMatch(/fn_course_import_catalog_sha256/);
     expect(source).toMatch(/verifyStorageObject/);
+    expect(source).toMatch(
+      /const storedMime =\s+info\.contentType \?\?[\s\S]*metadata\.mimetype/,
+    );
     expect(source).toMatch(/uploadApprovedAssets/);
     expect(source).toMatch(/fn_replace_released_imported_welcome_video/);
     expect(source).toMatch(/content_import_welcome_video_replacement_records/);
