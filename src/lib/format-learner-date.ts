@@ -19,3 +19,12 @@ export function formatLearnerDate(value: string | Date): string {
 export function formatLearnerDateTime(value: string | Date): string {
   return new Intl.DateTimeFormat("en-US", LEARNER_DATE_TIME_FORMAT).format(new Date(value));
 }
+
+export function formatLearnerLongDate(value: string | Date): string {
+  return new Intl.DateTimeFormat("en-US", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(value));
+}

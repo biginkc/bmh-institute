@@ -5,7 +5,7 @@ import {
   normalizeLearnerCertificateTemplate,
   renderCertificateHtml,
 } from "@/lib/certificates/render";
-import { formatLearnerDate } from "@/lib/format-learner-date";
+import { formatLearnerLongDate } from "@/lib/format-learner-date";
 
 import { CertificateLayout } from "../../certificate-layout";
 
@@ -62,7 +62,7 @@ export default async function ProgramCertificatePage({
   const html = renderCertificateHtml(normalizeLearnerCertificateTemplate(bodyHtml, "program"), {
     full_name: fullName,
     title,
-    completion_date: formatLearnerDate(cert.issued_at as string),
+    completion_date: formatLearnerLongDate(cert.issued_at as string),
     certificate_number: cert.certificate_number as string,
   });
 
