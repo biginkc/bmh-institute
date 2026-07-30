@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Regenerate b02 interrogation still with the LOCKED 5B seller (couch-picture seller anchor).
 set -u
 cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"

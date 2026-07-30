@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Carol v2 — TWO-person "arguing with the contractor" still (source for the Seedance animated tag).
 # Bespoke (not gen_scenes_2B.sh) so the ONE-PERSON clause is replaced by a TWO-person anti-clone guard.
 set -u

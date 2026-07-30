@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 7A base plates — one lane per image: zsh gen_stills_7A.sh <key>
 # Each recurring cast member is anchored to its crop in course-assets/scenes/module-07/_anchors/.
 set -u

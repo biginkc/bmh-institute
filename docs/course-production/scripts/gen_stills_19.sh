@@ -1,4 +1,6 @@
 #!/bin/zsh
+setopt pipefail
+zmodload zsh/datetime
 # Lesson 19 v6 still corrections. Run one lane per image or `all`.
 set -eu
 SCRIPT_PATH="${0:A}"

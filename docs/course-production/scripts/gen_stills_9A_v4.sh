@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 9A v4 — fix bench Andrea (skeletal→canonical full face) + b08 mover (man, real cardboard).
 # zsh gen_stills_9A_v4.sh <bench|mover>
 set -u

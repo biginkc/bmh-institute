@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 5B "The Fact Find" stills — one lane per image: zsh gen_stills_5B.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 set -u

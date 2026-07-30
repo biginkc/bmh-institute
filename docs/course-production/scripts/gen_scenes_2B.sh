@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 2B v2 — situational scene stills (ONE per seller), identity-matched to the approved portrait.
 # usage: zsh gen_scenes_2B.sh <david|beth|ray|carol|marcus>
 # Full doodle SCENE (not head-shoulders): the seller is IN the scene, weary/frustrated, depicting their problem.

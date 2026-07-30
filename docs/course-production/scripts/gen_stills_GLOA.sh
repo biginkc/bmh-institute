@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson GLO-A stills — one lane per image: zsh gen_stills_GLOA.sh <key>
 # Rules of record (Jarrad 2026-07-09, scene-card-v2.md 1d/1e/1f): minimalism purpose test
 # (ONLY listed elements), no code visuals (every board/diagram is art), static text BAKED

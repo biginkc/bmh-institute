@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 7B — Objection Scripts Playbook. One lane per image:
 #   zsh scripts/gen_stills_7B.sh <key>
 # Category-theme dividers (later Seedance-animated). LOCKED CAST (Jarrad 2026-07-05):

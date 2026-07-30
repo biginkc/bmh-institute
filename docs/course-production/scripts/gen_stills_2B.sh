@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 2B seller portraits — one lane per image: zsh gen_stills_2B.sh <key>
 # Head-and-shoulders doodle portraits, ONE person each, generous even blue margin
 # so each crops cleanly into the b07 recap grid AND serves as the HeyGen talking-avatar source.

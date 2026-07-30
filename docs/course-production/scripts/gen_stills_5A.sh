@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 5A "Opening the Call" stills — one lane per image: zsh gen_stills_5A.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 set -u

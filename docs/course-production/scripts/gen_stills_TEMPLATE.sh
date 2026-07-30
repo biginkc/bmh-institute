@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 1B redo pass — one lane per image: zsh gen_1b_v2.sh <key>
 set -u
 cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"

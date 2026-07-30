@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 4A wordless vignette stills — one lane per image: zsh gen_stills_4A.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 set -u

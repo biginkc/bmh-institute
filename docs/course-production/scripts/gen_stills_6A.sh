@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 6A "Discovery" stills — one lane per image: zsh gen_stills_6A.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 # Keys: office iceberg fork (Seedance start-images) · mask pyramid notices deciders (code-motion stills)

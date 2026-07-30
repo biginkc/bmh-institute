@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 13A stills — run one lane per image or `all`.
 set -u
 cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"

@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 3B stills — one lane per image: zsh gen_stills_3B.sh <key>
 # Keys: homeowner (RUN FIRST — b06 avatar source), rundown, offer, ideal, notafit, relieved
 set -u

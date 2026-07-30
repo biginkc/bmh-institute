@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Beth v2 — interior living room, elderly late-mother's framed portrait on the wall.
 # Bespoke (not gen_scenes_2B.sh) so the ONE-PERSON clause allows the mother's memorial PHOTO.
 set -u

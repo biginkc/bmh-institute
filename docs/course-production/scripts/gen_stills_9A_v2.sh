@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 9A stills v2 — NO-NOSE re-roll (Jarrad 2026-07-06): dot eyes + mouth only, no nose on any character.
 # Beth additionally re-designed to look clearly DIFFERENT from Andrea. Scale (b07) unchanged (no person).
 # one lane per image: zsh gen_stills_9A_v2.sh <key>

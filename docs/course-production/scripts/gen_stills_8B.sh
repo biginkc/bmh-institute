@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 8B still candidates. Run one lane per image:
 #   zsh docs/course-production/scripts/gen_stills_8B.sh <key>
 set -u

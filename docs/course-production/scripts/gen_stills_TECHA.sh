@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson TECH-A stills — one lane per image: zsh gen_stills_TECHA.sh <key>
 # v4 (Jarrad watch-through redlines 2026-07-10):
 #  - LOGOS/PRODUCT UIs use the REAL brand colors from the attached reference — the BMH course

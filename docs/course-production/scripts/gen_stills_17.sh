@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 17 stills — v5.1 board (Jarrad-approved 2026-07-09). Run one lane per image or `all`.
 # Fresh-gen beats: b04 your-deal, b05 strong-months, b06 real-outcomes, b09 finish-line (Priya), b10 wallet.
 # Reuse (do NOT regen): b02 three-blocks, b03 ramp-calendar, b08 credit-loop, b11 comp-sheet.

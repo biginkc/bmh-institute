@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 9A stills v3 — CANONICAL NOSE fix (Jarrad 2026-07-06): small curved hook/comma nose like the cast board.
 # NOT noseless (v2 was wrong), NOT the wrong pointed/bracket nose (v1 was wrong). Match previous modules exactly.
 # Beth stays re-designed distinct from Andrea. Scale (b07) unchanged (no person).

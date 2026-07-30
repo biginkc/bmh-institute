@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 9A stills — one lane per image: zsh gen_stills_9A.sh <key>
 set -u
 cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"

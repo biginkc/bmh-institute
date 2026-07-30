@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 8A base plates — one lane per image: zsh gen_stills_8A.sh <key>
 # Pattern copied from gen_stills_7A.sh. Anchors in course-assets/scenes/module-08/_anchors/
 # (jim/mark/david copied from 7A; ray/carol/marcus/grace cropped from cast-board, text sliver trimmed).

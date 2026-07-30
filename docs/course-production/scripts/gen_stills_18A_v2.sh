@@ -1,4 +1,5 @@
 #!/bin/zsh
+setopt pipefail
 # Lesson 18A v2 correction stills.
 set -u
 cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
