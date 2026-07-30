@@ -23,6 +23,7 @@ const originMainToHeadMigrations = [
   "20260729210000_institute_role_group_lifecycle_lock.sql",
   "20260730200000_hugo_institute_lifecycle_contract.sql",
   "20260730210000_hugo_institute_lifecycle_contract_forward.sql",
+  "20260730220000_institute_last_owner_guard.sql",
 ];
 const requestedBin = process.argv.find((value) => value.startsWith("--pg-bin="))
   ?.slice("--pg-bin=".length);
@@ -162,6 +163,7 @@ async function runPostgres(pgBin, index) {
       "063_hugo_post_merge_security_closure.sql",
       "064_institute_app_owned_role_access.sql",
       "065_hugo_lifecycle_ownership.sql",
+      "066_institute_last_owner_guard.sql",
     ]) {
       const path = resolve(root, "supabase/tests", test);
       if (existsSync(path)) psqlFile(binary, env, path);
@@ -223,7 +225,7 @@ async function runPostgres(pgBin, index) {
         ? migrations.length - originMainToHeadMigrations.length
         : null,
       head_migrations: upgradeRehearsal ? originMainToHeadMigrations : [],
-      focused_sql_tests: 10,
+      focused_sql_tests: 12,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       role_group_delete_lifecycle_serialization:
         roleGroupDeleteSerialization,

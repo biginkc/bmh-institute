@@ -27,6 +27,9 @@ const migrations = [
   {
     file: "20260730210000_hugo_institute_lifecycle_contract_forward.sql",
   },
+  {
+    file: "20260730220000_institute_last_owner_guard.sql",
+  },
 ];
 
 const psql = (args) =>
