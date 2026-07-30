@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     p_block_id: payload.blockId,
     p_position_seconds: payload.positionSeconds,
     p_duration_seconds: payload.durationSeconds,
-    p_client_updated_at: new Date(payload.clientUpdatedAt).toISOString(),
+    p_checkpoint_sequence: payload.checkpointSequence,
   });
   if (error) return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
   return NextResponse.json({ ok: true, ...(data as unknown as Record<string, unknown>) });

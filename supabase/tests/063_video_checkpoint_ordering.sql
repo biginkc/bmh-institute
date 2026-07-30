@@ -76,7 +76,7 @@ select public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-463063063063',
   4,
   100,
-  clock_timestamp() + interval '90 seconds'
+  0
 );
 select public.fn_record_video_playback(
   '06306306-3063-4063-8063-063063063063',
@@ -103,7 +103,7 @@ begin
     raise exception 'checkpoint-first race dropped legitimate coverage: %', v_ranges;
   end if;
   if v_last_at is null or v_last_at > clock_timestamp() then
-    raise exception 'positive client clock skew became the observation baseline: %', v_last_at;
+    raise exception 'database observation clock became invalid: %', v_last_at;
   end if;
   if v_position <> 4 then
     raise exception 'checkpoint-first arrival regressed the final resume position: %', v_position;
@@ -134,15 +134,24 @@ select public.fn_record_video_playback(
   2
 );
 
--- An observation must establish a server-time ordering marker. A delayed
--- older checkpoint cannot regress the resume position after it arrives.
-select public.fn_checkpoint_video_playback(
+-- An observation must advance the server ordering sequence. A delayed
+-- checkpoint carrying the old sequence cannot regress the resume position.
+do $$
+declare
+  v_result jsonb;
+begin
+  v_result := public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-063063063063',
   '06306306-3063-4063-8063-463063063063',
   8,
   100,
-  clock_timestamp() - interval '1 hour'
-);
+  0
+  );
+  if v_result ->> 'stale' <> 'true' then
+    raise exception 'delayed checkpoint with an old server sequence was accepted: %', v_result;
+  end if;
+end;
+$$;
 
 do $$
 declare
@@ -163,7 +172,7 @@ select public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-463063063063',
   4,
   100,
-  clock_timestamp() + interval '90 seconds'
+  1
 );
 
 do $$
@@ -204,7 +213,7 @@ select public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-463063063063',
   6,
   100,
-  clock_timestamp() - interval '1 hour'
+  0
 );
 
 do $$
@@ -230,15 +239,24 @@ begin
 end;
 $$;
 
--- A late older checkpoint must remain stale even when database updated_at is
--- newer because the client-ordering field is independent of server time.
-select public.fn_checkpoint_video_playback(
+-- A late checkpoint carrying the old server sequence must remain stale even
+-- when database updated_at is newer.
+do $$
+declare
+  v_result jsonb;
+begin
+  v_result := public.fn_checkpoint_video_playback(
   '06306306-3063-4063-8063-063063063063',
   '06306306-3063-4063-8063-463063063063',
   9,
   100,
-  clock_timestamp() - interval '2 hours'
-);
+  0
+  );
+  if v_result ->> 'stale' <> 'true' then
+    raise exception 'late checkpoint with an old server sequence was accepted: %', v_result;
+  end if;
+end;
+$$;
 
 do $$
 declare

@@ -12,6 +12,15 @@ import {
 
 const PROGRESS_SAMPLE_SECONDS = 2;
 
+function setCheckpointSequence(
+  sequenceRef: { current: number },
+  value: unknown,
+) {
+  if (typeof value === "number" && Number.isSafeInteger(value) && value >= 0) {
+    sequenceRef.current = value;
+  }
+}
+
 /**
  * HTML5 video player that records short contiguous playback observations.
  * Seeking moves the resume point but does not add watched coverage.
@@ -47,6 +56,7 @@ export function VideoBlockPlayer({
   const videoRef = useRef<HTMLVideoElement>(null);
   const sampleStartRef = useRef<number | null>(null);
   const resumePositionRef = useRef(0);
+  const checkpointSequenceRef = useRef(0);
   const writeQueueRef = useRef<Promise<void>>(Promise.resolve());
   const mountedRef = useRef(true);
   const completedRef = useRef(initialComplete);
@@ -94,6 +104,7 @@ export function VideoBlockPlayer({
     if (!result?.ok) return false;
 
     resumePositionRef.current = result.positionSeconds;
+    setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
     sampleStartRef.current = result.positionSeconds;
     setWatchedPercent(result.watchedPercent);
     const transitionedToComplete = result.completed && !completedRef.current;
@@ -127,6 +138,7 @@ export function VideoBlockPlayer({
         }
         if (!mountedRef.current) return;
         if (result?.ok) {
+          setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
           if (Number.isFinite(result.positionSeconds)) {
             resumePositionRef.current = result.positionSeconds;
           }
@@ -165,6 +177,9 @@ export function VideoBlockPlayer({
         if (result?.ok && Number.isFinite(result.positionSeconds)) {
           resumePositionRef.current = result.positionSeconds;
         }
+        if (result?.ok) {
+          setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
+        }
         const recovered = result?.ok ? true : await resynchronizeProgress();
         if (!mountedRef.current) return;
         setProgressError(
@@ -200,7 +215,7 @@ export function VideoBlockPlayer({
       blockId,
       positionSeconds: Math.max(0, Math.min(el.currentTime, el.duration)),
       durationSeconds: el.duration,
-      clientUpdatedAt: Date.now(),
+      checkpointSequence: checkpointSequenceRef.current,
     });
     void fetch("/api/video-progress/checkpoint", {
       method: "POST",
@@ -208,6 +223,15 @@ export function VideoBlockPlayer({
       credentials: "same-origin",
       headers: { "content-type": "application/json" },
       keepalive: true,
+    }).then(async (response) => {
+      if (!response.ok) return;
+      const result = await response.json().catch(() => null);
+      if (result && typeof result === "object") {
+        setCheckpointSequence(
+          checkpointSequenceRef,
+          (result as Record<string, unknown>).checkpointSequence,
+        );
+      }
     }).catch(() => undefined);
   }, [blockId]);
 
@@ -217,6 +241,7 @@ export function VideoBlockPlayer({
     mountedRef.current = true;
     void loadVideoProgress(blockId).then((result) => {
       if (!active || !result.ok) return;
+      setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
       const canRestorePosition =
         !playbackStartedRef.current && !hasRecordedProgressRef.current;
       if (canRestorePosition) {

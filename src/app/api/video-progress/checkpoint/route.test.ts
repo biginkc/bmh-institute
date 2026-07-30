@@ -58,7 +58,26 @@ describe("POST /api/video-progress/checkpoint", () => {
     expect(rpc).toHaveBeenCalledWith("fn_checkpoint_video_playback", expect.objectContaining({
       p_user_id: "user-1",
       p_block_id: "block-1",
+      p_checkpoint_sequence: 0,
     }));
+  });
+
+  it("returns the server-issued sequence for the next checkpoint cursor", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    rpc.mockResolvedValue({
+      data: { saved: true, stale: false, checkpointSequence: 3 },
+      error: null,
+    });
+
+    const response = await POST(checkpointRequest());
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      saved: true,
+      stale: false,
+      checkpointSequence: 3,
+    });
   });
 });
 
@@ -69,7 +88,7 @@ function checkpointRequest() {
       blockId: "block-1",
       positionSeconds: 42,
       durationSeconds: 100,
-      clientUpdatedAt: Date.now(),
+      checkpointSequence: 0,
     }),
     headers: { "content-type": "application/json" },
   });

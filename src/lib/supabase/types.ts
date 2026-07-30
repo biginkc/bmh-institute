@@ -1491,7 +1491,7 @@ export type Database = {
         Row: {
           asset_version: string
           block_id: string
-          checkpoint_client_updated_at: string | null
+          checkpoint_sequence: number
           duration_seconds: number
           last_observed_at: string | null
           last_observed_position_seconds: number
@@ -1503,7 +1503,7 @@ export type Database = {
         Insert: {
           asset_version: string
           block_id: string
-          checkpoint_client_updated_at?: string | null
+          checkpoint_sequence?: number
           duration_seconds: number
           last_observed_at?: string | null
           last_observed_position_seconds?: number
@@ -1515,7 +1515,7 @@ export type Database = {
         Update: {
           asset_version?: string
           block_id?: string
-          checkpoint_client_updated_at?: string | null
+          checkpoint_sequence?: number
           duration_seconds?: number
           last_observed_at?: string | null
           last_observed_position_seconds?: number
@@ -1750,7 +1750,7 @@ export type Database = {
       fn_checkpoint_video_playback: {
         Args: {
           p_block_id: string
-          p_client_updated_at: string
+          p_checkpoint_sequence: number
           p_duration_seconds: number
           p_position_seconds: number
           p_user_id: string
