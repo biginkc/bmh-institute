@@ -43,6 +43,37 @@ describe("prepareLearnerPart", () => {
     expect(signBlocks).not.toHaveBeenCalled();
     expect(attachEmbeds).not.toHaveBeenCalled();
   });
+
+  it.each(["not-a-real-part", "role-play-1"])(
+    "rejects an explicit unknown or unavailable part request: %s",
+    async (requestedPart) => {
+      const signBlocks = vi.fn(async (blocks) => blocks);
+      const attachEmbeds = vi.fn(async (blocks) => blocks);
+      const selected = await prepareLearnerPart({
+        parts,
+        requestedPart,
+        signBlocks,
+        attachEmbeds,
+      });
+
+      expect(selected).toBeNull();
+      expect(signBlocks).not.toHaveBeenCalled();
+      expect(attachEmbeds).not.toHaveBeenCalled();
+    },
+  );
+
+  it("keeps the normal default selection when no part is requested", async () => {
+    const signBlocks = vi.fn(async (blocks) => blocks);
+    const attachEmbeds = vi.fn(async (blocks) => blocks);
+    const selected = await prepareLearnerPart({
+      parts,
+      requestedPart: null,
+      signBlocks,
+      attachEmbeds,
+    });
+
+    expect(selected?.id).toBe("video-2");
+  });
 });
 
 function block(id: string, blockType: "video" | "role_play") {

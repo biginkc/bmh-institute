@@ -273,7 +273,11 @@ async function ContentCompositeLesson({
   if (!selected)
     return (
       <LessonError
-        error="This lesson has no available content."
+        error={
+          requestedPart
+            ? "That lesson part is unavailable. Choose an available part or finish the earlier lesson first."
+            : "This lesson has no available content."
+        }
         courseId={courseId}
       />
     );
