@@ -44,7 +44,10 @@ begin
         or exists (select 1 from public.assignment_submissions x where x.lesson_id = lesson.id)
         or exists (select 1 from public.user_quiz_attempts x where x.lesson_id = lesson.id)
         or exists (select 1 from public.content_blocks block join public.user_block_progress x on x.block_id = block.id where block.lesson_id = lesson.id)
+        or exists (select 1 from public.content_blocks block join public.user_video_progress x on x.block_id = block.id where block.lesson_id = lesson.id)
+        or exists (select 1 from public.content_blocks block join public.role_play_results x on x.block_id = block.id where block.lesson_id = lesson.id)
         or exists (select 1 from public.content_blocks block join public.user_video_completion_history x on x.block_id = block.id where block.lesson_id = lesson.id)
+        or exists (select 1 from public.user_course_resume x where x.course_id = (select module.course_id from public.modules module where module.id = p_entity_id) and (x.last_lesson_id = lesson.id or x.last_block_id in (select block.id from public.content_blocks block where block.lesson_id = lesson.id)))
       )
     ) into v_activity;
   elsif p_entity_type = 'lesson' then
@@ -62,7 +65,10 @@ begin
       union all select 1 from public.user_quiz_attempts x where x.lesson_id = p_entity_id
       union all select 1 from public.user_course_resume x where x.last_lesson_id = p_entity_id
       union all select 1 from public.content_blocks block join public.user_block_progress x on x.block_id = block.id where block.lesson_id = p_entity_id
+      union all select 1 from public.content_blocks block join public.user_video_progress x on x.block_id = block.id where block.lesson_id = p_entity_id
+      union all select 1 from public.content_blocks block join public.role_play_results x on x.block_id = block.id where block.lesson_id = p_entity_id
       union all select 1 from public.content_blocks block join public.user_video_completion_history x on x.block_id = block.id where block.lesson_id = p_entity_id
+      union all select 1 from public.user_course_resume x where x.last_block_id in (select block.id from public.content_blocks block where block.lesson_id = p_entity_id)
     ) into v_activity;
   elsif p_entity_type = 'role_group' then
     select count(*) into v_members from public.user_role_groups where role_group_id = p_entity_id;
@@ -96,7 +102,10 @@ begin
     ) into v_imported;
     select exists (
       select 1 from public.user_block_progress x where x.block_id = p_entity_id
+      union all select 1 from public.user_video_progress x where x.block_id = p_entity_id
+      union all select 1 from public.role_play_results x where x.block_id = p_entity_id
       union all select 1 from public.user_video_completion_history x where x.block_id = p_entity_id
+      union all select 1 from public.user_course_resume x where x.last_block_id = p_entity_id
     ) into v_activity;
   elsif p_entity_type = 'question' then
     select exists (
@@ -176,6 +185,9 @@ begin
   if p_entity_type not in ('module', 'lesson', 'role_group', 'block', 'question', 'option') then
     return jsonb_build_object('code', 'invalid_target');
   end if;
+  -- Take the shared catalog lock before the target lock. Import and editor
+  -- mutations therefore use one global-to-specific lock order.
+  perform pg_advisory_xact_lock(hashtextextended('course-import-catalog-mutation', 0));
   perform pg_advisory_xact_lock(hashtextextended('admin-delete:' || p_entity_type || ':' || p_entity_id::text, 0));
 
   -- Lock the target and every activity row consulted by the guards before
@@ -183,20 +195,28 @@ begin
   if p_entity_type = 'module' then
     perform 1 from public.modules where id = p_entity_id for update;
     perform 1 from public.lessons where module_id = p_entity_id for update;
+    perform 1 from public.quizzes where id in (select quiz_id from public.lessons where module_id = p_entity_id and quiz_id is not null) for update;
     perform 1 from public.user_lesson_completions where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;
     perform 1 from public.assignment_submissions where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;
     perform 1 from public.user_quiz_attempts where quiz_id in (select quiz_id from public.lessons where module_id = p_entity_id and quiz_id is not null) for update;
     perform 1 from public.user_block_progress where block_id in (select id from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id)) for update;
+    perform 1 from public.user_video_progress where block_id in (select id from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id)) for update;
+    perform 1 from public.role_play_results where block_id in (select id from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id)) for update;
     perform 1 from public.user_video_completion_history where block_id in (select id from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id)) for update;
+    perform 1 from public.user_course_resume where course_id = (select course_id from public.modules where id = p_entity_id) and (last_lesson_id in (select id from public.lessons where module_id = p_entity_id) or last_block_id in (select block.id from public.content_blocks block join public.lessons lesson on lesson.id = block.lesson_id where lesson.module_id = p_entity_id)) for update;
   elsif p_entity_type = 'lesson' then
     perform 1 from public.lessons where id = p_entity_id for update;
     perform 1 from public.content_blocks where lesson_id = p_entity_id for update;
+    perform 1 from public.quizzes where id = (select quiz_id from public.lessons where id = p_entity_id) for update;
     perform 1 from public.user_lesson_completions where lesson_id = p_entity_id for update;
     perform 1 from public.assignment_submissions where lesson_id = p_entity_id for update;
     perform 1 from public.user_quiz_attempts where quiz_id = (select quiz_id from public.lessons where id = p_entity_id) for update;
     perform 1 from public.user_course_resume where last_lesson_id = p_entity_id for update;
     perform 1 from public.user_block_progress where block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
+    perform 1 from public.user_video_progress where block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
+    perform 1 from public.role_play_results where block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
     perform 1 from public.user_video_completion_history where block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
+    perform 1 from public.user_course_resume where last_block_id in (select id from public.content_blocks where lesson_id = p_entity_id) for update;
   elsif p_entity_type = 'role_group' then
     perform 1 from public.role_groups where id = p_entity_id for update;
     perform 1 from public.program_access where role_group_id = p_entity_id for update;
@@ -207,11 +227,17 @@ begin
   elsif p_entity_type = 'block' then
     perform 1 from public.content_blocks where id = p_entity_id for update;
     perform 1 from public.user_block_progress where block_id = p_entity_id for update;
+    perform 1 from public.user_video_progress where block_id = p_entity_id for update;
+    perform 1 from public.role_play_results where block_id = p_entity_id for update;
     perform 1 from public.user_video_completion_history where block_id = p_entity_id for update;
+    perform 1 from public.user_course_resume where last_block_id = p_entity_id for update;
   elsif p_entity_type = 'question' then
+    perform 1 from public.quizzes where id = (select quiz_id from public.questions where id = p_entity_id) for update;
     perform 1 from public.questions where id = p_entity_id for update;
     perform 1 from public.user_quiz_attempts where quiz_id = (select quiz_id from public.questions where id = p_entity_id) for update;
   else
+    perform 1 from public.quizzes where id = (select question.quiz_id from public.questions question join public.answer_options option on option.question_id = question.id where option.id = p_entity_id) for update;
+    perform 1 from public.questions where id = (select question.id from public.questions question join public.answer_options option on option.question_id = question.id where option.id = p_entity_id) for update;
     perform 1 from public.answer_options where id = p_entity_id for update;
     perform 1 from public.user_quiz_attempts where quiz_id = (select question.quiz_id from public.questions question join public.answer_options option on option.question_id = question.id where option.id = p_entity_id) for update;
   end if;
@@ -244,9 +270,12 @@ begin
     perform 1 from public.content_blocks where id = p_entity_id for update;
     delete from public.content_blocks where id = p_entity_id;
   elsif p_entity_type = 'question' then
+    perform 1 from public.quizzes where id = (select quiz_id from public.questions where id = p_entity_id) for update;
     perform 1 from public.questions where id = p_entity_id for update;
     delete from public.questions where id = p_entity_id;
   else
+    perform 1 from public.quizzes where id = (select question.quiz_id from public.questions question join public.answer_options option on option.question_id = question.id where option.id = p_entity_id) for update;
+    perform 1 from public.questions where id = (select question.id from public.questions question join public.answer_options option on option.question_id = question.id where option.id = p_entity_id) for update;
     perform 1 from public.answer_options where id = p_entity_id for update;
     delete from public.answer_options where id = p_entity_id;
   end if;

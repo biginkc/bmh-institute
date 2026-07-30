@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button, Card } from "@/components/bmh-ds";
 
@@ -17,9 +17,23 @@ export function DestructiveConfirmation({
   impact: string[];
   confirmLabel?: string;
   onCancel: () => void;
-  onConfirm: () => void;
+  onConfirm: () => void | Promise<void>;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  const activatedRef = useRef(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleConfirm() {
+    if (activatedRef.current) return;
+    activatedRef.current = true;
+    setSubmitting(true);
+    try {
+      await onConfirm();
+    } catch {
+      activatedRef.current = false;
+      setSubmitting(false);
+    }
+  }
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
@@ -32,7 +46,7 @@ export function DestructiveConfirmation({
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
-        onCancel();
+        if (!activatedRef.current) onCancel();
         return;
       }
       if (event.key !== "Tab") return;
@@ -63,6 +77,7 @@ export function DestructiveConfirmation({
         aria-modal="true"
         aria-labelledby="destructive-confirmation-title"
         aria-describedby="destructive-confirmation-description"
+        aria-busy={submitting}
         className="w-full max-w-lg"
       >
         <Card padding="md">
@@ -81,8 +96,10 @@ export function DestructiveConfirmation({
             </div>
           ) : null}
           <div className="mt-5 flex justify-end gap-2">
-            <Button variant="secondary" onClick={onCancel}>Cancel</Button>
-            <Button variant="warm" onClick={onConfirm}>{confirmLabel}</Button>
+            <Button variant="secondary" onClick={onCancel} disabled={submitting}>Cancel</Button>
+            <Button variant="warm" onClick={handleConfirm} disabled={submitting} aria-busy={submitting}>
+              {submitting ? "Deleting..." : confirmLabel}
+            </Button>
           </div>
         </Card>
       </div>

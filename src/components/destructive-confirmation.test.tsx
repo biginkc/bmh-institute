@@ -34,4 +34,25 @@ describe("DestructiveConfirmation", () => {
     expect(trigger).toHaveFocus();
     trigger.remove();
   });
+
+  it("submits only once while the destructive action is pending", () => {
+    const onConfirm = vi.fn(() => new Promise<void>(() => {}));
+    render(
+      <DestructiveConfirmation
+        title="Delete item"
+        description="This cannot be undone."
+        impact={[]}
+        onCancel={vi.fn()}
+        onConfirm={onConfirm}
+      />,
+    );
+
+    const confirm = screen.getByRole("button", { name: "Delete" });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+
+    expect(onConfirm).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Deleting..." })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeDisabled();
+  });
 });

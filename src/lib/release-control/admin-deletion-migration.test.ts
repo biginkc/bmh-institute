@@ -42,6 +42,17 @@ describe("transactional admin deletion contract", () => {
     expect(lockBlock).toMatch(/assignment_submissions[\s\S]*for update/);
     expect(lockBlock).toMatch(/user_quiz_attempts[\s\S]*for update/);
     expect(lockBlock).toMatch(/user_block_progress[\s\S]*for update/);
+    expect(lockBlock).toMatch(/user_video_progress[\s\S]*for update/);
+    expect(lockBlock).toMatch(/role_play_results[\s\S]*for update/);
     expect(lockBlock).toMatch(/user_video_completion_history[\s\S]*for update/);
+    expect(lockBlock).toMatch(/user_course_resume[\s\S]*for update/);
+  });
+
+  it("takes the shared catalog lock before target locks and serializes quiz ownership", () => {
+    const deleteBody = migration.slice(migration.indexOf("create or replace function public.fn_admin_delete_catalog_entity_v1"));
+    expect(deleteBody.indexOf("course-import-catalog-mutation")).toBeLessThan(deleteBody.indexOf("admin-delete:"));
+    expect(deleteBody).toMatch(/public\.quizzes[\s\S]*where id = \(select quiz_id from public\.questions[\s\S]*for update/);
+    expect(deleteBody).toMatch(/public\.questions[\s\S]*where id = \(select question\.id[\s\S]*for update/);
+    expect(deleteBody).toMatch(/public\.user_quiz_attempts[\s\S]*for update/);
   });
 });
