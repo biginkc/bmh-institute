@@ -253,7 +253,7 @@ export function resolveLearnerPart(
 ): LearnerPartResolution {
   const requested = parts.find((part) => part.id === requestedPartId);
   const fallback = selectLearnerPart(parts, null);
-  const part = requested && !requested.available ? requested : requested ?? fallback;
+  const part = requested ?? fallback;
   return {
     part,
     requestedPart: requestedPartId,

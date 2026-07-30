@@ -28,5 +28,26 @@ export async function POST(request: Request) {
     p_checkpoint_sequence: payload.checkpointSequence,
   });
   if (error) return NextResponse.json({ ok: false, error: "Video checkpoint could not be saved." }, { status: 400 });
-  return NextResponse.json({ ok: true, ...(data as unknown as Record<string, unknown>) });
+  if (
+    !data ||
+    typeof data !== "object" ||
+    Array.isArray(data) ||
+    typeof (data as Record<string, unknown>).saved !== "boolean" ||
+    typeof (data as Record<string, unknown>).stale !== "boolean" ||
+    !Number.isSafeInteger((data as Record<string, unknown>).checkpointSequence) ||
+    ((data as Record<string, unknown>).checkpointSequence as number) < 0
+  ) {
+    return NextResponse.json({ ok: false, error: "Video checkpoint could not be saved." }, { status: 400 });
+  }
+  const result = data as {
+    saved: boolean;
+    stale: boolean;
+    checkpointSequence: number;
+  };
+  return NextResponse.json({
+    ok: true,
+    saved: result.saved,
+    stale: result.stale,
+    checkpointSequence: result.checkpointSequence,
+  });
 }

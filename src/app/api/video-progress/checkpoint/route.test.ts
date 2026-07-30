@@ -47,6 +47,57 @@ describe("POST /api/video-progress/checkpoint", () => {
     expect(rpc).not.toHaveBeenCalled();
   });
 
+  it("rejects JSON requests from a foreign origin", async () => {
+    const response = await POST(new Request("http://localhost/api/video-progress/checkpoint", {
+      method: "POST",
+      body: JSON.stringify({}),
+      headers: { "content-type": "application/json", origin: "https://evil.example" },
+    }));
+
+    expect(response.status).toBe(400);
+    expect(getUser).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("rejects JSON requests marked cross-site", async () => {
+    const response = await POST(new Request("http://localhost/api/video-progress/checkpoint", {
+      method: "POST",
+      body: JSON.stringify({}),
+      headers: { "content-type": "application/json", "sec-fetch-site": "cross-site" },
+    }));
+
+    expect(response.status).toBe(400);
+    expect(getUser).not.toHaveBeenCalled();
+    expect(rpc).not.toHaveBeenCalled();
+  });
+
+  it("accepts JSON from the request origin", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    rpc.mockResolvedValue({
+      data: { saved: true, stale: false, checkpointSequence: 3, ignored: "not exposed" },
+      error: null,
+    });
+
+    const response = await POST(new Request("http://localhost/api/video-progress/checkpoint", {
+      method: "POST",
+      body: JSON.stringify({
+        blockId: "06306306-3063-4063-8063-463063063063",
+        positionSeconds: 42,
+        durationSeconds: 100,
+        checkpointSequence: 0,
+      }),
+      headers: { "content-type": "application/json", origin: "http://localhost" },
+    }));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      ok: true,
+      saved: true,
+      stale: false,
+      checkpointSequence: 3,
+    });
+  });
+
   it("rejects unauthenticated requests", async () => {
     getUser.mockResolvedValue({ data: { user: null } });
 
@@ -93,6 +144,19 @@ describe("POST /api/video-progress/checkpoint", () => {
       saved: true,
       stale: false,
       checkpointSequence: 3,
+    });
+  });
+
+  it("rejects an invalid guarded RPC result shape", async () => {
+    getUser.mockResolvedValue({ data: { user: { id: "user-1" } } });
+    rpc.mockResolvedValue({ data: { saved: true, stale: false }, error: null });
+
+    const response = await POST(checkpointRequest());
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      ok: false,
+      error: "Video checkpoint could not be saved.",
     });
   });
 });

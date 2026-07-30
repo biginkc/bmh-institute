@@ -145,7 +145,7 @@ export function VideoBlockPlayer({
         }
         if (!mountedRef.current) return;
         if (result?.ok) {
-        setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
+          setCheckpointSequence(checkpointSequenceRef, result.checkpointSequence);
           if (Number.isFinite(result.positionSeconds)) {
             resumePositionRef.current = result.positionSeconds;
           }
@@ -240,9 +240,11 @@ export function VideoBlockPlayer({
       if (!response.ok) return;
       const result = await response.json().catch(() => null);
       if (result && typeof result === "object") {
+        const checkpoint = result as Record<string, unknown>;
         setCheckpointSequence(
           checkpointSequenceRef,
-          (result as Record<string, unknown>).checkpointSequence,
+          checkpoint.checkpointSequence,
+          { reset: checkpoint.stale === true },
         );
       }
     }).catch(() => undefined);
