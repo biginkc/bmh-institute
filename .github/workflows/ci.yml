@@ -95,6 +95,20 @@ jobs:
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
           TEST_SUPABASE_DB_URL="$DB_URL" node scripts/apply-hugo-lifecycle-shared-test.mjs
 
+      - name: Apply routing and video migrations to the shared TEST project
+        env:
+          TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"
+          if [ -z "$TEST_SUPABASE_DB_PASSWORD" ]; then
+            echo "TEST_SUPABASE_DB_PASSWORD secret is required."
+            exit 1
+          fi
+          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
+          echo "::add-mask::$ENCODED_PASSWORD"
+          DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
+          TEST_SUPABASE_DB_URL="$DB_URL" node scripts/apply-routing-video-shared-test.mjs
+
       - name: Reconcile the exact Tech Stack canary poster
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.TEST_SUPABASE_URL }}
