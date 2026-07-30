@@ -320,4 +320,26 @@ begin
 end;
 $$;
 
+-- A checkpoint is only a resume hint. It must never seed a trusted observation
+-- anchor at an arbitrary position when no real observation has happened yet.
+do $$
+begin
+  perform public.fn_record_video_playback(
+    '06306306-3063-4063-8063-063063063063',
+    '06306306-3063-4063-8063-463063063063',
+    'observe',
+    83,
+    100,
+    80,
+    83
+  );
+  raise exception 'forged checkpoint anchor was accepted';
+exception
+  when others then
+    if sqlerrm = 'forged checkpoint anchor was accepted' then
+      raise;
+    end if;
+end;
+$$;
+
 rollback;

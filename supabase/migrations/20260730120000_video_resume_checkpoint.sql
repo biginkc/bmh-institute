@@ -241,8 +241,6 @@ begin
       or (
         v_last_at is null
         and p_observed_from > 1
-        and abs(p_observed_from - coalesce(v_resume_position, 0)) > 1
-        and abs(p_observed_to - coalesce(v_resume_position, 0)) > 1
       )
       or (
         v_last_at is not null
