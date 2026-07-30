@@ -139,45 +139,14 @@ async function createWritePathFixtureBody(
   // this keeps the E2E fixture aligned with the production authorization
   // boundary instead of weakening the RPC or report page.
   if (reviewerProgramIds.length > 0) {
-    const grantedReviewerProgramIds: string[] = [];
-    try {
-      for (const programId of reviewerProgramIds) {
-        await admin
-          .rpc("fn_set_unreleased_import_reviewer_v1", {
-            p_program_id: programId,
-            p_user_id: adminUser.id,
-            p_allowed: true,
-          })
-          .throwOnError();
-        grantedReviewerProgramIds.push(programId);
-      }
-    } catch (error) {
-      const rollbackErrors: unknown[] = [];
-      for (const programId of grantedReviewerProgramIds) {
-        try {
-          await admin
-            .rpc("fn_set_unreleased_import_reviewer_v1", {
-              p_program_id: programId,
-              p_user_id: adminUser.id,
-              p_allowed: false,
-            })
-            .throwOnError();
-        } catch (rollbackError) {
-          rollbackErrors.push(rollbackError);
-        }
-      }
-      const userCleanupErrors = await deleteFixtureUsers(admin, [
-        adminUser.id,
-        learner.id,
-        unassigned.id,
-      ]);
-      if (rollbackErrors.length > 0 || userCleanupErrors.length > 0) {
-        throw new AggregateError(
-          [error, ...rollbackErrors, ...userCleanupErrors],
-          "Failed to create and roll back disposable reviewer grants.",
-        );
-      }
-      throw error;
+    for (const programId of reviewerProgramIds) {
+      await admin
+        .rpc("fn_set_unreleased_import_reviewer_v1", {
+          p_program_id: programId,
+          p_user_id: adminUser.id,
+          p_allowed: true,
+        })
+        .throwOnError();
     }
   }
 
