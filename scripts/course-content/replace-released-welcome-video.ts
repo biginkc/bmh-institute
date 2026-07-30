@@ -21,7 +21,10 @@ import {
   type CourseImportAsset,
 } from "../../src/lib/course-import/manifest";
 import { buildImportPlan } from "../../src/lib/course-import/operations";
-import { assertWelcomeVideoReplacementNotRolledBack } from "../../src/lib/course-import/welcome-video-replacement-policy";
+import {
+  assertWelcomeVideoReplacementNotRolledBack,
+  runWelcomeVideoUploadAfterRollbackGuard,
+} from "../../src/lib/course-import/welcome-video-replacement-policy";
 
 const EXPECTED_IMPORT_ID = "bmh-employee-training-v1";
 const VIDEO_KEY = "video-slot-01-welcome";
@@ -236,14 +239,19 @@ async function main() {
   if (!options.execute) return;
   assertExecutionConfirmation(options, importId);
 
-  await uploadApprovedAssets({
-    endpoint: resumableEndpoint(url),
-    serviceKey,
-    importId,
-    sourceRoot: process.cwd(),
-    assets: [assets.video, assets.caption],
-    bucket: storage,
-    stateRoot: options.stateRoot,
+  await runWelcomeVideoUploadAfterRollbackGuard({
+    assertNotRolledBack: () =>
+      assertReplacementWasNotRolledBack(client, importId),
+    upload: () =>
+      uploadApprovedAssets({
+        endpoint: resumableEndpoint(url),
+        serviceKey,
+        importId,
+        sourceRoot: process.cwd(),
+        assets: [assets.video, assets.caption],
+        bucket: storage,
+        stateRoot: options.stateRoot,
+      }),
   });
   await verifyStorageObject(
     storage,

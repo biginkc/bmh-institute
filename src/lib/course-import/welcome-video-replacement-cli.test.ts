@@ -2,7 +2,10 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 import { describe, expect, it } from "vitest";
-import { assertWelcomeVideoReplacementNotRolledBack } from "./welcome-video-replacement-policy";
+import {
+  assertWelcomeVideoReplacementNotRolledBack,
+  runWelcomeVideoUploadAfterRollbackGuard,
+} from "./welcome-video-replacement-policy";
 
 const source = readFileSync(
   resolve(
@@ -92,11 +95,29 @@ describe("released welcome video replacement CLI policy", () => {
       /await assertReplacementWasNotRolledBack\(client, importId\)[\s\S]*await verifyStorageObject/,
     );
     expect(source).toMatch(
+      /runWelcomeVideoUploadAfterRollbackGuard\([\s\S]*assertReplacementWasNotRolledBack\(client, importId\)[\s\S]*uploadApprovedAssets/,
+    );
+    expect(source).toMatch(
       /from\("content_import_welcome_video_rollback_records"\)[\s\S]*client_payload_sha256[\s\S]*approval_evidence_sha256/,
     );
     expect(source).toMatch(
       /assertWelcomeVideoReplacementNotRolledBack\(rollback\.data\)/,
     );
+  });
+
+  it("leaves the uploader untouched when rollback evidence blocks the operation", async () => {
+    let uploadCalls = 0;
+    await expect(
+      runWelcomeVideoUploadAfterRollbackGuard({
+        assertNotRolledBack: async () => {
+          throw new Error("terminal rollback evidence");
+        },
+        upload: async () => {
+          uploadCalls += 1;
+        },
+      }),
+    ).rejects.toThrow("terminal rollback evidence");
+    expect(uploadCalls).toBe(0);
   });
 
   it("makes rollback terminal as a directly tested runtime policy", () => {

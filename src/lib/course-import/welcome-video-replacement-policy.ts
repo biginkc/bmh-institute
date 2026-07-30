@@ -7,3 +7,14 @@ export function assertWelcomeVideoReplacementNotRolledBack(
     );
   }
 }
+
+export async function runWelcomeVideoUploadAfterRollbackGuard<T>({
+  assertNotRolledBack,
+  upload,
+}: {
+  assertNotRolledBack: () => Promise<void>;
+  upload: () => Promise<T>;
+}): Promise<T> {
+  await assertNotRolledBack();
+  return upload();
+}

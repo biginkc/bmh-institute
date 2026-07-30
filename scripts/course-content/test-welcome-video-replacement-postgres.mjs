@@ -6,13 +6,30 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 const root = resolve(import.meta.dirname, "../..");
-const pgBin = [
-  process.argv.find((value) => value.startsWith("--pg-bin="))?.slice(9),
+const explicitPgBin = process.argv
+  .find((value) => value.startsWith("--pg-bin="))
+  ?.slice(9);
+const pgBinCandidates = [
+  explicitPgBin,
   "/opt/homebrew/opt/postgresql@17/bin",
   "/opt/homebrew/opt/postgresql@16/bin",
   "/opt/homebrew/opt/postgresql@15/bin",
-  execFileSync("pg_config", ["--bindir"], { encoding: "utf8" }).trim(),
-].find((directory) => directory && existsSync(join(directory, "postgres")));
+  "/usr/lib/postgresql/17/bin",
+  "/usr/lib/postgresql/16/bin",
+  "/usr/lib/postgresql/15/bin",
+];
+if (!explicitPgBin) {
+  try {
+    pgBinCandidates.push(
+      execFileSync("pg_config", ["--bindir"], { encoding: "utf8" }).trim(),
+    );
+  } catch {
+    // The explicit and known installation paths above remain authoritative.
+  }
+}
+const pgBin = pgBinCandidates.find(
+  (directory) => directory && existsSync(join(directory, "postgres")),
+);
 
 if (!pgBin) throw new Error("PostgreSQL binaries were not found.");
 
@@ -82,7 +99,22 @@ const replacement = {
   replacement_caption_mime_type: "text/vtt",
   replacement_duration_seconds: 318.351,
 };
+const replacementContent = {
+  ...priorContent,
+  file_path: replacementVideoPath,
+  caption_path: replacementCaptionPath,
+  duration_seconds: replacement.replacement_duration_seconds,
+};
+const driftedPriorContent = {
+  ...priorContent,
+  title: "DRIFTED prior welcome content",
+};
+const driftedReplacementContent = {
+  ...replacementContent,
+  title: "DRIFTED replacement welcome content",
+};
 const payloadSql = quoteJson([replacement]);
+let started = false;
 
 try {
   execFileSync(
@@ -90,8 +122,8 @@ try {
     [
       "-D",
       cluster,
-      "-A",
-      "trust",
+      "--auth-local=trust",
+      "--auth-host=reject",
       "-U",
       "postgres",
       "--no-locale",
@@ -102,9 +134,17 @@ try {
   execFileSync("mkdir", ["-p", socket]);
   execFileSync(
     binary("pg_ctl"),
-    ["-D", cluster, "-o", `-F -p ${port} -k ${socket}`, "-w", "start"],
+    [
+      "-D",
+      cluster,
+      "-o",
+      `-F -c listen_addresses='' -p ${port} -k ${socket}`,
+      "-w",
+      "start",
+    ],
     { env, stdio: "ignore" },
   );
+  started = true;
 
   psqlText(bootstrapSql());
   psqlFile(
@@ -127,16 +167,17 @@ try {
     throw new Error(`Unexpected terminal lifecycle state: ${result}`);
   }
   console.log(
-    "PASS: authorization and null payload rejected; exact replacement, replay, rollback, rollback replay, and terminal retry verified in disposable PostgreSQL",
+    "PASS: SQL-role and JWT authorization, null payload, forward and rollback drift, replay, rollback replay, and terminal retry verified in disposable PostgreSQL",
   );
 } finally {
-  try {
+  if (started) {
     execFileSync(
       binary("pg_ctl"),
       ["-D", cluster, "-m", "fast", "-w", "stop"],
       { env, stdio: "ignore" },
     );
-  } catch {}
+    started = false;
+  }
   rmSync(cluster, { recursive: true, force: true });
 }
 
@@ -210,15 +251,86 @@ function bootstrapSql() {
     create table public.answer_options (id uuid);
     create table public.assignments (id uuid);
 
+    create procedure public.test_expect_error(
+      p_label text,
+      p_statement text,
+      p_expected_sqlstate text,
+      p_expected_message text
+    )
+    language plpgsql
+    as $$
+    declare
+      actual_sqlstate text;
+      actual_message text;
+    begin
+      begin
+        execute p_statement;
+      exception when others then
+        get stacked diagnostics
+          actual_sqlstate = returned_sqlstate,
+          actual_message = message_text;
+        if actual_sqlstate is distinct from p_expected_sqlstate
+          or actual_message is distinct from p_expected_message
+        then
+          raise exception '% returned [%] %, expected [%] %',
+            p_label,
+            actual_sqlstate,
+            actual_message,
+            p_expected_sqlstate,
+            p_expected_message;
+        end if;
+        return;
+      end;
+      raise exception '% unexpectedly succeeded', p_label;
+    end
+    $$;
+
+    create procedure public.test_assert_welcome_state(
+      p_label text,
+      p_expected_content jsonb,
+      p_expected_replacement_count bigint,
+      p_expected_rollback_count bigint
+    )
+    language plpgsql
+    as $$
+    declare
+      actual_content jsonb;
+      actual_replacement_count bigint;
+      actual_rollback_count bigint;
+    begin
+      select content into strict actual_content
+      from public.content_blocks
+      where id = 'e8d2c1d2-7a02-5b28-a807-9dad78b46306';
+      select count(*) into actual_replacement_count
+      from public.content_import_welcome_video_replacement_records;
+      select count(*) into actual_rollback_count
+      from public.content_import_welcome_video_rollback_records;
+      if actual_content is distinct from p_expected_content
+        or actual_replacement_count is distinct from p_expected_replacement_count
+        or actual_rollback_count is distinct from p_expected_rollback_count
+      then
+        raise exception
+          '% left content or audit counts changed: content=%, replacements=%, rollbacks=%',
+          p_label,
+          actual_content,
+          actual_replacement_count,
+          actual_rollback_count;
+      end if;
+    end
+    $$;
+
     create function public.fn_course_import_catalog_sha256(p_import_id text)
     returns text language sql stable as $$
-      select case
-        when exists (
-          select 1 from public.content_blocks
-          where content ->> 'file_path' = '${replacementVideoPath}'
-        ) then '${replacementCatalog}'
-        else '${priorCatalog}'
-      end
+      select coalesce(
+        nullif(current_setting('bmh.test_welcome_catalog_override', true), ''),
+        case
+          when exists (
+            select 1 from public.content_blocks
+            where content ->> 'file_path' = '${replacementVideoPath}'
+          ) then '${replacementCatalog}'
+          else '${priorCatalog}'
+        end
+      )
     $$;
 
     insert into public.content_import_release_records values ('bmh-employee-training-v1');
@@ -257,36 +369,159 @@ function storageInsert(path, checksum, size, mimetype) {
 
 function lifecycleSql() {
   return `
-    do $$
-    begin
-      perform set_config('request.jwt.claim.role', 'authenticated', true);
-      begin
-        perform public.fn_replace_released_imported_welcome_video(
+    set role authenticated;
+    call public.test_expect_error(
+      'authenticated replacement execution',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
           'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
           '${approvalEvidence}', '${priorCatalog}'
-        );
-        raise exception 'unauthorized replacement unexpectedly succeeded';
-      exception when insufficient_privilege then null;
-      end;
-    end $$;
+        )
+      $statement$,
+      '42501',
+      'permission denied for function fn_replace_released_imported_welcome_video'
+    );
+    call public.test_expect_error(
+      'authenticated rollback execution',
+      $statement$
+        select public.fn_rollback_released_imported_welcome_video(
+          'bmh-employee-training-v1', '${"f".repeat(64)}', '${clientPayload}',
+          '${approvalEvidence}', '${replacementCatalog}'
+        )
+      $statement$,
+      '42501',
+      'permission denied for function fn_rollback_released_imported_welcome_video'
+    );
+    reset role;
 
-    do $$
-    begin
-      perform set_config('request.jwt.claim.role', 'service_role', true);
-      begin
-        perform public.fn_replace_released_imported_welcome_video(
-          'bmh-employee-training-v1', null, '${clientPayload}',
+    set request.jwt.claim.role = 'authenticated';
+    set role service_role;
+    call public.test_expect_error(
+      'replacement JWT-role guard',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
+          'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
           '${approvalEvidence}', '${priorCatalog}'
-        );
-        raise exception 'null payload unexpectedly succeeded';
-      exception when invalid_parameter_value then null;
-      end;
-    end $$;
+        )
+      $statement$,
+      '42501',
+      'Released welcome video replacement requires service_role.'
+    );
+    call public.test_expect_error(
+      'rollback JWT-role guard',
+      $statement$
+        select public.fn_rollback_released_imported_welcome_video(
+          'bmh-employee-training-v1', '${"f".repeat(64)}', '${clientPayload}',
+          '${approvalEvidence}', '${replacementCatalog}'
+        )
+      $statement$,
+      '42501',
+      'Released welcome video rollback requires service_role.'
+    );
+    reset role;
 
     set request.jwt.claim.role = 'service_role';
+    set role service_role;
+    call public.test_expect_error(
+      'null replacement payload',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
+          'bmh-employee-training-v1', null, '${clientPayload}',
+          '${approvalEvidence}', '${priorCatalog}'
+        )
+      $statement$,
+      '22023',
+      'Released welcome video replacement requires exactly one replacement.'
+    );
+    reset role;
+    call public.test_assert_welcome_state(
+      'null replacement payload',
+      ${quoteJson(priorContent)}::jsonb,
+      0,
+      0
+    );
+
+    set bmh.test_welcome_catalog_override = '${"b".repeat(64)}';
+    set role service_role;
+    call public.test_expect_error(
+      'pre-forward catalog drift',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
+          'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
+          '${approvalEvidence}', '${priorCatalog}'
+        )
+      $statement$,
+      '40001',
+      'Released welcome video replacement refused: catalog drifted from the exact production preflight.'
+    );
+    reset role;
+    reset bmh.test_welcome_catalog_override;
+    call public.test_assert_welcome_state(
+      'pre-forward catalog drift',
+      ${quoteJson(priorContent)}::jsonb,
+      0,
+      0
+    );
+
+    update public.content_blocks
+    set content = ${quoteJson(driftedPriorContent)}::jsonb
+    where id = 'e8d2c1d2-7a02-5b28-a807-9dad78b46306';
+    set role service_role;
+    call public.test_expect_error(
+      'pre-forward content drift',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
+          'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
+          '${approvalEvidence}', '${priorCatalog}'
+        )
+      $statement$,
+      '40001',
+      'Released welcome video replacement refused: target, ownership, type, or expected content mismatch.'
+    );
+    reset role;
+    call public.test_assert_welcome_state(
+      'pre-forward content drift',
+      ${quoteJson(driftedPriorContent)}::jsonb,
+      0,
+      0
+    );
+    update public.content_blocks
+    set content = ${quoteJson(priorContent)}::jsonb
+    where id = 'e8d2c1d2-7a02-5b28-a807-9dad78b46306';
+
+    update storage.objects
+    set metadata = jsonb_set(metadata, '{sha256}', to_jsonb('${"0".repeat(64)}'::text))
+    where bucket_id = 'content' and name = '${replacementVideoPath}';
+    set role service_role;
+    call public.test_expect_error(
+      'pre-forward storage checksum drift',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
+          'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
+          '${approvalEvidence}', '${priorCatalog}'
+        )
+      $statement$,
+      '22023',
+      'Released welcome video replacement refused: an exact old or new storage object is missing.'
+    );
+    reset role;
+    call public.test_assert_welcome_state(
+      'pre-forward storage checksum drift',
+      ${quoteJson(priorContent)}::jsonb,
+      0,
+      0
+    );
+    update storage.objects
+    set metadata = jsonb_set(
+      metadata,
+      '{sha256}',
+      to_jsonb('${replacement.replacement_video_sha256}'::text)
+    )
+    where bucket_id = 'content' and name = '${replacementVideoPath}';
+
+    set role service_role;
     do $$
     declare result jsonb;
-    declare database_payload text;
     begin
       result := public.fn_replace_released_imported_welcome_video(
         'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
@@ -302,7 +537,107 @@ function lifecycleSql() {
       if result ->> 'status' <> 'already_replaced' then
         raise exception 'replacement replay failed: %', result;
       end if;
-      select database_payload_sha256 into database_payload
+    end $$;
+    reset role;
+    call public.test_assert_welcome_state(
+      'replacement and replay',
+      ${quoteJson(replacementContent)}::jsonb,
+      1,
+      0
+    );
+
+    set bmh.test_welcome_catalog_override = '${"b".repeat(64)}';
+    set role service_role;
+    call public.test_expect_error(
+      'pre-rollback catalog drift',
+      $statement$
+        select public.fn_rollback_released_imported_welcome_video(
+          'bmh-employee-training-v1',
+          (
+            select database_payload_sha256
+            from public.content_import_welcome_video_replacement_records
+          ),
+          '${clientPayload}', '${approvalEvidence}', '${replacementCatalog}'
+        )
+      $statement$,
+      '40001',
+      'Released welcome video rollback refused: replacement catalog drifted.'
+    );
+    reset role;
+    reset bmh.test_welcome_catalog_override;
+    call public.test_assert_welcome_state(
+      'pre-rollback catalog drift',
+      ${quoteJson(replacementContent)}::jsonb,
+      1,
+      0
+    );
+
+    update public.content_blocks
+    set content = ${quoteJson(driftedReplacementContent)}::jsonb
+    where id = 'e8d2c1d2-7a02-5b28-a807-9dad78b46306';
+    set role service_role;
+    call public.test_expect_error(
+      'pre-rollback content drift',
+      $statement$
+        select public.fn_rollback_released_imported_welcome_video(
+          'bmh-employee-training-v1',
+          (
+            select database_payload_sha256
+            from public.content_import_welcome_video_replacement_records
+          ),
+          '${clientPayload}', '${approvalEvidence}', '${replacementCatalog}'
+        )
+      $statement$,
+      '40001',
+      'Released welcome video rollback refused: exact replacement content is absent.'
+    );
+    reset role;
+    call public.test_assert_welcome_state(
+      'pre-rollback content drift',
+      ${quoteJson(driftedReplacementContent)}::jsonb,
+      1,
+      0
+    );
+    update public.content_blocks
+    set content = ${quoteJson(replacementContent)}::jsonb
+    where id = 'e8d2c1d2-7a02-5b28-a807-9dad78b46306';
+
+    update storage.objects
+    set metadata = jsonb_set(metadata, '{size}', to_jsonb('7628'::text))
+    where bucket_id = 'content' and name = '${replacementCaptionPath}';
+    set role service_role;
+    call public.test_expect_error(
+      'pre-rollback storage size drift',
+      $statement$
+        select public.fn_rollback_released_imported_welcome_video(
+          'bmh-employee-training-v1',
+          (
+            select database_payload_sha256
+            from public.content_import_welcome_video_replacement_records
+          ),
+          '${clientPayload}', '${approvalEvidence}', '${replacementCatalog}'
+        )
+      $statement$,
+      '22023',
+      'Released welcome video rollback refused: an exact old or new storage object is missing.'
+    );
+    reset role;
+    call public.test_assert_welcome_state(
+      'pre-rollback storage size drift',
+      ${quoteJson(replacementContent)}::jsonb,
+      1,
+      0
+    );
+    update storage.objects
+    set metadata = jsonb_set(metadata, '{size}', to_jsonb('7629'::text))
+    where bucket_id = 'content' and name = '${replacementCaptionPath}';
+
+    set role service_role;
+    do $$
+    declare result jsonb;
+    declare database_payload text;
+    begin
+      select database_payload_sha256 into strict database_payload
       from public.content_import_welcome_video_replacement_records;
       result := public.fn_rollback_released_imported_welcome_video(
         'bmh-employee-training-v1', database_payload, '${clientPayload}',
@@ -318,14 +653,24 @@ function lifecycleSql() {
       if result ->> 'status' <> 'already_rolled_back' then
         raise exception 'rollback replay failed: %', result;
       end if;
-      begin
-        perform public.fn_replace_released_imported_welcome_video(
+    end $$;
+    call public.test_expect_error(
+      'terminal replacement retry',
+      $statement$
+        select public.fn_replace_released_imported_welcome_video(
           'bmh-employee-training-v1', ${payloadSql}::jsonb, '${clientPayload}',
           '${approvalEvidence}', '${priorCatalog}'
-        );
-        raise exception 'terminal replacement retry unexpectedly succeeded';
-      exception when serialization_failure then null;
-      end;
-    end $$;
+        )
+      $statement$,
+      '40001',
+      'Released welcome video replacement was previously rolled back and is terminal.'
+    );
+    reset role;
+    call public.test_assert_welcome_state(
+      'rollback, rollback replay, and terminal retry',
+      ${quoteJson(priorContent)}::jsonb,
+      1,
+      1
+    );
   `;
 }
