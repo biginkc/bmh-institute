@@ -34,8 +34,12 @@ begin
       where lesson.module_id = p_entity_id
         and (lesson.quiz_id is not null or lesson.assignment_id is not null);
     select exists (
-      select 1 from public.courses course join public.modules module on module.course_id = course.id
-      where module.id = p_entity_id and course.content_import_id is not null
+      select 1
+      from public.lessons lesson
+      join public.modules module on module.id = lesson.module_id
+      join public.courses course on course.id = module.course_id
+      where module.id = p_entity_id
+        and (course.content_import_id is not null or lesson.content_import_id is not null)
     ) into v_imported;
     select exists (
       select 1 from public.lessons lesson

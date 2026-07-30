@@ -55,4 +55,15 @@ describe("transactional admin deletion contract", () => {
     expect(deleteBody).toMatch(/public\.questions[\s\S]*where id = \(select question\.id[\s\S]*for update/);
     expect(deleteBody).toMatch(/public\.user_quiz_attempts[\s\S]*for update/);
   });
+
+  it("protects a module when any child lesson carries import provenance", () => {
+    const modulePreview = migration.slice(
+      migration.indexOf("if p_entity_type = 'module' then"),
+      migration.indexOf("elsif p_entity_type = 'lesson' then"),
+    );
+
+    expect(modulePreview).toMatch(
+      /from public\.lessons lesson[\s\S]*join public\.modules module[\s\S]*join public\.courses course[\s\S]*where module\.id = p_entity_id[\s\S]*course\.content_import_id is not null or lesson\.content_import_id is not null/i,
+    );
+  });
 });
