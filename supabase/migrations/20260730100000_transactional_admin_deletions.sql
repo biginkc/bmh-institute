@@ -199,6 +199,7 @@ begin
   if p_entity_type = 'module' then
     perform 1 from public.modules where id = p_entity_id for update;
     perform 1 from public.lessons where module_id = p_entity_id for update;
+    perform 1 from public.content_blocks where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;
     perform 1 from public.quizzes where id in (select quiz_id from public.lessons where module_id = p_entity_id and quiz_id is not null) for update;
     perform 1 from public.user_lesson_completions where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;
     perform 1 from public.assignment_submissions where lesson_id in (select id from public.lessons where module_id = p_entity_id) for update;

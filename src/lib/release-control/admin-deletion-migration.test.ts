@@ -66,4 +66,24 @@ describe("transactional admin deletion contract", () => {
       /from public\.lessons lesson[\s\S]*join public\.modules module[\s\S]*join public\.courses course[\s\S]*where module\.id = p_entity_id[\s\S]*course\.content_import_id is not null or lesson\.content_import_id is not null/i,
     );
   });
+
+  it("locks descendant content blocks before module and lesson activity rechecks", () => {
+    const deleteBody = migration.slice(
+      migration.indexOf("-- Lock the target"),
+      migration.indexOf("v_preview :="),
+    );
+    const moduleLocks = deleteBody.slice(
+      deleteBody.indexOf("if p_entity_type = 'module' then"),
+      deleteBody.indexOf("elsif p_entity_type = 'lesson' then"),
+    );
+    const lessonLocks = deleteBody.slice(
+      deleteBody.indexOf("elsif p_entity_type = 'lesson' then"),
+      deleteBody.indexOf("elsif p_entity_type = 'role_group' then"),
+    );
+
+    expect(moduleLocks).toMatch(/public\.content_blocks where lesson_id in \(select id from public\.lessons where module_id = p_entity_id\) for update/);
+    expect(lessonLocks).toMatch(/public\.content_blocks where lesson_id = p_entity_id for update/);
+    expect(moduleLocks.indexOf("public.content_blocks")).toBeLessThan(moduleLocks.indexOf("user_lesson_completions"));
+    expect(lessonLocks.indexOf("public.content_blocks")).toBeLessThan(lessonLocks.indexOf("user_lesson_completions"));
+  });
 });
