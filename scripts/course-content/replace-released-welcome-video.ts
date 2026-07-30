@@ -168,6 +168,7 @@ async function main() {
       "Production welcome block is in a mixed or unknown video/caption state; refusing replacement.",
     );
   }
+  await assertReplacementWasNotRolledBack(client, importId);
 
   await verifyStorageObject(
     storage,
@@ -350,6 +351,29 @@ async function loadReplacementAudit(client: SupabaseClient, importId: string) {
     throw new Error("Production welcome replacement audit has drifted.");
   }
   return record;
+}
+
+async function assertReplacementWasNotRolledBack(
+  client: SupabaseClient,
+  importId: string,
+) {
+  const rollback = await client
+    .from("content_import_welcome_video_rollback_records")
+    .select("id")
+    .eq("import_id", importId)
+    .eq("client_payload_sha256", EXPECTED_CLIENT_PAYLOAD_SHA256)
+    .eq("approval_evidence_sha256", APPROVAL_EVIDENCE_SHA256)
+    .limit(1);
+  if (rollback.error) {
+    throw new Error(
+      `Production welcome rollback audit could not be read: ${rollback.error.message}.`,
+    );
+  }
+  if (rollback.data.length > 0) {
+    throw new Error(
+      "Production welcome replacement was previously rolled back and is terminal; refusing retry before upload.",
+    );
+  }
 }
 
 async function rollbackExisting(input: {

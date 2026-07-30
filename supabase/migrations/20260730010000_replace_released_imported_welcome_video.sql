@@ -26,6 +26,32 @@ from public, anon, authenticated;
 grant select on table public.content_import_welcome_video_replacement_records
 to service_role;
 
+-- Create the append-only rollback ledger before compiling the replacement
+-- function because the replacement path locks and queries it to make rollback
+-- terminal before any replay can mutate content.
+create table public.content_import_welcome_video_rollback_records (
+  id uuid primary key default gen_random_uuid(),
+  replacement_record_id uuid not null unique
+    references public.content_import_welcome_video_replacement_records(id) on delete restrict,
+  import_id text not null references public.content_import_release_records(import_id) on delete restrict,
+  replacement_catalog_sha256 text not null check (replacement_catalog_sha256 ~ '^[0-9a-f]{64}$'),
+  restored_catalog_sha256 text not null check (restored_catalog_sha256 ~ '^[0-9a-f]{64}$'),
+  database_payload_sha256 text not null check (database_payload_sha256 ~ '^[0-9a-f]{64}$'),
+  client_payload_sha256 text not null check (client_payload_sha256 ~ '^[0-9a-f]{64}$'),
+  approval_evidence_sha256 text not null check (approval_evidence_sha256 ~ '^[0-9a-f]{64}$'),
+  rolled_back_at timestamptz not null default now(),
+  unique (import_id, database_payload_sha256, client_payload_sha256)
+);
+
+comment on table public.content_import_welcome_video_rollback_records is
+  'Append-only evidence that the exact audited Video Zero replacement was atomically restored.';
+
+alter table public.content_import_welcome_video_rollback_records enable row level security;
+revoke all on table public.content_import_welcome_video_rollback_records
+from public, anon, authenticated;
+grant select on table public.content_import_welcome_video_rollback_records
+to service_role;
+
 create or replace function public.fn_guard_import_welcome_video_replacement_record()
 returns trigger
 language plpgsql
@@ -65,37 +91,14 @@ set search_path = ''
 as $$
 declare
   v_replacement jsonb;
-  v_storage_prefix text := 'courses/bmh-employee-training/v1';
   v_payload_sha256 text;
   v_prior_catalog_sha256 text;
   v_replacement_catalog_sha256 text;
   v_expected_content jsonb;
+  v_expected_replacement jsonb;
+  v_expected_payload jsonb;
   v_replaced_content jsonb;
   v_updated_count integer;
-  v_required_keys constant text[] := array[
-    'block_id',
-    'video_asset_key',
-    'caption_asset_key',
-    'expected_content',
-    'expected_video_path',
-    'expected_video_sha256',
-    'expected_video_size_bytes',
-    'expected_video_mime_type',
-    'expected_caption_path',
-    'expected_caption_sha256',
-    'expected_caption_size_bytes',
-    'expected_caption_mime_type',
-    'expected_duration_seconds',
-    'replacement_video_path',
-    'replacement_video_sha256',
-    'replacement_video_size_bytes',
-    'replacement_video_mime_type',
-    'replacement_caption_path',
-    'replacement_caption_sha256',
-    'replacement_caption_size_bytes',
-    'replacement_caption_mime_type',
-    'replacement_duration_seconds'
-  ];
 begin
   if coalesce(auth.role(), '') <> 'service_role' then
     raise exception 'Released welcome video replacement requires service_role.'
@@ -129,78 +132,56 @@ begin
   end if;
 
   v_replacement := p_replacements -> 0;
+  v_expected_content := jsonb_build_object(
+    'title', 'Welcome and the Service Playbook',
+    'file_path',
+      'courses/bmh-employee-training/v1/videos/video-slot-01-welcome.493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72.mp4',
+    'part_label', 'Part A',
+    'poster_path',
+      'courses/bmh-employee-training/v1/posters/video-slot-01-welcome-2e481279cc270f73c2af666857dd7379c529679388d5ccd41b0d8eace71c11b0.webp',
+    'caption_path',
+      'courses/bmh-employee-training/v1/captions/video-slot-01-welcome.54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11.vtt',
+    'duration_seconds', 246.186
+  );
+  v_expected_replacement := jsonb_build_object(
+    'block_id', 'e8d2c1d2-7a02-5b28-a807-9dad78b46306',
+    'video_asset_key', 'video-slot-01-welcome',
+    'caption_asset_key', 'caption-video-slot-01-welcome',
+    'expected_content', v_expected_content,
+    'expected_video_path',
+      'courses/bmh-employee-training/v1/videos/video-slot-01-welcome.493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72.mp4',
+    'expected_video_sha256',
+      '493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72',
+    'expected_video_size_bytes', 35190296,
+    'expected_video_mime_type', 'video/mp4',
+    'expected_caption_path',
+      'courses/bmh-employee-training/v1/captions/video-slot-01-welcome.54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11.vtt',
+    'expected_caption_sha256',
+      '54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11',
+    'expected_caption_size_bytes', 5636,
+    'expected_caption_mime_type', 'text/vtt',
+    'expected_duration_seconds', 246.186,
+    'replacement_video_path',
+      'courses/bmh-employee-training/v1/videos/video-slot-01-welcome.06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b.mp4',
+    'replacement_video_sha256',
+      '06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b',
+    'replacement_video_size_bytes', 74404741,
+    'replacement_video_mime_type', 'video/mp4',
+    'replacement_caption_path',
+      'courses/bmh-employee-training/v1/captions/video-slot-01-welcome.bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939.vtt',
+    'replacement_caption_sha256',
+      'bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939',
+    'replacement_caption_size_bytes', 7629,
+    'replacement_caption_mime_type', 'text/vtt',
+    'replacement_duration_seconds', 318.351
+  );
+  v_expected_payload := jsonb_build_array(v_expected_replacement);
   v_payload_sha256 := encode(sha256(convert_to(p_replacements::text, 'UTF8')), 'hex');
-  if jsonb_typeof(v_replacement) <> 'object'
-    or not v_replacement ?& v_required_keys
-    or v_replacement - v_required_keys <> '{}'::jsonb
-    or v_replacement ->> 'video_asset_key' <> 'video-slot-01-welcome'
-    or v_replacement ->> 'caption_asset_key' <> 'caption-video-slot-01-welcome'
-    or jsonb_typeof(v_replacement -> 'expected_content') <> 'object'
-    or v_replacement -> 'expected_content' is distinct from jsonb_build_object(
-      'title', 'Welcome and the Service Playbook',
-      'file_path',
-        'courses/bmh-employee-training/v1/videos/video-slot-01-welcome.493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72.mp4',
-      'part_label', 'Part A',
-      'poster_path',
-        'courses/bmh-employee-training/v1/posters/video-slot-01-welcome-2e481279cc270f73c2af666857dd7379c529679388d5ccd41b0d8eace71c11b0.webp',
-      'caption_path',
-        'courses/bmh-employee-training/v1/captions/video-slot-01-welcome.54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11.vtt',
-      'duration_seconds', 246.186
+  if p_replacements is distinct from v_expected_payload
+    or v_payload_sha256 is distinct from encode(
+      sha256(convert_to(v_expected_payload::text, 'UTF8')),
+      'hex'
     )
-    or v_replacement -> 'expected_content' ->> 'file_path' <> v_replacement ->> 'expected_video_path'
-    or v_replacement -> 'expected_content' ->> 'caption_path' <> v_replacement ->> 'expected_caption_path'
-    or v_replacement ->> 'block_id' <>
-      'e8d2c1d2-7a02-5b28-a807-9dad78b46306'
-    or v_replacement ->> 'expected_video_sha256' !~ '^[0-9a-f]{64}$'
-    or v_replacement ->> 'replacement_video_sha256' !~ '^[0-9a-f]{64}$'
-    or v_replacement ->> 'expected_caption_sha256' !~ '^[0-9a-f]{64}$'
-    or v_replacement ->> 'replacement_caption_sha256' !~ '^[0-9a-f]{64}$'
-    or v_replacement ->> 'expected_video_sha256' <>
-      '493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72'
-    or v_replacement ->> 'replacement_video_sha256' <>
-      '06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b'
-    or v_replacement ->> 'expected_caption_sha256' <>
-      '54150f0e7f8c691b32ad0767934db2da0ac7ef9bcdb4ff73e3147a79ba262a11'
-    or v_replacement ->> 'replacement_caption_sha256' <>
-      'bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939'
-    or v_replacement ->> 'expected_video_sha256' = v_replacement ->> 'replacement_video_sha256'
-    or v_replacement ->> 'expected_caption_sha256' = v_replacement ->> 'replacement_caption_sha256'
-    or v_replacement ->> 'expected_video_mime_type' <> 'video/mp4'
-    or v_replacement ->> 'replacement_video_mime_type' <> 'video/mp4'
-    or v_replacement ->> 'expected_caption_mime_type' <> 'text/vtt'
-    or v_replacement ->> 'replacement_caption_mime_type' <> 'text/vtt'
-    or jsonb_typeof(v_replacement -> 'expected_video_size_bytes') <> 'number'
-    or jsonb_typeof(v_replacement -> 'replacement_video_size_bytes') <> 'number'
-    or jsonb_typeof(v_replacement -> 'expected_caption_size_bytes') <> 'number'
-    or jsonb_typeof(v_replacement -> 'replacement_caption_size_bytes') <> 'number'
-    or jsonb_typeof(v_replacement -> 'expected_duration_seconds') <> 'number'
-    or jsonb_typeof(v_replacement -> 'replacement_duration_seconds') <> 'number'
-    or (v_replacement ->> 'expected_video_size_bytes')::numeric % 1 <> 0
-    or (v_replacement ->> 'replacement_video_size_bytes')::numeric % 1 <> 0
-    or (v_replacement ->> 'expected_caption_size_bytes')::numeric % 1 <> 0
-    or (v_replacement ->> 'replacement_caption_size_bytes')::numeric % 1 <> 0
-    or (v_replacement ->> 'expected_video_size_bytes')::numeric < 1
-    or (v_replacement ->> 'replacement_video_size_bytes')::numeric < 1
-    or (v_replacement ->> 'expected_caption_size_bytes')::numeric < 1
-    or (v_replacement ->> 'replacement_caption_size_bytes')::numeric < 1
-    or (v_replacement ->> 'expected_video_size_bytes')::bigint <> 35190296
-    or (v_replacement ->> 'replacement_video_size_bytes')::bigint <> 74404741
-    or (v_replacement ->> 'expected_caption_size_bytes')::bigint <> 5636
-    or (v_replacement ->> 'replacement_caption_size_bytes')::bigint <> 7629
-    or (v_replacement ->> 'expected_duration_seconds')::numeric <> 246.186
-    or (v_replacement ->> 'replacement_duration_seconds')::numeric <> 318.351
-    or v_replacement ->> 'expected_video_path' <>
-      v_storage_prefix || '/videos/video-slot-01-welcome.' ||
-      (v_replacement ->> 'expected_video_sha256') || '.mp4'
-    or v_replacement ->> 'replacement_video_path' <>
-      v_storage_prefix || '/videos/video-slot-01-welcome.' ||
-      (v_replacement ->> 'replacement_video_sha256') || '.mp4'
-    or v_replacement ->> 'expected_caption_path' <>
-      v_storage_prefix || '/captions/video-slot-01-welcome.' ||
-      (v_replacement ->> 'expected_caption_sha256') || '.vtt'
-    or v_replacement ->> 'replacement_caption_path' <>
-      v_storage_prefix || '/captions/video-slot-01-welcome.' ||
-      (v_replacement ->> 'replacement_caption_sha256') || '.vtt'
   then
     raise exception 'Released welcome video replacement has malformed or noncanonical values.'
       using errcode = '22023';
@@ -212,6 +193,7 @@ begin
   lock table
     public.content_import_release_records,
     public.content_import_welcome_video_replacement_records,
+    public.content_import_welcome_video_rollback_records,
     public.programs,
     public.courses,
     public.program_courses,
@@ -246,7 +228,19 @@ begin
       using errcode = '42501';
   end if;
 
-  v_expected_content := v_replacement -> 'expected_content';
+  if exists (
+    select 1
+    from public.content_import_welcome_video_rollback_records rollback
+    join public.content_import_welcome_video_replacement_records replacement
+      on replacement.id = rollback.replacement_record_id
+    where rollback.import_id = p_import_id
+      and replacement.client_payload_sha256 = p_client_payload_sha256
+      and replacement.approval_evidence_sha256 = p_approval_evidence_sha256
+  ) then
+    raise exception 'Released welcome video replacement was previously rolled back and is terminal.'
+      using errcode = '40001';
+  end if;
+
   v_replaced_content := jsonb_set(
     jsonb_set(
       jsonb_set(
@@ -473,29 +467,6 @@ to service_role;
 -- objects are deliberately retained; this function restores only the audited
 -- preflight content after proving both the replacement state and all four
 -- storage objects still match the immutable replacement record.
-create table public.content_import_welcome_video_rollback_records (
-  id uuid primary key default gen_random_uuid(),
-  replacement_record_id uuid not null unique
-    references public.content_import_welcome_video_replacement_records(id) on delete restrict,
-  import_id text not null references public.content_import_release_records(import_id) on delete restrict,
-  replacement_catalog_sha256 text not null check (replacement_catalog_sha256 ~ '^[0-9a-f]{64}$'),
-  restored_catalog_sha256 text not null check (restored_catalog_sha256 ~ '^[0-9a-f]{64}$'),
-  database_payload_sha256 text not null check (database_payload_sha256 ~ '^[0-9a-f]{64}$'),
-  client_payload_sha256 text not null check (client_payload_sha256 ~ '^[0-9a-f]{64}$'),
-  approval_evidence_sha256 text not null check (approval_evidence_sha256 ~ '^[0-9a-f]{64}$'),
-  rolled_back_at timestamptz not null default now(),
-  unique (import_id, database_payload_sha256, client_payload_sha256)
-);
-
-comment on table public.content_import_welcome_video_rollback_records is
-  'Append-only evidence that the exact audited Video Zero replacement was atomically restored.';
-
-alter table public.content_import_welcome_video_rollback_records enable row level security;
-revoke all on table public.content_import_welcome_video_rollback_records
-from public, anon, authenticated;
-grant select on table public.content_import_welcome_video_rollback_records
-to service_role;
-
 create or replace function public.fn_guard_import_welcome_video_rollback_record()
 returns trigger
 language plpgsql

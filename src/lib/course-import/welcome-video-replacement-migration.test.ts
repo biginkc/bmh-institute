@@ -32,15 +32,15 @@ describe("released imported welcome video replacement migration", () => {
 
   it("accepts exactly one fixed welcome video and caption replacement", () => {
     expect(sql).toMatch(/jsonb_array_length\(p_replacements\) <> 1/i);
-    expect(sql).toMatch(/video_asset_key' <> 'video-slot-01-welcome'/i);
+    expect(sql).toMatch(/'video_asset_key', 'video-slot-01-welcome'/i);
     expect(sql).toMatch(
-      /caption_asset_key' <> 'caption-video-slot-01-welcome'/i,
+      /'caption_asset_key', 'caption-video-slot-01-welcome'/i,
     );
-    expect(sql).toMatch(
-      /videos\/video-slot-01-welcome\.'[\s\S]*replacement_video_sha256/i,
+    expect(sql).toContain(
+      "courses/bmh-employee-training/v1/videos/video-slot-01-welcome.06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b.mp4",
     );
-    expect(sql).toMatch(
-      /captions\/video-slot-01-welcome\.'[\s\S]*replacement_caption_sha256/i,
+    expect(sql).toContain(
+      "courses/bmh-employee-training/v1/captions/video-slot-01-welcome.bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939.vtt",
     );
     for (const exactIdentity of [
       "493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
@@ -58,20 +58,18 @@ describe("released imported welcome video replacement migration", () => {
 
   it("uses serialized exact-content compare-and-swap and atomically changes paths plus duration", () => {
     expect(sql).toMatch(/pg_advisory_xact_lock/i);
+    expect(sql).toMatch(/v_expected_payload := jsonb_build_array/i);
+    expect(sql).toMatch(/p_replacements is distinct from v_expected_payload/i);
     expect(sql).toMatch(
-      /v_expected_content := v_replacement -> 'expected_content'/i,
+      /v_payload_sha256 is distinct from encode\([\s\S]*v_expected_payload::text/i,
     );
     expect(sql).toMatch(
       /v_replaced_content := jsonb_set\([\s\S]*'\{file_path\}'[\s\S]*'\{caption_path\}'[\s\S]*'\{duration_seconds\}'/i,
     );
     expect(sql).toContain("'expected_duration_seconds'");
     expect(sql).toContain("'replacement_duration_seconds'");
-    expect(sql).toMatch(
-      /\(v_replacement ->> 'expected_duration_seconds'\)::numeric <> 246\.186/i,
-    );
-    expect(sql).toMatch(
-      /\(v_replacement ->> 'replacement_duration_seconds'\)::numeric <> 318\.351/i,
-    );
+    expect(sql).toContain("'expected_duration_seconds', 246.186");
+    expect(sql).toContain("'replacement_duration_seconds', 318.351");
     expect(sql).toMatch(
       /update public\.content_blocks block[\s\S]*set content = v_replaced_content[\s\S]*block\.content = v_expected_content/i,
     );
@@ -124,6 +122,15 @@ describe("released imported welcome video replacement migration", () => {
     );
     expect(sql).toMatch(
       /grant execute on function public\.fn_rollback_released_imported_welcome_video\(text, text, text, text, text\)[\s\S]*to service_role/i,
+    );
+  });
+
+  it("treats an audited rollback as terminal before a replacement update", () => {
+    expect(sql).toMatch(
+      /from public\.content_import_welcome_video_rollback_records rollback[\s\S]*join public\.content_import_welcome_video_replacement_records replacement/i,
+    );
+    expect(sql).toMatch(
+      /replacement was previously rolled back and is terminal/i,
     );
   });
 });

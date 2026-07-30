@@ -86,6 +86,18 @@ describe("released welcome video replacement CLI policy", () => {
     );
   });
 
+  it("refuses a previously rolled-back replacement before any new upload", () => {
+    expect(source).toMatch(
+      /await assertReplacementWasNotRolledBack\(client, importId\)[\s\S]*await verifyStorageObject/,
+    );
+    expect(source).toMatch(
+      /from\("content_import_welcome_video_rollback_records"\)[\s\S]*client_payload_sha256[\s\S]*approval_evidence_sha256/,
+    );
+    expect(source).toMatch(
+      /previously rolled back and is terminal; refusing retry before upload/,
+    );
+  });
+
   it("ships approval evidence that satisfies the runtime identity gate", () => {
     expect(approvalEvidence).toContain(
       "User approval: Jarrad Henry, 2026-07-30",
