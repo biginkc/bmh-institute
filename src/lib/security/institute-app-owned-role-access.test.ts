@@ -38,56 +38,68 @@ const roleLockMigration = readFileSync(
   ),
   "utf8",
 );
+const lifecycleMigration = readFileSync(
+  resolve(
+    process.cwd(),
+    "supabase/migrations/20260730200000_hugo_institute_lifecycle_contract.sql",
+  ),
+  "utf8",
+);
 
 describe("Institute app-owned role access", () => {
   it("keeps an active Hugo grant usable after Institute changes the role", () => {
-    expect(migration).toContain(
+    expect(authorizationMigration).toContain(
       "create or replace function public.fn_hugo_grant_row_is_active",
     );
-    expect(migration).toContain("grant_row.role is not null");
-    expect(migration).not.toContain(
+    expect(authorizationMigration).toContain("grant_row.role is not null");
+    expect(lifecycleMigration).not.toContain(
       "grant_row.role = profile.system_role",
     );
-    expect(migration).toMatch(
+    expect(authorizationMigration).toMatch(
       /create or replace function public\.fn_hugo_access_is_active[\s\S]*public\.fn_hugo_grant_row_is_active\(profile\.id\)/,
+    );
+    expect(lifecycleMigration).toContain(
+      "create or replace function public.fn_hugo_grant_row_is_active",
     );
   });
 
   it("preserves the exact identity and lifecycle checks", () => {
-    expect(migration).toContain(
+    expect(authorizationMigration).toContain(
       "lower(btrim(grant_row.email)) = lower(btrim(profile.email))",
     );
-    expect(migration).toContain(
+    expect(authorizationMigration).toContain(
       "grant_row.app_user_id = profile.id::text",
     );
-    expect(migration).toContain("grant_row.desired_status = 'active'");
-    expect(migration).toContain("not grant_row.prepared_for_delete");
-    expect(migration).toContain(
+    expect(authorizationMigration).toContain("grant_row.desired_status = 'active'");
+    expect(authorizationMigration).toContain("not grant_row.prepared_for_delete");
+    expect(authorizationMigration).toContain(
       "grant_row.access_expires_at > now()",
     );
   });
 
   it("serializes lifecycle and role/group changes per Institute identity", () => {
-    expect(provisionerMigration).toContain(
+    expect(lifecycleMigration).toContain(
+      "hugo-institute-user-lifecycle:' || v_lock_user_id::text",
+    );
+    expect(lifecycleMigration).toMatch(
+      /select profile\.system_role[\s\S]*?from public\.profiles profile[\s\S]*?where profile\.id = v_lock_user_id/,
+    );
+    expect(lifecycleMigration).toContain("hugo_apply_access_unhashed_legacy_20260730");
+    expect(lifecycleMigration).not.toContain("pg_get_functiondef");
+    expect(provisionerMigration).not.toContain(
       "hugo-institute-user-lifecycle:' || v_profile.id::text",
-    );
-    expect(provisionerMigration).toMatch(
-      /select system_role\s+into v_current_role\s+from public\.profiles/,
-    );
-    expect(provisionerMigration).toMatch(
-      /select coalesce\(\s*jsonb_agg\(role_group_id order by role_group_id\),\s*'\[\]'::jsonb\s*\)\s+into v_current_groups/,
     );
   });
 
   it("treats suspension as a Hugo status transition, not a role/group overwrite", () => {
-    expect(provisionerMigration).toMatch(
-      /if v_status = 'suspended' then[\s\S]*select system_role\s+into v_current_role[\s\S]*v_config := jsonb_build_object\('role_group_ids', v_current_groups\)/,
+    expect(lifecycleMigration).toMatch(
+      /if p_status = 'suspended' then[\s\S]*v_effective_role := v_current_role[\s\S]*role_group_ids[\s\S]*to_jsonb\(v_current_groups\)/,
     );
-    expect(provisionerMigration).toMatch(
-      /if v_status = 'active' and found and v_grant\.desired_status = 'suspended'[\s\S]*v_config := v_current_config[\s\S]*p_access_expires_at := v_grant\.access_expires_at/,
+    expect(lifecycleMigration).toMatch(
+      /if v_grant_status = 'suspended' then[\s\S]*v_effective_role := v_current_role[\s\S]*role_group_ids/,
     );
-    expect(provisionerMigration).toMatch(
-      /if v_status <> 'suspended'[\s\S]*if v_status = 'suspended' then\s+v_config := '\{\}'::jsonb/,
+    expect(lifecycleMigration).toContain(
+      "Terminal revocation denies Hugo access but does not delete Institute's",
     );
   });
 
@@ -107,6 +119,11 @@ describe("Institute app-owned role access", () => {
     expect(migration).not.toMatch(
       /insert into public\.hugo_access_grants[\s\S]*from public\.profiles profile[\s\S]*where[\s\S]*not exists[\s\S]*user_role_groups/,
     );
+  });
+
+  it("keeps the historical migrations unchanged", () => {
+    expect(migration).not.toContain("hugo-institute-user-lifecycle");
+    expect(migration).not.toContain("fn_hugo_access_is_active(p_user_id)");
   });
 
   it("lets Institute change role/groups without changing Hugo lifecycle status", () => {

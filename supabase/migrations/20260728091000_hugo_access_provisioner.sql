@@ -388,10 +388,9 @@ declare
   v_operation text;
   v_receipt jsonb;
   v_durable boolean := false;
-  v_current_role text;
-  v_current_groups jsonb := '[]'::jsonb;
 begin
   perform public.fn_hugo_require_service_role();
+  perform pg_advisory_xact_lock(hashtextextended('hugo-institute-privileged-lifecycle-v1', 0));
   if p_operation_id is null then
     raise exception 'operation_id is required.' using errcode = 'invalid_parameter_value';
   end if;
@@ -414,20 +413,12 @@ begin
     insert into public.hugo_access_operations values (p_operation_id, 'grant', p_email, '{}'::jsonb, v_receipt);
     return v_receipt;
   end if;
-  -- Suspension is a Hugo-owned status operation. Its role/config payload may
-  -- be stale (including deleted group IDs), so validate it only for grant and
-  -- reactivation requests, which deliberately carry Institute state.
-  if v_status <> 'suspended'
-     and p_role is not null
-     and p_role not in ('owner', 'admin', 'learner') then
+  if p_role is not null and p_role not in ('owner', 'admin', 'learner') then
     v_receipt := public.fn_hugo_receipt(p_operation_id, p_app_user_id, p_role, v_config, v_status,
       p_access_expires_at, null, '{}'::jsonb, 'missing', null, null, false,
       'invalid_role', 'The requested Institute role is not supported.');
     insert into public.hugo_access_operations values (p_operation_id, 'grant', p_email, '{}'::jsonb, v_receipt);
     return v_receipt;
-  end if;
-  if v_status = 'suspended' then
-    v_config := '{}'::jsonb;
   end if;
   if jsonb_typeof(v_config) <> 'object' then
     v_receipt := public.fn_hugo_receipt(p_operation_id, p_app_user_id, p_role, '{}'::jsonb, v_status,
@@ -542,12 +533,6 @@ begin
     v_app_id := v_profile.id;
   end if;
 
-  -- Institute role/group edits and Hugo lifecycle changes must observe one
-  -- coherent identity snapshot. This is intentionally per-user so unrelated
-  -- identities do not block each other.
-  perform pg_advisory_xact_lock(
-    hashtextextended('hugo-institute-user-lifecycle:' || v_profile.id::text, 0)
-  );
   select * into v_grant from public.hugo_access_grants where user_id = v_profile.id for update;
   if found and v_grant.prepared_for_delete then
     v_receipt := public.fn_hugo_receipt(p_operation_id, v_profile.id::text, p_role, v_config, v_status,
@@ -567,19 +552,6 @@ begin
   end if;
 
   v_current_config := coalesce(v_grant.config, '{}'::jsonb);
-  if v_status = 'suspended' then
-    select system_role
-      into v_current_role
-    from public.profiles
-    where id = v_profile.id;
-    select coalesce(
-      jsonb_agg(role_group_id order by role_group_id),
-      '[]'::jsonb
-    )
-      into v_current_groups
-    from public.user_role_groups
-    where user_id = v_profile.id;
-  end if;
   v_role := coalesce(p_role, v_grant.role, v_profile.system_role);
   if v_status = 'active' and found and v_grant.desired_status = 'suspended'
      and (p_config is null or p_config = '{}'::jsonb) then
@@ -600,15 +572,11 @@ begin
     return v_receipt;
   end if;
   if v_status = 'suspended' and not found then
-    v_config := jsonb_build_object('role_group_ids', v_current_groups);
+    v_config := jsonb_build_object('role_group_ids', coalesce(
+      (select jsonb_agg(role_group_id order by role_group_id) from public.user_role_groups where user_id = v_profile.id),
+      '[]'::jsonb));
   elsif v_status = 'suspended' and (p_config is null or p_config = '{}'::jsonb) and found then
     v_config := v_current_config;
-  end if;
-  if v_status = 'suspended' then
-    -- Hugo owns only the lifecycle status. Never apply its possibly stale
-    -- bootstrap role/groups over Institute-owned changes.
-    v_role := v_current_role;
-    v_config := jsonb_build_object('role_group_ids', v_current_groups);
   end if;
 
   if v_status = 'active' then

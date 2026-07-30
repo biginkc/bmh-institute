@@ -46,7 +46,8 @@ begin
 
   select pg_get_functiondef(p.oid) into v_definition
   from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-  where n.nspname = 'public' and p.proname = 'hugo_apply_access_unhashed';
+  where n.nspname = 'public'
+    and p.proname = 'hugo_apply_access_unhashed_legacy_20260730';
   assert position('fn_hugo_require_service_role' in v_definition) > 0,
     'apply RPC lost the service-role guard';
   assert position('hugo_access_operations' in v_definition) > 0,
@@ -118,7 +119,8 @@ begin
     select proacl from pg_proc p join pg_namespace n on n.oid = p.pronamespace
     where n.nspname = 'public'
       and p.proname in ('hugo_apply_access', 'hugo_inspect_access',
-        'hugo_list_access', 'hugo_prepare_pristine_delete', 'hugo_delete_identity')
+        'hugo_list_access', 'hugo_prepare_pristine_delete', 'hugo_delete_identity',
+        'hugo_apply_access_unhashed', 'hugo_apply_access_unhashed_legacy_20260730')
   loop
     assert not exists (
       select 1 from unnest(v_acl) item

@@ -38,42 +38,4 @@ revoke all on function public.fn_hugo_grant_row_is_active(uuid)
 comment on function public.fn_hugo_grant_row_is_active(uuid) is
   'Returns active Hugo lifecycle access for the exact Institute identity. Institute role changes do not alter access.';
 
-create or replace function public.fn_hugo_access_is_active(p_user_id uuid)
-returns boolean
-language sql
-stable
-security definer
-set search_path = ''
-as $$
-  select coalesce(
-    (
-      select profile.status = 'active'
-        and case
-          when coalesce((
-            select setting.enforce_grants
-            from public.hugo_access_settings setting
-            where setting.singleton
-          ), true)
-          then public.fn_hugo_grant_row_is_active(profile.id)
-          else not exists (
-            select 1
-            from public.hugo_access_grants identity_grant
-            where identity_grant.user_id = profile.id
-              or lower(btrim(identity_grant.email)) =
-                lower(btrim(profile.email))
-          )
-          or public.fn_hugo_grant_row_is_active(profile.id)
-        end
-      from public.profiles profile
-      where profile.id = p_user_id
-    ),
-    false
-  );
-$$;
-
-revoke all on function public.fn_hugo_access_is_active(uuid)
-  from public, anon;
-grant execute on function public.fn_hugo_access_is_active(uuid)
-  to authenticated, service_role;
-
 commit;

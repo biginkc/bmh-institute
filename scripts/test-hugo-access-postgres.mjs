@@ -12,11 +12,17 @@ import { join, resolve } from "node:path";
 
 import {
   verifyAuthInsertLifecycleSerialization,
+  verifyRoleAndLifecycleTwoSessionSerialization,
   verifyRoleGroupDeleteLifecycleSerialization,
   verifyRoleGroupTruncateLifecycleSerialization,
 } from "./hugo-auth-insert-concurrency-test.mjs";
 
 const root = resolve(import.meta.dirname, "..");
+const upgradeRehearsal = process.argv.includes("--upgrade-rehearsal");
+const originMainToHeadMigrations = [
+  "20260729210000_institute_role_group_lifecycle_lock.sql",
+  "20260730200000_hugo_institute_lifecycle_contract.sql",
+];
 const requestedBin = process.argv.find((value) => value.startsWith("--pg-bin="))
   ?.slice("--pg-bin=".length);
 const candidates = requestedBin
@@ -85,11 +91,47 @@ async function runPostgres(pgBin, index) {
     const migrations = readdirSync(resolve(root, "supabase/migrations"))
       .filter((file) => file.endsWith(".sql"))
       .sort();
-    for (const migration of migrations) {
+    const headMigrations = new Set(originMainToHeadMigrations);
+    if (upgradeRehearsal) {
+      const missing = originMainToHeadMigrations.filter(
+        (migration) => !migrations.includes(migration),
+      );
+      if (missing.length > 0) {
+        throw new Error(
+          `Origin/main to head rehearsal is missing head migrations: ${missing.join(", ")}`,
+        );
+      }
+    }
+    const migrationPlan = upgradeRehearsal
+      ? [
+          ...migrations.filter((migration) => !headMigrations.has(migration)),
+          ...originMainToHeadMigrations,
+        ]
+      : migrations;
+    const applyMigration = (migration) => {
       if (migration === "20260729040000_hugo_mutation_receipt_binding.sql") {
         psqlText(binary, env, historicalUnboundReceiptSql);
       }
       psqlFile(binary, env, resolve(root, "supabase/migrations", migration));
+    };
+    const baseMigrations = upgradeRehearsal
+      ? migrations.filter((migration) => !headMigrations.has(migration))
+      : migrationPlan;
+    for (const migration of baseMigrations) applyMigration(migration);
+    if (upgradeRehearsal) {
+      const preHeadState = psqlText(
+        binary,
+        env,
+        "select to_regprocedure('public.hugo_apply_access_unhashed(uuid,text,text,jsonb,text,timestamptz,text)') is not null, to_regprocedure('public.hugo_apply_access_unhashed_legacy_20260730(uuid,text,text,jsonb,text,timestamptz,text)') is not null, to_regprocedure('public.fn_set_user_role_and_groups(uuid,text,uuid[])') is not null;",
+      ).trim();
+      if (preHeadState !== "t|f|f") {
+        throw new Error(
+          `Origin/main pre-head state was not installed before head migrations: ${preHeadState}`,
+        );
+      }
+      for (const migration of originMainToHeadMigrations) {
+        applyMigration(migration);
+      }
     }
     psqlFile(
       binary,
@@ -139,6 +181,11 @@ async function runPostgres(pgBin, index) {
         psqlPath: binary("psql"),
         env,
       });
+    const roleAndLifecycleTwoSessionSerialization =
+      await verifyRoleAndLifecycleTwoSessionSerialization(
+        binary("psql"),
+        env,
+      );
 
     psqlText(binary, env, concurrencyFixtureSql);
     const outcomes = await Promise.all([
@@ -169,13 +216,20 @@ async function runPostgres(pgBin, index) {
 
     return {
       postgres_major: major,
-      migrations: migrations.length,
+      migration_mode: upgradeRehearsal ? "origin_main_to_head" : "fresh_chain",
+      migrations: migrationPlan.length,
+      origin_main_migrations: upgradeRehearsal
+        ? migrations.length - originMainToHeadMigrations.length
+        : null,
+      head_migrations: upgradeRehearsal ? originMainToHeadMigrations : [],
       focused_sql_tests: 10,
       auth_insert_lifecycle_serialization: authInsertSerialization,
       role_group_delete_lifecycle_serialization:
         roleGroupDeleteSerialization,
       role_group_truncate_lifecycle_serialization:
         roleGroupTruncateSerialization,
+      role_and_lifecycle_two_session_serialization:
+        roleAndLifecycleTwoSessionSerialization,
       concurrent_owner_deletes: "both_direct_mutations_blocked",
     };
   } finally {

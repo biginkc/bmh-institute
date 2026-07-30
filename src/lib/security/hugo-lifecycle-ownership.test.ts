@@ -12,25 +12,24 @@ describe("Hugo and Institute lifecycle ownership contract", () => {
   it("takes the per-user lock before profile and grant row locks", () => {
     expect(migration).toContain("hugo-institute-user-lifecycle:");
     expect(migration).toMatch(
-      /hugo-institute-user-lifecycle:[\s\S]*?select \* into v_profile[\s\S]*?for update[\s\S]*?select \* into v_grant[\s\S]*?for update/i,
+      /hugo-institute-user-lifecycle:[\s\S]*?legacy_20260730[\s\S]*?return v_receipt/i,
     );
-    expect(migration).toContain("v_grant_found := found");
+    expect(migration).not.toContain("pg_get_functiondef");
+    expect(migration).toContain("rename to hugo_apply_access_unhashed_legacy_20260730");
   });
 
   it("reactivation snapshots the locked Institute role and memberships", () => {
-    expect(migration).toContain("v_grant_found boolean");
-    expect(migration).toContain("v_grant_found\n     and v_grant.desired_status = 'suspended'");
-    expect(migration).toContain("v_role := v_current_role");
+    expect(migration).toContain("v_grant_status = 'suspended'");
+    expect(migration).toContain("v_effective_role := v_current_role");
     expect(migration).toContain("from public.user_role_groups");
     expect(migration).toContain("role_group_ids");
   });
 
   it("revokes access without deleting Institute-owned role or memberships", () => {
-    const revoke = migration.match(
-      /v_new := \$new\$\n\s+-- Institute retains role and memberships[\s\S]*?\$new\$/i,
-    )?.[0];
-    expect(revoke).toBeDefined();
-    expect(revoke).not.toContain("delete from public.user_role_groups");
-    expect(revoke).toContain("revoked grant and suspended profile");
+    expect(migration).toContain(
+      "Terminal revocation denies Hugo access but does not delete Institute's",
+    );
+    expect(migration).toContain("delete from public.user_role_groups");
+    expect(migration).toContain("from unnest(v_current_groups)");
   });
 });

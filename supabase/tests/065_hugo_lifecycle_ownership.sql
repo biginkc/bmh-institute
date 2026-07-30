@@ -47,7 +47,7 @@ select public.hugo_apply_access(
   '00000000-0000-4000-8000-000000000366',
   'lifecycle-ownership@example.invalid',
   'admin',
-  '{}'::jsonb, 'suspended', null,
+  '{}'::jsonb, 'suspended', '2099-01-01 00:00:00+00'::timestamptz,
   '00000000-0000-4000-8000-000000000165'
 );
 
@@ -69,6 +69,8 @@ begin
   assert v_grant.role = 'admin', 'reactivation must use the current Institute role';
   assert v_grant.config->'role_group_ids' = '["00000000-0000-4000-8000-000000000265"]'::jsonb,
     'reactivation must use the current Institute memberships';
+  assert v_grant.access_expires_at = '2099-01-01 00:00:00+00'::timestamptz,
+    'reactivation must preserve the suspended grant expiry';
 end;
 $$;
 
