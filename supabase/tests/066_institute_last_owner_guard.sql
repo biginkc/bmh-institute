@@ -31,6 +31,22 @@ set local request.jwt.claims =
 do $$
 begin
   begin
+    update public.profiles
+    set system_role = 'admin'
+    where id = '00000000-0000-4000-8000-000000000166';
+    raise exception 'direct last-owner update unexpectedly succeeded';
+  exception
+    when sqlstate '42501' then
+      null;
+  end;
+
+  assert (
+    select system_role
+    from public.profiles
+    where id = '00000000-0000-4000-8000-000000000166'
+  ) = 'owner', 'direct table writes must preserve the last owner';
+
+  begin
     perform public.fn_set_user_role_and_groups(
       '00000000-0000-4000-8000-000000000166',
       'admin',

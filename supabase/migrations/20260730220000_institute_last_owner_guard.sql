@@ -61,4 +61,37 @@ begin
 end;
 $$;
 
+create or replace function public.fn_prevent_last_owner_demotion()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if old.system_role = 'owner' and new.system_role <> 'owner' then
+    -- Serialize every owner demotion, not only edits to the same target row.
+    -- This closes the two-admin/two-owner race where each transaction could
+    -- otherwise observe the other owner before both demotions commit.
+    perform pg_advisory_xact_lock(
+      hashtextextended('institute-owner-invariant', 0)
+    );
+    if not exists (
+      select 1
+      from public.profiles other_owner
+      where other_owner.system_role = 'owner'
+        and other_owner.id <> old.id
+    ) then
+      raise exception 'At least one Institute owner must remain.'
+        using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists trg_prevent_last_owner_demotion on public.profiles;
+create trigger trg_prevent_last_owner_demotion
+  before update of system_role on public.profiles
+  for each row execute function public.fn_prevent_last_owner_demotion();
+
 commit;
