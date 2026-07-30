@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "status": "active",
-  "updated_at": "2026-07-23",
+  "updated_at": "2026-07-30",
   "records": [
     {
       "video_source_key": "video-slot-03-tech-stack",
@@ -899,6 +899,19 @@
       "evidence_commit_sha": "813425d5cc875592f8463c1ca76708075660ad8d",
       "evidence_path": "docs/course-production/caption-evidence/faq-b-moving-mouth-release-2026-07-23.json",
       "evidence_sha256": "42049aa714fc56c874ddf997fb3de55b20bab06642f57f5e118f4143f85303c3"
+    },
+    {
+      "video_source_key": "video-slot-01-welcome",
+      "video_sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
+      "caption_sha256": "bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939",
+      "transcript_sha256": null,
+      "status": "approved",
+      "reviewed_by": "BMH Institute caption QA evidence",
+      "decision_source": "caption_accessibility_validation",
+      "reviewed_at": "2026-07-30T09:32:28Z",
+      "evidence_commit_sha": "c9828a05bb3ad0c364bc1bec65c1b839cfd84138",
+      "evidence_path": "docs/course-production/caption-evidence/video-zero-caption-validation-2026-07-30.json",
+      "evidence_sha256": "16bd257ac362240ff6c4a8f138fffd2e1acdd076da305f17a5263bc912dd16cb"
     }
   ]
 }

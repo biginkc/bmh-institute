@@ -121,10 +121,10 @@
       "sha256": "06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
       "candidate_local_path": "course-assets/review-lessonA/LESSON-1A-v11-VIDEO-ZERO-FINAL-AUDIO-QC.mp4",
       "title": "Welcome",
-      "decision": "pending",
-      "approver": null,
-      "date": null,
-      "notes": null
+      "decision": "approved",
+      "approver": "Jarrad Henry",
+      "date": "2026-07-30",
+      "notes": "Jarrad Henry approved the corrected Video Zero picture and requested correction of the quiet ending. This checksum preserves the approved H.264 picture and loudness-matches only the final 19.351 seconds of audio."
     }
   ]
 }

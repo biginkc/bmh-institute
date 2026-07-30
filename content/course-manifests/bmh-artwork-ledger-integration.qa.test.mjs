@@ -242,8 +242,15 @@ test("the complete manifest builder is deterministic against portable fixture so
     import.meta.url,
   );
   const approvalLedger = JSON.parse(await readFile(canonicalApprovalPath, "utf8"));
+  const trackedVideoBySource = new Map(
+    trackedVideos.map((video) => [video.source_key, video]),
+  );
   const fixtureRecords = approvalLedger.records.map((record) => {
     if (record.decision === "changes_requested") return record;
+    const trackedVideo = trackedVideoBySource.get(record.source_key);
+    if (!trackedVideo || record.sha256 !== trackedVideo.checksum_sha256) {
+      return record;
+    }
     const fixture = fixtureVideoBySource.get(record.source_key);
     return {
       ...record,
@@ -303,6 +310,12 @@ test("the complete manifest builder is deterministic against portable fixture so
     quizSourceRoot,
     videoApprovalLedgerPath: fixtureApprovalPath,
     videoApprovalHistoryRepoRoot: fixtureRoot,
+    approvedVideoSupersessions: new Map(
+      [...fixtureVideoBySource.entries()].map(([sourceKey, fixture]) => [
+        sourceKey,
+        fixture.checksum,
+      ]),
+    ),
     inspectDuration(fullPath) {
       const duration = durationByPath.get(path.resolve(fullPath));
       assert.ok(duration, `fixture duration missing for ${fullPath}`);

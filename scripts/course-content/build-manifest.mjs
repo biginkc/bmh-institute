@@ -1,7 +1,14 @@
 import { createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { lstat, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
+import {
+  lstat,
+  mkdir,
+  readFile,
+  realpath,
+  stat,
+  writeFile,
+} from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +19,7 @@ import {
 } from "./artwork-production-workflow.mjs";
 import {
   DIRECT_APPROVAL_OVERRIDE_CUTS,
+  APPROVED_VIDEO_SUPERSESSIONS,
   REPLACEMENT_REQUIRED_CUTS,
   REVIEWED_VIDEO_SOURCE_KEYS,
   approvalRecordKey,
@@ -23,16 +31,27 @@ import {
   validateCaptionApprovalEvidence,
   validateCaptionApprovalHistory,
 } from "./caption-approval-ledger.mjs";
-import { projectQuizBankQuestion, quizBankSha256, validateQuizBank } from "./quiz-bank.mjs";
+import {
+  projectQuizBankQuestion,
+  quizBankSha256,
+  validateQuizBank,
+} from "./quiz-bank.mjs";
 
-const REPO_ROOT = path.resolve(fileURLToPath(new URL("../..", import.meta.url)));
-const DEFAULT_VIDEO_SOURCE_ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
-const DEFAULT_QUIZ_SOURCE_ROOT = "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
+const REPO_ROOT = path.resolve(
+  fileURLToPath(new URL("../..", import.meta.url)),
+);
+const DEFAULT_VIDEO_SOURCE_ROOT =
+  "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
+const DEFAULT_QUIZ_SOURCE_ROOT =
+  "/Users/jarradhenry/BMH-OS/BMH Training Course/Thinkific";
 const DEFAULT_QUIZ_BANK_PATH = path.join(
   REPO_ROOT,
   "content/quiz-generation/question-bank.v1.json",
 );
-const OUTPUT_PATH = path.join(REPO_ROOT, "content/course-manifests/bmh-employee-training.v1.json");
+const OUTPUT_PATH = path.join(
+  REPO_ROOT,
+  "content/course-manifests/bmh-employee-training.v1.json",
+);
 const ARTWORK_LEDGER_PATH = path.join(
   REPO_ROOT,
   "docs/course-production/thumbnail-pilots/production-ledger.json",
@@ -55,43 +74,222 @@ const QUIZ_APPROVAL_LEDGER_PATH = path.join(
 );
 const ARTWORK_LEDGER_SCHEMA = "bmh-artwork-production-ledger/v1";
 export const GUIDE_APPROVAL_LEDGER_SCHEMA = "bmh-guide-approval-ledger/v1";
-export const QUIZ_APPROVAL_LEDGER_SCHEMA = "bmh-quiz-content-approval-ledger/v1";
-const QUIZ_REVIEW_REQUEST_PATH = "docs/course-production/quiz-content-review-request.v1.json";
-const QUIZ_REVIEW_SURFACE_PATH = "docs/course-production/quiz-content-review.quizbank.v1.md";
-const QUIZ_REVIEW_MANIFEST_PATH = "content/course-manifests/bmh-employee-training.v1.json";
+export const QUIZ_APPROVAL_LEDGER_SCHEMA =
+  "bmh-quiz-content-approval-ledger/v1";
+const QUIZ_REVIEW_REQUEST_PATH =
+  "docs/course-production/quiz-content-review-request.v1.json";
+const QUIZ_REVIEW_SURFACE_PATH =
+  "docs/course-production/quiz-content-review.quizbank.v1.md";
+const QUIZ_REVIEW_MANIFEST_PATH =
+  "content/course-manifests/bmh-employee-training.v1.json";
 const SHA256_PATTERN = /^[a-f0-9]{64}$/;
-const ISO_TIMESTAMP_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
 
 const VIDEO_SOURCES = [
-  ["video-slot-01-welcome", 1, "Welcome and the Service Playbook", "Part A", "course-assets/review-lessonA/LESSON-1A-v7.mp4"],
-  ["video-slot-01-mindset", 1, "Mindset", "Part B", "course-assets/review-lessonB/LESSON-1B-v4.mp4"],
-  ["video-slot-02-terms", 2, "Real Estate Terms Glossary", null, "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4"],
-  ["video-slot-03-tech-stack", 3, "Tech Stack and Systems", null, "course-assets/review-lessonTECHA/LESSON-TECHA-v5.mp4"],
-  ["video-slot-04-humanizing-a", 4, "Humanizing the Lead", "Part A", "course-assets/review-lesson2A/LESSON-2A-v1-FINAL.mp4"],
-  ["video-slot-04-humanizing-b", 4, "Humanizing the Lead", "Part B", "course-assets/review-lesson2B/LESSON-2B-v3-FULL.mp4"],
-  ["video-slot-04-ideal-seller", 4, "Ideal Seller Profile", "Part C", "course-assets/review-lessonISP/LESSON-ISP-v6.mp4"],
-  ["video-slot-05-offer-a", 5, "The BMH Offer Playbook", "Part A", "course-assets/review-lesson3A/LESSON-3A-rev1-FULL.mp4"],
-  ["video-slot-05-offer-b", 5, "The BMH Offer Playbook", "Part B", "course-assets/review-lesson3B/LESSON-3B-v1-FULL.mp4"],
-  ["video-slot-06-pipeline", 6, "Sales Pipeline and Stage Ownership", "Part A", "course-assets/review-lesson4A/LESSON-4A-v3.mp4"],
-  ["video-slot-06-framework", 6, "The Five-Step Conversation Framework", "Part B", "course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4"],
-  ["video-slot-07-opening", 7, "Opening the Call", "Part A", "course-assets/review-lesson5A/LESSON-5A-v3-FINAL.mp4"],
-  ["video-slot-07-fact-find", 7, "The Fact Find", "Part B", "course-assets/review-lesson5B/LESSON-5B-v1-FINAL.mp4"],
-  ["video-slot-08-discovery", 8, "Discovery", "Part A", "course-assets/review-lesson6A/LESSON-6A-v2-FULL.mp4"],
-  ["video-slot-08-handoff", 8, "The Handoff", "Part B", "course-assets/review-lesson6B/LESSON-6B-v3.mp4"],
-  ["video-slot-09-objection-architecture", 9, "Objection Architecture", null, "course-assets/review-lesson7A/LESSON-7A-v1-FULL.mp4"],
-  ["video-slot-10-objection-scripts", 10, "Objection Scripts Playbook", null, "course-assets/review-lesson7B/LESSON-7B-v5.mp4"],
-  ["video-slot-11-complex", 11, "Complex Objections", "Part A", "course-assets/review-lesson8A/LESSON-8A-v1-FULL.mp4"],
-  ["video-slot-11-trust", 11, "Trust and People Objections", "Part B", "course-assets/review-lesson8B/LESSON-8B-v2.mp4"],
-  ["video-slot-12-faq-a", 12, "Seller FAQ Decoder Questions 1 through 5", "Part A", "course-assets/review-lesson9A/LESSON-9A-v1-FULL.mp4"],
-  ["video-slot-12-faq-b", 12, "Seller FAQ Decoder Questions 6 through 10", "Part B", "course-assets/review-lesson9B/LESSON-9B-v5-MOVING-MOUTH.mp4"],
-  ["video-slot-13-follow-up", 13, "Follow-Up Cadence", null, "course-assets/review-lesson10A/LESSON-10A-v6.mp4"],
-  ["video-slot-14-flow", 14, "Conversation Flow Mastery", null, "course-assets/review-lesson1C/LESSON-1C-v3-FULL.mp4"],
-  ["video-slot-15-closing", 15, "Closing and Deal Engineering", null, "course-assets/review-lesson11A/LESSON-11A-v4.mp4"],
-  ["video-slot-16-kpis", 16, "KPIs and Sales Telemetry", null, "course-assets/review-lesson12A/LESSON-12A-v11.mp4"],
-  ["video-slot-17-compensation", 17, "Compensation Engine", null, "course-assets/review-lesson17/LESSON-17-v1-QT.mp4"],
-  ["video-slot-18-operator", 18, "Operator Playbook", "Part A", "course-assets/review-lesson18A/LESSON-18A-v10.mp4"],
-  ["video-slot-18-mission-control", 18, "Daily Mission Control", "Part B", "course-assets/review-lesson18B/LESSON-18B-v7.mp4"],
-  ["video-slot-19-career", 19, "Career Growth Path", null, "course-assets/review-lesson19/LESSON-19-v7.mp4"],
+  [
+    "video-slot-01-welcome",
+    1,
+    "Welcome and the Service Playbook",
+    "Part A",
+    "course-assets/review-lessonA/LESSON-1A-v11-VIDEO-ZERO-FINAL-AUDIO-QC.mp4",
+  ],
+  [
+    "video-slot-01-mindset",
+    1,
+    "Mindset",
+    "Part B",
+    "course-assets/review-lessonB/LESSON-1B-v4.mp4",
+  ],
+  [
+    "video-slot-02-terms",
+    2,
+    "Real Estate Terms Glossary",
+    null,
+    "course-assets/review-lessonGLOA/LESSON-GLOA-v9.mp4",
+  ],
+  [
+    "video-slot-03-tech-stack",
+    3,
+    "Tech Stack and Systems",
+    null,
+    "course-assets/review-lessonTECHA/LESSON-TECHA-v5.mp4",
+  ],
+  [
+    "video-slot-04-humanizing-a",
+    4,
+    "Humanizing the Lead",
+    "Part A",
+    "course-assets/review-lesson2A/LESSON-2A-v1-FINAL.mp4",
+  ],
+  [
+    "video-slot-04-humanizing-b",
+    4,
+    "Humanizing the Lead",
+    "Part B",
+    "course-assets/review-lesson2B/LESSON-2B-v3-FULL.mp4",
+  ],
+  [
+    "video-slot-04-ideal-seller",
+    4,
+    "Ideal Seller Profile",
+    "Part C",
+    "course-assets/review-lessonISP/LESSON-ISP-v6.mp4",
+  ],
+  [
+    "video-slot-05-offer-a",
+    5,
+    "The BMH Offer Playbook",
+    "Part A",
+    "course-assets/review-lesson3A/LESSON-3A-rev1-FULL.mp4",
+  ],
+  [
+    "video-slot-05-offer-b",
+    5,
+    "The BMH Offer Playbook",
+    "Part B",
+    "course-assets/review-lesson3B/LESSON-3B-v1-FULL.mp4",
+  ],
+  [
+    "video-slot-06-pipeline",
+    6,
+    "Sales Pipeline and Stage Ownership",
+    "Part A",
+    "course-assets/review-lesson4A/LESSON-4A-v3.mp4",
+  ],
+  [
+    "video-slot-06-framework",
+    6,
+    "The Five-Step Conversation Framework",
+    "Part B",
+    "course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4",
+  ],
+  [
+    "video-slot-07-opening",
+    7,
+    "Opening the Call",
+    "Part A",
+    "course-assets/review-lesson5A/LESSON-5A-v3-FINAL.mp4",
+  ],
+  [
+    "video-slot-07-fact-find",
+    7,
+    "The Fact Find",
+    "Part B",
+    "course-assets/review-lesson5B/LESSON-5B-v1-FINAL.mp4",
+  ],
+  [
+    "video-slot-08-discovery",
+    8,
+    "Discovery",
+    "Part A",
+    "course-assets/review-lesson6A/LESSON-6A-v2-FULL.mp4",
+  ],
+  [
+    "video-slot-08-handoff",
+    8,
+    "The Handoff",
+    "Part B",
+    "course-assets/review-lesson6B/LESSON-6B-v3.mp4",
+  ],
+  [
+    "video-slot-09-objection-architecture",
+    9,
+    "Objection Architecture",
+    null,
+    "course-assets/review-lesson7A/LESSON-7A-v1-FULL.mp4",
+  ],
+  [
+    "video-slot-10-objection-scripts",
+    10,
+    "Objection Scripts Playbook",
+    null,
+    "course-assets/review-lesson7B/LESSON-7B-v5.mp4",
+  ],
+  [
+    "video-slot-11-complex",
+    11,
+    "Complex Objections",
+    "Part A",
+    "course-assets/review-lesson8A/LESSON-8A-v1-FULL.mp4",
+  ],
+  [
+    "video-slot-11-trust",
+    11,
+    "Trust and People Objections",
+    "Part B",
+    "course-assets/review-lesson8B/LESSON-8B-v2.mp4",
+  ],
+  [
+    "video-slot-12-faq-a",
+    12,
+    "Seller FAQ Decoder Questions 1 through 5",
+    "Part A",
+    "course-assets/review-lesson9A/LESSON-9A-v1-FULL.mp4",
+  ],
+  [
+    "video-slot-12-faq-b",
+    12,
+    "Seller FAQ Decoder Questions 6 through 10",
+    "Part B",
+    "course-assets/review-lesson9B/LESSON-9B-v5-MOVING-MOUTH.mp4",
+  ],
+  [
+    "video-slot-13-follow-up",
+    13,
+    "Follow-Up Cadence",
+    null,
+    "course-assets/review-lesson10A/LESSON-10A-v6.mp4",
+  ],
+  [
+    "video-slot-14-flow",
+    14,
+    "Conversation Flow Mastery",
+    null,
+    "course-assets/review-lesson1C/LESSON-1C-v3-FULL.mp4",
+  ],
+  [
+    "video-slot-15-closing",
+    15,
+    "Closing and Deal Engineering",
+    null,
+    "course-assets/review-lesson11A/LESSON-11A-v4.mp4",
+  ],
+  [
+    "video-slot-16-kpis",
+    16,
+    "KPIs and Sales Telemetry",
+    null,
+    "course-assets/review-lesson12A/LESSON-12A-v11.mp4",
+  ],
+  [
+    "video-slot-17-compensation",
+    17,
+    "Compensation Engine",
+    null,
+    "course-assets/review-lesson17/LESSON-17-v1-QT.mp4",
+  ],
+  [
+    "video-slot-18-operator",
+    18,
+    "Operator Playbook",
+    "Part A",
+    "course-assets/review-lesson18A/LESSON-18A-v10.mp4",
+  ],
+  [
+    "video-slot-18-mission-control",
+    18,
+    "Daily Mission Control",
+    "Part B",
+    "course-assets/review-lesson18B/LESSON-18B-v7.mp4",
+  ],
+  [
+    "video-slot-19-career",
+    19,
+    "Career Growth Path",
+    null,
+    "course-assets/review-lesson19/LESSON-19-v7.mp4",
+  ],
 ];
 
 const LESSONS = [
@@ -99,219 +297,512 @@ const LESSONS = [
     slot: 1,
     module: 1,
     title: "Welcome and Mindset",
-    summary: "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
-    objectives: ["Explain the BMH service standard", "Put service before pressure", "Use curiosity and clarity in seller conversations", "Detach from outcomes while staying accountable"],
-    guide: ["The goal is an aligned decision, not a forced yes", "Listen for the seller's real problem before discussing a solution", "Treat repetition as practice that creates calm", "A respectful no is better than a pressured agreement"],
+    summary:
+      "Learn the BMH Group service standard and the mindset that keeps seller conversations clear, calm, and human.",
+    objectives: [
+      "Explain the BMH service standard",
+      "Put service before pressure",
+      "Use curiosity and clarity in seller conversations",
+      "Detach from outcomes while staying accountable",
+    ],
+    guide: [
+      "The goal is an aligned decision, not a forced yes",
+      "Listen for the seller's real problem before discussing a solution",
+      "Treat repetition as practice that creates calm",
+      "A respectful no is better than a pressured agreement",
+    ],
   },
   {
     slot: 2,
     module: 1,
     title: "Real Estate Terms Glossary",
-    summary: "Build the vocabulary needed to follow property, title, financing, and transaction conversations without guessing.",
-    objectives: ["Define distressed, off-market, on-market, MLS, and listing terms", "Distinguish wholesaling, assignment, and double-close concepts", "Recognize subject-to and seller-financing structures", "Ask for clarification when a term affects a seller"],
-    guide: ["Terms are tools for understanding, not jargon to impress sellers", "Translate technical language into plain English", "Never guess about legal or title questions", "Use the current deal record as the source for property facts"],
+    summary:
+      "Build the vocabulary needed to follow property, title, financing, and transaction conversations without guessing.",
+    objectives: [
+      "Define distressed, off-market, on-market, MLS, and listing terms",
+      "Distinguish wholesaling, assignment, and double-close concepts",
+      "Recognize subject-to and seller-financing structures",
+      "Ask for clarification when a term affects a seller",
+    ],
+    guide: [
+      "Terms are tools for understanding, not jargon to impress sellers",
+      "Translate technical language into plain English",
+      "Never guess about legal or title questions",
+      "Use the current deal record as the source for property facts",
+    ],
   },
   {
     slot: 3,
     module: 1,
     title: "Tech Stack and Systems",
-    summary: "Understand where lead data, calls, research, practice, time tracking, and team communication belong.",
-    objectives: ["Identify the purpose of each core tool", "Keep Sandra as the lead source of truth", "Use Closer Lab for deliberate practice", "Escalate blocked work through the correct team channel"],
-    guide: ["If lead activity is not recorded in Sandra it is not operationally visible", "Use property tools for research and Sandra for relationship history", "Complete assigned tasks and next actions on time", "Ask your manager for the current SOP when a tool workflow changes"],
+    summary:
+      "Understand where lead data, calls, research, practice, time tracking, and team communication belong.",
+    objectives: [
+      "Identify the purpose of each core tool",
+      "Keep Sandra as the lead source of truth",
+      "Use Closer Lab for deliberate practice",
+      "Escalate blocked work through the correct team channel",
+    ],
+    guide: [
+      "If lead activity is not recorded in Sandra it is not operationally visible",
+      "Use property tools for research and Sandra for relationship history",
+      "Complete assigned tasks and next actions on time",
+      "Ask your manager for the current SOP when a tool workflow changes",
+    ],
   },
   {
     slot: 4,
     module: 2,
     title: "Humanizing the Lead",
-    summary: "Recognize the people and pressures behind distressed-property data and determine whether BMH Group can genuinely help.",
-    objectives: ["Describe the ideal seller profile", "Identify urgency, condition, equity, and decision-maker signals", "Use respectful first-person language", "Disqualify poor fits without dehumanizing the seller"],
-    guide: ["A lead is a person in a real situation", "Motivation is discovered through listening, not assumed from a list", "Hard filters protect both the seller and the team", "A seller's timeline and desired outcome matter as much as property data"],
+    summary:
+      "Recognize the people and pressures behind distressed-property data and determine whether BMH Group can genuinely help.",
+    objectives: [
+      "Describe the ideal seller profile",
+      "Identify urgency, condition, equity, and decision-maker signals",
+      "Use respectful first-person language",
+      "Disqualify poor fits without dehumanizing the seller",
+    ],
+    guide: [
+      "A lead is a person in a real situation",
+      "Motivation is discovered through listening, not assumed from a list",
+      "Hard filters protect both the seller and the team",
+      "A seller's timeline and desired outcome matter as much as property data",
+    ],
   },
   {
     slot: 5,
     module: 2,
     title: "The BMH Offer Playbook",
-    summary: "Explain how a direct property purchase exchanges maximum retail price for speed, certainty, convenience, and an as-is sale.",
-    objectives: ["Explain the four offer pillars", "Describe ARV and repair-cost inputs", "Compare direct sale and traditional listing tradeoffs", "Present the offer without promising an outcome"],
-    guide: ["The offer is a solution with tradeoffs, not a claim to be the highest price", "Use plain English when explaining the math", "Confirm the seller values the benefits before positioning them", "Do not invent property values or repair estimates"],
+    summary:
+      "Explain how a direct property purchase exchanges maximum retail price for speed, certainty, convenience, and an as-is sale.",
+    objectives: [
+      "Explain the four offer pillars",
+      "Describe ARV and repair-cost inputs",
+      "Compare direct sale and traditional listing tradeoffs",
+      "Present the offer without promising an outcome",
+    ],
+    guide: [
+      "The offer is a solution with tradeoffs, not a claim to be the highest price",
+      "Use plain English when explaining the math",
+      "Confirm the seller values the benefits before positioning them",
+      "Do not invent property values or repair estimates",
+    ],
   },
   {
     slot: 6,
     module: 3,
     title: "Sales Pipeline and Stage Ownership",
-    summary: "Move leads through the pipeline with a clear purpose, complete notes, and an owner at every stage.",
-    objectives: ["Describe the purpose of each pipeline stage", "Identify the exit criteria for stages 1 through 4", "Use the five-step conversation framework", "Keep every active lead tied to a next action"],
-    guide: ["A stage describes what is true now, not what you hope will happen", "Do not advance a lead before the exit criteria are met", "Document the reason for every stage change", "The handoff begins only after qualification and discovery are complete"],
+    summary:
+      "Move leads through the pipeline with a clear purpose, complete notes, and an owner at every stage.",
+    objectives: [
+      "Describe the purpose of each pipeline stage",
+      "Identify the exit criteria for stages 1 through 4",
+      "Use the five-step conversation framework",
+      "Keep every active lead tied to a next action",
+    ],
+    guide: [
+      "A stage describes what is true now, not what you hope will happen",
+      "Do not advance a lead before the exit criteria are met",
+      "Document the reason for every stage change",
+      "The handoff begins only after qualification and discovery are complete",
+    ],
   },
   {
     slot: 7,
     module: 3,
     title: "Opening the Call",
-    summary: "Open seller conversations with permission, relevance, a clear frame, and a disciplined fact find.",
-    objectives: ["Use the opening frame without sounding scripted", "Earn permission to continue", "Capture essential property and seller facts", "Transition from facts to deeper discovery"],
-    guide: ["State why you are calling and give the seller room to respond", "Use a calm pace and equal-status tone", "Write down details instead of relying on memory", "The fact find creates context. It does not replace discovery"],
+    summary:
+      "Open seller conversations with permission, relevance, a clear frame, and a disciplined fact find.",
+    objectives: [
+      "Use the opening frame without sounding scripted",
+      "Earn permission to continue",
+      "Capture essential property and seller facts",
+      "Transition from facts to deeper discovery",
+    ],
+    guide: [
+      "State why you are calling and give the seller room to respond",
+      "Use a calm pace and equal-status tone",
+      "Write down details instead of relying on memory",
+      "The fact find creates context. It does not replace discovery",
+    ],
   },
   {
     slot: 8,
     module: 3,
     title: "Discovery and Handoff",
-    summary: "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean acquisition handoff.",
-    objectives: ["Distinguish qualification from discovery", "Ask consequence and future-state questions", "Confirm decision-makers and expectations", "Complete a concise handoff with all required context"],
-    guide: ["Discovery explains why the seller may act", "Ask one question at a time and listen to the full answer", "Do not diagnose or advise outside your role", "A clean handoff lets the next person continue without making the seller repeat everything"],
+    summary:
+      "Uncover the seller's situation, consequences, timeline, and decision process then deliver a clean acquisition handoff.",
+    objectives: [
+      "Distinguish qualification from discovery",
+      "Ask consequence and future-state questions",
+      "Confirm decision-makers and expectations",
+      "Complete a concise handoff with all required context",
+    ],
+    guide: [
+      "Discovery explains why the seller may act",
+      "Ask one question at a time and listen to the full answer",
+      "Do not diagnose or advise outside your role",
+      "A clean handoff lets the next person continue without making the seller repeat everything",
+    ],
   },
   {
     slot: 9,
     module: 4,
     title: "Objection Architecture",
-    summary: "Use a repeatable framework to understand concerns before selecting a response.",
-    objectives: ["Apply Listen, Acknowledge, Ask, Redirect", "Classify common objection types", "Avoid arguing with the seller", "Choose a response that matches the concern"],
-    guide: ["An objection is information before it is resistance", "Acknowledge without automatically agreeing", "Ask enough to identify the real concern", "Redirect only after the seller feels heard"],
+    summary:
+      "Use a repeatable framework to understand concerns before selecting a response.",
+    objectives: [
+      "Apply Listen, Acknowledge, Ask, Redirect",
+      "Classify common objection types",
+      "Avoid arguing with the seller",
+      "Choose a response that matches the concern",
+    ],
+    guide: [
+      "An objection is information before it is resistance",
+      "Acknowledge without automatically agreeing",
+      "Ask enough to identify the real concern",
+      "Redirect only after the seller feels heard",
+    ],
   },
   {
     slot: 10,
     module: 4,
     title: "Objection Scripts Playbook",
-    summary: "Practice adaptable responses for price, timing, trust, competition, and decision-maker concerns.",
-    objectives: ["Select a script pattern that matches the objection", "Adapt wording without changing its intent", "Use questions to reopen dialogue", "Know when to pause and seek guidance"],
-    guide: ["Scripts are guardrails, not lines to recite at any cost", "Use the seller's language when reflecting a concern", "Do not answer a question you do not understand", "A graceful exit protects trust when there is no fit"],
+    summary:
+      "Practice adaptable responses for price, timing, trust, competition, and decision-maker concerns.",
+    objectives: [
+      "Select a script pattern that matches the objection",
+      "Adapt wording without changing its intent",
+      "Use questions to reopen dialogue",
+      "Know when to pause and seek guidance",
+    ],
+    guide: [
+      "Scripts are guardrails, not lines to recite at any cost",
+      "Use the seller's language when reflecting a concern",
+      "Do not answer a question you do not understand",
+      "A graceful exit protects trust when there is no fit",
+    ],
   },
   {
     slot: 11,
     module: 4,
     title: "Complex Objections",
-    summary: "Handle emotionally or structurally difficult situations with patience, boundaries, and appropriate escalation.",
-    objectives: ["Recognize complex ownership and family dynamics", "Respond to scam and privacy concerns", "Separate empathy from legal advice", "Escalate cases that require specialist guidance"],
-    guide: ["Slow down when the situation involves grief, conflict, or financial distress", "Never pretend to be an attorney or financial adviser", "Confirm who can legally make decisions", "Document sensitivities so the next team member can respond appropriately"],
+    summary:
+      "Handle emotionally or structurally difficult situations with patience, boundaries, and appropriate escalation.",
+    objectives: [
+      "Recognize complex ownership and family dynamics",
+      "Respond to scam and privacy concerns",
+      "Separate empathy from legal advice",
+      "Escalate cases that require specialist guidance",
+    ],
+    guide: [
+      "Slow down when the situation involves grief, conflict, or financial distress",
+      "Never pretend to be an attorney or financial adviser",
+      "Confirm who can legally make decisions",
+      "Document sensitivities so the next team member can respond appropriately",
+    ],
   },
   {
     slot: 12,
     module: 4,
     title: "Seller FAQ Decoder",
-    summary: "Answer common seller questions through the three lenses of trust, fairness, and simplicity.",
-    objectives: ["Identify the concern behind a common question", "Explain the direct-sale tradeoff", "Answer clearly without overpromising", "Return to the seller's stated priorities"],
-    guide: ["Answer the question that was asked before adding detail", "Use specific process facts instead of vague reassurance", "If an answer varies by deal, say so", "Confirm whether the answer resolved the seller's concern"],
+    summary:
+      "Answer common seller questions through the three lenses of trust, fairness, and simplicity.",
+    objectives: [
+      "Identify the concern behind a common question",
+      "Explain the direct-sale tradeoff",
+      "Answer clearly without overpromising",
+      "Return to the seller's stated priorities",
+    ],
+    guide: [
+      "Answer the question that was asked before adding detail",
+      "Use specific process facts instead of vague reassurance",
+      "If an answer varies by deal, say so",
+      "Confirm whether the answer resolved the seller's concern",
+    ],
   },
   {
     slot: 13,
     module: 5,
     title: "Follow-Up Cadence",
-    summary: "Use planned, respectful follow-up to stay present without turning persistence into pressure.",
-    objectives: ["Apply the follow-up cadence", "Choose a relevant reason for each contact", "Record every attempt and next action", "Recognize when to pause or stop outreach"],
-    guide: ["Every follow-up should add context or make the next step easier", "Honor opt-outs and communication preferences", "Use multiple approved channels when appropriate", "Consistency matters more than one aggressive burst"],
+    summary:
+      "Use planned, respectful follow-up to stay present without turning persistence into pressure.",
+    objectives: [
+      "Apply the follow-up cadence",
+      "Choose a relevant reason for each contact",
+      "Record every attempt and next action",
+      "Recognize when to pause or stop outreach",
+    ],
+    guide: [
+      "Every follow-up should add context or make the next step easier",
+      "Honor opt-outs and communication preferences",
+      "Use multiple approved channels when appropriate",
+      "Consistency matters more than one aggressive burst",
+    ],
   },
   {
     slot: 14,
     module: 5,
     title: "Conversation Flow Mastery",
-    summary: "Keep difficult conversations moving through thought experiments, option framing, price exploration, and respectful repositioning.",
-    objectives: ["Use thought experiments to create clarity", "Frame available paths without false urgency", "Explore price expectations", "Re-engage or de-position gracefully"],
-    guide: ["Offer choices only when each choice is real", "Use curiosity to test assumptions", "Do not trap a seller into defending a number", "A clean de-position can preserve a future relationship"],
+    summary:
+      "Keep difficult conversations moving through thought experiments, option framing, price exploration, and respectful repositioning.",
+    objectives: [
+      "Use thought experiments to create clarity",
+      "Frame available paths without false urgency",
+      "Explore price expectations",
+      "Re-engage or de-position gracefully",
+    ],
+    guide: [
+      "Offer choices only when each choice is real",
+      "Use curiosity to test assumptions",
+      "Do not trap a seller into defending a number",
+      "A clean de-position can preserve a future relationship",
+    ],
   },
   {
     slot: 15,
     module: 5,
     title: "Closing and Deal Engineering",
-    summary: "Prepare and present an offer as a clear next step while protecting accuracy, consent, and handoff quality.",
-    objectives: ["Prepare the information needed for an offer", "Present terms cleanly", "Identify unresolved decision barriers", "Confirm the next action without pressure"],
-    guide: ["A strong close starts with accurate discovery", "State what is known and what still requires confirmation", "Let the seller evaluate the tradeoff", "Document the decision and exact next step"],
+    summary:
+      "Prepare and present an offer as a clear next step while protecting accuracy, consent, and handoff quality.",
+    objectives: [
+      "Prepare the information needed for an offer",
+      "Present terms cleanly",
+      "Identify unresolved decision barriers",
+      "Confirm the next action without pressure",
+    ],
+    guide: [
+      "A strong close starts with accurate discovery",
+      "State what is known and what still requires confirmation",
+      "Let the seller evaluate the tradeoff",
+      "Document the decision and exact next step",
+    ],
   },
   {
     slot: 16,
     module: 6,
     title: "KPIs and Sales Telemetry",
-    summary: "Read the funnel from left to right to locate process gaps and choose the right coaching response.",
-    objectives: ["Define the six core metrics", "Separate activity from productive progress", "Diagnose where a funnel breaks", "Use metrics for coaching rather than punishment"],
-    guide: ["Metrics show where to investigate. They do not explain everything by themselves", "Use the current role-and-market scorecard. Training does not set one universal numeric target", "Check conversion between adjacent stages", "Pair numbers with notes and call review before deciding on a fix"],
+    summary:
+      "Read the funnel from left to right to locate process gaps and choose the right coaching response.",
+    objectives: [
+      "Define the six core metrics",
+      "Separate activity from productive progress",
+      "Diagnose where a funnel breaks",
+      "Use metrics for coaching rather than punishment",
+    ],
+    guide: [
+      "Metrics show where to investigate. They do not explain everything by themselves",
+      "Use the current role-and-market scorecard. Training does not set one universal numeric target",
+      "Check conversion between adjacent stages",
+      "Pair numbers with notes and call review before deciding on a fix",
+    ],
   },
   {
     slot: 17,
     module: 6,
     title: "Compensation Engine",
-    summary: "Understand that compensation depends on the value a role owns and that the current written plan is always the source of truth.",
-    objectives: ["Identify the current compensation source of truth", "Connect role outcomes to the role scorecard", "Know where to take compensation questions", "Avoid relying on another person's plan or an old example"],
-    guide: ["There is no universal formula for every role", "Use your current offer letter, written plan, or role sheet", "Ask your manager when any part of the plan is unclear", "Do not treat training examples or conversations as a compensation promise"],
+    summary:
+      "Understand that compensation depends on the value a role owns and that the current written plan is always the source of truth.",
+    objectives: [
+      "Identify the current compensation source of truth",
+      "Connect role outcomes to the role scorecard",
+      "Know where to take compensation questions",
+      "Avoid relying on another person's plan or an old example",
+    ],
+    guide: [
+      "There is no universal formula for every role",
+      "Use your current offer letter, written plan, or role sheet",
+      "Ask your manager when any part of the plan is unclear",
+      "Do not treat training examples or conversations as a compensation promise",
+    ],
   },
   {
     slot: 18,
     module: 6,
     title: "Operator Playbook and Daily Mission Control",
-    summary: "Run a disciplined workday, keep the pipeline current, and communicate decisions and blockers through the team's operating systems.",
-    objectives: ["Prioritize daily lead work", "Maintain notes, stages, and next actions", "Use team communication channels professionally", "Close the day with a clean pipeline and clear plan"],
-    guide: ["Begin with scheduled and high-priority follow-ups", "Log notes immediately after meaningful activity", "Ask rather than guess when a situation is unfamiliar", "A worked day reflects complete controllable actions, not a guaranteed outcome"],
+    summary:
+      "Run a disciplined workday, keep the pipeline current, and communicate decisions and blockers through the team's operating systems.",
+    objectives: [
+      "Prioritize daily lead work",
+      "Maintain notes, stages, and next actions",
+      "Use team communication channels professionally",
+      "Close the day with a clean pipeline and clear plan",
+    ],
+    guide: [
+      "Begin with scheduled and high-priority follow-ups",
+      "Log notes immediately after meaningful activity",
+      "Ask rather than guess when a situation is unfamiliar",
+      "A worked day reflects complete controllable actions, not a guaranteed outcome",
+    ],
   },
   {
     slot: 19,
     module: 6,
     title: "Career Growth Path",
-    summary: "Build capability in your current role through deliberate practice, useful feedback, coachability, and reliable execution.",
-    objectives: ["Use a practice and feedback loop", "Respond to coaching without defensiveness", "Connect capability to current role expectations", "Confirm any increase in ownership with your manager and current written role plan"],
-    guide: ["Practice, apply feedback, and review the result", "Capability means using knowledge and skills reliably in current work", "Your manager and current written role plan define your responsibilities and expectations", "Take on increased ownership only after the change is documented in your current written role plan"],
+    summary:
+      "Build capability in your current role through deliberate practice, useful feedback, coachability, and reliable execution.",
+    objectives: [
+      "Use a practice and feedback loop",
+      "Respond to coaching without defensiveness",
+      "Connect capability to current role expectations",
+      "Confirm any increase in ownership with your manager and current written role plan",
+    ],
+    guide: [
+      "Practice, apply feedback, and review the result",
+      "Capability means using knowledge and skills reliably in current work",
+      "Your manager and current written role plan define your responsibilities and expectations",
+      "Take on increased ownership only after the change is documented in your current written role plan",
+    ],
   },
 ];
 
 const MODULES = [
-  [1, "Orientation", "Learn the BMH Group service standard, vocabulary, and operating tools."],
-  [2, "Who We Serve", "Understand the sellers BMH Group can help and the tradeoffs in our offer."],
-  [3, "The Conversation", "Move from a clear opening through discovery and a complete handoff."],
-  [4, "Objections and Questions", "Respond to concerns with empathy, structure, and accurate process information."],
-  [5, "Cadence, Scripts, and Close", "Follow up consistently, guide conversation flow, and create a clean next step."],
-  [6, "Performance and Career", "Use scorecards, operating discipline, and coaching to improve and grow."],
+  [
+    1,
+    "Orientation",
+    "Learn the BMH Group service standard, vocabulary, and operating tools.",
+  ],
+  [
+    2,
+    "Who We Serve",
+    "Understand the sellers BMH Group can help and the tradeoffs in our offer.",
+  ],
+  [
+    3,
+    "The Conversation",
+    "Move from a clear opening through discovery and a complete handoff.",
+  ],
+  [
+    4,
+    "Objections and Questions",
+    "Respond to concerns with empathy, structure, and accurate process information.",
+  ],
+  [
+    5,
+    "Cadence, Scripts, and Close",
+    "Follow up consistently, guide conversation flow, and create a clean next step.",
+  ],
+  [
+    6,
+    "Performance and Career",
+    "Use scorecards, operating discipline, and coaching to improve and grow.",
+  ],
 ];
 
 const ASSIGNMENTS = {
   1: {
     title: "Orientation Readiness Check",
-    instructions: "Write a short operating plan that identifies the source of truth for lead data, where you will find current SOPs, how you will ask for help, and two behaviors you will use to keep seller conversations service-first.",
+    instructions:
+      "Write a short operating plan that identifies the source of truth for lead data, where you will find current SOPs, how you will ask for help, and two behaviors you will use to keep seller conversations service-first.",
     rubric: [
-      ["Systems", "Correctly identifies where lead data, SOPs, and blocked-work questions belong."],
-      ["Service mindset", "Connects at least two mindset principles to observable behavior."],
+      [
+        "Systems",
+        "Correctly identifies where lead data, SOPs, and blocked-work questions belong.",
+      ],
+      [
+        "Service mindset",
+        "Connects at least two mindset principles to observable behavior.",
+      ],
       ["Clarity", "Uses specific actions rather than general promises."],
     ],
   },
   2: {
     title: "Seller and Offer Fit Analysis",
-    instructions: "Review the supplied fictional seller profile. Explain whether the situation appears to fit BMH Group, what facts still need confirmation, and how you would explain the direct-sale tradeoff in plain English.",
+    instructions:
+      "Review the supplied fictional seller profile. Explain whether the situation appears to fit BMH Group, what facts still need confirmation, and how you would explain the direct-sale tradeoff in plain English.",
     rubric: [
-      ["Fit analysis", "Uses seller, property, timeline, and decision-maker signals without assumptions."],
-      ["Offer framing", "Explains speed, certainty, convenience, and as-is condition without overpromising."],
-      ["Respect", "Describes the seller as a person and avoids pressure language."],
+      [
+        "Fit analysis",
+        "Uses seller, property, timeline, and decision-maker signals without assumptions.",
+      ],
+      [
+        "Offer framing",
+        "Explains speed, certainty, convenience, and as-is condition without overpromising.",
+      ],
+      [
+        "Respect",
+        "Describes the seller as a person and avoids pressure language.",
+      ],
     ],
   },
   3: {
     title: "Conversation and Handoff Plan",
-    instructions: "Draft a permission-based seller opening and the first five fact-find questions. Then draft five discovery questions and a handoff summary for a seller who is tired of managing repairs and tenant issues. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
+    instructions:
+      "Draft a permission-based seller opening and the first five fact-find questions. Then draft five discovery questions and a handoff summary for a seller who is tired of managing repairs and tenant issues. Include the pipeline stage, known facts, missing facts, motivation, timeline, decision-makers, and next action.",
     rubric: [
-      ["Conversation flow", "Moves naturally from permission and facts into discovery."],
-      ["Discovery", "Questions surface consequences, timing, priorities, and decision process."],
-      ["Handoff quality", "The summary is accurate, concise, complete, and actionable."],
+      [
+        "Conversation flow",
+        "Moves naturally from permission and facts into discovery.",
+      ],
+      [
+        "Discovery",
+        "Questions surface consequences, timing, priorities, and decision process.",
+      ],
+      [
+        "Handoff quality",
+        "The summary is accurate, concise, complete, and actionable.",
+      ],
     ],
   },
   4: {
     title: "Objection Response Plan",
-    instructions: "Choose three objections from the lesson, including a seller who is concerned the contact may be a scam. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
+    instructions:
+      "Choose three objections from the lesson, including a seller who is concerned the contact may be a scam. For each one, write a Listen, Acknowledge, Ask, Redirect response and identify when you would stop, escalate, or seek specialist guidance.",
     rubric: [
-      ["Framework", "Each response includes all four steps in the correct order."],
-      ["Fit", "Questions and redirects match the concern instead of using a generic rebuttal."],
-      ["Boundaries", "Correctly identifies legal, financial, family, or authority issues that require escalation."],
+      [
+        "Framework",
+        "Each response includes all four steps in the correct order.",
+      ],
+      [
+        "Fit",
+        "Questions and redirects match the concern instead of using a generic rebuttal.",
+      ],
+      [
+        "Boundaries",
+        "Correctly identifies legal, financial, family, or authority issues that require escalation.",
+      ],
     ],
   },
   5: {
     title: "Follow-Up and Closing Plan",
-    instructions: "Create a 30-day follow-up plan for a seller managing a relative's estate who previously asked for time. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
+    instructions:
+      "Create a 30-day follow-up plan for a seller managing a relative's estate who previously asked for time. Include purpose, channel, message angle, stop conditions, CRM note, and next action for each touch. Finish with the conditions required for a clean offer conversation without rushing the estate process.",
     rubric: [
-      ["Cadence", "Touches are intentional, spaced, and tied to a relevant reason."],
-      ["Compliance", "The plan honors preferences, opt-outs, and approved channels."],
-      ["Closing readiness", "Separates confirmed facts from items that still require validation."],
+      [
+        "Cadence",
+        "Touches are intentional, spaced, and tied to a relevant reason.",
+      ],
+      [
+        "Compliance",
+        "The plan honors preferences, opt-outs, and approved channels.",
+      ],
+      [
+        "Closing readiness",
+        "Separates confirmed facts from items that still require validation.",
+      ],
     ],
   },
   6: {
     title: "Mission Control and Growth Capstone",
-    instructions: "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two written case debriefs: how you would preserve authority and neutrality when an adult child opposes a homeowner's decision, and what you would carry forward through a complete seller conversation from opening to handoff.",
+    instructions:
+      "Build a one-day operating plan with priorities, checkpoints, metrics, pipeline hygiene, team communication, and end-of-day review. Add a short reflection on one skill to improve, how you will measure it, and how you will use coaching. Finish with two written case debriefs: how you would preserve authority and neutrality when an adult child opposes a homeowner's decision, and what you would carry forward through a complete seller conversation from opening to handoff.",
     rubric: [
-      ["Operating discipline", "The day protects follow-ups, documentation, communication, breaks, and review."],
-      ["Measurement", "Chooses metrics that reveal a specific process gap without inventing targets."],
-      ["Growth", "Names a concrete practice and feedback loop tied to the current role."],
-      ["Applied judgment", "Explains how the written case responses preserve consent, decision authority, neutrality, and an accurate handoff."],
+      [
+        "Operating discipline",
+        "The day protects follow-ups, documentation, communication, breaks, and review.",
+      ],
+      [
+        "Measurement",
+        "Chooses metrics that reveal a specific process gap without inventing targets.",
+      ],
+      [
+        "Growth",
+        "Names a concrete practice and feedback loop tied to the current role.",
+      ],
+      [
+        "Applied judgment",
+        "Explains how the written case responses preserve consent, decision authority, neutrality, and an accurate handoff.",
+      ],
     ],
   },
 };
@@ -322,10 +813,21 @@ const ROLE_PLAYS = {
       key: "guarded-inbound",
       assignment_source_key: "assignment-section-3",
       title: "Guarded inbound seller",
-      context: "A warm inbound homeowner is willing to talk but gives short answers and wants to know why BMH Group needs personal details.",
-      learner_goal: "Earn permission, complete the opening frame, and gather core facts without rushing into a pitch.",
-      success_criteria: ["States purpose clearly", "Acknowledges the privacy concern", "Asks one question at a time", "Secures a specific next step"],
-      fail_conditions: ["Pressures the seller", "Invents a reason for collecting information", "Skips consent or the fact find"],
+      context:
+        "A warm inbound homeowner is willing to talk but gives short answers and wants to know why BMH Group needs personal details.",
+      learner_goal:
+        "Earn permission, complete the opening frame, and gather core facts without rushing into a pitch.",
+      success_criteria: [
+        "States purpose clearly",
+        "Acknowledges the privacy concern",
+        "Asks one question at a time",
+        "Secures a specific next step",
+      ],
+      fail_conditions: [
+        "Pressures the seller",
+        "Invents a reason for collecting information",
+        "Skips consent or the fact find",
+      ],
     },
   ],
   8: [
@@ -333,10 +835,21 @@ const ROLE_PLAYS = {
       key: "tired-landlord",
       assignment_source_key: "assignment-section-3",
       title: "Tired landlord discovery and handoff",
-      context: "A landlord is exhausted by repairs and tenant problems but has not decided when to sell.",
-      learner_goal: "Discover the real impact, clarify timing and decision-makers, then frame a clean handoff.",
-      success_criteria: ["Separates facts from motivation", "Explores consequences", "Confirms timing and authority", "Summarizes an accurate handoff"],
-      fail_conditions: ["Assumes urgency", "Promises a price", "Transfers the seller with missing context"],
+      context:
+        "A landlord is exhausted by repairs and tenant problems but has not decided when to sell.",
+      learner_goal:
+        "Discover the real impact, clarify timing and decision-makers, then frame a clean handoff.",
+      success_criteria: [
+        "Separates facts from motivation",
+        "Explores consequences",
+        "Confirms timing and authority",
+        "Summarizes an accurate handoff",
+      ],
+      fail_conditions: [
+        "Assumes urgency",
+        "Promises a price",
+        "Transfers the seller with missing context",
+      ],
     },
   ],
   11: [
@@ -344,10 +857,21 @@ const ROLE_PLAYS = {
       key: "scam-suspicious-preforeclosure",
       assignment_source_key: "assignment-section-4",
       title: "Scam-suspicious pre-foreclosure seller",
-      context: "During an initial seller conversation, a homeowner facing a possible foreclosure believes the contact may be a scam and refuses to share information.",
-      learner_goal: "Lower pressure, explain the process, offer verifiable next steps, and respect the seller's boundaries.",
-      success_criteria: ["Acknowledges the concern", "Uses accurate verification options", "Avoids legal advice", "Accepts a pause or no"],
-      fail_conditions: ["Uses fear or false urgency", "Claims legal expertise", "Asks for sensitive financial credentials"],
+      context:
+        "During an initial seller conversation, a homeowner facing a possible foreclosure believes the contact may be a scam and refuses to share information.",
+      learner_goal:
+        "Lower pressure, explain the process, offer verifiable next steps, and respect the seller's boundaries.",
+      success_criteria: [
+        "Acknowledges the concern",
+        "Uses accurate verification options",
+        "Avoids legal advice",
+        "Accepts a pause or no",
+      ],
+      fail_conditions: [
+        "Uses fear or false urgency",
+        "Claims legal expertise",
+        "Asks for sensitive financial credentials",
+      ],
     },
   ],
   13: [
@@ -355,10 +879,21 @@ const ROLE_PLAYS = {
       key: "probate-follow-up",
       assignment_source_key: "assignment-section-5",
       title: "Probate follow-up",
-      context: "A seller handling a relative's estate asked for time and has not responded to two prior contacts.",
-      learner_goal: "Use a respectful follow-up reason, acknowledge grief and process complexity, and create a low-pressure next step.",
-      success_criteria: ["References prior context", "Uses patient language", "Checks authority without advising", "Records a clear next action"],
-      fail_conditions: ["Treats silence as consent", "Rushes the estate process", "Creates an artificial deadline"],
+      context:
+        "A seller handling a relative's estate asked for time and has not responded to two prior contacts.",
+      learner_goal:
+        "Use a respectful follow-up reason, acknowledge grief and process complexity, and create a low-pressure next step.",
+      success_criteria: [
+        "References prior context",
+        "Uses patient language",
+        "Checks authority without advising",
+        "Records a clear next action",
+      ],
+      fail_conditions: [
+        "Treats silence as consent",
+        "Rushes the estate process",
+        "Creates an artificial deadline",
+      ],
     },
   ],
   18: [
@@ -366,19 +901,42 @@ const ROLE_PLAYS = {
       key: "family-dynamics-dayton",
       assignment_source_key: "assignment-section-6",
       title: "Family dynamics seller",
-      context: "An older Dayton homeowner wants to sell but an adult child strongly opposes the decision.",
-      learner_goal: "Identify who can decide, hear both concerns, preserve the homeowner's agency, and seek guidance when needed.",
-      success_criteria: ["Confirms decision authority", "Does not take sides", "Surfaces each person's concern", "Sets a safe next step"],
-      fail_conditions: ["Manipulates family conflict", "Ignores the homeowner's stated wishes", "Provides legal advice"],
+      context:
+        "An older Dayton homeowner wants to sell but an adult child strongly opposes the decision.",
+      learner_goal:
+        "Identify who can decide, hear both concerns, preserve the homeowner's agency, and seek guidance when needed.",
+      success_criteria: [
+        "Confirms decision authority",
+        "Does not take sides",
+        "Surfaces each person's concern",
+        "Sets a safe next step",
+      ],
+      fail_conditions: [
+        "Manipulates family conflict",
+        "Ignores the homeowner's stated wishes",
+        "Provides legal advice",
+      ],
     },
     {
       key: "full-cycle-capstone",
       assignment_source_key: "assignment-section-6",
       title: "Full-cycle seller conversation",
-      context: "A seller moves from a first conversation through qualification, discovery, an objection, and readiness for handoff.",
-      learner_goal: "Run the full conversation from opening through a documented handoff while maintaining clarity and consent.",
-      success_criteria: ["Uses a clear opening", "Completes qualification and discovery", "Handles the objection with LAAR", "Produces a complete handoff"],
-      fail_conditions: ["Skips required facts", "Applies pressure", "Promises price or timing", "Ends without a documented next action"],
+      context:
+        "A seller moves from a first conversation through qualification, discovery, an objection, and readiness for handoff.",
+      learner_goal:
+        "Run the full conversation from opening through a documented handoff while maintaining clarity and consent.",
+      success_criteria: [
+        "Uses a clear opening",
+        "Completes qualification and discovery",
+        "Handles the objection with LAAR",
+        "Produces a complete handoff",
+      ],
+      fail_conditions: [
+        "Skips required facts",
+        "Applies pressure",
+        "Promises price or timing",
+        "Ends without a documented next action",
+      ],
     },
   ],
 };
@@ -423,11 +981,13 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-01",
       scenarioId: "7f02bec1-94d6-403f-9792-157238c75450",
-      context: "This lesson is a casual first check-in -- what you think the company does, who you'll be talking to, and what it means to be a guide instead of a salesman. Andrea isn't grading you here -- there's no wrong answer, she just wants to hear how it's landing before you ever pick up a phone.",
-      learner_goal: "Talk through what you've taken in so far, in your own words -- there's no wrong answer.",
+      context:
+        "This lesson is a casual first check-in -- what you think the company does, who you'll be talking to, and what it means to be a guide instead of a salesman. Andrea isn't grading you here -- there's no wrong answer, she just wants to hear how it's landing before you ever pick up a phone.",
+      learner_goal:
+        "Talk through what you've taken in so far, in your own words -- there's no wrong answer.",
       success_criteria: [
         "Describes what BMH does in their own words (buys houses for cash, as-is, from people who need speed and simplicity)",
-        "Describes who the sellers are with some human framing (real people in tough spots, not just \"homeowners\")",
+        'Describes who the sellers are with some human framing (real people in tough spots, not just "homeowners")',
         "Puts the guide-not-salesman idea in their own words (helping people find their best path, not pushing for a yes)",
       ],
       fail_conditions: [
@@ -441,8 +1001,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-02",
       scenarioId: "e46baf56-d0ae-4621-87f3-07718f0744b2",
-      context: "This lesson covers the core vocabulary a caller needs on a live call -- property and seller-situation terms, wholesaling mechanics, deal-math terms, and CRM/pipeline terms. Andrea checks it out loud because recognizing these terms in the moment on a real call is different from recognizing them on a written quiz.",
-      learner_goal: "Demonstrate accurate understanding of the core terms in your own words, not a memorized definition.",
+      context:
+        "This lesson covers the core vocabulary a caller needs on a live call -- property and seller-situation terms, wholesaling mechanics, deal-math terms, and CRM/pipeline terms. Andrea checks it out loud because recognizing these terms in the moment on a real call is different from recognizing them on a written quiz.",
+      learner_goal:
+        "Demonstrate accurate understanding of the core terms in your own words, not a memorized definition.",
       success_criteria: [
         "Correctly defines core property/seller-situation terms (distressed, off-market, MLS, DOM, FSBO)",
         "Explains the wholesaling mechanism (assignment of contract, assignment fee, and/or double close)",
@@ -460,8 +1022,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-03",
       scenarioId: "37ac4bc8-5f76-4cd4-9a96-37e6c3e36e7a",
-      context: "This lesson covers the daily tools -- Sandra, Closer Lab, and DialPad -- and why using them right (or working around them) matters before you start calling. Andrea checks it out loud because knowing you've got the map matters more than memorizing menus.",
-      learner_goal: "Demonstrate you understand what each tool is for and why it matters, in your own words.",
+      context:
+        "This lesson covers the daily tools -- Sandra, Closer Lab, and DialPad -- and why using them right (or working around them) matters before you start calling. Andrea checks it out loud because knowing you've got the map matters more than memorizing menus.",
+      learner_goal:
+        "Demonstrate you understand what each tool is for and why it matters, in your own words.",
       success_criteria: [
         "Explains why the tools matter (keeps the team organized, nothing falls through the cracks)",
         "Explains what Sandra does (the CRM -- leads, notes, deal stages, and tasks; the shared record)",
@@ -470,7 +1034,7 @@ const ORAL_CHECK_ROLE_PLAYS = {
       ],
       fail_conditions: [
         "Confuses or misstates what one of the core tools does",
-        "Cannot explain why the tools matter beyond \"I have to use them\"",
+        'Cannot explain why the tools matter beyond "I have to use them"',
         "Gives no grounded answer -- guesses or answers a different question",
       ],
     },
@@ -479,12 +1043,14 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-04",
       scenarioId: "0b3d9673-54b7-4ac5-a5e6-b907f6ec043d",
-      context: "This lesson is the heart of the course -- who's really behind each lead, the difference between a motivated seller and someone just curious, and recognizing who you can and can't help. Andrea checks it out loud because seeing the people, not the list, changes how every call goes.",
-      learner_goal: "Demonstrate you can recognize real seller situations, motivation, and fit, in your own words.",
+      context:
+        "This lesson is the heart of the course -- who's really behind each lead, the difference between a motivated seller and someone just curious, and recognizing who you can and can't help. Andrea checks it out loud because seeing the people, not the list, changes how every call goes.",
+      learner_goal:
+        "Demonstrate you can recognize real seller situations, motivation, and fit, in your own words.",
       success_criteria: [
         "Names three real seller situations that bring sellers to us (inherited property, foreclosure, tired landlord, rough house, divorce, out-of-state owner, etc.)",
         "Explains the difference between a motivated seller and someone just curious (a real reason plus a timeline vs. no urgency)",
-        "Recognizes motivation-signal language (phrases like \"I just need this off my plate\" or \"I'm behind on payments\")",
+        'Recognizes motivation-signal language (phrases like "I just need this off my plate" or "I\'m behind on payments")',
         "Recognizes who we can't help (already listed with a realtor, can't authorize the sale, no equity, commercial or vacant land)",
       ],
       fail_conditions: [
@@ -498,8 +1064,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-05",
       scenarioId: "fd3b4f85-2407-426b-a21b-db9d7163ebbb",
-      context: "This lesson covers the As-Is Cash Home Purchase offer, the four-step process, why sellers accept a below-market price, and how the offer number gets built. Andrea checks it out loud because explaining the offer to a real seller is different from reciting the script.",
-      learner_goal: "Demonstrate accurate understanding of the offer and why it works, in your own words.",
+      context:
+        "This lesson covers the As-Is Cash Home Purchase offer, the four-step process, why sellers accept a below-market price, and how the offer number gets built. Andrea checks it out loud because explaining the offer to a real seller is different from reciting the script.",
+      learner_goal:
+        "Demonstrate accurate understanding of the offer and why it works, in your own words.",
       success_criteria: [
         "Explains the core offer and the four-step process accurately",
         "Explains why sellers accept a below-market price (speed/certainty/simplicity/convenience trade-off)",
@@ -517,8 +1085,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-06",
       scenarioId: "345d2756-c1df-417f-ac00-8a4509f0a9c8",
-      context: "This lesson covers how deals move through the system, the handoff to acquisition, the 80/20 rule, and what actually counts as a lead moving forward. Andrea checks it out loud because understanding your part in the pipeline matters more than memorizing every stage name.",
-      learner_goal: "Demonstrate you understand how a deal moves and where you fit, in your own words.",
+      context:
+        "This lesson covers how deals move through the system, the handoff to acquisition, the 80/20 rule, and what actually counts as a lead moving forward. Andrea checks it out loud because understanding your part in the pipeline matters more than memorizing every stage name.",
+      learner_goal:
+        "Demonstrate you understand how a deal moves and where you fit, in your own words.",
       success_criteria: [
         "Knows the acquisition team receives the handoff after qualification",
         "Explains the 80/20 person-over-property rule and why (the house isn't the problem, the situation is)",
@@ -536,8 +1106,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-09",
       scenarioId: "c3642915-deab-4b3d-9479-0fc71afee9e6",
-      context: "This lesson covers why an objection is a good sign, the difference between a real objection and silence, venting, or a reactionary brush-off, and the listen-acknowledge-ask-redirect framework. Andrea checks it out loud with real seller moments -- a frustrated seller, a sudden silence, a price pushback -- because recognizing what's actually happening on the call matters more than reciting the framework.",
-      learner_goal: "Demonstrate you can recognize what's really happening when a seller pushes back and respond the right way, in your own words.",
+      context:
+        "This lesson covers why an objection is a good sign, the difference between a real objection and silence, venting, or a reactionary brush-off, and the listen-acknowledge-ask-redirect framework. Andrea checks it out loud with real seller moments -- a frustrated seller, a sudden silence, a price pushback -- because recognizing what's actually happening on the call matters more than reciting the framework.",
+      learner_goal:
+        "Demonstrate you can recognize what's really happening when a seller pushes back and respond the right way, in your own words.",
       success_criteria: [
         "Explains why an objection signals engagement, not rejection",
         "Recognizes venting for what it is and responds with empathy plus redirect",
@@ -555,8 +1127,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-10",
       scenarioId: "c164bec1-fb24-46c7-8790-7ea3bf2fb7fb",
-      context: "This lesson drills thirty real objection-to-comeback scripts. Andrea checks it out loud because the point was never memorizing all thirty -- it's the pattern: get the seller's number before giving ours, and use terms to close a gap cash alone can't. Andrea has the learner pick any drilled objection and deliver their own comeback.",
-      learner_goal: "Show the pattern behind the scripts, not a recitation of them, in your own words -- including one full comeback of your choosing.",
+      context:
+        "This lesson drills thirty real objection-to-comeback scripts. Andrea checks it out loud because the point was never memorizing all thirty -- it's the pattern: get the seller's number before giving ours, and use terms to close a gap cash alone can't. Andrea has the learner pick any drilled objection and deliver their own comeback.",
+      learner_goal:
+        "Show the pattern behind the scripts, not a recitation of them, in your own words -- including one full comeback of your choosing.",
       success_criteria: [
         "Understands the expectation is framework and reps, not memorized scripts",
         "Explains why we never give our number first",
@@ -574,8 +1148,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-12",
       scenarioId: "abb45d78-8cd6-4167-a567-b78dc1f4fc2e",
-      context: "This lesson covers answering sellers' plain questions like a person, not a script -- the scam concern, the price trade-off, repairs, and what happens after signing. Andrea plays the seller and checks it out loud because a warm, honest answer under real pressure is different from reciting the FAQ.",
-      learner_goal: "Answer a seller's plain questions warmly and honestly, in your own words.",
+      context:
+        "This lesson covers answering sellers' plain questions like a person, not a script -- the scam concern, the price trade-off, repairs, and what happens after signing. Andrea plays the seller and checks it out loud because a warm, honest answer under real pressure is different from reciting the FAQ.",
+      learner_goal:
+        "Answer a seller's plain questions warmly and honestly, in your own words.",
       success_criteria: [
         "Names the underlying concerns sellers usually have (trust, fairness, simplicity) in some form",
         "Handles the scam concern with warmth and real specifics (licensed title company, attorney can review everything, never pay us anything)",
@@ -593,8 +1169,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-14",
       scenarioId: "1f4414cb-4d6a-4209-a444-c5903c43cd1d",
-      context: "This lesson stitches the whole call together -- protecting the price anchor, handling a competing offer, painting the finish line, and exiting gracefully when the gap's too wide. Andrea throws real moments at you and checks the reasoning out loud, not a recited script.",
-      learner_goal: "Reason through real call moments and explain your move, in your own words.",
+      context:
+        "This lesson stitches the whole call together -- protecting the price anchor, handling a competing offer, painting the finish line, and exiting gracefully when the gap's too wide. Andrea throws real moments at you and checks the reasoning out loud, not a recited script.",
+      learner_goal:
+        "Reason through real call moments and explain your move, in your own words.",
       success_criteria: [
         "Protects the price anchor (learns the seller's number before giving ours)",
         "Answers a higher competing offer with a certainty comparison, not a bigger bid",
@@ -612,13 +1190,15 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-15",
       scenarioId: "e0eadd9b-3261-4470-b46e-da4e292ed3f1",
-      context: "This lesson covers the endgame -- why closing is easy when the earlier work was real, what happens after signing, and why deals fall apart. Andrea checks it out loud because seeing the endgame matters even though you don't present the offers yourself.",
-      learner_goal: "Demonstrate you understand why closings are won or lost weeks earlier, in your own words.",
+      context:
+        "This lesson covers the endgame -- why closing is easy when the earlier work was real, what happens after signing, and why deals fall apart. Andrea checks it out loud because seeing the endgame matters even though you don't present the offers yourself.",
+      learner_goal:
+        "Demonstrate you understand why closings are won or lost weeks earlier, in your own words.",
       success_criteria: [
         "Explains why closing is easy when the earlier work was real (the seller already trusts us and has basically decided)",
         "Describes roughly what happens after signing and the rep's support role (title, logistics, keeping a nervous seller calm)",
         "Names why deals fall apart (seller's remorse, an undiscovered decision-maker, title problems, a higher offer) and connects it to discovery",
-        "Responds to \"I was hoping for more\" with acknowledge-and-ask, not defensiveness",
+        'Responds to "I was hoping for more" with acknowledge-and-ask, not defensiveness',
       ],
       fail_conditions: [
         "Treats a signed contract as the finish line instead of the start of a process",
@@ -631,8 +1211,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-16",
       scenarioId: "7765693a-5f8a-4aa1-ac39-c21866624006",
-      context: "This lesson covers what a KPI is, the six pipeline metrics tracked left to right, and how to use that order to diagnose exactly where a funnel is breaking. Andrea checks it out loud because using the numbers to self-diagnose is different from reciting the list.",
-      learner_goal: "Demonstrate accurate understanding of the six metrics and how to read them, in your own words.",
+      context:
+        "This lesson covers what a KPI is, the six pipeline metrics tracked left to right, and how to use that order to diagnose exactly where a funnel is breaking. Andrea checks it out loud because using the numbers to self-diagnose is different from reciting the list.",
+      learner_goal:
+        "Demonstrate accurate understanding of the six metrics and how to read them, in your own words.",
       success_criteria: [
         "Names the six metrics in the correct left-to-right order",
         "Explains dial count as an effort indicator, not a strict goal (names the speed-dialing risk)",
@@ -650,8 +1232,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-17",
       scenarioId: "148bc0c0-e42d-4b57-983b-4fc012f8dcf2",
-      context: "This lesson is deliberately number-free -- how pay thinking works here and where the real answers live. Andrea checks it out loud because knowing WHERE to look matters more than memorizing a number that isn't yours.",
-      learner_goal: "Demonstrate you know where pay answers actually live and why plans differ by role, in your own words.",
+      context:
+        "This lesson is deliberately number-free -- how pay thinking works here and where the real answers live. Andrea checks it out loud because knowing WHERE to look matters more than memorizing a number that isn't yours.",
+      learner_goal:
+        "Demonstrate you know where pay answers actually live and why plans differ by role, in your own words.",
       success_criteria: [
         "Names the source of truth (your own written agreement and your manager) and rejects hallway sources like a teammate's plan",
         "Explains why pay isn't one formula for everyone (built around the value each role creates)",
@@ -668,8 +1252,10 @@ const ORAL_CHECK_ROLE_PLAYS = {
     {
       key: "slot-19",
       scenarioId: "dc7d2a81-8100-49c4-832a-d0e9e0e2effe",
-      context: "This is the last lesson of the course -- how people actually move up here. Andrea checks it out loud because knowing there's a real path, and what earns it, is the note she wants you to leave on.",
-      learner_goal: "Demonstrate you understand how promotion actually works here, in your own words.",
+      context:
+        "This is the last lesson of the course -- how people actually move up here. Andrea checks it out loud because knowing there's a real path, and what earns it, is the note she wants you to leave on.",
+      learner_goal:
+        "Demonstrate you understand how promotion actually works here, in your own words.",
       success_criteria: [
         "Explains promotion as demonstrated performance and readiness, not tenure (consistent numbers, clean CRM, handoffs that turn into closed deals)",
         "Describes the coachability loop (hear feedback, apply it, come back better) instead of getting defensive",
@@ -709,33 +1295,226 @@ export const QUIZ_SOURCE_FILE_NAMES = [
 const EXCLUDED_QUESTION_PATTERNS = {
   10: [/bringing the loan current helps rebuild/i],
   11: [/^What is a leaseback arrangement\?$/i],
-  16: [/target percentage/i, /drops below what percentage/i, /daily target range/i],
-  18: [/how many dials should you aim/i, /110 to 150 dials/i, /150 to 200 total dials/i],
+  16: [
+    /target percentage/i,
+    /drops below what percentage/i,
+    /daily target range/i,
+  ],
+  18: [
+    /how many dials should you aim/i,
+    /110 to 150 dials/i,
+    /150 to 200 total dials/i,
+  ],
 };
 
-function manualQuestion(questionText, options, correct, explanation, type = "single_choice") {
-  return { questionType: type === "multi_select" ? "MA" : "SA", questionText, explanation, choices: options.map((option, index) => `${correct.includes(index) ? "*" : ""}${option}`) };
+function manualQuestion(
+  questionText,
+  options,
+  correct,
+  explanation,
+  type = "single_choice",
+) {
+  return {
+    questionType: type === "multi_select" ? "MA" : "SA",
+    questionText,
+    explanation,
+    choices: options.map(
+      (option, index) => `${correct.includes(index) ? "*" : ""}${option}`,
+    ),
+  };
 }
 
 const COMPENSATION_QUESTIONS = [
-  manualQuestion("What is the source of truth for your current compensation plan?", ["Your current written agreement", "This training lesson", "A coworker's plan", "An old example"], [0], "Your current offer letter, compensation plan, or role-specific sheet controls."),
-  manualQuestion("Why does the lesson avoid one universal compensation formula?", ["Different roles own different outcomes", "The company does not measure performance", "Every employee chooses a formula", "Managers cannot explain plans"], [0], "Compensation is designed around the value and outcomes assigned to each role."),
-  manualQuestion("Which documents may contain the current written plan?", ["Offer letter", "Current compensation plan", "Role-specific sheet", "A teammate's notes"], [0, 1, 2], "Use the current written documents issued for your role.", "multi_select"),
-  manualQuestion("If your written plan and a training example appear different, which one applies?", ["The current written plan", "The training example", "Whichever pays more", "A coworker's memory"], [0], "Training explains the engine. The current written plan defines what applies to you."),
-  manualQuestion("Where should you take a question about what applies to your role?", ["Your manager and current written plan", "A public forum", "A former employee", "Another department's plan"], [0], "Your manager and your current written plan are the two approved sources."),
-  manualQuestion("Which outcomes might a role be responsible for creating?", ["Qualified conversations", "Clean handoffs", "Operational accuracy", "Team performance"], [0, 1, 2, 3], "Role scorecards can focus on different outcomes across the business.", "multi_select"),
-  manualQuestion("What should you understand instead of memorizing example numbers?", ["What your role owns and how success is measured", "What another role earns", "A formula from an old video", "An informal promise"], [0], "The durable lesson is to understand the role, its scorecard, and the current written plan."),
-  manualQuestion("A role scorecard can change as the business changes.", ["True", "False"], [0], "The company may update which outcomes matter and how performance is measured.", "true_false"),
-  manualQuestion("Which behaviors make role performance visible?", ["Clean notes", "Following the process", "Consistent work", "Hiding incomplete tasks"], [0, 1, 2], "Clear records and consistent process make the work observable.", "multi_select"),
-  manualQuestion("What three things does the compensation engine ask you to know?", ["What your role owns", "How success is measured now", "How to work consistently and visibly", "What every other role owns"], [0, 1, 2], "The engine connects role ownership, current measurement, and consistent visible execution.", "multi_select"),
-  manualQuestion("Why should you not rely on someone else's plan?", ["It may apply to a different role or period", "All written plans are optional", "Coworkers cannot discuss work", "Training replaces all plans"], [0], "Another person's terms may be different and are not your agreement."),
-  manualQuestion("What should you do after moving into a different role?", ["Confirm the current written plan and scorecard", "Keep using the former role's plan", "Use a teammate's plan", "Assume nothing changed"], [0], "A role change can change both owned outcomes and the applicable written plan."),
-  manualQuestion("The training lesson overrides your current written agreement.", ["True", "False"], [1], "The lesson explicitly says the current written agreement is the source of truth.", "true_false"),
-  manualQuestion("How should compensation be viewed according to the lesson?", ["As a role-specific scoreboard", "As an unwritten mystery", "As the same formula for everyone", "As a promise made by training"], [0], "Your role identifies the game and your written plan explains how it is scored."),
-  manualQuestion("Which action is appropriate when part of the plan is unclear?", ["Ask your manager for clarification", "Guess from past examples", "Copy another person's plan", "Wait until a dispute occurs"], [0], "Clarify uncertainty before relying on an assumption."),
-  manualQuestion("Some plans may be more fixed while others may be more performance-based.", ["True", "False"], [0], "The structure depends on the responsibilities of the role.", "true_false"),
-  manualQuestion("Which item is not a reliable compensation source?", ["An informal hallway conversation", "Your current offer letter", "Your current written plan", "Your current role sheet"], [0], "Informal conversations do not replace the written terms for your role."),
-  manualQuestion("What is your responsibility within the compensation engine?", ["Understand your role, follow the current scorecard, and make work visible", "Set your own terms", "Memorize another role's examples", "Treat training as a written agreement"], [0], "Professional execution starts with the current role, scorecard, and written plan."),
+  manualQuestion(
+    "What is the source of truth for your current compensation plan?",
+    [
+      "Your current written agreement",
+      "This training lesson",
+      "A coworker's plan",
+      "An old example",
+    ],
+    [0],
+    "Your current offer letter, compensation plan, or role-specific sheet controls.",
+  ),
+  manualQuestion(
+    "Why does the lesson avoid one universal compensation formula?",
+    [
+      "Different roles own different outcomes",
+      "The company does not measure performance",
+      "Every employee chooses a formula",
+      "Managers cannot explain plans",
+    ],
+    [0],
+    "Compensation is designed around the value and outcomes assigned to each role.",
+  ),
+  manualQuestion(
+    "Which documents may contain the current written plan?",
+    [
+      "Offer letter",
+      "Current compensation plan",
+      "Role-specific sheet",
+      "A teammate's notes",
+    ],
+    [0, 1, 2],
+    "Use the current written documents issued for your role.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "If your written plan and a training example appear different, which one applies?",
+    [
+      "The current written plan",
+      "The training example",
+      "Whichever pays more",
+      "A coworker's memory",
+    ],
+    [0],
+    "Training explains the engine. The current written plan defines what applies to you.",
+  ),
+  manualQuestion(
+    "Where should you take a question about what applies to your role?",
+    [
+      "Your manager and current written plan",
+      "A public forum",
+      "A former employee",
+      "Another department's plan",
+    ],
+    [0],
+    "Your manager and your current written plan are the two approved sources.",
+  ),
+  manualQuestion(
+    "Which outcomes might a role be responsible for creating?",
+    [
+      "Qualified conversations",
+      "Clean handoffs",
+      "Operational accuracy",
+      "Team performance",
+    ],
+    [0, 1, 2, 3],
+    "Role scorecards can focus on different outcomes across the business.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "What should you understand instead of memorizing example numbers?",
+    [
+      "What your role owns and how success is measured",
+      "What another role earns",
+      "A formula from an old video",
+      "An informal promise",
+    ],
+    [0],
+    "The durable lesson is to understand the role, its scorecard, and the current written plan.",
+  ),
+  manualQuestion(
+    "A role scorecard can change as the business changes.",
+    ["True", "False"],
+    [0],
+    "The company may update which outcomes matter and how performance is measured.",
+    "true_false",
+  ),
+  manualQuestion(
+    "Which behaviors make role performance visible?",
+    [
+      "Clean notes",
+      "Following the process",
+      "Consistent work",
+      "Hiding incomplete tasks",
+    ],
+    [0, 1, 2],
+    "Clear records and consistent process make the work observable.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "What three things does the compensation engine ask you to know?",
+    [
+      "What your role owns",
+      "How success is measured now",
+      "How to work consistently and visibly",
+      "What every other role owns",
+    ],
+    [0, 1, 2],
+    "The engine connects role ownership, current measurement, and consistent visible execution.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "Why should you not rely on someone else's plan?",
+    [
+      "It may apply to a different role or period",
+      "All written plans are optional",
+      "Coworkers cannot discuss work",
+      "Training replaces all plans",
+    ],
+    [0],
+    "Another person's terms may be different and are not your agreement.",
+  ),
+  manualQuestion(
+    "What should you do after moving into a different role?",
+    [
+      "Confirm the current written plan and scorecard",
+      "Keep using the former role's plan",
+      "Use a teammate's plan",
+      "Assume nothing changed",
+    ],
+    [0],
+    "A role change can change both owned outcomes and the applicable written plan.",
+  ),
+  manualQuestion(
+    "The training lesson overrides your current written agreement.",
+    ["True", "False"],
+    [1],
+    "The lesson explicitly says the current written agreement is the source of truth.",
+    "true_false",
+  ),
+  manualQuestion(
+    "How should compensation be viewed according to the lesson?",
+    [
+      "As a role-specific scoreboard",
+      "As an unwritten mystery",
+      "As the same formula for everyone",
+      "As a promise made by training",
+    ],
+    [0],
+    "Your role identifies the game and your written plan explains how it is scored.",
+  ),
+  manualQuestion(
+    "Which action is appropriate when part of the plan is unclear?",
+    [
+      "Ask your manager for clarification",
+      "Guess from past examples",
+      "Copy another person's plan",
+      "Wait until a dispute occurs",
+    ],
+    [0],
+    "Clarify uncertainty before relying on an assumption.",
+  ),
+  manualQuestion(
+    "Some plans may be more fixed while others may be more performance-based.",
+    ["True", "False"],
+    [0],
+    "The structure depends on the responsibilities of the role.",
+    "true_false",
+  ),
+  manualQuestion(
+    "Which item is not a reliable compensation source?",
+    [
+      "An informal hallway conversation",
+      "Your current offer letter",
+      "Your current written plan",
+      "Your current role sheet",
+    ],
+    [0],
+    "Informal conversations do not replace the written terms for your role.",
+  ),
+  manualQuestion(
+    "What is your responsibility within the compensation engine?",
+    [
+      "Understand your role, follow the current scorecard, and make work visible",
+      "Set your own terms",
+      "Memorize another role's examples",
+      "Treat training as a written agreement",
+    ],
+    [0],
+    "Professional execution starts with the current role, scorecard, and written plan.",
+  ),
 ];
 
 const KPI_POLICY_SAFE_REPLACEMENTS = new Map([
@@ -770,24 +1549,196 @@ const KPI_POLICY_SAFE_REPLACEMENTS = new Map([
 ]);
 
 const CAREER_GROWTH_QUESTIONS = [
-  manualQuestion("What is the practical focus of career growth in this lesson?", ["Strengthening capability in your current role", "Choosing a new title for yourself", "Taking over a coworker's duties", "Waiting for expectations to change"], [0], "Career growth starts by building capability in the work assigned to your current role."),
-  manualQuestion("Which actions belong in a deliberate development loop?", ["Practice a relevant skill", "Ask for specific feedback", "Apply the feedback", "Review the result", "Change your expectations without approval", "Copy another person's role plan"], [0, 1, 2, 3], "A useful practice loop combines practice, feedback, application, and review.", "multi_select"),
-  manualQuestion("Feedback is useful only when it confirms that your current approach is already correct.", ["True", "False"], [1], "Feedback is useful because it can reveal a skill or process gap to practice."),
-  manualQuestion("What should you do when feedback is unclear?", ["Ask a clarifying question before applying it", "Guess what the manager meant", "Ignore it until it is repeated", "Use a coworker's expectations instead"], [0], "Coachability includes clarifying feedback so you can apply it accurately."),
-  manualQuestion("Which behaviors demonstrate coachability?", ["Listen without becoming defensive", "Confirm the action to practice", "Apply the feedback in the work", "Return with evidence of the change", "Explain why the old approach should never change", "Wait for someone else to fix the gap"], [0, 1, 2, 3], "Coachability is visible when feedback is heard, clarified, practiced, and reflected in changed work.", "multi_select"),
-  manualQuestion("What is the source of truth for your current responsibilities?", ["Your current written role plan and manager", "An older training example", "A coworker's task list", "An informal assumption"], [0], "Your manager and current written role plan define current role expectations."),
-  manualQuestion("A new responsibility is mentioned informally. What should happen before you treat it as assigned ownership?", ["Confirm it with your manager and have it documented in the current written role plan", "Add it to your role without discussion", "Trade duties with a coworker", "Wait for a training example"], [0], "Increased ownership applies only when your manager confirms it and the current written role plan documents it."),
-  manualQuestion("Completing this training automatically changes your assigned responsibilities.", ["True", "False"], [1], "Training builds capability; only manager-confirmed, documented role expectations change assigned ownership."),
-  manualQuestion("A coworker's duties differ from yours. Which expectations should guide your work?", ["Your current written role plan, clarified with your manager", "The coworker's duties", "Whichever tasks seem more advanced", "A previous employee's routine"], [0], "Current role expectations come from your own written role plan and manager, not another person's duties."),
-  manualQuestion("What does capability mean in this lesson?", ["Using knowledge and skills reliably in current work", "Knowing the names of future job titles", "Taking on unassigned work", "Avoiding feedback once trained"], [0], "Capability is the reliable application of relevant knowledge and skills in your current role."),
-  manualQuestion("Which actions make growing capability visible?", ["Practice relevant skills", "Perform current responsibilities consistently", "Keep the work record clean", "Apply specific feedback", "Claim unassigned ownership", "Rely on memory instead of the role plan"], [0, 1, 2, 3], "Practice, consistent execution, clean records, and applied feedback make capability visible.", "multi_select"),
-  manualQuestion("When should you take on increased ownership?", ["After your manager confirms it and the current written role plan documents it", "As soon as you feel ready", "When a coworker suggests it", "After finishing any course"], [0], "Increased ownership must be manager-confirmed and documented in the current written role plan."),
-  manualQuestion("Every employee follows the same fixed development timeline.", ["True", "False"], [1], "The lesson gives no fixed timeline; use current role expectations and manager feedback to guide development."),
-  manualQuestion("Which topics belong in a development discussion with your manager?", ["Current role expectations", "A capability to practice", "Recent feedback to apply", "Any proposed ownership that needs documentation", "Another person's role terms", "An assumed change in duties"], [0, 1, 2, 3], "A grounded development discussion connects current expectations, practice, feedback, and documented ownership.", "multi_select"),
-  manualQuestion("An old training example conflicts with your current role plan. What should guide you?", ["The current written role plan and manager direction", "The older example", "A teammate's memory", "The option with more responsibility"], [0], "The current written role plan and manager direction are the source of truth for current expectations."),
-  manualQuestion("Why can deliberate practice still be useful when it feels repetitive?", ["Repetition helps turn a skill into reliable capability", "Repetition changes assigned ownership", "Repetition replaces manager feedback", "Repetition makes documentation unnecessary"], [0], "Deliberate repetition helps a relevant skill become reliable capability in current work."),
-  manualQuestion("Which response is least coachable after a gap is identified?", ["Defend the old approach and ignore the gap", "Clarify the expected change", "Practice the corrected approach", "Follow up with evidence of improvement"], [0], "Coachability requires engaging with feedback and practicing the correction rather than dismissing the gap."),
-  manualQuestion("Professional development in this lesson means applying practice and feedback to become more capable in your current role.", ["True", "False"], [0], "The lesson defines development as practice, applied feedback, and reliable capability within current role expectations."),
+  manualQuestion(
+    "What is the practical focus of career growth in this lesson?",
+    [
+      "Strengthening capability in your current role",
+      "Choosing a new title for yourself",
+      "Taking over a coworker's duties",
+      "Waiting for expectations to change",
+    ],
+    [0],
+    "Career growth starts by building capability in the work assigned to your current role.",
+  ),
+  manualQuestion(
+    "Which actions belong in a deliberate development loop?",
+    [
+      "Practice a relevant skill",
+      "Ask for specific feedback",
+      "Apply the feedback",
+      "Review the result",
+      "Change your expectations without approval",
+      "Copy another person's role plan",
+    ],
+    [0, 1, 2, 3],
+    "A useful practice loop combines practice, feedback, application, and review.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "Feedback is useful only when it confirms that your current approach is already correct.",
+    ["True", "False"],
+    [1],
+    "Feedback is useful because it can reveal a skill or process gap to practice.",
+  ),
+  manualQuestion(
+    "What should you do when feedback is unclear?",
+    [
+      "Ask a clarifying question before applying it",
+      "Guess what the manager meant",
+      "Ignore it until it is repeated",
+      "Use a coworker's expectations instead",
+    ],
+    [0],
+    "Coachability includes clarifying feedback so you can apply it accurately.",
+  ),
+  manualQuestion(
+    "Which behaviors demonstrate coachability?",
+    [
+      "Listen without becoming defensive",
+      "Confirm the action to practice",
+      "Apply the feedback in the work",
+      "Return with evidence of the change",
+      "Explain why the old approach should never change",
+      "Wait for someone else to fix the gap",
+    ],
+    [0, 1, 2, 3],
+    "Coachability is visible when feedback is heard, clarified, practiced, and reflected in changed work.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "What is the source of truth for your current responsibilities?",
+    [
+      "Your current written role plan and manager",
+      "An older training example",
+      "A coworker's task list",
+      "An informal assumption",
+    ],
+    [0],
+    "Your manager and current written role plan define current role expectations.",
+  ),
+  manualQuestion(
+    "A new responsibility is mentioned informally. What should happen before you treat it as assigned ownership?",
+    [
+      "Confirm it with your manager and have it documented in the current written role plan",
+      "Add it to your role without discussion",
+      "Trade duties with a coworker",
+      "Wait for a training example",
+    ],
+    [0],
+    "Increased ownership applies only when your manager confirms it and the current written role plan documents it.",
+  ),
+  manualQuestion(
+    "Completing this training automatically changes your assigned responsibilities.",
+    ["True", "False"],
+    [1],
+    "Training builds capability; only manager-confirmed, documented role expectations change assigned ownership.",
+  ),
+  manualQuestion(
+    "A coworker's duties differ from yours. Which expectations should guide your work?",
+    [
+      "Your current written role plan, clarified with your manager",
+      "The coworker's duties",
+      "Whichever tasks seem more advanced",
+      "A previous employee's routine",
+    ],
+    [0],
+    "Current role expectations come from your own written role plan and manager, not another person's duties.",
+  ),
+  manualQuestion(
+    "What does capability mean in this lesson?",
+    [
+      "Using knowledge and skills reliably in current work",
+      "Knowing the names of future job titles",
+      "Taking on unassigned work",
+      "Avoiding feedback once trained",
+    ],
+    [0],
+    "Capability is the reliable application of relevant knowledge and skills in your current role.",
+  ),
+  manualQuestion(
+    "Which actions make growing capability visible?",
+    [
+      "Practice relevant skills",
+      "Perform current responsibilities consistently",
+      "Keep the work record clean",
+      "Apply specific feedback",
+      "Claim unassigned ownership",
+      "Rely on memory instead of the role plan",
+    ],
+    [0, 1, 2, 3],
+    "Practice, consistent execution, clean records, and applied feedback make capability visible.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "When should you take on increased ownership?",
+    [
+      "After your manager confirms it and the current written role plan documents it",
+      "As soon as you feel ready",
+      "When a coworker suggests it",
+      "After finishing any course",
+    ],
+    [0],
+    "Increased ownership must be manager-confirmed and documented in the current written role plan.",
+  ),
+  manualQuestion(
+    "Every employee follows the same fixed development timeline.",
+    ["True", "False"],
+    [1],
+    "The lesson gives no fixed timeline; use current role expectations and manager feedback to guide development.",
+  ),
+  manualQuestion(
+    "Which topics belong in a development discussion with your manager?",
+    [
+      "Current role expectations",
+      "A capability to practice",
+      "Recent feedback to apply",
+      "Any proposed ownership that needs documentation",
+      "Another person's role terms",
+      "An assumed change in duties",
+    ],
+    [0, 1, 2, 3],
+    "A grounded development discussion connects current expectations, practice, feedback, and documented ownership.",
+    "multi_select",
+  ),
+  manualQuestion(
+    "An old training example conflicts with your current role plan. What should guide you?",
+    [
+      "The current written role plan and manager direction",
+      "The older example",
+      "A teammate's memory",
+      "The option with more responsibility",
+    ],
+    [0],
+    "The current written role plan and manager direction are the source of truth for current expectations.",
+  ),
+  manualQuestion(
+    "Why can deliberate practice still be useful when it feels repetitive?",
+    [
+      "Repetition helps turn a skill into reliable capability",
+      "Repetition changes assigned ownership",
+      "Repetition replaces manager feedback",
+      "Repetition makes documentation unnecessary",
+    ],
+    [0],
+    "Deliberate repetition helps a relevant skill become reliable capability in current work.",
+  ),
+  manualQuestion(
+    "Which response is least coachable after a gap is identified?",
+    [
+      "Defend the old approach and ignore the gap",
+      "Clarify the expected change",
+      "Practice the corrected approach",
+      "Follow up with evidence of improvement",
+    ],
+    [0],
+    "Coachability requires engaging with feedback and practicing the correction rather than dismissing the gap.",
+  ),
+  manualQuestion(
+    "Professional development in this lesson means applying practice and feedback to become more capable in your current role.",
+    ["True", "False"],
+    [0],
+    "The lesson defines development as practice, applied feedback, and reliable capability within current role expectations.",
+  ),
 ];
 
 async function sha256(filePath) {
@@ -806,24 +1757,31 @@ function isRecord(value) {
 
 function artworkLedgerRecords(ledger) {
   if (!isRecord(ledger) || ledger.schema_version !== ARTWORK_LEDGER_SCHEMA) {
-    throw new Error(`Artwork ledger schema_version must be ${ARTWORK_LEDGER_SCHEMA}`);
+    throw new Error(
+      `Artwork ledger schema_version must be ${ARTWORK_LEDGER_SCHEMA}`,
+    );
   }
   if (Array.isArray(ledger.assets)) return ledger.assets;
   if (isRecord(ledger.assets)) {
     return Object.entries(ledger.assets).map(([manifestPath, value]) => {
       if (!isRecord(value)) return value;
-      if (value.manifest_path !== undefined && value.manifest_path !== manifestPath) {
-        throw new Error(`Artwork ledger key ${manifestPath} conflicts with manifest_path`);
+      if (
+        value.manifest_path !== undefined &&
+        value.manifest_path !== manifestPath
+      ) {
+        throw new Error(
+          `Artwork ledger key ${manifestPath} conflicts with manifest_path`,
+        );
       }
       return { ...value, manifest_path: manifestPath };
     });
   }
-  throw new Error("Artwork ledger assets must be an array or manifest_path-keyed object");
+  throw new Error(
+    "Artwork ledger assets must be an array or manifest_path-keyed object",
+  );
 }
 
-export async function loadArtworkLedger(
-  ledgerPath = ARTWORK_LEDGER_PATH,
-) {
+export async function loadArtworkLedger(ledgerPath = ARTWORK_LEDGER_PATH) {
   let raw;
   try {
     raw = await readFile(ledgerPath, "utf8");
@@ -835,7 +1793,9 @@ export async function loadArtworkLedger(
   try {
     parsed = JSON.parse(raw);
   } catch (error) {
-    throw new Error(`Artwork ledger is not valid JSON: ${ledgerPath}`, { cause: error });
+    throw new Error(`Artwork ledger is not valid JSON: ${ledgerPath}`, {
+      cause: error,
+    });
   }
   artworkLedgerRecords(parsed);
   return parsed;
@@ -843,7 +1803,8 @@ export async function loadArtworkLedger(
 
 function checksumAddressedStoragePath(storagePath, checksum) {
   const extension = path.posix.extname(storagePath);
-  if (!extension) throw new Error(`Artwork storage path has no extension: ${storagePath}`);
+  if (!extension)
+    throw new Error(`Artwork storage path has no extension: ${storagePath}`);
   return `${storagePath.slice(0, -extension.length)}-${checksum}${extension}`;
 }
 
@@ -869,14 +1830,19 @@ function webpDimensions(contents, label) {
         contents.readUIntLE(dataOffset + 7, 3) + 1,
       ];
     }
-    if (chunkType === "VP8L" && chunkSize >= 5 && contents[dataOffset] === 0x2f) {
+    if (
+      chunkType === "VP8L" &&
+      chunkSize >= 5 &&
+      contents[dataOffset] === 0x2f
+    ) {
       const bits = contents.readUInt32LE(dataOffset + 1);
       return [(bits & 0x3fff) + 1, ((bits >>> 14) & 0x3fff) + 1];
     }
     if (
       chunkType === "VP8 " &&
       chunkSize >= 10 &&
-      contents.subarray(dataOffset + 3, dataOffset + 6).toString("hex") === "9d012a"
+      contents.subarray(dataOffset + 3, dataOffset + 6).toString("hex") ===
+        "9d012a"
     ) {
       return [
         contents.readUInt16LE(dataOffset + 6) & 0x3fff,
@@ -890,7 +1856,9 @@ function webpDimensions(contents, label) {
 
 function validateLedgerProvenance(provenance, manifestPath) {
   if (!isRecord(provenance)) {
-    throw new Error(`Approved artwork ${manifestPath} requires workflow provenance`);
+    throw new Error(
+      `Approved artwork ${manifestPath} requires workflow provenance`,
+    );
   }
   const requiredStrings = [
     "master_id",
@@ -906,12 +1874,19 @@ function validateLedgerProvenance(provenance, manifestPath) {
     "review_evidence_sha256",
   ];
   for (const field of requiredStrings) {
-    if (typeof provenance[field] !== "string" || provenance[field].trim().length === 0) {
-      throw new Error(`Approved artwork ${manifestPath} provenance ${field} is required`);
+    if (
+      typeof provenance[field] !== "string" ||
+      provenance[field].trim().length === 0
+    ) {
+      throw new Error(
+        `Approved artwork ${manifestPath} provenance ${field} is required`,
+      );
     }
   }
   if (provenance.master_id !== provenance.source_master_id) {
-    throw new Error(`Approved artwork ${manifestPath} provenance master mapping is inconsistent`);
+    throw new Error(
+      `Approved artwork ${manifestPath} provenance master mapping is inconsistent`,
+    );
   }
   for (const field of [
     "prompt_sha256",
@@ -921,59 +1896,88 @@ function validateLedgerProvenance(provenance, manifestPath) {
     "review_evidence_sha256",
   ]) {
     if (!SHA256_PATTERN.test(provenance[field])) {
-      throw new Error(`Approved artwork ${manifestPath} provenance ${field} is invalid`);
+      throw new Error(
+        `Approved artwork ${manifestPath} provenance ${field} is invalid`,
+      );
     }
   }
   if (
     !Array.isArray(provenance.reference_ids) ||
     provenance.reference_ids.length === 0 ||
-    !provenance.reference_ids.every((value) => typeof value === "string" && value.length > 0)
+    !provenance.reference_ids.every(
+      (value) => typeof value === "string" && value.length > 0,
+    )
   ) {
-    throw new Error(`Approved artwork ${manifestPath} provenance reference_ids are required`);
+    throw new Error(
+      `Approved artwork ${manifestPath} provenance reference_ids are required`,
+    );
   }
   if (
     !Array.isArray(provenance.reference_inputs) ||
     provenance.reference_inputs.length === 0 ||
-    !provenance.reference_inputs.every((reference) =>
-      isRecord(reference) &&
-      typeof reference.id === "string" && reference.id.length > 0 &&
-      typeof reference.role === "string" && reference.role.length > 0 &&
-      typeof reference.path === "string" && reference.path.length > 0 &&
-      SHA256_PATTERN.test(reference.sha256 ?? ""))
+    !provenance.reference_inputs.every(
+      (reference) =>
+        isRecord(reference) &&
+        typeof reference.id === "string" &&
+        reference.id.length > 0 &&
+        typeof reference.role === "string" &&
+        reference.role.length > 0 &&
+        typeof reference.path === "string" &&
+        reference.path.length > 0 &&
+        SHA256_PATTERN.test(reference.sha256 ?? ""),
+    )
   ) {
-    throw new Error(`Approved artwork ${manifestPath} provenance reference_inputs are invalid`);
+    throw new Error(
+      `Approved artwork ${manifestPath} provenance reference_inputs are invalid`,
+    );
   }
   if (
     JSON.stringify(provenance.reference_ids) !==
     JSON.stringify(provenance.reference_inputs.map((reference) => reference.id))
   ) {
-    throw new Error(`Approved artwork ${manifestPath} provenance reference mapping is inconsistent`);
+    throw new Error(
+      `Approved artwork ${manifestPath} provenance reference mapping is inconsistent`,
+    );
   }
-  if (!Number.isSafeInteger(provenance.lineage_steps) || provenance.lineage_steps <= 0) {
-    throw new Error(`Approved artwork ${manifestPath} provenance lineage_steps is invalid`);
+  if (
+    !Number.isSafeInteger(provenance.lineage_steps) ||
+    provenance.lineage_steps <= 0
+  ) {
+    throw new Error(
+      `Approved artwork ${manifestPath} provenance lineage_steps is invalid`,
+    );
   }
   if (
     !ISO_TIMESTAMP_PATTERN.test(provenance.reviewed_at) ||
     !Number.isFinite(Date.parse(provenance.reviewed_at))
   ) {
-    throw new Error(`Approved artwork ${manifestPath} provenance reviewed_at is invalid`);
+    throw new Error(
+      `Approved artwork ${manifestPath} provenance reviewed_at is invalid`,
+    );
   }
   if (
     provenance.promoted_pilot_sha256 !== undefined &&
     !SHA256_PATTERN.test(provenance.promoted_pilot_sha256)
   ) {
-    throw new Error(`Approved artwork ${manifestPath} promoted pilot checksum is invalid`);
+    throw new Error(
+      `Approved artwork ${manifestPath} promoted pilot checksum is invalid`,
+    );
   }
 }
 
 function expectedArtworkDimensions(asset) {
   if (asset.local_path.startsWith("course-assets/posters/")) return [1280, 720];
-  if (asset.local_path.startsWith("course-assets/thumbnails/")) return [1280, 800];
-  throw new Error(`Artwork asset is outside the production inventory paths: ${asset.local_path}`);
+  if (asset.local_path.startsWith("course-assets/thumbnails/"))
+    return [1280, 800];
+  throw new Error(
+    `Artwork asset is outside the production inventory paths: ${asset.local_path}`,
+  );
 }
 
 function validateFinalizedArtworkLedger(ledger, records, expectedAssetCount) {
-  const approved = records.filter((record) => record?.approval_status === "approved");
+  const approved = records.filter(
+    (record) => record?.approval_status === "approved",
+  );
   if (approved.length === 0) return;
   if (
     ledger.status !== "finalized" ||
@@ -1004,7 +2008,10 @@ function validateFinalizedArtworkLedger(ledger, records, expectedAssetCount) {
 
 async function approvedArtworkAsset(asset, record, repoRoot) {
   const manifestPath = record.manifest_path;
-  if (record.output_path !== manifestPath || manifestPath !== asset.local_path) {
+  if (
+    record.output_path !== manifestPath ||
+    manifestPath !== asset.local_path
+  ) {
     throw new Error(`Approved artwork path mismatch for ${manifestPath}`);
   }
   if (
@@ -1014,23 +2021,33 @@ async function approvedArtworkAsset(asset, record, repoRoot) {
     throw new Error(`Approved artwork source key mismatch for ${manifestPath}`);
   }
   if (!SHA256_PATTERN.test(record.checksum_sha256 ?? "")) {
-    throw new Error(`Approved artwork ${manifestPath} requires a lowercase SHA-256`);
+    throw new Error(
+      `Approved artwork ${manifestPath} requires a lowercase SHA-256`,
+    );
   }
   if (!Number.isSafeInteger(record.size_bytes) || record.size_bytes <= 0) {
-    throw new Error(`Approved artwork ${manifestPath} requires a positive size_bytes`);
+    throw new Error(
+      `Approved artwork ${manifestPath} requires a positive size_bytes`,
+    );
   }
   if (
     !Array.isArray(record.dimensions) ||
     record.dimensions.length !== 2 ||
-    !record.dimensions.every((value) => Number.isSafeInteger(value) && value > 0)
+    !record.dimensions.every(
+      (value) => Number.isSafeInteger(value) && value > 0,
+    )
   ) {
-    throw new Error(`Approved artwork ${manifestPath} requires positive integer dimensions`);
+    throw new Error(
+      `Approved artwork ${manifestPath} requires positive integer dimensions`,
+    );
   }
   if (
     JSON.stringify(record.dimensions) !==
     JSON.stringify(expectedArtworkDimensions(asset))
   ) {
-    throw new Error(`Approved artwork dimensions violate the production inventory for ${manifestPath}`);
+    throw new Error(
+      `Approved artwork dimensions violate the production inventory for ${manifestPath}`,
+    );
   }
   validateLedgerProvenance(record.provenance, manifestPath);
   const expectedKind = asset.local_path.startsWith("course-assets/posters/")
@@ -1042,28 +2059,40 @@ async function approvedArtworkAsset(asset, record, repoRoot) {
     throw new Error(`Approved artwork kind mismatch for ${manifestPath}`);
   }
   if (!SHA256_PATTERN.test(record.pixel_sha256 ?? "")) {
-    throw new Error(`Approved artwork ${manifestPath} requires a decoded pixel SHA-256`);
+    throw new Error(
+      `Approved artwork ${manifestPath} requires a decoded pixel SHA-256`,
+    );
   }
   if (
     !isRecord(record.derivative) ||
     !isRecord(record.derivative.recipe) ||
     record.derivative.source_master_id !== record.provenance.source_master_id ||
-    record.derivative.recipe.source_master_id !== record.provenance.source_master_id ||
+    record.derivative.recipe.source_master_id !==
+      record.provenance.source_master_id ||
     record.derivative.recipe.id !== record.provenance.derivative_recipe_id ||
     record.derivative.recipe.kind !== record.kind ||
     !SHA256_PATTERN.test(record.derivative.recipe_sha256 ?? "") ||
-    record.derivative.recipe_sha256 !== record.provenance.derivative_recipe_sha256 ||
-    record.derivative.recipe_sha256 !== createHash("sha256")
-      .update(JSON.stringify(record.derivative.recipe))
-      .digest("hex")
+    record.derivative.recipe_sha256 !==
+      record.provenance.derivative_recipe_sha256 ||
+    record.derivative.recipe_sha256 !==
+      createHash("sha256")
+        .update(JSON.stringify(record.derivative.recipe))
+        .digest("hex")
   ) {
-    throw new Error(`Approved artwork derivative provenance mismatch for ${manifestPath}`);
+    throw new Error(
+      `Approved artwork derivative provenance mismatch for ${manifestPath}`,
+    );
   }
 
   const absoluteRoot = await realpath(repoRoot);
   const candidate = path.resolve(absoluteRoot, manifestPath);
-  if (candidate === absoluteRoot || !candidate.startsWith(`${absoluteRoot}${path.sep}`)) {
-    throw new Error(`Approved artwork path escapes the repository: ${manifestPath}`);
+  if (
+    candidate === absoluteRoot ||
+    !candidate.startsWith(`${absoluteRoot}${path.sep}`)
+  ) {
+    throw new Error(
+      `Approved artwork path escapes the repository: ${manifestPath}`,
+    );
   }
   const fileInfo = await lstat(candidate);
   if (!fileInfo.isFile() || fileInfo.isSymbolicLink()) {
@@ -1071,12 +2100,19 @@ async function approvedArtworkAsset(asset, record, repoRoot) {
   }
   const resolvedCandidate = await realpath(candidate);
   if (!resolvedCandidate.startsWith(`${absoluteRoot}${path.sep}`)) {
-    throw new Error(`Approved artwork resolves outside the repository: ${manifestPath}`);
+    throw new Error(
+      `Approved artwork resolves outside the repository: ${manifestPath}`,
+    );
   }
   const contents = await readFile(resolvedCandidate);
   const actualChecksum = createHash("sha256").update(contents).digest("hex");
-  if (actualChecksum !== record.checksum_sha256 || contents.length !== record.size_bytes) {
-    throw new Error(`Approved artwork checksum or size mismatch for ${manifestPath}`);
+  if (
+    actualChecksum !== record.checksum_sha256 ||
+    contents.length !== record.size_bytes
+  ) {
+    throw new Error(
+      `Approved artwork checksum or size mismatch for ${manifestPath}`,
+    );
   }
   const actualDimensions = webpDimensions(contents, manifestPath);
   if (JSON.stringify(actualDimensions) !== JSON.stringify(record.dimensions)) {
@@ -1087,8 +2123,13 @@ async function approvedArtworkAsset(asset, record, repoRoot) {
     asset.storage_path,
     record.checksum_sha256,
   );
-  if (record.storage_path !== undefined && record.storage_path !== storagePath) {
-    throw new Error(`Approved artwork storage path mismatch for ${manifestPath}`);
+  if (
+    record.storage_path !== undefined &&
+    record.storage_path !== storagePath
+  ) {
+    throw new Error(
+      `Approved artwork storage path mismatch for ${manifestPath}`,
+    );
   }
 
   return {
@@ -1106,7 +2147,9 @@ export async function applyArtworkLedger(
   { repoRoot = REPO_ROOT } = {},
 ) {
   const records = artworkLedgerRecords(ledger);
-  const expected = new Map(artworkAssets.map((asset) => [asset.local_path, asset]));
+  const expected = new Map(
+    artworkAssets.map((asset) => [asset.local_path, asset]),
+  );
   if (expected.size !== artworkAssets.length) {
     throw new Error("Artwork manifest paths must be unique");
   }
@@ -1117,13 +2160,19 @@ export async function applyArtworkLedger(
       throw new Error("Artwork ledger record requires manifest_path");
     }
     if (recordsByPath.has(record.manifest_path)) {
-      throw new Error(`Duplicate artwork ledger manifest_path: ${record.manifest_path}`);
+      throw new Error(
+        `Duplicate artwork ledger manifest_path: ${record.manifest_path}`,
+      );
     }
     if (!expected.has(record.manifest_path)) {
-      throw new Error(`Artwork ledger path is not present in the manifest: ${record.manifest_path}`);
+      throw new Error(
+        `Artwork ledger path is not present in the manifest: ${record.manifest_path}`,
+      );
     }
     if (!["missing", "approved"].includes(record.approval_status)) {
-      throw new Error(`Artwork ledger ${record.manifest_path} has invalid approval_status`);
+      throw new Error(
+        `Artwork ledger ${record.manifest_path} has invalid approval_status`,
+      );
     }
     recordsByPath.set(record.manifest_path, record);
   }
@@ -1155,9 +2204,10 @@ export async function validateArtworkManifestTrustBoundary(
   if (ledger === null) return manifest;
 
   const inventory = JSON.parse(await readFile(inventoryPath, "utf8"));
-  const reconciled = ledger.status === "finalized"
-    ? reconcileManifestFromLedger(ledger, manifest)
-    : manifest;
+  const reconciled =
+    ledger.status === "finalized"
+      ? reconcileManifestFromLedger(ledger, manifest)
+      : manifest;
   await validateArtworkWorkflowLedger({
     root: repoRoot,
     inventory,
@@ -1170,27 +2220,42 @@ export async function validateArtworkManifestTrustBoundary(
 export function currentReviewedVideoRecord(
   sourceKey,
   approvalLedger,
-  { currentLocalPath } = {},
+  {
+    currentLocalPath,
+    approvedVideoSupersessions = APPROVED_VIDEO_SUPERSESSIONS,
+  } = {},
 ) {
   if (!REVIEWED_VIDEO_SOURCE_KEYS.has(sourceKey)) return null;
-  const records = approvalLedger?.records?.filter(
-    (record) => record.source_key === sourceKey,
-  ) ?? [];
+  const records =
+    approvalLedger?.records?.filter(
+      (record) => record.source_key === sourceKey,
+    ) ?? [];
   if (records.length === 0) {
     throw new Error(`Approval ledger is missing reviewed video ${sourceKey}`);
   }
   const eligible = records.filter(
     (record) => !REPLACEMENT_REQUIRED_CUTS.has(approvalRecordKey(record)),
   );
+  const configuredEligible = currentLocalPath
+    ? eligible.findLast(
+        (record) => record.candidate_local_path === currentLocalPath,
+      )
+    : null;
   const approved = eligible.filter((record) => record.decision === "approved");
   if (approved.length > 1) {
-    throw new Error(`Approval ledger has multiple approved corrected cuts for ${sourceKey}; explicit supersession is required`);
+    const activeSha256 = approvedVideoSupersessions.get(sourceKey);
+    const supersedingRecord = activeSha256
+      ? approved.find((record) => record.sha256 === activeSha256)
+      : null;
+    if (!supersedingRecord) {
+      throw new Error(
+        `Approval ledger has multiple approved corrected cuts for ${sourceKey}; explicit supersession is required`,
+      );
+    }
+    return supersedingRecord;
   }
-  if (approved[0]) return approved[0];
-  const configuredEligible = currentLocalPath
-    ? eligible.findLast((record) => record.candidate_local_path === currentLocalPath)
-    : null;
   if (configuredEligible) return configuredEligible;
+  if (approved[0]) return approved[0];
   const configured = currentLocalPath
     ? records.find((record) => record.candidate_local_path === currentLocalPath)
     : null;
@@ -1203,30 +2268,50 @@ export function currentReviewedVideoRecord(
 function resolveSourcePath(root, relativePath, label) {
   const absoluteRoot = path.resolve(root);
   const candidate = path.resolve(absoluteRoot, relativePath);
-  if (candidate === absoluteRoot || !candidate.startsWith(`${absoluteRoot}${path.sep}`)) {
-    throw new Error(`${label} escapes its configured source root: ${relativePath}`);
+  if (
+    candidate === absoluteRoot ||
+    !candidate.startsWith(`${absoluteRoot}${path.sep}`)
+  ) {
+    throw new Error(
+      `${label} escapes its configured source root: ${relativePath}`,
+    );
   }
   return candidate;
 }
 
 function probeVideoDuration(fullPath) {
-  return Number(execFileSync(
-    "ffprobe",
-    ["-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", fullPath],
-    { encoding: "utf8" },
-  ).trim());
+  return Number(
+    execFileSync(
+      "ffprobe",
+      [
+        "-v",
+        "error",
+        "-show_entries",
+        "format=duration",
+        "-of",
+        "default=noprint_wrappers=1:nokey=1",
+        fullPath,
+      ],
+      { encoding: "utf8" },
+    ).trim(),
+  );
 }
 
 async function buildVideoAsset(
   [sourceKey, slot, title, partLabel, defaultLocalPath],
   approvalLedger,
-  { videoSourceRoot, inspectDuration },
+  { videoSourceRoot, inspectDuration, approvedVideoSupersessions },
 ) {
   const reviewRecord = currentReviewedVideoRecord(sourceKey, approvalLedger, {
     currentLocalPath: defaultLocalPath,
+    approvedVideoSupersessions,
   });
   const localPath = reviewRecord?.candidate_local_path ?? defaultLocalPath;
-  const fullPath = resolveSourcePath(videoSourceRoot, localPath, `${sourceKey} video path`);
+  const fullPath = resolveSourcePath(
+    videoSourceRoot,
+    localPath,
+    `${sourceKey} video path`,
+  );
   const fileStat = await stat(fullPath);
   const duration = Number(await inspectDuration(fullPath));
   if (!Number.isFinite(duration) || duration <= 0) {
@@ -1234,9 +2319,16 @@ async function buildVideoAsset(
   }
   const checksum = await sha256(fullPath);
   if (reviewRecord && checksum !== reviewRecord.sha256) {
-    throw new Error(`${sourceKey} does not match its checksum-keyed approval ledger record`);
+    throw new Error(
+      `${sourceKey} does not match its checksum-keyed approval ledger record`,
+    );
   }
-  const approvalStatus = reviewRecord?.decision === "approved" ? "approved" : reviewRecord ? "hold" : "approved";
+  const approvalStatus =
+    reviewRecord?.decision === "approved"
+      ? "approved"
+      : reviewRecord
+        ? "hold"
+        : "approved";
   return {
     source_key: sourceKey,
     kind: "video",
@@ -1253,27 +2345,55 @@ async function buildVideoAsset(
   };
 }
 
-export async function buildDerivativePair(videoAsset, captionApprovalLedger, repoRoot = REPO_ROOT) {
+export async function buildDerivativePair(
+  videoAsset,
+  captionApprovalLedger,
+  repoRoot = REPO_ROOT,
+) {
   const isDirectAccessibilityCut = DIRECT_APPROVAL_OVERRIDE_CUTS.has(
     `${videoAsset.source_key}:${videoAsset.checksum_sha256}`,
   );
   const descriptors = isDirectAccessibilityCut
-    ? [{ kind: "caption", extension: "vtt", directory: "captions", mimeType: "text/vtt" }]
+    ? [
+        {
+          kind: "caption",
+          extension: "vtt",
+          directory: "captions",
+          mimeType: "text/vtt",
+        },
+      ]
     : [
-      { kind: "caption", extension: "vtt", directory: "captions", mimeType: "text/vtt" },
-      { kind: "transcript", extension: "md", directory: "transcripts", mimeType: "text/markdown" },
-    ];
-  const files = await Promise.all(descriptors.map(async (descriptor) => {
-    const localPath = `course-assets/${descriptor.directory}/${videoAsset.source_key}.${descriptor.extension}`;
-    const fullPath = path.join(repoRoot, localPath);
-    try {
-      const fileStat = await stat(fullPath);
-      return { ...descriptor, localPath, fileStat, checksum: await sha256(fullPath) };
-    } catch (error) {
-      if (error?.code !== "ENOENT") throw error;
-      return { ...descriptor, localPath, fileStat: null, checksum: null };
-    }
-  }));
+        {
+          kind: "caption",
+          extension: "vtt",
+          directory: "captions",
+          mimeType: "text/vtt",
+        },
+        {
+          kind: "transcript",
+          extension: "md",
+          directory: "transcripts",
+          mimeType: "text/markdown",
+        },
+      ];
+  const files = await Promise.all(
+    descriptors.map(async (descriptor) => {
+      const localPath = `course-assets/${descriptor.directory}/${videoAsset.source_key}.${descriptor.extension}`;
+      const fullPath = path.join(repoRoot, localPath);
+      try {
+        const fileStat = await stat(fullPath);
+        return {
+          ...descriptor,
+          localPath,
+          fileStat,
+          checksum: await sha256(fullPath),
+        };
+      } catch (error) {
+        if (error?.code !== "ENOENT") throw error;
+        return { ...descriptor, localPath, fileStat: null, checksum: null };
+      }
+    }),
+  );
   const missingAsset = (file) => ({
     source_key: `${file.kind}-${videoAsset.source_key}`,
     kind: file.kind,
@@ -1285,7 +2405,10 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
     approval_status: "missing",
   });
   if (videoAsset.approval_status === "hold") {
-    if (files.some((file) => file.fileStat)) throw new Error(`${videoAsset.source_key} derivatives exist before the held cut is approved`);
+    if (files.some((file) => file.fileStat))
+      throw new Error(
+        `${videoAsset.source_key} derivatives exist before the held cut is approved`,
+      );
     return files.filter((file) => file.kind === "caption").map(missingAsset);
   }
   const [caption, transcript] = files;
@@ -1312,24 +2435,29 @@ export async function buildDerivativePair(videoAsset, captionApprovalLedger, rep
   }
   // The Markdown transcript is internal caption-review evidence only. It is
   // deliberately excluded from the learner-facing manifest and storage plan.
-  return files.filter((file) => file.kind === "caption").map((file) => ({
-    source_key: `${file.kind}-${videoAsset.source_key}`,
-    kind: file.kind,
-    local_path: file.localPath,
-    storage_path: `courses/bmh-employee-training/v1/${file.directory}/${videoAsset.source_key}.${file.checksum}.${file.extension}`,
-    mime_type: file.mimeType,
-    checksum_sha256: file.checksum,
-    size_bytes: file.fileStat.size,
-    approval_status: "approved",
-  }));
+  return files
+    .filter((file) => file.kind === "caption")
+    .map((file) => ({
+      source_key: `${file.kind}-${videoAsset.source_key}`,
+      kind: file.kind,
+      local_path: file.localPath,
+      storage_path: `courses/bmh-employee-training/v1/${file.directory}/${videoAsset.source_key}.${file.checksum}.${file.extension}`,
+      mime_type: file.mimeType,
+      checksum_sha256: file.checksum,
+      size_bytes: file.fileStat.size,
+      approval_status: "approved",
+    }));
 }
 
 function spreadSelect(candidates, count) {
   const selected = [];
   const used = new Set();
   for (let index = 0; index < count; index += 1) {
-    let candidateIndex = Math.round(index * (candidates.length - 1) / (count - 1));
-    while (used.has(candidateIndex) && candidateIndex < candidates.length - 1) candidateIndex += 1;
+    let candidateIndex = Math.round(
+      (index * (candidates.length - 1)) / (count - 1),
+    );
+    while (used.has(candidateIndex) && candidateIndex < candidates.length - 1)
+      candidateIndex += 1;
     while (used.has(candidateIndex) && candidateIndex > 0) candidateIndex -= 1;
     used.add(candidateIndex);
     selected.push(candidates[candidateIndex]);
@@ -1341,32 +2469,48 @@ async function sourceQuestions(slot, quizSourceRoot) {
   if (slot === 17) return COMPENSATION_QUESTIONS;
   if (slot === 19) return CAREER_GROWTH_QUESTIONS;
   const fileName = QUIZ_SOURCE_FILE_NAMES[slot - 1];
-  const raw = JSON.parse(await readFile(
-    resolveSourcePath(
-      quizSourceRoot,
-      path.join("_quiz-exports-by-slot", fileName),
-      `slot ${slot} quiz path`,
+  const raw = JSON.parse(
+    await readFile(
+      resolveSourcePath(
+        quizSourceRoot,
+        path.join("_quiz-exports-by-slot", fileName),
+        `slot ${slot} quiz path`,
+      ),
+      "utf8",
     ),
-    "utf8",
-  ));
+  );
   const excluded = EXCLUDED_QUESTION_PATTERNS[slot] ?? [];
   const candidates = raw.questions.filter((question) => {
     const searchable = `${question.questionText} ${question.choices.join(" ")}`;
     return !excluded.some((pattern) => pattern.test(searchable));
   });
-  if (candidates.length < 18) throw new Error(`Slot ${slot} has fewer than 18 eligible questions`);
+  if (candidates.length < 18)
+    throw new Error(`Slot ${slot} has fewer than 18 eligible questions`);
   const selected = spreadSelect(candidates, 18);
   if (slot !== 16) return selected;
-  return selected.map((question) =>
-    KPI_POLICY_SAFE_REPLACEMENTS.get(question.questionText) ?? question
+  return selected.map(
+    (question) =>
+      KPI_POLICY_SAFE_REPLACEMENTS.get(question.questionText) ?? question,
   );
 }
 
 const ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS = [
-  [/\bSellers are responsible for Stages 1 through 4\b/gi, "The representative is responsible for Stages 1 through 4"],
-  [/\bStages 5 and 6 are managed by the acquisition and transaction teams, not the sellers\./gi, "Stages 5 and 6 are managed by the acquisition and transaction teams, not the seller-facing representatives."],
-  [/\bWhat must the seller brief the acquisition manager on during Stage 4\?/gi, "What must the representative brief the acquisition manager on during Stage 4?"],
-  [/\bThe seller must communicate the seller's situation, expectations, and emotional triggers \(hot buttons\)\./gi, "The representative briefs the acquisition manager on the seller's situation, expectations, and emotional triggers (hot buttons)."],
+  [
+    /\bSellers are responsible for Stages 1 through 4\b/gi,
+    "The representative is responsible for Stages 1 through 4",
+  ],
+  [
+    /\bStages 5 and 6 are managed by the acquisition and transaction teams, not the sellers\./gi,
+    "Stages 5 and 6 are managed by the acquisition and transaction teams, not the seller-facing representatives.",
+  ],
+  [
+    /\bWhat must the seller brief the acquisition manager on during Stage 4\?/gi,
+    "What must the representative brief the acquisition manager on during Stage 4?",
+  ],
+  [
+    /\bThe seller must communicate the seller's situation, expectations, and emotional triggers \(hot buttons\)\./gi,
+    "The representative briefs the acquisition manager on the seller's situation, expectations, and emotional triggers (hot buttons).",
+  ],
   [/\bNavigator roles\b/gi, "representative roles"],
   [/\bNavigator role\b/gi, "BMH service standard"],
   [/\bNavigators\b/gi, "representatives"],
@@ -1390,41 +2534,56 @@ const ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS = [
 
 export function normalizeRoleAgnosticCourseText(value) {
   return ROLE_AGNOSTIC_COURSE_TEXT_REPLACEMENTS.reduce(
-    (text, [pattern, replacement, preserveInitialCase = true]) => text.replace(
-      pattern,
-      (match) => preserveInitialCase && /^[A-Z]/.test(match)
-        ? `${replacement[0].toUpperCase()}${replacement.slice(1)}`
-        : replacement,
-    ),
+    (text, [pattern, replacement, preserveInitialCase = true]) =>
+      text.replace(pattern, (match) =>
+        preserveInitialCase && /^[A-Z]/.test(match)
+          ? `${replacement[0].toUpperCase()}${replacement.slice(1)}`
+          : replacement,
+      ),
     String(value),
   );
 }
 
 function shapeQuestion(slot, question, index) {
-  const correctCount = question.choices.filter((choice) => choice.startsWith("*")).length;
-  const strippedChoices = question.choices.map((choice) => choice.replace(/^\*/, ""));
-  const truthValues = new Set(strippedChoices.map((choice) => choice.toLowerCase()));
-  const questionType = question.questionType === "MA"
-    ? "multi_select"
-    : truthValues.size === 2 && truthValues.has("true") && truthValues.has("false")
-      ? "true_false"
-      : "single_choice";
+  const correctCount = question.choices.filter((choice) =>
+    choice.startsWith("*"),
+  ).length;
+  const strippedChoices = question.choices.map((choice) =>
+    choice.replace(/^\*/, ""),
+  );
+  const truthValues = new Set(
+    strippedChoices.map((choice) => choice.toLowerCase()),
+  );
+  const questionType =
+    question.questionType === "MA"
+      ? "multi_select"
+      : truthValues.size === 2 &&
+          truthValues.has("true") &&
+          truthValues.has("false")
+        ? "true_false"
+        : "single_choice";
   if (questionType === "multi_select" ? correctCount < 2 : correctCount !== 1) {
-    throw new Error(`Slot ${slot} question ${index + 1} has invalid answer count`);
+    throw new Error(
+      `Slot ${slot} question ${index + 1} has invalid answer count`,
+    );
   }
   return {
     source_key: `question-slot-${String(slot).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}`,
-    question_text: normalizeRoleAgnosticCourseText(question.questionText.trim()),
+    question_text: normalizeRoleAgnosticCourseText(
+      question.questionText.trim(),
+    ),
     question_type: questionType,
     explanation: normalizeRoleAgnosticCourseText(
-      question.explanation?.trim()
-        || "Review the lesson and compare each choice with the process described there.",
+      question.explanation?.trim() ||
+        "Review the lesson and compare each choice with the process described there.",
     ),
     points: 1,
     sort_order: index + 1,
     options: question.choices.map((choice, optionIndex) => ({
       source_key: `option-slot-${String(slot).padStart(2, "0")}-${String(index + 1).padStart(2, "0")}-${optionIndex + 1}`,
-      option_text: normalizeRoleAgnosticCourseText(choice.replace(/^\*/, "").trim()),
+      option_text: normalizeRoleAgnosticCourseText(
+        choice.replace(/^\*/, "").trim(),
+      ),
       is_correct: choice.startsWith("*"),
       sort_order: optionIndex + 1,
     })),
@@ -1445,52 +2604,77 @@ function guideHtml(lesson) {
 
 export function validateGuideApprovalLedger(ledger) {
   const errors = [];
-  if (!isRecord(ledger) || ledger.schema_version !== GUIDE_APPROVAL_LEDGER_SCHEMA) {
-    return [`Guide approval ledger schema_version must be ${GUIDE_APPROVAL_LEDGER_SCHEMA}`];
+  if (
+    !isRecord(ledger) ||
+    ledger.schema_version !== GUIDE_APPROVAL_LEDGER_SCHEMA
+  ) {
+    return [
+      `Guide approval ledger schema_version must be ${GUIDE_APPROVAL_LEDGER_SCHEMA}`,
+    ];
   }
   const acceptance = ledger.acceptance;
   if (
-    !isRecord(acceptance)
-    || acceptance.decision !== "accepted"
-    || acceptance.accepted_by !== "codex-course-qa-controller"
-    || acceptance.human_approval !== false
-    || !ISO_TIMESTAMP_PATTERN.test(acceptance.accepted_at ?? "")
-    || typeof acceptance.evidence !== "string"
-    || !/deterministic rebuild/i.test(acceptance.evidence)
-    || !/semantic tests/i.test(acceptance.evidence)
-    || !/visual review/i.test(acceptance.evidence)
-    || !/not Jarrad human approval/i.test(acceptance.evidence)
+    !isRecord(acceptance) ||
+    acceptance.decision !== "accepted" ||
+    acceptance.accepted_by !== "codex-course-qa-controller" ||
+    acceptance.human_approval !== false ||
+    !ISO_TIMESTAMP_PATTERN.test(acceptance.accepted_at ?? "") ||
+    typeof acceptance.evidence !== "string" ||
+    !/deterministic rebuild/i.test(acceptance.evidence) ||
+    !/semantic tests/i.test(acceptance.evidence) ||
+    !/visual review/i.test(acceptance.evidence) ||
+    !/not Jarrad human approval/i.test(acceptance.evidence)
   ) {
-    errors.push("Guide approval ledger requires explicit course-QA controller acceptance evidence, not Jarrad human approval");
+    errors.push(
+      "Guide approval ledger requires explicit course-QA controller acceptance evidence, not Jarrad human approval",
+    );
   }
-  if (!Array.isArray(ledger.records) || ledger.records.length !== LESSONS.length) {
-    errors.push(`Guide approval ledger must contain exactly ${LESSONS.length} records`);
+  if (
+    !Array.isArray(ledger.records) ||
+    ledger.records.length !== LESSONS.length
+  ) {
+    errors.push(
+      `Guide approval ledger must contain exactly ${LESSONS.length} records`,
+    );
     return errors;
   }
-  const expected = new Map(LESSONS.map((lesson) => {
-    const slotKey = String(lesson.slot).padStart(2, "0");
-    return [`guide-slot-${slotKey}`, `output/pdf/slot-${slotKey}-learner-guide.pdf`];
-  }));
+  const expected = new Map(
+    LESSONS.map((lesson) => {
+      const slotKey = String(lesson.slot).padStart(2, "0");
+      return [
+        `guide-slot-${slotKey}`,
+        `output/pdf/slot-${slotKey}-learner-guide.pdf`,
+      ];
+    }),
+  );
   const seen = new Set();
   for (const record of ledger.records) {
     if (!isRecord(record) || typeof record.source_key !== "string") {
       errors.push("Guide approval ledger record requires source_key");
       continue;
     }
-    if (seen.has(record.source_key)) errors.push(`Duplicate guide approval record ${record.source_key}`);
+    if (seen.has(record.source_key))
+      errors.push(`Duplicate guide approval record ${record.source_key}`);
     seen.add(record.source_key);
     const expectedPath = expected.get(record.source_key);
-    if (!expectedPath) errors.push(`Unexpected guide approval record ${record.source_key}`);
-    if (record.local_path !== expectedPath) errors.push(`${record.source_key} guide approval path drifted`);
-    if (!SHA256_PATTERN.test(record.checksum_sha256 ?? "")) errors.push(`${record.source_key} guide approval checksum is invalid`);
-    if (!Number.isInteger(record.size_bytes) || record.size_bytes <= 0) errors.push(`${record.source_key} guide approval size is invalid`);
+    if (!expectedPath)
+      errors.push(`Unexpected guide approval record ${record.source_key}`);
+    if (record.local_path !== expectedPath)
+      errors.push(`${record.source_key} guide approval path drifted`);
+    if (!SHA256_PATTERN.test(record.checksum_sha256 ?? ""))
+      errors.push(`${record.source_key} guide approval checksum is invalid`);
+    if (!Number.isInteger(record.size_bytes) || record.size_bytes <= 0)
+      errors.push(`${record.source_key} guide approval size is invalid`);
   }
   for (const sourceKey of expected.keys()) {
-    if (!seen.has(sourceKey)) errors.push(`Guide approval ledger is missing ${sourceKey}`);
+    if (!seen.has(sourceKey))
+      errors.push(`Guide approval ledger is missing ${sourceKey}`);
   }
   const recordsSha256 = guideApprovalRecordsSha256(ledger.records);
   if (acceptance?.records_sha256 !== recordsSha256) {
-    errors.push("Guide approval acceptance is not bound to the exact ordered record set");
+    errors.push(
+      "Guide approval acceptance is not bound to the exact ordered record set",
+    );
   }
   return errors;
 }
@@ -1504,22 +2688,37 @@ export function guideApprovalRecordsSha256(records) {
       checksum_sha256: record?.checksum_sha256 ?? null,
       size_bytes: record?.size_bytes ?? null,
     }))
-    .sort((left, right) => String(left.source_key).localeCompare(String(right.source_key)));
-  return createHash("sha256").update(JSON.stringify(canonicalRecords)).digest("hex");
+    .sort((left, right) =>
+      String(left.source_key).localeCompare(String(right.source_key)),
+    );
+  return createHash("sha256")
+    .update(JSON.stringify(canonicalRecords))
+    .digest("hex");
 }
 
-export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = REPO_ROOT) {
+export async function buildGuideAsset(
+  lesson,
+  guideApprovalLedger,
+  repoRoot = REPO_ROOT,
+) {
   const slotKey = String(lesson.slot).padStart(2, "0");
   const localPath = `output/pdf/slot-${slotKey}-learner-guide.pdf`;
   const absolutePath = path.join(repoRoot, localPath);
-  const [checksum, fileInfo] = await Promise.all([sha256(absolutePath), stat(absolutePath)]);
-  const ledgerIsAccepted = validateGuideApprovalLedger(guideApprovalLedger).length === 0;
-  const approvalRecord = ledgerIsAccepted && guideApprovalLedger.records.find((record) =>
-    record.source_key === `guide-slot-${slotKey}`
-    && record.local_path === localPath
-    && record.checksum_sha256 === checksum
-    && record.size_bytes === fileInfo.size
-  );
+  const [checksum, fileInfo] = await Promise.all([
+    sha256(absolutePath),
+    stat(absolutePath),
+  ]);
+  const ledgerIsAccepted =
+    validateGuideApprovalLedger(guideApprovalLedger).length === 0;
+  const approvalRecord =
+    ledgerIsAccepted &&
+    guideApprovalLedger.records.find(
+      (record) =>
+        record.source_key === `guide-slot-${slotKey}` &&
+        record.local_path === localPath &&
+        record.checksum_sha256 === checksum &&
+        record.size_bytes === fileInfo.size,
+    );
   return {
     source_key: `guide-slot-${slotKey}`,
     kind: "pdf",
@@ -1533,30 +2732,45 @@ export async function buildGuideAsset(lesson, guideApprovalLedger, repoRoot = RE
 }
 
 export function quizContentSha256({ source_key, title, questions }) {
-  return createHash("sha256")
-    // The persisted manifest intentionally normalizes em dashes to ASCII.
-    // Bind approval to those exact learner-visible bytes even while the source
-    // quiz JSON still contains typographic em dashes.
-    .update(JSON.stringify({ source_key, title, questions }).replaceAll("\u2014", "-"))
-    .digest("hex");
+  return (
+    createHash("sha256")
+      // The persisted manifest intentionally normalizes em dashes to ASCII.
+      // Bind approval to those exact learner-visible bytes even while the source
+      // quiz JSON still contains typographic em dashes.
+      .update(
+        JSON.stringify({ source_key, title, questions }).replaceAll(
+          "\u2014",
+          "-",
+        ),
+      )
+      .digest("hex")
+  );
 }
 
 export function quizBindingsSha256(quizPools) {
-  const bindings = quizPools.map(({ quiz_source_key, question_count, content_sha256 }) => ({
-    quiz_source_key,
-    question_count,
-    content_sha256,
-  }));
+  const bindings = quizPools.map(
+    ({ quiz_source_key, question_count, content_sha256 }) => ({
+      quiz_source_key,
+      question_count,
+      content_sha256,
+    }),
+  );
   return createHash("sha256").update(JSON.stringify(bindings)).digest("hex");
 }
 
 export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
   const errors = [];
   let reviewRequest;
-  if (!isRecord(ledger) || ledger.schema_version !== QUIZ_APPROVAL_LEDGER_SCHEMA) {
-    return [`Quiz approval ledger schema_version must be ${QUIZ_APPROVAL_LEDGER_SCHEMA}`];
+  if (
+    !isRecord(ledger) ||
+    ledger.schema_version !== QUIZ_APPROVAL_LEDGER_SCHEMA
+  ) {
+    return [
+      `Quiz approval ledger schema_version must be ${QUIZ_APPROVAL_LEDGER_SCHEMA}`,
+    ];
   }
-  if (ledger.status !== "active") errors.push("Quiz approval ledger must be active");
+  if (ledger.status !== "active")
+    errors.push("Quiz approval ledger must be active");
   if (ledger.request_path !== QUIZ_REVIEW_REQUEST_PATH) {
     errors.push("Quiz approval ledger request path is not canonical");
   }
@@ -1567,7 +2781,9 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       const requestPath = path.join(repoRoot, ledger.request_path);
       const requestChecksum = await sha256(requestPath);
       if (requestChecksum !== ledger.request_sha256) {
-        errors.push("Quiz approval ledger is not bound to the exact review request");
+        errors.push(
+          "Quiz approval ledger is not bound to the exact review request",
+        );
       }
       reviewRequest = JSON.parse(await readFile(requestPath, "utf8"));
     } catch {
@@ -1576,18 +2792,24 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
   }
   const authorization = ledger.release_authorization;
   if (
-    !isRecord(authorization)
-    || authorization.decision !== "delegated_ai_checksum_review_satisfies_human_content_gate"
-    || authorization.authorized_by !== "Jarrad Henry"
-    || !ISO_TIMESTAMP_PATTERN.test(authorization.recorded_at ?? "")
-    || authorization.request_id !== "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8"
-    || authorization.request_sha256 !== ledger.request_sha256
-    || typeof authorization.scope !== "string"
-    || !/explicitly delegated/i.test(authorization.scope)
-    || !/Claude's independent checksum-bound content approval satisfies the delegated content gate/i.test(authorization.scope)
-    || authorization.source !== "Codex GOAL conversation, 2026-07-22"
+    !isRecord(authorization) ||
+    authorization.decision !==
+      "delegated_ai_checksum_review_satisfies_human_content_gate" ||
+    authorization.authorized_by !== "Jarrad Henry" ||
+    !ISO_TIMESTAMP_PATTERN.test(authorization.recorded_at ?? "") ||
+    authorization.request_id !==
+      "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8" ||
+    authorization.request_sha256 !== ledger.request_sha256 ||
+    typeof authorization.scope !== "string" ||
+    !/explicitly delegated/i.test(authorization.scope) ||
+    !/Claude's independent checksum-bound content approval satisfies the delegated content gate/i.test(
+      authorization.scope,
+    ) ||
+    authorization.source !== "Codex GOAL conversation, 2026-07-22"
   ) {
-    errors.push("Quiz approval ledger requires Jarrad's explicit delegated human-gate authorization bound to the exact review request");
+    errors.push(
+      "Quiz approval ledger requires Jarrad's explicit delegated human-gate authorization bound to the exact review request",
+    );
   }
   if (reviewRequest) {
     const requestedPools = Array.isArray(reviewRequest.quiz_pools)
@@ -1597,101 +2819,142 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
       errors.push("Quiz approval review request schema is invalid");
     }
     if (
-      reviewRequest.request_id !== "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8"
-      || reviewRequest.created_at !== "2026-07-22T13:17:04Z"
+      reviewRequest.request_id !==
+        "bmh-employee-training-quiz-review-2026-07-22-content-quality-v8" ||
+      reviewRequest.created_at !== "2026-07-22T13:17:04Z"
     ) {
       errors.push("Quiz approval review request identity is not canonical");
     }
     if (reviewRequest.status !== "pending_human_review") {
-      errors.push("Quiz approval review request must preserve its pending review state");
+      errors.push(
+        "Quiz approval review request must preserve its pending review state",
+      );
     }
     const scope = reviewRequest.scope;
     if (
-      !isRecord(scope)
-      || scope.manifest_path !== QUIZ_REVIEW_MANIFEST_PATH
-      || scope.import_id !== "bmh-employee-training-v1"
-      || scope.quiz_pool_count !== 19
-      || scope.question_count !== 920
-      || scope.questions_per_pool !== null
-      || scope.questions_per_attempt !== null
+      !isRecord(scope) ||
+      scope.manifest_path !== QUIZ_REVIEW_MANIFEST_PATH ||
+      scope.import_id !== "bmh-employee-training-v1" ||
+      scope.quiz_pool_count !== 19 ||
+      scope.question_count !== 920 ||
+      scope.questions_per_pool !== null ||
+      scope.questions_per_attempt !== null
     ) {
-      errors.push("Quiz approval review request scope is not the canonical quizbank scope");
+      errors.push(
+        "Quiz approval review request scope is not the canonical quizbank scope",
+      );
     }
-    if (!Array.isArray(reviewRequest.quiz_pools) || requestedPools.length !== 19) {
-      errors.push("Quiz approval review request must bind exactly 19 quizbank pools");
+    if (
+      !Array.isArray(reviewRequest.quiz_pools) ||
+      requestedPools.length !== 19
+    ) {
+      errors.push(
+        "Quiz approval review request must bind exactly 19 quizbank pools",
+      );
     } else {
       const poolKeys = new Set();
       let questionCount = 0;
       let poolsAreHashable = true;
       for (const pool of requestedPools) {
-        if (!isRecord(pool) || !/^quiz-slot-[0-9]{2}$/.test(pool.quiz_source_key ?? "")) {
-          errors.push("Quiz approval review request contains an invalid quiz source key");
+        if (
+          !isRecord(pool) ||
+          !/^quiz-slot-[0-9]{2}$/.test(pool.quiz_source_key ?? "")
+        ) {
+          errors.push(
+            "Quiz approval review request contains an invalid quiz source key",
+          );
           poolsAreHashable = false;
           continue;
         }
         if (poolKeys.has(pool.quiz_source_key)) {
-          errors.push(`Quiz approval review request duplicates ${pool.quiz_source_key}`);
+          errors.push(
+            `Quiz approval review request duplicates ${pool.quiz_source_key}`,
+          );
         }
         poolKeys.add(pool.quiz_source_key);
         if (!Number.isInteger(pool.question_count) || pool.question_count < 1) {
-          errors.push(`${pool.quiz_source_key} review binding has an invalid question count`);
+          errors.push(
+            `${pool.quiz_source_key} review binding has an invalid question count`,
+          );
         } else {
           questionCount += pool.question_count;
         }
         if (!SHA256_PATTERN.test(pool.content_sha256 ?? "")) {
-          errors.push(`${pool.quiz_source_key} review binding checksum is invalid`);
+          errors.push(
+            `${pool.quiz_source_key} review binding checksum is invalid`,
+          );
         }
         if (pool.approval_status !== "pending_human_review") {
-          errors.push(`${pool.quiz_source_key} review binding must preserve its pending review state`);
+          errors.push(
+            `${pool.quiz_source_key} review binding must preserve its pending review state`,
+          );
         }
       }
       if (questionCount !== 920) {
-        errors.push("Quiz approval review request question counts must total 920");
+        errors.push(
+          "Quiz approval review request question counts must total 920",
+        );
       }
       if (
-        poolsAreHashable
-        && scope?.quiz_bindings_sha256 !== quizBindingsSha256(requestedPools)
+        poolsAreHashable &&
+        scope?.quiz_bindings_sha256 !== quizBindingsSha256(requestedPools)
       ) {
-        errors.push("Quiz approval review request pool binding checksum is invalid");
+        errors.push(
+          "Quiz approval review request pool binding checksum is invalid",
+        );
       }
     }
     const reviewSurface = reviewRequest.review_surface;
     if (
-      !isRecord(reviewSurface)
-      || reviewSurface.path !== QUIZ_REVIEW_SURFACE_PATH
+      !isRecord(reviewSurface) ||
+      reviewSurface.path !== QUIZ_REVIEW_SURFACE_PATH
     ) {
       errors.push("Quiz approval review surface path is not canonical");
     } else if (
-      reviewSurface.format !== "markdown"
-      || reviewSurface.quiz_pool_count !== 19
-      || reviewSurface.question_count !== 920
+      reviewSurface.format !== "markdown" ||
+      reviewSurface.quiz_pool_count !== 19 ||
+      reviewSurface.question_count !== 920
     ) {
-      errors.push("Quiz approval review surface scope is not the canonical quizbank scope");
+      errors.push(
+        "Quiz approval review surface scope is not the canonical quizbank scope",
+      );
     } else if (!SHA256_PATTERN.test(reviewSurface.sha256 ?? "")) {
       errors.push("Quiz approval review surface checksum is invalid");
     } else {
       try {
         const reviewPath = path.join(repoRoot, reviewSurface.path);
         const actualReviewBytes = await readFile(reviewPath);
-        const actualReviewChecksum = createHash("sha256").update(actualReviewBytes).digest("hex");
+        const actualReviewChecksum = createHash("sha256")
+          .update(actualReviewBytes)
+          .digest("hex");
         if (actualReviewChecksum !== reviewSurface.sha256) {
-          errors.push("Quiz approval review surface is not bound to the exact review packet");
+          errors.push(
+            "Quiz approval review surface is not bound to the exact review packet",
+          );
         }
         const reviewText = actualReviewBytes.toString("utf8");
         const packetBindings = new Map(
-          [...reviewText.matchAll(/^- Pool key: `([^`]+)`\n- Pool SHA-256: `([a-f0-9]{64})`/gm)]
-            .map((match) => [match[1], match[2]]),
+          [
+            ...reviewText.matchAll(
+              /^- Pool key: `([^`]+)`\n- Pool SHA-256: `([a-f0-9]{64})`/gm,
+            ),
+          ].map((match) => [match[1], match[2]]),
         );
-        const packetQuestionCount = (reviewText.match(/^- Question key:/gm) ?? []).length;
+        const packetQuestionCount = (
+          reviewText.match(/^- Question key:/gm) ?? []
+        ).length;
         if (
-          packetBindings.size !== requestedPools.length
-          || packetQuestionCount !== reviewSurface.question_count
-          || requestedPools.some((pool) =>
-            !isRecord(pool)
-            || packetBindings.get(pool.quiz_source_key) !== pool.content_sha256
+          packetBindings.size !== requestedPools.length ||
+          packetQuestionCount !== reviewSurface.question_count ||
+          requestedPools.some(
+            (pool) =>
+              !isRecord(pool) ||
+              packetBindings.get(pool.quiz_source_key) !== pool.content_sha256,
           )
         ) {
-          errors.push("Quiz approval review packet does not match the exact requested pool bindings");
+          errors.push(
+            "Quiz approval review packet does not match the exact requested pool bindings",
+          );
         }
       } catch {
         errors.push("Quiz approval review surface is missing or invalid");
@@ -1705,27 +2968,43 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
   const seen = new Set();
   for (const record of ledger.records) {
     const label = record?.quiz_source_key ?? "unknown quiz";
-    if (!isRecord(record) || !/^quiz-slot-[0-9]{2}$/.test(record.quiz_source_key ?? "")) {
+    if (
+      !isRecord(record) ||
+      !/^quiz-slot-[0-9]{2}$/.test(record.quiz_source_key ?? "")
+    ) {
       errors.push(`${label} approval record has an invalid quiz source key`);
       continue;
     }
-    if (seen.has(record.quiz_source_key)) errors.push(`Duplicate quiz approval record ${record.quiz_source_key}`);
+    if (seen.has(record.quiz_source_key))
+      errors.push(`Duplicate quiz approval record ${record.quiz_source_key}`);
     seen.add(record.quiz_source_key);
-    if (record.decision !== "approved") errors.push(`${label} approval record decision must be approved`);
-    if (!SHA256_PATTERN.test(record.content_sha256 ?? "")) errors.push(`${label} approval checksum is invalid`);
+    if (record.decision !== "approved")
+      errors.push(`${label} approval record decision must be approved`);
+    if (!SHA256_PATTERN.test(record.content_sha256 ?? ""))
+      errors.push(`${label} approval checksum is invalid`);
     const requestedPools = Array.isArray(reviewRequest?.quiz_pools)
       ? reviewRequest.quiz_pools
       : [];
-    const requestedPool = requestedPools.find((pool) =>
-      isRecord(pool) && pool.quiz_source_key === record.quiz_source_key
+    const requestedPool = requestedPools.find(
+      (pool) =>
+        isRecord(pool) && pool.quiz_source_key === record.quiz_source_key,
     );
-    if (!requestedPool || requestedPool.content_sha256 !== record.content_sha256) {
-      errors.push(`${label} approval does not match an exact pool in the current review request`);
+    if (
+      !requestedPool ||
+      requestedPool.content_sha256 !== record.content_sha256
+    ) {
+      errors.push(
+        `${label} approval does not match an exact pool in the current review request`,
+      );
     }
-    if (record.request_sha256 !== ledger.request_sha256) errors.push(`${label} is not bound to the current review request`);
-    if (typeof record.approved_by !== "string" || !record.approved_by.trim()) errors.push(`${label} needs an approver`);
-    if (!ISO_TIMESTAMP_PATTERN.test(record.approved_at ?? "")) errors.push(`${label} approval timestamp is invalid`);
-    if (typeof record.evidence !== "string" || !record.evidence.trim()) errors.push(`${label} needs approval evidence`);
+    if (record.request_sha256 !== ledger.request_sha256)
+      errors.push(`${label} is not bound to the current review request`);
+    if (typeof record.approved_by !== "string" || !record.approved_by.trim())
+      errors.push(`${label} needs an approver`);
+    if (!ISO_TIMESTAMP_PATTERN.test(record.approved_at ?? ""))
+      errors.push(`${label} approval timestamp is invalid`);
+    if (typeof record.evidence !== "string" || !record.evidence.trim())
+      errors.push(`${label} needs approval evidence`);
   }
   return errors;
 }
@@ -1733,19 +3012,21 @@ export async function validateQuizApprovalLedger(ledger, repoRoot = REPO_ROOT) {
 export function quizApprovalStatus(ledger, quiz) {
   const authorization = ledger.release_authorization;
   if (
-    !isRecord(authorization)
-    || authorization.decision !== "delegated_ai_checksum_review_satisfies_human_content_gate"
-    || authorization.authorized_by !== "Jarrad Henry"
-    || authorization.request_sha256 !== ledger.request_sha256
+    !isRecord(authorization) ||
+    authorization.decision !==
+      "delegated_ai_checksum_review_satisfies_human_content_gate" ||
+    authorization.authorized_by !== "Jarrad Henry" ||
+    authorization.request_sha256 !== ledger.request_sha256
   ) {
     return "pending_human_review";
   }
   const checksum = quizContentSha256(quiz);
-  const approved = ledger.records.some((record) =>
-    record.quiz_source_key === quiz.source_key
-    && record.content_sha256 === checksum
-    && record.decision === "approved"
-    && record.request_sha256 === ledger.request_sha256
+  const approved = ledger.records.some(
+    (record) =>
+      record.quiz_source_key === quiz.source_key &&
+      record.content_sha256 === checksum &&
+      record.decision === "approved" &&
+      record.request_sha256 === ledger.request_sha256,
   );
   return approved ? "approved" : "pending_human_review";
 }
@@ -1762,12 +3043,18 @@ export async function buildManifest({
   quizBankPath = DEFAULT_QUIZ_BANK_PATH,
   allowPendingQuizReview = false,
   inspectDuration = probeVideoDuration,
+  approvedVideoSupersessions = APPROVED_VIDEO_SUPERSESSIONS,
 } = {}) {
   let quizBankContext = null;
   if (quizBankPath) {
     const relativeBankPath = path.relative(REPO_ROOT, quizBankPath);
-    if (relativeBankPath.startsWith("..") || path.isAbsolute(relativeBankPath)) {
-      throw new Error("The configured question bank must be inside the repository.");
+    if (
+      relativeBankPath.startsWith("..") ||
+      path.isAbsolute(relativeBankPath)
+    ) {
+      throw new Error(
+        "The configured question bank must be inside the repository.",
+      );
     }
     const bytes = await readFile(quizBankPath);
     let bank;
@@ -1777,14 +3064,20 @@ export async function buildManifest({
       throw new Error(`Question bank is not valid JSON: ${error.message}`);
     }
     const errors = validateQuizBank(bank);
-    if (errors.length > 0) throw new Error(`Question bank is invalid: ${errors.join("; ")}`);
+    if (errors.length > 0)
+      throw new Error(`Question bank is invalid: ${errors.join("; ")}`);
     quizBankContext = {
       bank,
       sha256: quizBankSha256(bytes),
       path: relativeBankPath.split(path.sep).join("/"),
     };
   }
-  const [videoApprovalLedger, captionApprovalLedger, guideApprovalLedger, quizApprovalLedger] = await Promise.all([
+  const [
+    videoApprovalLedger,
+    captionApprovalLedger,
+    guideApprovalLedger,
+    quizApprovalLedger,
+  ] = await Promise.all([
     readFile(videoApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(captionApprovalLedgerPath, "utf8").then(JSON.parse),
     readFile(guideApprovalLedgerPath, "utf8").then(JSON.parse),
@@ -1792,32 +3085,42 @@ export async function buildManifest({
   ]);
   const guideApprovalErrors = validateGuideApprovalLedger(guideApprovalLedger);
   if (guideApprovalErrors.length > 0) {
-    throw new Error(`Guide approval ledger is invalid: ${guideApprovalErrors.join("; ")}`);
+    throw new Error(
+      `Guide approval ledger is invalid: ${guideApprovalErrors.join("; ")}`,
+    );
   }
-  const quizApprovalErrors = await validateQuizApprovalLedger(quizApprovalLedger);
+  const quizApprovalErrors =
+    await validateQuizApprovalLedger(quizApprovalLedger);
   if (!allowPendingQuizReview && quizApprovalErrors.length > 0) {
-    throw new Error(`Quiz approval ledger is invalid: ${quizApprovalErrors.join("; ")}`);
+    throw new Error(
+      `Quiz approval ledger is invalid: ${quizApprovalErrors.join("; ")}`,
+    );
   }
   const captionApprovalErrors = [
-    ...await validateCaptionApprovalEvidence({
+    ...(await validateCaptionApprovalEvidence({
       ledger: captionApprovalLedger,
       repoRoot: REPO_ROOT,
-    }),
-    ...await validateCaptionApprovalHistory({
+    })),
+    ...(await validateCaptionApprovalHistory({
       ledger: captionApprovalLedger,
       repoRoot: REPO_ROOT,
       ledgerPath: captionApprovalLedgerPath,
-    }),
+    })),
   ];
   if (captionApprovalErrors.length > 0) {
-    throw new Error(`Caption approval ledger is invalid: ${captionApprovalErrors.join("; ")}`);
+    throw new Error(
+      `Caption approval ledger is invalid: ${captionApprovalErrors.join("; ")}`,
+    );
   }
   const videoAssetsWithMetadata = [];
   for (const video of VIDEO_SOURCES) {
-    videoAssetsWithMetadata.push(await buildVideoAsset(video, videoApprovalLedger, {
-      videoSourceRoot,
-      inspectDuration,
-    }));
+    videoAssetsWithMetadata.push(
+      await buildVideoAsset(video, videoApprovalLedger, {
+        videoSourceRoot,
+        inspectDuration,
+        approvedVideoSupersessions,
+      }),
+    );
   }
 
   const reviewedVideoAssets = videoAssetsWithMetadata.filter((asset) =>
@@ -1829,27 +3132,35 @@ export async function buildManifest({
       reviewedVideoAssets,
       { allowHistoricalPending: true },
     ),
-    ...await validateHeldVideoApprovalHistory({
+    ...(await validateHeldVideoApprovalHistory({
       ledger: videoApprovalLedger,
       currentReviewAssets: reviewedVideoAssets,
       repoRoot: videoApprovalHistoryRepoRoot,
       ledgerPath: videoApprovalLedgerPath,
-    }),
+    })),
   ];
   if (videoApprovalErrors.length > 0) {
-    throw new Error(`Video approval ledger is invalid: ${videoApprovalErrors.join("; ")}`);
+    throw new Error(
+      `Video approval ledger is invalid: ${videoApprovalErrors.join("; ")}`,
+    );
   }
 
-  const videosBySlot = Map.groupBy(videoAssetsWithMetadata, (asset) => asset._slot);
+  const videosBySlot = Map.groupBy(
+    videoAssetsWithMetadata,
+    (asset) => asset._slot,
+  );
   const quizQuestionsBySlot = new Map();
   for (const lesson of LESSONS) {
-    const bankSlot = quizBankContext?.bank.slots.find((slot) => slot.slot === lesson.slot);
+    const bankSlot = quizBankContext?.bank.slots.find(
+      (slot) => slot.slot === lesson.slot,
+    );
     quizQuestionsBySlot.set(
       lesson.slot,
       bankSlot
         ? bankSlot.questions.map(shapeQuizBankQuestion)
-        : (await sourceQuestions(lesson.slot, quizSourceRoot))
-          .map((question, index) => shapeQuestion(lesson.slot, question, index)),
+        : (await sourceQuestions(lesson.slot, quizSourceRoot)).map(
+            (question, index) => shapeQuestion(lesson.slot, question, index),
+          ),
     );
   }
 
@@ -1863,14 +3174,17 @@ export async function buildManifest({
   });
   const derivativeAssets = [];
   for (const asset of videoAssetsWithMetadata) {
-    derivativeAssets.push(...await buildDerivativePair(asset, captionApprovalLedger));
+    derivativeAssets.push(
+      ...(await buildDerivativePair(asset, captionApprovalLedger)),
+    );
   }
   const imageAssets = [
     {
       source_key: "thumbnail-program-bmh-employee-training",
       kind: "image",
       local_path: "course-assets/thumbnails/program-bmh-employee-training.webp",
-      storage_path: "courses/bmh-employee-training/v1/thumbnails/program-bmh-employee-training.webp",
+      storage_path:
+        "courses/bmh-employee-training/v1/thumbnails/program-bmh-employee-training.webp",
       mime_type: "image/webp",
       checksum_sha256: null,
       size_bytes: null,
@@ -1911,7 +3225,9 @@ export async function buildManifest({
   );
 
   const modules = MODULES.map(([moduleNumber, title, description]) => {
-    const topicLessons = LESSONS.filter((lesson) => lesson.module === moduleNumber);
+    const topicLessons = LESSONS.filter(
+      (lesson) => lesson.module === moduleNumber,
+    );
     const lessons = [];
     for (const topic of topicLessons) {
       const slotKey = String(topic.slot).padStart(2, "0");
@@ -1938,9 +3254,14 @@ export async function buildManifest({
       }));
       const flashcards = questions.slice(0, 8).map((question) => ({
         front: question.question_text,
-        back: question.options.filter((option) => option.is_correct).map((option) => option.option_text).join("; "),
+        back: question.options
+          .filter((option) => option.is_correct)
+          .map((option) => option.option_text)
+          .join("; "),
       }));
-      const rolePlayBlocks = (INCLUDE_CLOSER_LAB_ROLE_PLAYS ? ROLE_PLAYS[topic.slot] ?? [] : []).map((scenario, index) => ({
+      const rolePlayBlocks = (
+        INCLUDE_CLOSER_LAB_ROLE_PLAYS ? (ROLE_PLAYS[topic.slot] ?? []) : []
+      ).map((scenario, index) => ({
         source_key: `block-role-play-${scenario.key}`,
         type: "role_play",
         sort_order: videoBlocks.length + 5 + index,
@@ -1958,7 +3279,9 @@ export async function buildManifest({
           },
         },
       }));
-      const oralCheckRolePlayBlocks = (ORAL_CHECK_ROLE_PLAYS[topic.slot] ?? []).map((scenario, index) => ({
+      const oralCheckRolePlayBlocks = (
+        ORAL_CHECK_ROLE_PLAYS[topic.slot] ?? []
+      ).map((scenario, index) => ({
         source_key: `block-oral-check-${scenario.key}`,
         type: "role_play",
         sort_order: videoBlocks.length + 5 + rolePlayBlocks.length + index,
@@ -1977,9 +3300,21 @@ export async function buildManifest({
         },
       }));
       const blocks = [
-        { source_key: `block-objectives-slot-${slotKey}`, type: "text", sort_order: 1, required: false, content: { html: textHtml(topic) } },
+        {
+          source_key: `block-objectives-slot-${slotKey}`,
+          type: "text",
+          sort_order: 1,
+          required: false,
+          content: { html: textHtml(topic) },
+        },
         ...videoBlocks,
-        { source_key: `block-guide-slot-${slotKey}`, type: "text", sort_order: videoBlocks.length + 2, required: false, content: { html: guideHtml(topic) } },
+        {
+          source_key: `block-guide-slot-${slotKey}`,
+          type: "text",
+          sort_order: videoBlocks.length + 2,
+          required: false,
+          content: { html: guideHtml(topic) },
+        },
         {
           source_key: `block-guide-pdf-slot-${slotKey}`,
           type: "download",
@@ -1996,7 +3331,13 @@ export async function buildManifest({
             description: `Accessible learner guide for ${topic.title}`,
           },
         },
-        { source_key: `block-flashcards-slot-${slotKey}`, type: "flashcard", sort_order: videoBlocks.length + 4, required: false, content: { cards: flashcards } },
+        {
+          source_key: `block-flashcards-slot-${slotKey}`,
+          type: "flashcard",
+          sort_order: videoBlocks.length + 4,
+          required: false,
+          content: { cards: flashcards },
+        },
         ...rolePlayBlocks,
         ...oralCheckRolePlayBlocks,
       ];
@@ -2055,7 +3396,10 @@ export async function buildManifest({
         instructions: assignment.instructions,
         submission_type: "text",
         requires_review: true,
-        rubric: assignment.rubric.map(([criterion, rubricDescription]) => ({ criterion, description: rubricDescription })),
+        rubric: assignment.rubric.map(([criterion, rubricDescription]) => ({
+          criterion,
+          description: rubricDescription,
+        })),
       },
     });
     return {
@@ -2071,22 +3415,31 @@ export async function buildManifest({
     schema_version: 1,
     import_id: "bmh-employee-training-v1",
     status: "draft",
-    ...(quizBankContext ? {
-      quiz_bank_ref: {
-        path: quizBankContext.path,
-        sha256: quizBankContext.sha256,
-      },
-    } : {}),
+    ...(quizBankContext
+      ? {
+          quiz_bank_ref: {
+            path: quizBankContext.path,
+            sha256: quizBankContext.sha256,
+          },
+        }
+      : {}),
     qa_role_group: {
       source_key: "role-group-bmh-content-qa",
       name: "BMH Content QA",
-      description: "Private reviewers for the unpublished BMH employee training program.",
+      description:
+        "Private reviewers for the unpublished BMH employee training program.",
     },
-    assets: [...videoAssets, ...derivativeAssets, ...artworkAssets, ...guideAssets],
+    assets: [
+      ...videoAssets,
+      ...derivativeAssets,
+      ...artworkAssets,
+      ...guideAssets,
+    ],
     program: {
       source_key: "program-bmh-employee-training",
       title: "BMH Employee Training",
-      description: "Internal training for serving sellers, operating the pipeline, and growing at BMH Group.",
+      description:
+        "Internal training for serving sellers, operating the pipeline, and growing at BMH Group.",
       thumbnail_asset_key: "thumbnail-program-bmh-employee-training",
       is_published: false,
       course_order_mode: "sequential",
@@ -2095,7 +3448,8 @@ export async function buildManifest({
         {
           source_key: "course-bmh-employee-training",
           title: "BMH Employee Training",
-          description: "Six sequential sections covering the BMH way, seller conversations, operating systems, and performance.",
+          description:
+            "Six sequential sections covering the BMH way, seller conversations, operating systems, and performance.",
           thumbnail_asset_key: "thumbnail-program-bmh-employee-training",
           is_published: false,
           certificate_enabled: false,
@@ -2137,28 +3491,43 @@ export function resolveManifestSourceRoots(argv = [], env = process.env) {
       index += 1;
       continue;
     }
-    throw new Error(`Unknown or incomplete manifest-builder argument: ${token}\n\n${manifestBuilderUsage()}`);
+    throw new Error(
+      `Unknown or incomplete manifest-builder argument: ${token}\n\n${manifestBuilderUsage()}`,
+    );
   }
-  const videoSourceRoot = options.get("video-root")
-    ?? env.BMH_COURSE_VIDEO_ROOT
-    ?? DEFAULT_VIDEO_SOURCE_ROOT;
-  const quizSourceRoot = options.get("quiz-root")
-    ?? env.BMH_COURSE_QUIZ_ROOT
-    ?? DEFAULT_QUIZ_SOURCE_ROOT;
-  if (typeof videoSourceRoot !== "string" || videoSourceRoot.trim().length === 0) {
+  const videoSourceRoot =
+    options.get("video-root") ??
+    env.BMH_COURSE_VIDEO_ROOT ??
+    DEFAULT_VIDEO_SOURCE_ROOT;
+  const quizSourceRoot =
+    options.get("quiz-root") ??
+    env.BMH_COURSE_QUIZ_ROOT ??
+    DEFAULT_QUIZ_SOURCE_ROOT;
+  if (
+    typeof videoSourceRoot !== "string" ||
+    videoSourceRoot.trim().length === 0
+  ) {
     throw new Error("The configured video source root must be nonempty.");
   }
-  if (typeof quizSourceRoot !== "string" || quizSourceRoot.trim().length === 0) {
+  if (
+    typeof quizSourceRoot !== "string" ||
+    quizSourceRoot.trim().length === 0
+  ) {
     throw new Error("The configured quiz source root must be nonempty.");
   }
-  const quizBankPath = options.get("quiz-bank")
-    ?? env.QUIZ_BANK_PATH
-    ?? DEFAULT_QUIZ_BANK_PATH;
+  const quizBankPath =
+    options.get("quiz-bank") ?? env.QUIZ_BANK_PATH ?? DEFAULT_QUIZ_BANK_PATH;
   const outputPath = options.get("out");
-  if (quizBankPath !== undefined && (typeof quizBankPath !== "string" || quizBankPath.trim().length === 0)) {
+  if (
+    quizBankPath !== undefined &&
+    (typeof quizBankPath !== "string" || quizBankPath.trim().length === 0)
+  ) {
     throw new Error("The configured question bank path must be nonempty.");
   }
-  if (outputPath !== undefined && (typeof outputPath !== "string" || outputPath.trim().length === 0)) {
+  if (
+    outputPath !== undefined &&
+    (typeof outputPath !== "string" || outputPath.trim().length === 0)
+  ) {
     throw new Error("The configured output path must be nonempty.");
   }
   return {
@@ -2177,11 +3546,17 @@ async function main() {
   );
   const manifest = await buildManifest(options);
   await mkdir(path.dirname(outputPath), { recursive: true });
-  await writeFile(outputPath, `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`);
+  await writeFile(
+    outputPath,
+    `${JSON.stringify(manifest, null, 2).replaceAll("\u2014", "-")}\n`,
+  );
   console.log(`Wrote ${outputPath}`);
 }
 
-if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   void main().catch((error) => {
     console.error(error instanceof Error ? error.message : error);
     process.exitCode = 1;

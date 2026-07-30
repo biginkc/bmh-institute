@@ -68,6 +68,15 @@ V8 rejects the prior identical-pixel Andrea stance lock. It keeps the same appro
 
 Orientation is bound to both held sources: `video-slot-01-welcome` and `video-slot-01-mindset`. If either source path or SHA-256 changes after Jarrad's cut review, the Orientation video evidence, contact sheet, pilot lineage, and approval candidate must be regenerated and revalidated before the pilot can be approved or promoted.
 
+An already-approved, already-promoted pilot retains its immutable historical
+generation lineage when a later released-video replacement does not change the
+lesson mapping, poster bytes, or pilot-artwork bytes. This is a technical
+no-artwork-change boundary, not a new artwork approval. The media release must
+be independently bound to the exact replacement master, while a separate
+old/new checksum registry proves that the historical contact sheet and existing
+artwork lineage remain unchanged. The evidence cannot approve new artwork or
+bypass the original pilot approval boundary.
+
 ## Approval boundary
 
 The three-image pilot still requires Jarrad's explicit approval before any post-pilot image generation. This contract changes prompt and workflow requirements only. It does not authorize generation, approval, manifest promotion, upload, publication, or learner access.

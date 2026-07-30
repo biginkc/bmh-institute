@@ -2,26 +2,59 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { createEmptyProductionRecord, sha256, validateProductionRecord } from "./artwork-production-contract.mjs";
-import { getArtworkPose, validateArtworkPoseContract } from "./artwork-pose-contract.mjs";
+import {
+  createEmptyProductionRecord,
+  sha256,
+  validateProductionRecord,
+} from "./artwork-production-contract.mjs";
+import {
+  getArtworkPose,
+  validateArtworkPoseContract,
+} from "./artwork-pose-contract.mjs";
 import { applyDistinctPosterInventoryOverlay } from "./sync-distinct-poster-inventory.mjs";
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../..");
-const manifestPath = path.join(repoRoot, "content/course-manifests/bmh-employee-training.v1.json");
-const outputPath = path.join(repoRoot, "docs/course-production/thumbnail-pilots/production-inventory.json");
-const pilotChecksumsRecordPath = "docs/course-production/thumbnail-pilots/v8-checksums.json";
-const pilotGenerationLineageRecordPath = "docs/course-production/thumbnail-pilots/v8-generation-lineage.json";
+const repoRoot = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../..",
+);
+const manifestPath = path.join(
+  repoRoot,
+  "content/course-manifests/bmh-employee-training.v1.json",
+);
+const outputPath = path.join(
+  repoRoot,
+  "docs/course-production/thumbnail-pilots/production-inventory.json",
+);
+const pilotChecksumsRecordPath =
+  "docs/course-production/thumbnail-pilots/v8-checksums.json";
+const pilotGenerationLineageRecordPath =
+  "docs/course-production/thumbnail-pilots/v8-generation-lineage.json";
 const videoContactSheetsRecordPath =
   "docs/course-production/thumbnail-pilots/references/production-video-stills/contact-sheets.json";
 const mediaReplacementsRecordPath =
   "docs/course-production/thumbnail-pilots/references/production-video-stills/media-replacements.json";
+const pilotMediaReplacementsRecordPath =
+  "docs/course-production/thumbnail-pilots/references/production-video-stills/pilot-media-replacements.json";
 const distinctPosterContactSheetsRecordPath =
   "docs/course-production/thumbnail-pilots/references/production-video-stills/distinct-posters/contact-sheets.json";
 const pilotChecksumsPath = path.join(repoRoot, pilotChecksumsRecordPath);
-const pilotGenerationLineagePath = path.join(repoRoot, pilotGenerationLineageRecordPath);
-const videoContactSheetsPath = path.join(repoRoot, videoContactSheetsRecordPath);
+const pilotGenerationLineagePath = path.join(
+  repoRoot,
+  pilotGenerationLineageRecordPath,
+);
+const videoContactSheetsPath = path.join(
+  repoRoot,
+  videoContactSheetsRecordPath,
+);
 const mediaReplacementsPath = path.join(repoRoot, mediaReplacementsRecordPath);
-const distinctPosterContactSheetsPath = path.join(repoRoot, distinctPosterContactSheetsRecordPath);
+const pilotMediaReplacementsPath = path.join(
+  repoRoot,
+  pilotMediaReplacementsRecordPath,
+);
+const distinctPosterContactSheetsPath = path.join(
+  repoRoot,
+  distinctPosterContactSheetsRecordPath,
+);
 const args = process.argv.slice(2);
 const unknownArgs = args.filter((arg) => arg !== "--check");
 if (unknownArgs.length > 0) {
@@ -29,24 +62,42 @@ if (unknownArgs.length > 0) {
 }
 const checkMode = args.includes("--check");
 
-const [manifest, pilotChecksums, pilotGenerationLineage, videoContactSheets, mediaReplacements, distinctPosterContactSheets] = await Promise.all([
+const [
+  manifest,
+  pilotChecksums,
+  pilotGenerationLineage,
+  videoContactSheets,
+  mediaReplacements,
+  pilotMediaReplacements,
+  distinctPosterContactSheets,
+] = await Promise.all([
   readFile(manifestPath, "utf8").then(JSON.parse),
   readFile(pilotChecksumsPath, "utf8").then(JSON.parse),
   readFile(pilotGenerationLineagePath, "utf8").then(JSON.parse),
   readFile(videoContactSheetsPath, "utf8").then(JSON.parse),
   readFile(mediaReplacementsPath, "utf8").then(JSON.parse),
+  readFile(pilotMediaReplacementsPath, "utf8").then(JSON.parse),
   readFile(distinctPosterContactSheetsPath, "utf8").then(JSON.parse),
 ]);
 const course = manifest.program.courses[0];
-const lessons = course.modules.flatMap((module) => module.lessons.filter((lesson) => lesson.type === "content"));
-const manifestAssets = new Map(manifest.assets.map((asset) => [asset.source_key, asset]));
+const lessons = course.modules.flatMap((module) =>
+  module.lessons.filter((lesson) => lesson.type === "content"),
+);
+const manifestAssets = new Map(
+  manifest.assets.map((asset) => [asset.source_key, asset]),
+);
 
 const BLUE_RGB = [103, 182, 255];
 const YELLOW_RGB = [255, 211, 1];
-const ALLOWED_BACKGROUND_RGB = new Set([BLUE_RGB.join(","), YELLOW_RGB.join(",")]);
+const ALLOWED_BACKGROUND_RGB = new Set([
+  BLUE_RGB.join(","),
+  YELLOW_RGB.join(","),
+]);
 const SHA256 = /^[a-f0-9]{64}$/;
 const MEDIA_REPLACEMENT_SCOPE =
   "facial-animation-only replacement with unchanged released audio, transcript, duration, lesson mapping, captions, poster, and artwork";
+const PILOT_MEDIA_REPLACEMENT_SCOPE =
+  "media-only welcome-video replacement preserving unchanged historical pilot-generation provenance, lesson mapping, poster, and artwork";
 
 validateArtworkPoseContract();
 
@@ -85,7 +136,10 @@ const baseReferences = [
 
 function repoPath(localPath) {
   const candidate = path.resolve(repoRoot, localPath);
-  if (candidate !== repoRoot && !candidate.startsWith(`${repoRoot}${path.sep}`)) {
+  if (
+    candidate !== repoRoot &&
+    !candidate.startsWith(`${repoRoot}${path.sep}`)
+  ) {
     throw new Error(`Pilot lineage path escapes the repository: ${localPath}`);
   }
   return candidate;
@@ -93,31 +147,47 @@ function repoPath(localPath) {
 
 function pngDimensions(contents, localPath) {
   const signature = "89504e470d0a1a0a";
-  if (contents.length < 24 || contents.subarray(0, 8).toString("hex") !== signature) {
+  if (
+    contents.length < 24 ||
+    contents.subarray(0, 8).toString("hex") !== signature
+  ) {
     throw new Error(`Pilot lineage output is not a PNG: ${localPath}`);
   }
   return [contents.readUInt32BE(16), contents.readUInt32BE(20)];
 }
 
 function validateBackgroundRgb(value, label) {
-  if (!Array.isArray(value) || value.length !== 3 || value.some((channel) => !Number.isInteger(channel) || channel < 0 || channel > 255) || !ALLOWED_BACKGROUND_RGB.has(value.join(","))) {
+  if (
+    !Array.isArray(value) ||
+    value.length !== 3 ||
+    value.some(
+      (channel) => !Number.isInteger(channel) || channel < 0 || channel > 255,
+    ) ||
+    !ALLOWED_BACKGROUND_RGB.has(value.join(","))
+  ) {
     throw new Error(`${label} must be the locked blue or yellow RGB value`);
   }
   return value;
 }
 
 function lessonVideoBlocks(slot) {
-  const lesson = lessons.find((candidate) => candidate.source_key === `lesson-content-${slot}`);
-  if (!lesson) throw new Error(`Manifest content lesson is missing for ${slot}`);
+  const lesson = lessons.find(
+    (candidate) => candidate.source_key === `lesson-content-${slot}`,
+  );
+  if (!lesson)
+    throw new Error(`Manifest content lesson is missing for ${slot}`);
   return lesson.blocks.filter((block) => block.type === "video");
 }
 
 function mappedVideoBlocksForMaster(masterId) {
   if (masterId === "master-poster-video-slot-07-fact-find") {
-    return lessonVideoBlocks("slot-07").filter((block) => block.content.asset_key === "video-slot-07-fact-find");
+    return lessonVideoBlocks("slot-07").filter(
+      (block) => block.content.asset_key === "video-slot-07-fact-find",
+    );
   }
   const slot = masterId.match(/^master-(slot-\d{2})$/)?.[1];
-  if (!slot) throw new Error(`Unsupported video-evidence master id: ${masterId}`);
+  if (!slot)
+    throw new Error(`Unsupported video-evidence master id: ${masterId}`);
   return lessonVideoBlocks(slot);
 }
 
@@ -204,12 +274,18 @@ async function validateMediaReplacement({
     replacement.historical_contact_sheet.checksum_sha256 !== input.sha256 ||
     !SHA256.test(replacement.release_evidence.checksum_sha256 ?? "")
   ) {
-    throw new Error(`${asset.source_key} media replacement does not exactly bind the historical and current sources`);
+    throw new Error(
+      `${asset.source_key} media replacement does not exactly bind the historical and current sources`,
+    );
   }
 
-  const evidenceBytes = await readFile(repoPath(replacement.release_evidence.path));
+  const evidenceBytes = await readFile(
+    repoPath(replacement.release_evidence.path),
+  );
   if (sha256(evidenceBytes) !== replacement.release_evidence.checksum_sha256) {
-    throw new Error(`${asset.source_key} media replacement release evidence checksum drifted`);
+    throw new Error(
+      `${asset.source_key} media replacement release evidence checksum drifted`,
+    );
   }
   const releaseEvidence = JSON.parse(evidenceBytes);
   const approval = releaseEvidence.records?.find(
@@ -234,16 +310,22 @@ async function validateMediaReplacement({
     !release?.storage_path?.includes(asset.checksum_sha256) ||
     !release?.rollback_storage_path?.includes(evidence.checksum_sha256)
   ) {
-    throw new Error(`${asset.source_key} media replacement release evidence is incomplete`);
+    throw new Error(
+      `${asset.source_key} media replacement release evidence is incomplete`,
+    );
   }
 }
 
 async function validateVideoContactSheets() {
   if (
-    videoContactSheets.schema_version !== "bmh-artwork-video-contact-sheets/v1" ||
-    videoContactSheets.generator !== "ffmpeg fixed-ratio frames plus sharp lossless PNG tiling" ||
-    JSON.stringify(videoContactSheets.frame_positions) !== JSON.stringify([0.2, 0.5, 0.8]) ||
-    JSON.stringify(videoContactSheets.tile_dimensions) !== JSON.stringify([320, 180]) ||
+    videoContactSheets.schema_version !==
+      "bmh-artwork-video-contact-sheets/v1" ||
+    videoContactSheets.generator !==
+      "ffmpeg fixed-ratio frames plus sharp lossless PNG tiling" ||
+    JSON.stringify(videoContactSheets.frame_positions) !==
+      JSON.stringify([0.2, 0.5, 0.8]) ||
+    JSON.stringify(videoContactSheets.tile_dimensions) !==
+      JSON.stringify([320, 180]) ||
     videoContactSheets.columns !== 3
   ) {
     throw new Error("Production video contact-sheet contract drifted");
@@ -253,19 +335,23 @@ async function validateVideoContactSheets() {
   if (
     !Array.isArray(records) ||
     records.length !== expectedIds.length ||
-    JSON.stringify(records.map((record) => record.master_id)) !== JSON.stringify(expectedIds) ||
+    JSON.stringify(records.map((record) => record.master_id)) !==
+      JSON.stringify(expectedIds) ||
     new Set(records.map((record) => record.master_id)).size !== records.length
   ) {
-    throw new Error("Production video contact sheets must cover all 17 non-pilot masters exactly once and in course order");
+    throw new Error(
+      "Production video contact sheets must cover all 17 non-pilot masters exactly once and in course order",
+    );
   }
 
   const byMasterId = new Map();
   const references = [];
   if (
-    mediaReplacements.schema_version !== "bmh-artwork-video-media-replacements/v1" ||
+    mediaReplacements.schema_version !==
+      "bmh-artwork-video-media-replacements/v1" ||
     !Array.isArray(mediaReplacements.records) ||
-    new Set(mediaReplacements.records.map((record) => record.asset_key)).size !==
-      mediaReplacements.records.length
+    new Set(mediaReplacements.records.map((record) => record.asset_key))
+      .size !== mediaReplacements.records.length
   ) {
     throw new Error("Artwork source-video media replacement contract drifted");
   }
@@ -275,17 +361,23 @@ async function validateVideoContactSheets() {
   const usedReplacementKeys = new Set();
   for (const record of records) {
     const expectedBlocks = mappedVideoBlocksForMaster(record.master_id);
-    const expectedFrameCount = expectedBlocks.length * videoContactSheets.frame_positions.length;
+    const expectedFrameCount =
+      expectedBlocks.length * videoContactSheets.frame_positions.length;
     const expectedDimensions = [
       videoContactSheets.tile_dimensions[0] * videoContactSheets.columns,
-      videoContactSheets.tile_dimensions[1] * Math.ceil(expectedFrameCount / videoContactSheets.columns),
+      videoContactSheets.tile_dimensions[1] *
+        Math.ceil(expectedFrameCount / videoContactSheets.columns),
     ];
     const input = record.contact_sheet_input;
-    const contactSheetStem = path.basename(input?.path ?? "", ".png").replace(/-contact-sheet$/, "");
+    const contactSheetStem = path
+      .basename(input?.path ?? "", ".png")
+      .replace(/-contact-sheet$/, "");
     if (
       input?.id !== `video-contact-sheet-${contactSheetStem}` ||
       input?.role !== "checksum-bound exact mapped-video contact sheet" ||
-      !input.path?.startsWith("docs/course-production/thumbnail-pilots/references/production-video-stills/") ||
+      !input.path?.startsWith(
+        "docs/course-production/thumbnail-pilots/references/production-video-stills/",
+      ) ||
       !/^[a-f0-9]{64}$/.test(input.sha256 ?? "") ||
       JSON.stringify(input.dimensions) !== JSON.stringify(expectedDimensions) ||
       input.frame_count !== expectedFrameCount
@@ -295,25 +387,38 @@ async function validateVideoContactSheets() {
     const contactSheetBytes = await readFile(repoPath(input.path));
     if (
       sha256(contactSheetBytes) !== input.sha256 ||
-      JSON.stringify(pngDimensions(contactSheetBytes, input.path)) !== JSON.stringify(expectedDimensions)
+      JSON.stringify(pngDimensions(contactSheetBytes, input.path)) !==
+        JSON.stringify(expectedDimensions)
     ) {
-      throw new Error(`${record.master_id} contact-sheet bytes do not match their checksum and dimensions`);
+      throw new Error(
+        `${record.master_id} contact-sheet bytes do not match their checksum and dimensions`,
+      );
     }
-    if (!Array.isArray(record.video_evidence) || record.video_evidence.length !== expectedBlocks.length) {
-      throw new Error(`${record.master_id} source-video evidence does not match its mapped videos`);
+    if (
+      !Array.isArray(record.video_evidence) ||
+      record.video_evidence.length !== expectedBlocks.length
+    ) {
+      throw new Error(
+        `${record.master_id} source-video evidence does not match its mapped videos`,
+      );
     }
     for (const [index, block] of expectedBlocks.entries()) {
       const evidence = record.video_evidence[index];
       const asset = manifestAssets.get(block.content.asset_key);
-      const expectedTimestamps = videoContactSheets.frame_positions.map((ratio) => Number((block.content.duration_seconds * ratio).toFixed(3)));
+      const expectedTimestamps = videoContactSheets.frame_positions.map(
+        (ratio) => Number((block.content.duration_seconds * ratio).toFixed(3)),
+      );
       if (
         !asset ||
         evidence?.asset_key !== asset.source_key ||
         evidence?.approval_status !== asset.approval_status ||
         evidence?.duration_seconds !== block.content.duration_seconds ||
-        JSON.stringify(evidence?.frame_timestamps_seconds) !== JSON.stringify(expectedTimestamps)
+        JSON.stringify(evidence?.frame_timestamps_seconds) !==
+          JSON.stringify(expectedTimestamps)
       ) {
-        throw new Error(`${record.master_id} video evidence ${index + 1} drifted from the exact mapped manifest source`);
+        throw new Error(
+          `${record.master_id} video evidence ${index + 1} drifted from the exact mapped manifest source`,
+        );
       }
       const exactCurrentSource =
         evidence.local_path === asset.local_path &&
@@ -322,7 +427,9 @@ async function validateVideoContactSheets() {
       if (!exactCurrentSource) {
         const replacement = replacementsByAssetKey.get(asset.source_key);
         if (!replacement) {
-          throw new Error(`${record.master_id} video evidence ${index + 1} has no approved immutable media replacement`);
+          throw new Error(
+            `${record.master_id} video evidence ${index + 1} has no approved immutable media replacement`,
+          );
         }
         await validateMediaReplacement({
           replacement,
@@ -339,7 +446,9 @@ async function validateVideoContactSheets() {
     references.push(input);
   }
   if (usedReplacementKeys.size !== replacementsByAssetKey.size) {
-    throw new Error("Artwork source-video media replacement registry contains an unused or stale record");
+    throw new Error(
+      "Artwork source-video media replacement registry contains an unused or stale record",
+    );
   }
   return { byMasterId, references };
 }
@@ -371,14 +480,134 @@ async function validateLineageInput(input, label, { requireId = false } = {}) {
   }
 }
 
+async function validatePilotMediaReplacement({
+  replacement,
+  lineageRecord,
+  evidence,
+  asset,
+}) {
+  assertExactKeys(
+    replacement,
+    [
+      "asset_key",
+      "lineage_slug",
+      "historical",
+      "current",
+      "historical_contact_sheet",
+      "release_evidence",
+      "scope",
+    ],
+    `${asset.source_key} pilot media replacement`,
+  );
+  assertExactKeys(
+    replacement.historical,
+    ["local_path", "checksum_sha256", "size_bytes", "duration_seconds"],
+    `${asset.source_key} historical pilot media`,
+  );
+  assertExactKeys(
+    replacement.current,
+    ["local_path", "checksum_sha256", "size_bytes", "duration_seconds"],
+    `${asset.source_key} current pilot media`,
+  );
+  assertExactKeys(
+    replacement.historical_contact_sheet,
+    ["path", "checksum_sha256"],
+    `${asset.source_key} historical pilot contact sheet`,
+  );
+  assertExactKeys(
+    replacement.release_evidence,
+    ["path", "checksum_sha256"],
+    `${asset.source_key} pilot replacement release evidence`,
+  );
+  if (
+    replacement.asset_key !== asset.source_key ||
+    replacement.lineage_slug !== lineageRecord.slug ||
+    replacement.scope !== PILOT_MEDIA_REPLACEMENT_SCOPE ||
+    replacement.historical.local_path !== evidence.path ||
+    replacement.historical.checksum_sha256 !== evidence.sha256 ||
+    replacement.current.local_path !== asset.local_path ||
+    replacement.current.checksum_sha256 !== asset.checksum_sha256 ||
+    replacement.current.size_bytes !== asset.size_bytes ||
+    replacement.historical_contact_sheet.path !==
+      lineageRecord.contact_sheet_input.path ||
+    replacement.historical_contact_sheet.checksum_sha256 !==
+      lineageRecord.contact_sheet_input.sha256 ||
+    !SHA256.test(replacement.release_evidence.checksum_sha256 ?? "")
+  ) {
+    throw new Error(
+      `${asset.source_key} pilot media replacement does not exactly bind historical lineage to the current release`,
+    );
+  }
+  const evidenceBytes = await readFile(
+    repoPath(replacement.release_evidence.path),
+  );
+  if (sha256(evidenceBytes) !== replacement.release_evidence.checksum_sha256) {
+    throw new Error(
+      `${asset.source_key} pilot media replacement evidence checksum drifted`,
+    );
+  }
+  const releaseEvidence = JSON.parse(evidenceBytes);
+  if (
+    releaseEvidence.schema_version !==
+      "bmh-artwork-pilot-media-replacement-evidence/v1" ||
+    releaseEvidence.asset_key !== asset.source_key ||
+    releaseEvidence.status !== "verified_no_artwork_change" ||
+    JSON.stringify(releaseEvidence.historical) !==
+      JSON.stringify(replacement.historical) ||
+    JSON.stringify(releaseEvidence.current) !==
+      JSON.stringify(replacement.current) ||
+    JSON.stringify(releaseEvidence.historical_contact_sheet) !==
+      JSON.stringify(replacement.historical_contact_sheet) ||
+    releaseEvidence.artwork_impact?.lesson_mapping_unchanged !== true ||
+    releaseEvidence.artwork_impact?.poster_unchanged !== true ||
+    releaseEvidence.artwork_impact?.pilot_artwork_unchanged !== true ||
+    releaseEvidence.artwork_impact?.historical_generation_lineage_preserved !==
+      true ||
+    releaseEvidence.artwork_impact
+      ?.release_replacement_does_not_modify_artwork !== true ||
+    releaseEvidence.release_binding?.path !==
+      "docs/course-production/video-zero-release-2026-07-30/README.md" ||
+    !SHA256.test(releaseEvidence.release_binding?.checksum_sha256 ?? "") ||
+    releaseEvidence.release_binding?.approved_master_sha256 !==
+      replacement.current.checksum_sha256 ||
+    releaseEvidence.release_binding?.scope !==
+      "media-only replacement evidence; no artwork approval asserted"
+  ) {
+    throw new Error(
+      `${asset.source_key} pilot media replacement evidence is incomplete`,
+    );
+  }
+  const releaseBindingBytes = await readFile(
+    repoPath(releaseEvidence.release_binding.path),
+  );
+  if (
+    sha256(releaseBindingBytes) !==
+    releaseEvidence.release_binding.checksum_sha256
+  ) {
+    throw new Error(
+      `${asset.source_key} pilot media replacement release binding checksum drifted`,
+    );
+  }
+}
+
 async function validateLineageOutput(output, label) {
   const outputContents = await readFile(repoPath(output.path));
-  if (sha256(outputContents) !== output.sha256 || outputContents.length !== output.size_bytes || JSON.stringify(pngDimensions(outputContents, output.path)) !== JSON.stringify(output.dimensions)) {
+  if (
+    sha256(outputContents) !== output.sha256 ||
+    outputContents.length !== output.size_bytes ||
+    JSON.stringify(pngDimensions(outputContents, output.path)) !==
+      JSON.stringify(output.dimensions)
+  ) {
     throw new Error(`${label} output checksum, size, or dimensions changed`);
   }
 }
 
-async function readAndValidatePrompt(promptPath, promptSha256, label, { exactBytes = false } = {}) {
+async function readAndValidatePrompt(
+  promptPath,
+  promptSha256,
+  label,
+  { exactBytes = false } = {},
+) {
   const promptBytes = await readFile(repoPath(promptPath), "utf8");
   const prompt = exactBytes ? promptBytes : promptBytes.replace(/\r?\n$/, "");
   if (sha256(prompt) !== promptSha256) {
@@ -397,9 +626,17 @@ async function validatePilotGenerationLineage() {
   ) {
     throw new Error("Pilot generation lineage schema is invalid");
   }
-  const version = schemaVersion.endsWith("/v4-candidate") ? 4 : schemaVersion.endsWith("/v3-candidate") ? 3 : schemaVersion.endsWith("/v2") ? 2 : 1;
+  const version = schemaVersion.endsWith("/v4-candidate")
+    ? 4
+    : schemaVersion.endsWith("/v3-candidate")
+      ? 3
+      : schemaVersion.endsWith("/v2")
+        ? 2
+        : 1;
   if (pilotGenerationLineage.status !== "awaiting-jarrad-approval") {
-    throw new Error("Pilot generation lineage must remain awaiting Jarrad approval");
+    throw new Error(
+      "Pilot generation lineage must remain awaiting Jarrad approval",
+    );
   }
   if (!Array.isArray(pilotGenerationLineage.records)) {
     throw new Error("Pilot generation lineage records are missing");
@@ -407,10 +644,16 @@ async function validatePilotGenerationLineage() {
   const expectedSlugs = Object.values(pilotSlugBySlot);
   if (
     pilotGenerationLineage.records.length !== expectedSlugs.length ||
-    new Set(pilotGenerationLineage.records.map((record) => record.slug)).size !== expectedSlugs.length ||
-    expectedSlugs.some((slug) => !pilotGenerationLineage.records.some((record) => record.slug === slug))
+    new Set(pilotGenerationLineage.records.map((record) => record.slug))
+      .size !== expectedSlugs.length ||
+    expectedSlugs.some(
+      (slug) =>
+        !pilotGenerationLineage.records.some((record) => record.slug === slug),
+    )
   ) {
-    throw new Error("Pilot generation lineage must cover each pilot exactly once");
+    throw new Error(
+      "Pilot generation lineage must cover each pilot exactly once",
+    );
   }
 
   const sharedParentsById = new Map();
@@ -421,8 +664,14 @@ async function validatePilotGenerationLineage() {
   const additionalReferences = [];
   if (version >= 3) {
     const expectedIdentityRoots = new Map([
-      ["andrea-approved", "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png"],
-      ["recurring-seller-approved", "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png"],
+      [
+        "andrea-approved",
+        "docs/course-production/thumbnail-pilots/references/v5-cast/andrea-approved.png",
+      ],
+      [
+        "recurring-seller-approved",
+        "docs/course-production/thumbnail-pilots/references/v5-cast/recurring-seller.png",
+      ],
     ]);
     const expectedCharacters = new Map([
       ["orientation", "andrea-approved"],
@@ -431,85 +680,169 @@ async function validatePilotGenerationLineage() {
     ]);
     const expectedVideoKeys = new Map([
       ["orientation", ["video-slot-01-welcome", "video-slot-01-mindset"]],
-      ["opening-the-call", ["video-slot-07-opening", "video-slot-07-fact-find"]],
+      [
+        "opening-the-call",
+        ["video-slot-07-opening", "video-slot-07-fact-find"],
+      ],
       ["objection-architecture", ["video-slot-09-objection-architecture"]],
     ]);
     if (
       pilotGenerationLineage.generator !== "built-in image_gen" ||
       pilotGenerationLineage.contract?.people_per_thumbnail !== 1 ||
-      JSON.stringify(pilotGenerationLineage.contract?.allowed_characters) !== JSON.stringify(["andrea", "recurring-seller"]) ||
-      pilotGenerationLineage.contract?.selection_rule !== "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue" ||
+      JSON.stringify(pilotGenerationLineage.contract?.allowed_characters) !==
+        JSON.stringify(["andrea", "recurring-seller"]) ||
+      pilotGenerationLineage.contract?.selection_rule !==
+        "Andrea or the recurring seller, never both; the lesson and exact source video determine the character and cue" ||
       pilotGenerationLineage.contract?.skin_fill !== "pure white"
     ) {
-      throw new Error(`Pilot lineage v${version} single-character identity contract drifted`);
+      throw new Error(
+        `Pilot lineage v${version} single-character identity contract drifted`,
+      );
     }
-    if (!Array.isArray(pilotGenerationLineage.identity_roots) || pilotGenerationLineage.identity_roots.length !== 2 || new Set(pilotGenerationLineage.identity_roots.map((root) => root.id)).size !== 2) {
-      throw new Error(`Pilot lineage v${version} requires exactly two honest identity roots`);
+    if (
+      !Array.isArray(pilotGenerationLineage.identity_roots) ||
+      pilotGenerationLineage.identity_roots.length !== 2 ||
+      new Set(pilotGenerationLineage.identity_roots.map((root) => root.id))
+        .size !== 2
+    ) {
+      throw new Error(
+        `Pilot lineage v${version} requires exactly two honest identity roots`,
+      );
     }
     for (const root of pilotGenerationLineage.identity_roots) {
       if (expectedIdentityRoots.get(root.id) !== root.path) {
-        throw new Error(`Pilot lineage v3 identity root is invalid: ${root.id}`);
+        throw new Error(
+          `Pilot lineage v3 identity root is invalid: ${root.id}`,
+        );
       }
       await validateLineageInput(root, `Pilot identity root ${root.id}`);
       additionalReferences.push({
         id: root.id,
-        role: root.id === "andrea-approved" ? "approved Andrea identity root" : "approved recurring seller identity root",
+        role:
+          root.id === "andrea-approved"
+            ? "approved Andrea identity root"
+            : "approved recurring seller identity root",
         path: root.path,
         sha256: root.sha256,
       });
     }
-    const identityRootsById = new Map(pilotGenerationLineage.identity_roots.map((root) => [root.id, root]));
+    const identityRootsById = new Map(
+      pilotGenerationLineage.identity_roots.map((root) => [root.id, root]),
+    );
     const usedIdentityRoots = new Set();
+    const usedPilotReplacementKeys = new Set();
     const poseLabels = new Set();
     const poseSignatures = new Set();
     for (const record of pilotGenerationLineage.records) {
       const expectedCharacterId = expectedCharacters.get(record.slug);
-      const checksumRecord = pilotChecksums.assets.find((asset) => asset.slug === record.slug);
-      if (!expectedCharacterId || record.character_id !== expectedCharacterId || !identityRootsById.has(record.character_id)) {
-        throw new Error(`${record.slug} must use its exact approved character id`);
+      const checksumRecord = pilotChecksums.assets.find(
+        (asset) => asset.slug === record.slug,
+      );
+      if (
+        !expectedCharacterId ||
+        record.character_id !== expectedCharacterId ||
+        !identityRootsById.has(record.character_id)
+      ) {
+        throw new Error(
+          `${record.slug} must use its exact approved character id`,
+        );
       }
       if ("character_ids" in record || Array.isArray(record.character_id)) {
-        throw new Error(`${record.slug} violates the one-person character contract`);
+        throw new Error(
+          `${record.slug} violates the one-person character contract`,
+        );
       }
       if (version === 4) {
-        if (typeof record.pose_label !== "string" || record.pose_label.length < 5 || poseLabels.has(record.pose_label)) {
-          throw new Error(`${record.slug} must have a globally unique pose_label`);
+        if (
+          typeof record.pose_label !== "string" ||
+          record.pose_label.length < 5 ||
+          poseLabels.has(record.pose_label)
+        ) {
+          throw new Error(
+            `${record.slug} must have a globally unique pose_label`,
+          );
         }
-        if (typeof record.pose_signature !== "string" || record.pose_signature.length < 12 || poseSignatures.has(record.pose_signature)) {
-          throw new Error(`${record.slug} must have a globally unique pose_signature`);
+        if (
+          typeof record.pose_signature !== "string" ||
+          record.pose_signature.length < 12 ||
+          poseSignatures.has(record.pose_signature)
+        ) {
+          throw new Error(
+            `${record.slug} must have a globally unique pose_signature`,
+          );
         }
         if (record.deterministic_character_lock !== undefined) {
-          throw new Error(`${record.slug} v4 cannot use an identical-pixel character lock`);
+          throw new Error(
+            `${record.slug} v4 cannot use an identical-pixel character lock`,
+          );
         }
         poseLabels.add(record.pose_label);
         poseSignatures.add(record.pose_signature);
       }
       usedIdentityRoots.add(record.character_id);
-      const expectedChecksumCharacter = expectedCharacterId === "andrea-approved" ? "andrea" : "recurring-seller";
+      const expectedChecksumCharacter =
+        expectedCharacterId === "andrea-approved"
+          ? "andrea"
+          : "recurring-seller";
       if (checksumRecord?.character !== expectedChecksumCharacter) {
         throw new Error(`${record.slug} checksum character binding drifted`);
       }
       validateBackgroundRgb(record.background_rgb, `${record.slug} background`);
-      if (!Array.isArray(record.video_evidence) || record.video_evidence.length === 0) {
-        throw new Error(`${record.slug} must retain exact source-video evidence`);
+      if (
+        !Array.isArray(record.video_evidence) ||
+        record.video_evidence.length === 0
+      ) {
+        throw new Error(
+          `${record.slug} must retain exact source-video evidence`,
+        );
       }
-      const expectedEvidence = expectedVideoKeys.get(record.slug).map((assetKey) => manifestAssets.get(assetKey));
-      if (record.video_evidence.length !== expectedEvidence.length || expectedEvidence.some((asset) => !asset)) {
-        throw new Error(`${record.slug} source-video evidence count drifted from the mapped lesson`);
+      const expectedEvidence = expectedVideoKeys
+        .get(record.slug)
+        .map((assetKey) => manifestAssets.get(assetKey));
+      if (
+        record.video_evidence.length !== expectedEvidence.length ||
+        expectedEvidence.some((asset) => !asset)
+      ) {
+        throw new Error(
+          `${record.slug} source-video evidence count drifted from the mapped lesson`,
+        );
       }
       for (const [index, evidence] of record.video_evidence.entries()) {
         const expectedAsset = expectedEvidence[index];
         if (
-          evidence?.path !== expectedAsset.local_path ||
-          evidence?.sha256 !== expectedAsset.checksum_sha256 ||
-          !evidence.path.startsWith("course-assets/review-") ||
+          !evidence?.path?.startsWith("course-assets/review-") ||
           !/^[a-f0-9]{64}$/.test(evidence.sha256 ?? "")
         ) {
-          throw new Error(`${record.slug} video evidence ${index + 1} drifted from the exact mapped manifest source`);
+          throw new Error(
+            `${record.slug} video evidence ${index + 1} drifted from the exact mapped manifest source`,
+          );
+        }
+        const exactCurrentSource =
+          evidence.path === expectedAsset.local_path &&
+          evidence.sha256 === expectedAsset.checksum_sha256;
+        if (!exactCurrentSource) {
+          const replacement = pilotMediaReplacements.records?.find(
+            (candidate) => candidate.asset_key === expectedAsset.source_key,
+          );
+          if (!replacement) {
+            throw new Error(
+              `${record.slug} video evidence ${index + 1} has no approved immutable pilot media replacement`,
+            );
+          }
+          await validatePilotMediaReplacement({
+            replacement,
+            lineageRecord: record,
+            evidence,
+            asset: expectedAsset,
+          });
+          usedPilotReplacementKeys.add(expectedAsset.source_key);
         }
         repoPath(evidence.path);
       }
-      await validateLineageInput(record.contact_sheet_input, `${record.slug} contact sheet`);
+      await validateLineageInput(
+        record.contact_sheet_input,
+        `${record.slug} contact sheet`,
+      );
       additionalReferences.push({
         id: `v${version + 4}-${record.slug}-contact-sheet`,
         role: `${record.slug} source-video contact sheet`,
@@ -517,33 +850,56 @@ async function validatePilotGenerationLineage() {
         sha256: record.contact_sheet_input.sha256,
       });
       const generation = record.generation;
-      const expectedOperation = record.slug === "orientation" ? "generate" : "edit";
-      if (generation?.operation !== expectedOperation || !generation.tool_output_id?.startsWith("exec-")) {
+      const expectedOperation =
+        record.slug === "orientation" ? "generate" : "edit";
+      if (
+        generation?.operation !== expectedOperation ||
+        !generation.tool_output_id?.startsWith("exec-")
+      ) {
         throw new Error(`${record.slug} generation record is invalid`);
       }
-      const prompt = await readAndValidatePrompt(generation.prompt_path, generation.prompt_sha256, `${record.slug} v${version + 4} generation`, {
-        exactBytes: true,
-      });
+      const prompt = await readAndValidatePrompt(
+        generation.prompt_path,
+        generation.prompt_sha256,
+        `${record.slug} v${version + 4} generation`,
+        {
+          exactBytes: true,
+        },
+      );
       const outputContents = await readFile(repoPath(generation.output_path));
       if (
         sha256(outputContents) !== generation.output_sha256 ||
         generation.output_path !== checksumRecord?.source?.path ||
         generation.output_sha256 !== checksumRecord?.source?.sha256 ||
-        JSON.stringify(pngDimensions(outputContents, generation.output_path)) !== JSON.stringify(checksumRecord?.source?.dimensions)
+        JSON.stringify(
+          pngDimensions(outputContents, generation.output_path),
+        ) !== JSON.stringify(checksumRecord?.source?.dimensions)
       ) {
-        throw new Error(`${record.slug} v${version + 4} generation output does not match the checksum-locked source`);
+        throw new Error(
+          `${record.slug} v${version + 4} generation output does not match the checksum-locked source`,
+        );
       }
       if (expectedOperation === "edit") {
         const parentBytes = await readFile(repoPath(generation.parent_path));
-        if (sha256(parentBytes) !== generation.parent_sha256 || generation.parent_sha256 === generation.output_sha256) {
+        if (
+          sha256(parentBytes) !== generation.parent_sha256 ||
+          generation.parent_sha256 === generation.output_sha256
+        ) {
           throw new Error(`${record.slug} edit parent lineage drifted`);
         }
-      } else if (generation.parent_path !== undefined || generation.parent_sha256 !== undefined) {
-        throw new Error(`${record.slug} initial generation cannot declare an edit parent`);
+      } else if (
+        generation.parent_path !== undefined ||
+        generation.parent_sha256 !== undefined
+      ) {
+        throw new Error(
+          `${record.slug} initial generation cannot declare an edit parent`,
+        );
       }
       if (version === 3 && record.slug === "opening-the-call") {
         const lock = record.deterministic_character_lock;
-        const orientation = pilotGenerationLineage.records.find((candidate) => candidate.slug === "orientation");
+        const orientation = pilotGenerationLineage.records.find(
+          (candidate) => candidate.slug === "orientation",
+        );
         if (
           lock?.source_path !== orientation?.generation?.output_path ||
           lock?.source_sha256 !== orientation?.generation?.output_sha256 ||
@@ -557,7 +913,11 @@ async function validatePilotGenerationLineage() {
           throw new Error("Opening v7 Andrea pixel lock drifted");
         }
       }
-      if (version === 3 && record.slug === "objection-architecture" && record.deterministic_contour_normalization?.source_pixel_radius !== 1) {
+      if (
+        version === 3 &&
+        record.slug === "objection-architecture" &&
+        record.deterministic_contour_normalization?.source_pixel_radius !== 1
+      ) {
         throw new Error("Objection v7 contour normalization drifted");
       }
       if (version === 4 && record.slug === "opening-the-call") {
@@ -573,16 +933,48 @@ async function validatePilotGenerationLineage() {
         }
       }
       promptBySlug.set(record.slug, prompt);
-      referenceIdsBySlug.set(record.slug, ["style-ref-1", "style-ref-2", record.character_id, `v${version + 4}-${record.slug}-contact-sheet`]);
+      referenceIdsBySlug.set(record.slug, [
+        "style-ref-1",
+        "style-ref-2",
+        record.character_id,
+        `v${version + 4}-${record.slug}-contact-sheet`,
+      ]);
     }
     if (usedIdentityRoots.size !== 2) {
-      throw new Error(`Pilot lineage v${version} must keep both identity roots in honest use`);
+      throw new Error(
+        `Pilot lineage v${version} must keep both identity roots in honest use`,
+      );
+    }
+    if (
+      pilotMediaReplacements.schema_version !==
+        "bmh-artwork-pilot-media-replacements/v1" ||
+      !Array.isArray(pilotMediaReplacements.records) ||
+      new Set(
+        pilotMediaReplacements.records.map(
+          (replacement) => replacement.asset_key,
+        ),
+      ).size !== pilotMediaReplacements.records.length ||
+      usedPilotReplacementKeys.size !== pilotMediaReplacements.records.length
+    ) {
+      throw new Error(
+        "Pilot artwork source-video replacement registry contains an invalid, unused, or stale record",
+      );
     }
     if (version === 4) {
-      const orientation = pilotGenerationLineage.records.find((record) => record.slug === "orientation");
-      const opening = pilotGenerationLineage.records.find((record) => record.slug === "opening-the-call");
-      if (orientation?.character_id !== "andrea-approved" || opening?.character_id !== "andrea-approved" || orientation.pose_signature === opening.pose_signature) {
-        throw new Error("Pilot lineage v4 must keep Andrea's identity while changing her pose");
+      const orientation = pilotGenerationLineage.records.find(
+        (record) => record.slug === "orientation",
+      );
+      const opening = pilotGenerationLineage.records.find(
+        (record) => record.slug === "opening-the-call",
+      );
+      if (
+        orientation?.character_id !== "andrea-approved" ||
+        opening?.character_id !== "andrea-approved" ||
+        orientation.pose_signature === opening.pose_signature
+      ) {
+        throw new Error(
+          "Pilot lineage v4 must keep Andrea's identity while changing her pose",
+        );
       }
     }
     return {
@@ -594,20 +986,33 @@ async function validatePilotGenerationLineage() {
     };
   }
   if (version === 2) {
-    if (!Array.isArray(pilotGenerationLineage.shared_parents) || pilotGenerationLineage.shared_parents.length !== 1) {
-      throw new Error("Pilot lineage v2 requires exactly one shared generated cast parent");
+    if (
+      !Array.isArray(pilotGenerationLineage.shared_parents) ||
+      pilotGenerationLineage.shared_parents.length !== 1
+    ) {
+      throw new Error(
+        "Pilot lineage v2 requires exactly one shared generated cast parent",
+      );
     }
     for (const parent of pilotGenerationLineage.shared_parents) {
       if (!parent?.id || sharedParentsById.has(parent.id)) {
-        throw new Error("Pilot lineage v2 shared parent ids must be present and unique");
+        throw new Error(
+          "Pilot lineage v2 shared parent ids must be present and unique",
+        );
       }
       if (parent.operation !== "generate") {
-        throw new Error(`${parent.id} shared parent operation must be generate`);
+        throw new Error(
+          `${parent.id} shared parent operation must be generate`,
+        );
       }
       if (!Array.isArray(parent.inputs) || parent.inputs.length === 0) {
         throw new Error(`${parent.id} shared parent inputs are missing`);
       }
-      await readAndValidatePrompt(parent.prompt_path, parent.prompt_sha256, parent.id);
+      await readAndValidatePrompt(
+        parent.prompt_path,
+        parent.prompt_sha256,
+        parent.id,
+      );
       for (const input of parent.inputs) {
         await validateLineageInput(input, `${parent.id} shared parent input`, {
           requireId: true,
@@ -619,7 +1024,13 @@ async function validatePilotGenerationLineage() {
       await validateLineageOutput(parent.output, parent.id);
       sharedParentsById.set(parent.id, parent);
     }
-    if (new Set(pilotGenerationLineage.shared_parents.map((parent) => parent.output.sha256)).size !== pilotGenerationLineage.shared_parents.length) {
+    if (
+      new Set(
+        pilotGenerationLineage.shared_parents.map(
+          (parent) => parent.output.sha256,
+        ),
+      ).size !== pilotGenerationLineage.shared_parents.length
+    ) {
       throw new Error("Pilot lineage v2 shared parent outputs must be unique");
     }
   } else if (pilotGenerationLineage.shared_parents !== undefined) {
@@ -627,21 +1038,44 @@ async function validatePilotGenerationLineage() {
   }
 
   for (const record of pilotGenerationLineage.records) {
-    const checksumRecord = pilotChecksums.assets.find((asset) => asset.slug === record.slug);
-    if (!checksumRecord || !Array.isArray(record.steps) || record.steps.length === 0) {
-      throw new Error(`Pilot generation lineage is incomplete for ${record.slug}`);
+    const checksumRecord = pilotChecksums.assets.find(
+      (asset) => asset.slug === record.slug,
+    );
+    if (
+      !checksumRecord ||
+      !Array.isArray(record.steps) ||
+      record.steps.length === 0
+    ) {
+      throw new Error(
+        `Pilot generation lineage is incomplete for ${record.slug}`,
+      );
     }
 
-    const sharedParent = version === 2 ? sharedParentsById.get(record.shared_parent_id) : null;
+    const sharedParent =
+      version === 2 ? sharedParentsById.get(record.shared_parent_id) : null;
     if (version === 2 && !sharedParent) {
-      throw new Error(`${record.slug} does not resolve a shared generated parent`);
+      throw new Error(
+        `${record.slug} does not resolve a shared generated parent`,
+      );
     }
     const renderContract = version === 2 ? record.render_contract : null;
     if (version === 2) {
-      validateBackgroundRgb(renderContract?.master_background_rgb, `${record.slug} master background`);
-      validateBackgroundRgb(renderContract?.lesson_card?.normalize_background_rgb, `${record.slug} lesson-card normalization background`);
-      validateBackgroundRgb(renderContract?.lesson_card?.padding_color_rgb, `${record.slug} lesson-card padding`);
-      validateBackgroundRgb(renderContract?.video_poster?.normalize_background_rgb, `${record.slug} video-poster normalization background`);
+      validateBackgroundRgb(
+        renderContract?.master_background_rgb,
+        `${record.slug} master background`,
+      );
+      validateBackgroundRgb(
+        renderContract?.lesson_card?.normalize_background_rgb,
+        `${record.slug} lesson-card normalization background`,
+      );
+      validateBackgroundRgb(
+        renderContract?.lesson_card?.padding_color_rgb,
+        `${record.slug} lesson-card padding`,
+      );
+      validateBackgroundRgb(
+        renderContract?.video_poster?.normalize_background_rgb,
+        `${record.slug} video-poster normalization background`,
+      );
     }
 
     let priorOutput = version === 2 ? sharedParent.output : null;
@@ -649,11 +1083,18 @@ async function validatePilotGenerationLineage() {
       if (step.step !== index + 1) {
         throw new Error(`${record.slug} generation lineage is out of order`);
       }
-      const expectedOperation = version === 2 ? "edit" : index === 0 ? "generate" : "edit";
+      const expectedOperation =
+        version === 2 ? "edit" : index === 0 ? "generate" : "edit";
       if (step.operation !== expectedOperation) {
-        throw new Error(`${record.slug} generation lineage operation is invalid`);
+        throw new Error(
+          `${record.slug} generation lineage operation is invalid`,
+        );
       }
-      const prompt = await readAndValidatePrompt(step.prompt_path, step.prompt_sha256, `${record.slug} generation`);
+      const prompt = await readAndValidatePrompt(
+        step.prompt_path,
+        step.prompt_sha256,
+        `${record.slug} generation`,
+      );
       if (!Array.isArray(step.inputs) || step.inputs.length === 0) {
         throw new Error(`${record.slug} generation inputs are missing`);
       }
@@ -662,18 +1103,39 @@ async function validatePilotGenerationLineage() {
           requireId: version === 2,
         });
       }
-      if ((version === 2 || index > 0) && (step.inputs[0]?.sha256 !== priorOutput?.sha256 || step.inputs[0]?.path !== priorOutput?.path)) {
-        throw new Error(`${record.slug} edit step is not tied to the prior output`);
+      if (
+        (version === 2 || index > 0) &&
+        (step.inputs[0]?.sha256 !== priorOutput?.sha256 ||
+          step.inputs[0]?.path !== priorOutput?.path)
+      ) {
+        throw new Error(
+          `${record.slug} edit step is not tied to the prior output`,
+        );
       }
-      if (version === 2 && index === 0 && (step.parent_source_sha256 !== sharedParent.output.sha256 || step.inputs[0]?.id !== record.shared_parent_id)) {
-        throw new Error(`${record.slug} first edit is not bound to its shared generated parent`);
+      if (
+        version === 2 &&
+        index === 0 &&
+        (step.parent_source_sha256 !== sharedParent.output.sha256 ||
+          step.inputs[0]?.id !== record.shared_parent_id)
+      ) {
+        throw new Error(
+          `${record.slug} first edit is not bound to its shared generated parent`,
+        );
       }
-      if (version === 2 && index > 0 && step.parent_source_sha256 !== priorOutput.sha256) {
+      if (
+        version === 2 &&
+        index > 0 &&
+        step.parent_source_sha256 !== priorOutput.sha256
+      ) {
         throw new Error(`${record.slug} edit parent checksum is out of order`);
       }
 
       validateToolEvidence(step.tool_evidence, `${record.slug} generation`);
-      if (version === 2 && (v2InvocationIds.has(step.tool_evidence.invocation_call_id) || v2ToolOutputIds.has(step.tool_evidence.tool_output_id))) {
+      if (
+        version === 2 &&
+        (v2InvocationIds.has(step.tool_evidence.invocation_call_id) ||
+          v2ToolOutputIds.has(step.tool_evidence.tool_output_id))
+      ) {
         throw new Error(`${record.slug} reuses image-generation tool evidence`);
       }
       if (version === 2) {
@@ -692,8 +1154,14 @@ async function validatePilotGenerationLineage() {
     }
 
     const terminal = record.steps.at(-1).output;
-    if (record.terminal_output_sha256 !== terminal.sha256 || terminal.sha256 !== checksumRecord.source.sha256 || terminal.path !== checksumRecord.source.path) {
-      throw new Error(`${record.slug} terminal generation output does not match the review source`);
+    if (
+      record.terminal_output_sha256 !== terminal.sha256 ||
+      terminal.sha256 !== checksumRecord.source.sha256 ||
+      terminal.path !== checksumRecord.source.path
+    ) {
+      throw new Error(
+        `${record.slug} terminal generation output does not match the review source`,
+      );
     }
   }
   return {
@@ -739,15 +1207,34 @@ const usesTwoIdentityPilotLineage = pilotLineageContract.version >= 3;
 const usesPoseVariationPilotLineage = pilotLineageContract.version === 4;
 
 const pilotReferences = usesTwoIdentityPilotLineage
-  ? [...baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2"), ...pilotLineageContract.additionalReferences]
+  ? [
+      ...baseReferences.filter(
+        (reference) =>
+          reference.id === "style-ref-1" || reference.id === "style-ref-2",
+      ),
+      ...pilotLineageContract.additionalReferences,
+    ]
   : usesSharedPilotLineage
     ? (() => {
-        const collected = new Map(baseReferences.filter((reference) => reference.id === "style-ref-1" || reference.id === "style-ref-2").map((reference) => [reference.id, reference]));
+        const collected = new Map(
+          baseReferences
+            .filter(
+              (reference) =>
+                reference.id === "style-ref-1" ||
+                reference.id === "style-ref-2",
+            )
+            .map((reference) => [reference.id, reference]),
+        );
         for (const parent of pilotLineageContract.sharedParentsById.values()) {
           for (const input of parent.inputs) {
             const existing = collected.get(input.id);
-            if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
-              throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
+            if (
+              existing &&
+              (existing.path !== input.path || existing.sha256 !== input.sha256)
+            ) {
+              throw new Error(
+                `Pilot lineage v2 reference id drifted: ${input.id}`,
+              );
             }
             collected.set(input.id, {
               id: input.id,
@@ -767,8 +1254,14 @@ const pilotReferences = usesTwoIdentityPilotLineage
           for (const step of record.steps) {
             for (const input of step.inputs) {
               const existing = collected.get(input.id);
-              if (existing && (existing.path !== input.path || existing.sha256 !== input.sha256)) {
-                throw new Error(`Pilot lineage v2 reference id drifted: ${input.id}`);
+              if (
+                existing &&
+                (existing.path !== input.path ||
+                  existing.sha256 !== input.sha256)
+              ) {
+                throw new Error(
+                  `Pilot lineage v2 reference id drifted: ${input.id}`,
+                );
               }
               if (!existing) {
                 collected.set(input.id, {
@@ -786,8 +1279,14 @@ const pilotReferences = usesTwoIdentityPilotLineage
     : baseReferences;
 
 const videoContactSheetContract = await validateVideoContactSheets();
-const references = [...pilotReferences, ...videoContactSheetContract.references];
-if (new Set(references.map((reference) => reference.id)).size !== references.length) {
+const references = [
+  ...pilotReferences,
+  ...videoContactSheetContract.references,
+];
+if (
+  new Set(references.map((reference) => reference.id)).size !==
+  references.length
+) {
   throw new Error("Artwork reference ids must be globally unique");
 }
 
@@ -795,7 +1294,9 @@ for (const reference of references) {
   const contents = await readFile(path.join(repoRoot, reference.path));
   const actualSha256 = sha256(contents);
   if (actualSha256 !== reference.sha256) {
-    throw new Error(`Reference ${reference.id} SHA-256 mismatch: ${actualSha256} != ${reference.sha256}`);
+    throw new Error(
+      `Reference ${reference.id} SHA-256 mismatch: ${actualSha256} != ${reference.sha256}`,
+    );
   }
 }
 
@@ -842,7 +1343,9 @@ Constraints: no title, no words, no letters, no numbers, no logos, no watermark;
 Avoid: any gradient, texture, lighting, glow, shadow, reflection, depth, realistic perspective, photorealism, 3D rendering, complex diagrams, busy masonry, detailed interiors, edge-cropped key objects`,
 };
 
-const factFindArtDirection = getArtworkPose("master-poster-video-slot-07-fact-find");
+const factFindArtDirection = getArtworkPose(
+  "master-poster-video-slot-07-fact-find",
+);
 const factFindPosterPrompt = `Use case: stylized-concept
 Asset type: BMH Institute Fact Find video-poster master, wide 16:9 artwork generated independently from the Opening the Call lesson-card master
 Primary request: Create a focused Fact Find illustration. The five-second read must be “ask with curiosity, listen carefully, and organize the seller facts.” Show a large listening ear, a magnifier, and a clean fact checklist made only from unlabeled lines and check marks. This image must stand on its own as the Fact Find video poster and must not reuse the Opening the Call pilot composition.
@@ -864,7 +1367,8 @@ const lessonSpecs = [
     pilot: true,
     references: ["style-ref-1", "style-ref-2", "orientation-building"],
     fiveSecondRead: "welcome, direction, and the calm service mindset",
-    scene: "a welcoming training building, learner, compass, checklist, and steady path",
+    scene:
+      "a welcoming training building, learner, compass, checklist, and steady path",
     anchors: [
       ["welcome at the open training doorway", "full-safe"],
       ["learner choosing a steady compass-led path", "left-safe"],
@@ -873,22 +1377,26 @@ const lessonSpecs = [
   {
     slot: "slot-02",
     title: "Real Estate Terms Glossary",
-    fiveSecondRead: "turn unfamiliar real estate language into clear shared meaning",
-    scene: "an open reference book surrounded by a house, key, contract page, map pin, and speech bubble stickers",
+    fiveSecondRead:
+      "turn unfamiliar real estate language into clear shared meaning",
+    scene:
+      "an open reference book surrounded by a house, key, contract page, map pin, and speech bubble stickers",
     anchors: [["plain-language real estate reference kit", "full-safe"]],
   },
   {
     slot: "slot-03",
     title: "Tech Stack and Systems",
     fiveSecondRead: "use connected tools as one reliable operating system",
-    scene: "a central hub linking a lead card, phone, task checklist, coaching headset, and clean dashboard stickers",
+    scene:
+      "a central hub linking a lead card, phone, task checklist, coaching headset, and clean dashboard stickers",
     anchors: [["connected tool hub and reliable handoffs", "full-safe"]],
   },
   {
     slot: "slot-04",
     title: "Humanizing the Lead",
     fiveSecondRead: "see the person and situation before the property",
-    scene: "three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing",
+    scene:
+      "three separate human-first stickers: a homeowner beside a small house, an unfolding story path, and a calm fit lens aligning person, property, and timing",
     anchors: [
       ["homeowner before property details", "left-safe"],
       ["seller story and situation path", "center-safe"],
@@ -899,7 +1407,8 @@ const lessonSpecs = [
     slot: "slot-05",
     title: "The BMH Offer Playbook",
     fiveSecondRead: "match a seller situation to a clear respectful option",
-    scene: "two balanced offer stations: a situation-to-option scale and a choice path ending in a calm handshake",
+    scene:
+      "two balanced offer stations: a situation-to-option scale and a choice path ending in a calm handshake",
     anchors: [
       ["situation-to-option balance", "left-safe"],
       ["clear choice path and respectful agreement", "right-safe"],
@@ -909,7 +1418,8 @@ const lessonSpecs = [
     slot: "slot-06",
     title: "Sales Pipeline and Stage Ownership",
     fiveSecondRead: "move each conversation through clear owned stages",
-    scene: "a pipeline of distinct stage cards passed with a baton, beside a five-step stepping-stone conversation path",
+    scene:
+      "a pipeline of distinct stage cards passed with a baton, beside a five-step stepping-stone conversation path",
     anchors: [
       ["owned pipeline stages and baton handoff", "left-safe"],
       ["five-step conversation path", "right-safe"],
@@ -921,7 +1431,8 @@ const lessonSpecs = [
     pilot: true,
     references: ["style-ref-1", "style-ref-2", "opening-phone-shapes"],
     fiveSecondRead: "start a confident human call and uncover the facts",
-    scene: "a friendly handset linking an employee and homeowner, with speech bubbles, an open door, and a small fact-finding checklist",
+    scene:
+      "a friendly handset linking an employee and homeowner, with speech bubbles, an open door, and a small fact-finding checklist",
     anchors: [
       ["confident human call opening", "full-safe"],
       ["curious fact-finding conversation", "right-safe"],
@@ -930,8 +1441,10 @@ const lessonSpecs = [
   {
     slot: "slot-08",
     title: "Discovery and Handoff",
-    fiveSecondRead: "listen deeply then transfer clear context without dropping it",
-    scene: "a listening magnifier uncovering a seller need, beside two teammates passing a complete context folder across a short bridge",
+    fiveSecondRead:
+      "listen deeply then transfer clear context without dropping it",
+    scene:
+      "a listening magnifier uncovering a seller need, beside two teammates passing a complete context folder across a short bridge",
     anchors: [
       ["listening-led discovery", "left-safe"],
       ["complete context handoff", "right-safe"],
@@ -943,21 +1456,24 @@ const lessonSpecs = [
     pilot: true,
     references: ["style-ref-1", "style-ref-2", "objection-character"],
     fiveSecondRead: "hear, reframe, and build a calm response",
-    scene: "a modular arch built from an ear, reframe arrow, and checked speech bubble, with a thoughtful phone rep",
+    scene:
+      "a modular arch built from an ear, reframe arrow, and checked speech bubble, with a thoughtful phone rep",
     anchors: [["hear reframe and respond architecture", "full-safe"]],
   },
   {
     slot: "slot-10",
     title: "Objection Scripts Playbook",
     fiveSecondRead: "use a flexible response tool without sounding robotic",
-    scene: "a compact toolbox holding modular speech-bubble cards, an ear, a curved response arrow, and a calm rep",
+    scene:
+      "a compact toolbox holding modular speech-bubble cards, an ear, a curved response arrow, and a calm rep",
     anchors: [["flexible objection response toolbox", "full-safe"]],
   },
   {
     slot: "slot-11",
     title: "Complex Objections",
     fiveSecondRead: "untangle layered concerns while preserving trust",
-    scene: "a rep calmly untangling a knot of house, clock, contract, and price symbols, beside a shield-shaped bridge connecting two people",
+    scene:
+      "a rep calmly untangling a knot of house, clock, contract, and price symbols, beside a shield-shaped bridge connecting two people",
     anchors: [
       ["untangling layered objections", "left-safe"],
       ["trust and people bridge", "right-safe"],
@@ -967,7 +1483,8 @@ const lessonSpecs = [
     slot: "slot-12",
     title: "Seller FAQ Decoder",
     fiveSecondRead: "decode common seller questions into clear helpful answers",
-    scene: "two question clusters connected to an answer lens: one around process and timing, one around property, contract, and next steps",
+    scene:
+      "two question clusters connected to an answer lens: one around process and timing, one around property, contract, and next steps",
     anchors: [
       ["process and timing question cluster", "left-safe"],
       ["property contract and next-step question cluster", "right-safe"],
@@ -977,42 +1494,54 @@ const lessonSpecs = [
     slot: "slot-13",
     title: "Follow-Up Cadence",
     fiveSecondRead: "follow up consistently with purpose and respect",
-    scene: "a calendar loop connecting a phone, message bubble, task check, and pause marker around one calm homeowner",
+    scene:
+      "a calendar loop connecting a phone, message bubble, task check, and pause marker around one calm homeowner",
     anchors: [["purposeful respectful follow-up loop", "full-safe"]],
   },
   {
     slot: "slot-14",
     title: "Conversation Flow Mastery",
-    fiveSecondRead: "guide a natural conversation from opening to clear next step",
-    scene: "a flowing path of listening, discovery, option, agreement, and next-step stickers led by one calm rep",
-    anchors: [["natural conversation flow from listen to next step", "full-safe"]],
+    fiveSecondRead:
+      "guide a natural conversation from opening to clear next step",
+    scene:
+      "a flowing path of listening, discovery, option, agreement, and next-step stickers led by one calm rep",
+    anchors: [
+      ["natural conversation flow from listen to next step", "full-safe"],
+    ],
   },
   {
     slot: "slot-15",
     title: "Closing and Deal Engineering",
     fiveSecondRead: "assemble a sound agreement that works for both sides",
-    scene: "two sides of a bridge joined by contract, calendar, house, and handshake puzzle pieces with a final fit check",
+    scene:
+      "two sides of a bridge joined by contract, calendar, house, and handshake puzzle pieces with a final fit check",
     anchors: [["sound agreement and deal-fit bridge", "full-safe"]],
   },
   {
     slot: "slot-16",
     title: "KPIs and Sales Telemetry",
-    fiveSecondRead: "use quality signals to improve the work without chasing vanity numbers",
-    scene: "a clean signal dashboard with a gauge, conversation-quality waveform, funnel, coaching magnifier, and improvement arrow",
+    fiveSecondRead:
+      "use quality signals to improve the work without chasing vanity numbers",
+    scene:
+      "a clean signal dashboard with a gauge, conversation-quality waveform, funnel, coaching magnifier, and improvement arrow",
     anchors: [["quality signals coaching and improvement", "full-safe"]],
   },
   {
     slot: "slot-17",
     title: "Compensation Engine",
-    fiveSecondRead: "understand how role expectations and verified outcomes connect to the current written plan",
-    scene: "a written role sheet connected by gears to quality work, verified outcome, and review check stickers, with no money symbols",
+    fiveSecondRead:
+      "understand how role expectations and verified outcomes connect to the current written plan",
+    scene:
+      "a written role sheet connected by gears to quality work, verified outcome, and review check stickers, with no money symbols",
     anchors: [["written role plan linked to verified outcomes", "full-safe"]],
   },
   {
     slot: "slot-18",
     title: "Operator Playbook and Daily Mission Control",
-    fiveSecondRead: "own the daily operating rhythm and keep priorities visible",
-    scene: "an operator station with an ownership checklist, beside a mission-control board linking calendar, calls, tasks, pipeline, and coaching",
+    fiveSecondRead:
+      "own the daily operating rhythm and keep priorities visible",
+    scene:
+      "an operator station with an ownership checklist, beside a mission-control board linking calendar, calls, tasks, pipeline, and coaching",
     anchors: [
       ["operator ownership checklist", "left-safe"],
       ["daily mission-control board", "right-safe"],
@@ -1021,24 +1550,38 @@ const lessonSpecs = [
   {
     slot: "slot-19",
     title: "Career Growth Path",
-    fiveSecondRead: "build capability through practice feedback and increasing ownership",
-    scene: "a learner climbing broad steps marked only by practice, coaching, capability, and ownership icons toward a guiding beacon",
+    fiveSecondRead:
+      "build capability through practice feedback and increasing ownership",
+    scene:
+      "a learner climbing broad steps marked only by practice, coaching, capability, and ownership icons toward a guiding beacon",
     anchors: [["practice coaching capability and ownership path", "full-safe"]],
   },
 ];
 
 function buildPrompt(spec) {
   if (usesLockedPilotContract && spec.pilot) {
-    const prompt = pilotLineageContract.promptBySlug.get(pilotSlugBySlot[spec.slot]);
-    if (!prompt) throw new Error(`${spec.slot} pilot prompt is missing from locked lineage`);
+    const prompt = pilotLineageContract.promptBySlug.get(
+      pilotSlugBySlot[spec.slot],
+    );
+    if (!prompt)
+      throw new Error(
+        `${spec.slot} pilot prompt is missing from locked lineage`,
+      );
     return prompt;
   }
   if (pilotPrompts[spec.slot]) return pilotPrompts[spec.slot];
   const artDirection = getArtworkPose(`master-${spec.slot}`);
-  const characterName = artDirection.character_id === "andrea-approved" ? "Andrea" : "the recurring curly-haired seller";
+  const characterName =
+    artDirection.character_id === "andrea-approved"
+      ? "Andrea"
+      : "the recurring curly-haired seller";
   const anchorSentence = spec.anchors
     .map(([subject, crop], index) => {
-      const placement = crop.startsWith("left") ? "left" : crop.startsWith("right") ? "right" : "center";
+      const placement = crop.startsWith("left")
+        ? "left"
+        : crop.startsWith("right")
+          ? "right"
+          : "center";
       return `poster anchor ${index + 1} is ${subject} in the ${placement} safe zone`;
     })
     .join("; ");
@@ -1062,20 +1605,28 @@ function assertAsset(assetKey, localPath) {
   const asset = manifestAssets.get(assetKey);
   if (!asset) throw new Error(`Manifest is missing ${assetKey}`);
   if (asset.local_path !== localPath) {
-    throw new Error(`${assetKey} path mismatch: ${asset.local_path} != ${localPath}`);
+    throw new Error(
+      `${assetKey} path mismatch: ${asset.local_path} != ${localPath}`,
+    );
   }
   if (!["missing", "approved"].includes(asset.approval_status)) {
-    throw new Error(`${assetKey} has unsupported artwork approval status ${asset.approval_status}`);
+    throw new Error(
+      `${assetKey} has unsupported artwork approval status ${asset.approval_status}`,
+    );
   }
   if (asset.approval_status === "approved") {
     if (!/^[a-f0-9]{64}$/.test(asset.checksum_sha256 ?? "")) {
-      throw new Error(`${assetKey} approved artwork is missing a valid SHA-256`);
+      throw new Error(
+        `${assetKey} approved artwork is missing a valid SHA-256`,
+      );
     }
     if (!Number.isSafeInteger(asset.size_bytes) || asset.size_bytes <= 0) {
       throw new Error(`${assetKey} approved artwork is missing a valid size`);
     }
     if (!asset.storage_path.includes(asset.checksum_sha256)) {
-      throw new Error(`${assetKey} approved artwork storage path is not checksum-addressed`);
+      throw new Error(
+        `${assetKey} approved artwork storage path is not checksum-addressed`,
+      );
     }
   }
 }
@@ -1083,7 +1634,9 @@ function assertAsset(assetKey, localPath) {
 const inventoryLessons = lessonSpecs.map((spec, index) => {
   const lesson = lessons[index];
   if (!lesson || lesson.title !== spec.title) {
-    throw new Error(`${spec.slot} title mismatch: expected ${spec.title}, got ${lesson?.title}`);
+    throw new Error(
+      `${spec.slot} title mismatch: expected ${spec.title}, got ${lesson?.title}`,
+    );
   }
   const videoBlocks = lesson.blocks.filter((block) => block.type === "video");
   if (videoBlocks.length !== spec.anchors.length) {
@@ -1093,8 +1646,12 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
   const cardPath = `course-assets/thumbnails/${spec.slot}.webp`;
   assertAsset(lesson.thumbnail_asset_key, cardPath);
   const pilotSlug = spec.pilot ? pilotSlugBySlot[spec.slot] : null;
-  const pilotLineage = pilotSlug ? pilotGenerationLineage.records.find((record) => record.slug === pilotSlug) : null;
-  const productionVideoEvidence = videoContactSheetContract.byMasterId.get(`master-${spec.slot}`);
+  const pilotLineage = pilotSlug
+    ? pilotGenerationLineage.records.find((record) => record.slug === pilotSlug)
+    : null;
+  const productionVideoEvidence = videoContactSheetContract.byMasterId.get(
+    `master-${spec.slot}`,
+  );
   const pilotContactSheetInput =
     usesLockedPilotContract && pilotLineage
       ? {
@@ -1103,14 +1660,25 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
           ...pilotLineage.contact_sheet_input,
         }
       : null;
-  const videoEvidence = pilotLineage?.video_evidence ?? productionVideoEvidence?.video_evidence;
-  const contactSheetInput = pilotContactSheetInput ?? productionVideoEvidence?.contact_sheet_input;
+  const videoEvidence =
+    pilotLineage?.video_evidence ?? productionVideoEvidence?.video_evidence;
+  const contactSheetInput =
+    pilotContactSheetInput ?? productionVideoEvidence?.contact_sheet_input;
   if (!videoEvidence?.length || !contactSheetInput) {
-    throw new Error(`master-${spec.slot} lacks required exact source-video evidence`);
+    throw new Error(
+      `master-${spec.slot} lacks required exact source-video evidence`,
+    );
   }
   const artDirection = getArtworkPose(`master-${spec.slot}`);
-  if (usesPoseVariationPilotLineage && pilotLineage && (pilotLineage.pose_label !== artDirection.pose_id || pilotLineage.pose_signature !== artDirection.lineage_pose_signature)) {
-    throw new Error(`${spec.slot} pilot pose does not match the production pose contract`);
+  if (
+    usesPoseVariationPilotLineage &&
+    pilotLineage &&
+    (pilotLineage.pose_label !== artDirection.pose_id ||
+      pilotLineage.pose_signature !== artDirection.lineage_pose_signature)
+  ) {
+    throw new Error(
+      `${spec.slot} pilot pose does not match the production pose contract`,
+    );
   }
   const renderContract =
     usesSharedPilotLineage && pilotLineage
@@ -1132,21 +1700,36 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
               normalize_background_rgb: artDirection.background_rgb,
               padding_color_rgb: artDirection.background_rgb,
             },
-            video_poster: { normalize_background_rgb: artDirection.background_rgb },
+            video_poster: {
+              normalize_background_rgb: artDirection.background_rgb,
+            },
           };
   const lessonReferenceIds =
     usesLockedPilotContract && pilotSlug
       ? pilotLineageContract.referenceIdsBySlug.get(pilotSlug)
-      : [...new Set([...(spec.references ?? ["style-ref-1", "style-ref-2"]), artDirection.character_id, contactSheetInput.id])];
+      : [
+          ...new Set([
+            ...(spec.references ?? ["style-ref-1", "style-ref-2"]),
+            artDirection.character_id,
+            contactSheetInput.id,
+          ]),
+        ];
   const prompt = buildPrompt(spec);
-  const plannedGenerationCallId = spec.pilot ? null : `imagegen-lesson-${spec.slot}`;
-  const lessonProvenance = buildProvenance(plannedGenerationCallId, spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call");
+  const plannedGenerationCallId = spec.pilot
+    ? null
+    : `imagegen-lesson-${spec.slot}`;
+  const lessonProvenance = buildProvenance(
+    plannedGenerationCallId,
+    spec.pilot ? "promote-existing-pilot-call" : "one-distinct-call",
+  );
 
   const master = {
     id: `master-${spec.slot}`,
     source_path: `course-assets/thumbnails/production/sources/${spec.slot}-generated.png`,
     flat_master_path: `course-assets/thumbnails/production/flat-masters/${spec.slot}-flat-master.png`,
-    ...(usesLockedPilotContract ? { background_rgb: renderContract.master_background_rgb } : {}),
+    ...(usesLockedPilotContract
+      ? { background_rgb: renderContract.master_background_rgb }
+      : {}),
     art_direction: artDirection,
     expected_aspect_ratio: "16:9",
     meaningful_content_bounds: {
@@ -1166,24 +1749,40 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     const outputPath = `course-assets/posters/${block.content.asset_key}.webp`;
     assertAsset(assetKey, outputPath);
     const isFactFind = assetKey === "poster-video-slot-07-fact-find";
-    const posterArtDirection = getArtworkPose(isFactFind ? "master-poster-video-slot-07-fact-find" : master.id);
+    const posterArtDirection = getArtworkPose(
+      isFactFind ? "master-poster-video-slot-07-fact-find" : master.id,
+    );
     const factFindVideoEvidence = isFactFind
-      ? videoContactSheetContract.byMasterId.get("master-poster-video-slot-07-fact-find")
+      ? videoContactSheetContract.byMasterId.get(
+          "master-poster-video-slot-07-fact-find",
+        )
       : null;
     const directMaster = isFactFind
       ? {
           id: "master-poster-video-slot-07-fact-find",
-          source_path: "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
-          flat_master_path: "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
-          ...(usesLockedPilotContract ? { background_rgb: posterArtDirection.background_rgb } : {}),
+          source_path:
+            "course-assets/posters/production/sources/video-slot-07-fact-find-generated.png",
+          flat_master_path:
+            "course-assets/posters/production/flat-masters/video-slot-07-fact-find-flat-master.png",
+          ...(usesLockedPilotContract
+            ? { background_rgb: posterArtDirection.background_rgb }
+            : {}),
           art_direction: posterArtDirection,
           expected_aspect_ratio: "16:9",
-          reference_ids: ["style-ref-1", "style-ref-2", posterArtDirection.character_id, factFindVideoEvidence.contact_sheet_input.id],
+          reference_ids: [
+            "style-ref-1",
+            "style-ref-2",
+            posterArtDirection.character_id,
+            factFindVideoEvidence.contact_sheet_input.id,
+          ],
           video_evidence: factFindVideoEvidence.video_evidence,
           contact_sheet_input: factFindVideoEvidence.contact_sheet_input,
           prompt: factFindPosterPrompt,
           prompt_sha256: sha256(factFindPosterPrompt),
-          provenance: buildProvenance("imagegen-poster-video-slot-07-fact-find", "one-distinct-call"),
+          provenance: buildProvenance(
+            "imagegen-poster-video-slot-07-fact-find",
+            "one-distinct-call",
+          ),
           production_record: createEmptyProductionRecord(),
         }
       : null;
@@ -1195,13 +1794,16 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       // The approved welcome poster recipe is checksum-bound to its historical
       // production title. Keep that lineage label stable while the learner-facing
       // course title remains free to use the role-agnostic service wording.
-      video_title: block.content.asset_key === "video-slot-01-welcome"
-        ? "Welcome and the Navigator's Playbook"
-        : block.content.title,
+      video_title:
+        block.content.asset_key === "video-slot-01-welcome"
+          ? "Welcome and the Navigator's Playbook"
+          : block.content.title,
       output_path: outputPath,
       focus_subject: focusSubject,
       art_direction: posterArtDirection,
-      production_source_mode: directMaster ? "generate-distinct-after-pilot-approval" : "derive-from-lesson-master",
+      production_source_mode: directMaster
+        ? "generate-distinct-after-pilot-approval"
+        : "derive-from-lesson-master",
       direct_master: directMaster,
       derivative: {
         recipe_id: `${spec.slot}-${block.content.asset_key}-${effectiveCropProfile}`,
@@ -1209,7 +1811,9 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         crop_profile: effectiveCropProfile,
         normalize_master_dimensions: [1280, 720],
         normalize_method: "contain-with-padding",
-        normalize_background_rgb: directMaster ? posterArtDirection.background_rgb : renderContract.video_poster.normalize_background_rgb,
+        normalize_background_rgb: directMaster
+          ? posterArtDirection.background_rgb
+          : renderContract.video_poster.normalize_background_rgb,
         crop_pixels_after_normalize: {
           "full-safe": [0, 0, 1280, 720],
           "left-safe": [64, 144, 768, 432],
@@ -1232,7 +1836,9 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
     lesson_source_key: lesson.source_key,
     title: spec.title,
     pilot: Boolean(spec.pilot),
-    production_source_mode: spec.pilot ? "promote-approved-pilot-flat-master" : "generate-after-pilot-approval",
+    production_source_mode: spec.pilot
+      ? "promote-approved-pilot-flat-master"
+      : "generate-after-pilot-approval",
     reference_ids: lessonReferenceIds,
     art_direction: artDirection,
     prompt,
@@ -1249,7 +1855,8 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
         method: "contain-master-in-1280x720-and-pad-40px-top-and-bottom",
         normalize_master_dimensions: [1280, 720],
         normalize_method: "contain-with-padding",
-        normalize_background_rgb: renderContract.lesson_card.normalize_background_rgb,
+        normalize_background_rgb:
+          renderContract.lesson_card.normalize_background_rgb,
         padding_color_rgb: renderContract.lesson_card.padding_color_rgb,
         crop_allowed: false,
         resample: "lanczos",
@@ -1263,7 +1870,9 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
       ? {
           slug: pilotSlug,
           status: pilotChecksums.status,
-          assets: pilotChecksums.assets.find((asset) => asset.slug === pilotSlug),
+          assets: pilotChecksums.assets.find(
+            (asset) => asset.slug === pilotSlug,
+          ),
           checksum_record_path: pilotChecksumsRecordPath,
           generation_lineage_record_path: pilotGenerationLineageRecordPath,
           generation_lineage: pilotLineage,
@@ -1272,7 +1881,10 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
                 lineage_schema_version: pilotGenerationLineage.schema_version,
                 ...(usesSharedPilotLineage
                   ? {
-                      shared_generation_parent: pilotLineageContract.sharedParentsById.get(pilotLineage.shared_parent_id),
+                      shared_generation_parent:
+                        pilotLineageContract.sharedParentsById.get(
+                          pilotLineage.shared_parent_id,
+                        ),
                     }
                   : {
                       identity_contract: pilotGenerationLineage.contract,
@@ -1289,7 +1901,9 @@ const inventoryLessons = lessonSpecs.map((spec, index) => {
 
 const coverPath = "course-assets/thumbnails/program-bmh-employee-training.webp";
 assertAsset(course.thumbnail_asset_key, coverPath);
-const courseCoverArtDirection = getArtworkPose("master-program-bmh-employee-training");
+const courseCoverArtDirection = getArtworkPose(
+  "master-program-bmh-employee-training",
+);
 const courseCoverFlatFillCleanup = {
   id: "lower-left-house-facade",
   seed_xy: [250, 450],
@@ -1297,18 +1911,28 @@ const courseCoverFlatFillCleanup = {
   replacement_rgb: YELLOW_RGB,
   expected_pixel_count: 6282,
   expected_changed_pixel_count: 1277,
-  source_pixel_baseline_path: "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-002.png",
-  source_pixel_baseline_sha256: "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
-  flat_pixel_baseline_path: "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-002.png",
-  flat_pixel_baseline_sha256: "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
+  source_pixel_baseline_path:
+    "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/step-002.png",
+  source_pixel_baseline_sha256:
+    "1f8caa9a9985e4a76ba6590eb8d6fb7078c7e8f4d5128bfbab91f2f2af4e94e1",
+  flat_pixel_baseline_path:
+    "course-assets/thumbnails/production/sources/lineage/master-program-bmh-employee-training/flat-masters/version-002.png",
+  flat_pixel_baseline_sha256:
+    "4e68c2aef5557a6ea677fa541697542d71f829ef79e3c0ad51d4e7550140c8b5",
   expected_bounds: [229, 392, 310, 510],
 };
 await validateLineageInput(
-  { path: courseCoverFlatFillCleanup.source_pixel_baseline_path, sha256: courseCoverFlatFillCleanup.source_pixel_baseline_sha256 },
+  {
+    path: courseCoverFlatFillCleanup.source_pixel_baseline_path,
+    sha256: courseCoverFlatFillCleanup.source_pixel_baseline_sha256,
+  },
   "course-cover source-pixel baseline",
 );
 await validateLineageInput(
-  { path: courseCoverFlatFillCleanup.flat_pixel_baseline_path, sha256: courseCoverFlatFillCleanup.flat_pixel_baseline_sha256 },
+  {
+    path: courseCoverFlatFillCleanup.flat_pixel_baseline_path,
+    sha256: courseCoverFlatFillCleanup.flat_pixel_baseline_sha256,
+  },
   "course-cover flat-pixel baseline",
 );
 
@@ -1324,10 +1948,12 @@ const inventory = {
   generation_policy: {
     gate: "Jarrad must approve all three pilots before any new image generation",
     generator: "built-in image_gen",
-    call_strategy: "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
+    call_strategy:
+      "one distinct image_gen call per cover or non-pilot lesson master, plus a separate Fact Find poster-master call",
     ...(usesSharedPilotLineage
       ? {
-          pilot_call_strategy: "one checksum-locked shared cast generation followed by one independently evidenced edit chain per pilot",
+          pilot_call_strategy:
+            "one checksum-locked shared cast generation followed by one independently evidenced edit chain per pilot",
         }
       : usesTwoIdentityPilotLineage
         ? {
@@ -1337,7 +1963,8 @@ const inventory = {
           }
         : {}),
     model_native_text: "forbidden",
-    manifest_approval_updates: "forbidden until visual QA and explicit approval",
+    manifest_approval_updates:
+      "forbidden until visual QA and explicit approval",
     upload_or_publish: "forbidden in artwork production",
   },
   style_system: {
@@ -1382,9 +2009,13 @@ const inventory = {
     id: "master-program-bmh-employee-training",
     asset_key: course.thumbnail_asset_key,
     output_path: coverPath,
-    source_path: "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
-    flat_master_path: "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
-    ...(usesLockedPilotContract ? { background_rgb: courseCoverArtDirection.background_rgb } : {}),
+    source_path:
+      "course-assets/thumbnails/production/sources/program-bmh-employee-training-generated.png",
+    flat_master_path:
+      "course-assets/thumbnails/production/flat-masters/program-bmh-employee-training-flat-master.png",
+    ...(usesLockedPilotContract
+      ? { background_rgb: courseCoverArtDirection.background_rgb }
+      : {}),
     flat_fill_cleanup: [courseCoverFlatFillCleanup],
     art_direction: courseCoverArtDirection,
     derivative: {
@@ -1400,7 +2031,11 @@ const inventory = {
       resample: "lanczos",
       output_format: "lossless-webp",
     },
-    reference_ids: ["style-ref-1", "style-ref-2", courseCoverArtDirection.character_id],
+    reference_ids: [
+      "style-ref-1",
+      "style-ref-2",
+      courseCoverArtDirection.character_id,
+    ],
     prompt: `Use case: stylized-concept
 Asset type: BMH Institute BMH Employee Training course cover, wide 16:9 master designed to crop safely to 16:10
 Primary request: Create the course cover for BMH Employee Training. The five-second read must be “one clear path from orientation through confident service and career growth.” Use a welcoming training doorway as the central hero sticker. Arrange six small supporting stickers around it for the six course sections: compass and checklist, homeowner and heart, connected speech bubbles, ear and reframe arrow, calendar and handshake, and a clean dashboard leading to broad growth steps.
@@ -1432,7 +2067,12 @@ const productionRecords = [
   ["course cover", inventory.course_cover.production_record],
   ...inventory.lessons.flatMap((lesson) => [
     [`${lesson.slot} lesson master`, lesson.master.production_record],
-    ...lesson.posters.filter((poster) => poster.direct_master).map((poster) => [`${poster.asset_key} direct master`, poster.direct_master.production_record]),
+    ...lesson.posters
+      .filter((poster) => poster.direct_master)
+      .map((poster) => [
+        `${poster.asset_key} direct master`,
+        poster.direct_master.production_record,
+      ]),
   ]),
 ];
 for (const [label, record] of productionRecords) {
@@ -1443,7 +2083,9 @@ const serializedInventory = `${JSON.stringify(inventory, null, 2)}\n`;
 if (checkMode) {
   const currentInventory = await readFile(outputPath, "utf8");
   if (currentInventory !== serializedInventory) {
-    throw new Error(`${path.relative(repoRoot, outputPath)} is stale; run the builder without --check`);
+    throw new Error(
+      `${path.relative(repoRoot, outputPath)} is stale; run the builder without --check`,
+    );
   }
   console.log(`Verified ${path.relative(repoRoot, outputPath)}`);
 } else {

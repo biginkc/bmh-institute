@@ -35,6 +35,7 @@ import {
 } from "../../scripts/course-content/validate-held-video-recuts.mjs";
 import {
   DIRECT_APPROVAL_OVERRIDE_CUTS,
+  INDEPENDENTLY_REVIEWED_APPROVED_CUTS,
   validateHeldVideoApprovalLedger,
   validateHeldVideoApprovalHistory,
   validateHeldVideoManifestApprovalState,
@@ -102,7 +103,11 @@ function readZipEntry(archive, wantedName) {
     const compressedSize = archive.readUInt32LE(offset + 18);
     const fileNameLength = archive.readUInt16LE(offset + 26);
     const extraLength = archive.readUInt16LE(offset + 28);
-    assert.equal(flags & 0x08, 0, "DOCX entries must record sizes in local headers");
+    assert.equal(
+      flags & 0x08,
+      0,
+      "DOCX entries must record sizes in local headers",
+    );
     const nameStart = offset + 30;
     const nameEnd = nameStart + fileNameLength;
     const dataStart = nameEnd + extraLength;
@@ -132,15 +137,18 @@ async function currentReviewAssets() {
       source_key: candidate.source_key,
       checksum_sha256: candidate.sha256,
       local_path: candidate.local_path,
-      approval_status: candidate.approval_status === "approved_exact_cut" ? "approved" : "hold",
+      approval_status:
+        candidate.approval_status === "approved_exact_cut"
+          ? "approved"
+          : "hold",
     })),
   ];
 }
 
-test("all seven policy recuts preserve source, objective, transition, and production gates", async () => {
+test("all seven policy recut packages preserve source, objective, transition, and production gates", async () => {
   const result = await validateHeldVideoRecuts();
   assert.deepEqual(result, {
-    approvalRecords: 11,
+    approvalRecords: 12,
     pendingApprovalRecords: 0,
     recutPackages: 7,
     scriptReviewStatus: "pending-human-script-and-scene-approval",
@@ -167,7 +175,10 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
     ["The Acquisition Manager takes over.", "role_title"],
     ["The Navigator takes over.", "role_title"],
     ["Andrea works with the acquisition team.", "role_title"],
-    ["A seller who says no in week one may agree in week six.", "fixed_stage_progression"],
+    [
+      "A seller who says no in week one may agree in week six.",
+      "fixed_stage_progression",
+    ],
     ["I can guarantee your net.", "outcome_guarantee"],
     ["Update Sandra after every call.", "provider_specific_claim"],
     ["Take a 15 minute break.", "fixed_daily_schedule"],
@@ -184,10 +195,13 @@ test("the spoken policy rejects money, quotas, timelines, promises, and role tit
   }
 });
 
-test("the seven direct overrides plus Terms v10 and KPIs v12 are exactly approved", async () => {
-  const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+test("the direct overrides plus independently reviewed replacements are exactly approved", async () => {
+  const [ledger, held] = await Promise.all([
+    ledgerPromise,
+    currentReviewAssets(),
+  ]);
   assert.deepEqual(validateHeldVideoApprovalLedger(ledger, held), []);
-  assert.equal(ledger.records.length, 11);
+  assert.equal(ledger.records.length, 12);
   assert.equal(
     ledger.records.filter(
       (record) =>
@@ -198,14 +212,17 @@ test("the seven direct overrides plus Terms v10 and KPIs v12 are exactly approve
     ).length,
     0,
   );
-  assert.equal(
-    ledger.records.filter((record) =>
-      DIRECT_APPROVAL_OVERRIDE_CUTS.has(`${record.source_key}:${record.sha256}`) &&
-      record.decision === "approved" &&
-      record.approver === "Jarrad Henry" &&
-      record.date === "2026-07-21",
-    ).length,
-    7,
+  const directApprovalRecords = ledger.records.filter((record) =>
+    DIRECT_APPROVAL_OVERRIDE_CUTS.has(`${record.source_key}:${record.sha256}`),
+  );
+  assert.equal(directApprovalRecords.length, 7);
+  assert.ok(
+    directApprovalRecords.every(
+      (record) =>
+        record.decision === "approved" &&
+        record.approver === "Jarrad Henry" &&
+        ["2026-07-21", "2026-07-30"].includes(record.date),
+    ),
   );
   assert.equal(
     ledger.records.filter(
@@ -213,7 +230,8 @@ test("the seven direct overrides plus Terms v10 and KPIs v12 are exactly approve
         record.decision === "approved" &&
         record.approver === "Jarrad Henry" &&
         record.source_key === "video-slot-02-terms" &&
-        record.sha256 === "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
+        record.sha256 ===
+          "6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
     ).length,
     1,
   );
@@ -223,7 +241,8 @@ test("the seven direct overrides plus Terms v10 and KPIs v12 are exactly approve
         record.decision === "approved" &&
         record.approver === "Jarrad Henry" &&
         record.source_key === "video-slot-16-kpis" &&
-        record.sha256 === "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
+        record.sha256 ===
+          "3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
     ).length,
     1,
   );
@@ -263,14 +282,21 @@ test("forged local candidate inventory cannot widen the approval transition boun
     notes: null,
   });
   const errors = validateLocalPolicyCandidates(inventory, manifest, ledger);
-  assert.ok(errors.some((error) => error.includes("unexpected local policy candidate")));
+  assert.ok(
+    errors.some((error) => error.includes("unexpected local policy candidate")),
+  );
 });
 
 test("approval transitions require evidence and keep decided checksums immutable", async () => {
-  const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  const [ledger, held] = await Promise.all([
+    ledgerPromise,
+    currentReviewAssets(),
+  ]);
   const current = structuredClone(ledger);
-  const pendingIndex = current.records.findIndex((record) =>
-    record.source_key === "video-slot-16-kpis" && record.decision === "approved",
+  const pendingIndex = current.records.findIndex(
+    (record) =>
+      record.source_key === "video-slot-16-kpis" &&
+      record.decision === "approved",
   );
   assert.notEqual(pendingIndex, -1);
   Object.assign(current.records[pendingIndex], {
@@ -314,8 +340,10 @@ test("approval transitions require evidence and keep decided checksums immutable
   approvedAssetWrongApprover.records[pendingIndex].approver = "Not Jarrad";
   const remainingHeld = held.filter(
     (asset) =>
-      asset.source_key !== approvedAssetWrongApprover.records[pendingIndex].source_key ||
-      asset.checksum_sha256 !== approvedAssetWrongApprover.records[pendingIndex].sha256,
+      asset.source_key !==
+        approvedAssetWrongApprover.records[pendingIndex].source_key ||
+      asset.checksum_sha256 !==
+        approvedAssetWrongApprover.records[pendingIndex].sha256,
   );
   assert.ok(
     validateHeldVideoApprovalLedger(
@@ -344,9 +372,11 @@ test("approval transitions require evidence and keep decided checksums immutable
   );
 
   const policyDefectiveApproval = structuredClone(ledger);
-  const policyDefectiveIndex = policyDefectiveApproval.records.findIndex((record) =>
-    record.source_key === "video-slot-02-terms" &&
-    record.sha256 === "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
+  const policyDefectiveIndex = policyDefectiveApproval.records.findIndex(
+    (record) =>
+      record.source_key === "video-slot-02-terms" &&
+      record.sha256 ===
+        "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
   );
   assert.notEqual(policyDefectiveIndex, -1);
   Object.assign(policyDefectiveApproval.records[policyDefectiveIndex], {
@@ -373,7 +403,10 @@ test("approval transitions require evidence and keep decided checksums immutable
 });
 
 test("direct approval overrides are checksum-bound and permit only the authorized terminal transitions", async () => {
-  const [ledger, reviewAssets] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  const [ledger, reviewAssets] = await Promise.all([
+    ledgerPromise,
+    currentReviewAssets(),
+  ]);
   assert.equal(DIRECT_APPROVAL_OVERRIDE_CUTS.size, 7);
 
   const current = structuredClone(ledger);
@@ -384,49 +417,90 @@ test("direct approval overrides are checksum-bound and permit only the authorize
     Object.assign(record, {
       decision: "changes_requested",
       approver: "BMH Institute content QA",
-      date: ["video-slot-17-compensation", "video-slot-18-operator", "video-slot-19-career"].includes(record.source_key)
+      date: [
+        "video-slot-17-compensation",
+        "video-slot-18-operator",
+        "video-slot-19-career",
+      ].includes(record.source_key)
         ? "2026-07-16"
         : "2026-07-17",
       notes: "Replacement required before the direct checksum override.",
     });
   }
-  assert.deepEqual(validateHeldVideoApprovalTransition(current, ledger, reviewAssets), []);
+  assert.deepEqual(
+    validateHeldVideoApprovalTransition(current, ledger, reviewAssets),
+    [],
+  );
 
   const unauthorized = structuredClone(current);
-  unauthorized.updated_at = "2026-07-21";
-  const remainingPolicyCut = unauthorized.records.find((record) =>
-    record.source_key === "video-slot-02-terms" &&
-    record.sha256 === "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
+  unauthorized.updated_at = "2026-07-31";
+  const remainingPolicyCut = unauthorized.records.find(
+    (record) =>
+      record.source_key === "video-slot-02-terms" &&
+      record.sha256 ===
+        "17cac99f171edfb773f85eaaa6719e09ffe1295abec5b062554c72958747c0bb",
   );
   assert.ok(remainingPolicyCut);
   Object.assign(remainingPolicyCut, {
     decision: "approved",
     approver: "Jarrad Henry",
-    date: "2026-07-21",
+    date: "2026-07-31",
     notes: "Not authorized by the exact override set.",
   });
-  assert.ok(validateHeldVideoApprovalTransition(current, unauthorized, reviewAssets).some(
-    (error) => error.includes("policy-defective source cut"),
-  ));
+  assert.ok(
+    validateHeldVideoApprovalTransition(
+      current,
+      unauthorized,
+      reviewAssets,
+    ).some((error) => error.includes("policy-defective source cut")),
+  );
+});
+
+test("every approved held-video checksum is independently code-bound", async () => {
+  const ledger = await ledgerPromise;
+  const approvedKeys = ledger.records
+    .filter((record) => record.decision === "approved")
+    .map((record) => `${record.source_key}:${record.sha256}`)
+    .sort();
+  assert.deepEqual(
+    approvedKeys,
+    [...INDEPENDENTLY_REVIEWED_APPROVED_CUTS].sort(),
+  );
+  assert.equal(
+    INDEPENDENTLY_REVIEWED_APPROVED_CUTS.has(
+      `video-slot-forged:${"e".repeat(64)}`,
+    ),
+    false,
+  );
 });
 
 test("the builder-facing history check rejects a rewritten decided record", async () => {
-  const [ledger, reviewAssets] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  const [ledger, reviewAssets] = await Promise.all([
+    ledgerPromise,
+    currentReviewAssets(),
+  ]);
   const repoRoot = fileURLToPath(new URL("../..", import.meta.url));
-  const ledgerPath = fileURLToPath(new URL(
-    "../../docs/course-production/held-video-review/approvals.json",
-    import.meta.url,
-  ));
+  const ledgerPath = fileURLToPath(
+    new URL(
+      "../../docs/course-production/held-video-review/approvals.json",
+      import.meta.url,
+    ),
+  );
 
-  assert.deepEqual(await validateHeldVideoApprovalHistory({
-    ledger,
-    currentReviewAssets: reviewAssets,
-    repoRoot,
-    ledgerPath,
-  }), []);
+  assert.deepEqual(
+    await validateHeldVideoApprovalHistory({
+      ledger,
+      currentReviewAssets: reviewAssets,
+      repoRoot,
+      ledgerPath,
+    }),
+    [],
+  );
 
   const rewritten = structuredClone(ledger);
-  const decided = rewritten.records.find((record) => record.decision === "changes_requested");
+  const decided = rewritten.records.find(
+    (record) => record.decision === "changes_requested",
+  );
   assert.ok(decided);
   decided.notes = `${decided.notes} rewritten`;
   const errors = await validateHeldVideoApprovalHistory({
@@ -439,7 +513,10 @@ test("the builder-facing history check rejects a rewritten decided record", asyn
 });
 
 test("a corrected replacement can enter review as a new checksum-keyed pending candidate", async () => {
-  const [ledger, held] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  const [ledger, held] = await Promise.all([
+    ledgerPromise,
+    currentReviewAssets(),
+  ]);
   const replacementSha256 = "a".repeat(64);
   const replacementPath =
     "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4";
@@ -453,7 +530,7 @@ test("a corrected replacement can enter review as a new checksum-keyed pending c
     },
   ];
   const next = structuredClone(ledger);
-  next.updated_at = "2026-07-21";
+  next.updated_at = "2026-07-31";
   next.records.push({
     source_key: "video-slot-17-compensation",
     sha256: replacementSha256,
@@ -472,10 +549,15 @@ test("a corrected replacement can enter review as a new checksum-keyed pending c
 });
 
 test("a corrected version can replace a previously pending cut without rewriting history", async () => {
-  const [ledger, reviewAssets] = await Promise.all([ledgerPromise, currentReviewAssets()]);
+  const [ledger, reviewAssets] = await Promise.all([
+    ledgerPromise,
+    currentReviewAssets(),
+  ]);
   const current = structuredClone(ledger);
-  const old = current.records.find((record) =>
-    record.source_key === "video-slot-16-kpis" && record.decision === "approved",
+  const old = current.records.find(
+    (record) =>
+      record.source_key === "video-slot-16-kpis" &&
+      record.decision === "approved",
   );
   assert.ok(old);
   Object.assign(old, {
@@ -488,17 +570,24 @@ test("a corrected version can replace a previously pending cut without rewriting
   const replacementPath = "course-assets/review-lessonA/LESSON-1A-v8.mp4";
   const nextAssets = reviewAssets.map((asset) =>
     asset.source_key === old.source_key && asset.checksum_sha256 === old.sha256
-    ? { ...asset, checksum_sha256: replacementSha256, local_path: replacementPath }
-    : asset,
+      ? {
+          ...asset,
+          checksum_sha256: replacementSha256,
+          local_path: replacementPath,
+        }
+      : asset,
   );
   const next = structuredClone(current);
-  next.updated_at = "2026-07-21";
-  Object.assign(next.records.find((record) => record.decision === "pending"), {
-    decision: "changes_requested",
-    approver: "Jarrad Henry",
-    date: "2026-07-21",
-    notes: "Exact checksum-locked cut needs a correction.",
-  });
+  next.updated_at = "2026-07-31";
+  Object.assign(
+    next.records.find((record) => record.decision === "pending"),
+    {
+      decision: "changes_requested",
+      approver: "Jarrad Henry",
+      date: "2026-07-31",
+      notes: "Exact checksum-locked cut needs a correction.",
+    },
+  );
   next.records.push({
     source_key: old.source_key,
     sha256: replacementSha256,
@@ -510,19 +599,28 @@ test("a corrected version can replace a previously pending cut without rewriting
     notes: null,
   });
 
-  assert.deepEqual(validateHeldVideoApprovalTransition(current, next, nextAssets), []);
+  assert.deepEqual(
+    validateHeldVideoApprovalTransition(current, next, nextAssets),
+    [],
+  );
 });
 
 test("the immutable ledger supports a final manifest with all 29 videos approved and zero held", async () => {
-  const [manifest, ledger] = await Promise.all([manifestPromise, ledgerPromise]);
+  const [manifest, ledger] = await Promise.all([
+    manifestPromise,
+    ledgerPromise,
+  ]);
   const finalLedger = structuredClone(ledger);
   finalLedger.updated_at = "2026-07-17";
-  for (const record of finalLedger.records.filter((candidate) => candidate.decision === "pending")) {
+  for (const record of finalLedger.records.filter(
+    (candidate) => candidate.decision === "pending",
+  )) {
     Object.assign(record, {
       decision: "approved",
       approver: "Jarrad Henry",
       date: "2026-07-17",
-      notes: "Watched and approved this exact checksum-locked local policy cut.",
+      notes:
+        "Watched and approved this exact checksum-locked local policy cut.",
     });
   }
   const existingCandidatesBySource = new Map(
@@ -534,7 +632,9 @@ test("the immutable ledger supports a final manifest with all 29 videos approved
     finalLedger.records.map((record) => record.source_key),
   );
   const finalReviewAssets = manifest.assets
-    .filter((asset) => asset.kind === "video" && reviewedKeys.has(asset.source_key))
+    .filter(
+      (asset) => asset.kind === "video" && reviewedKeys.has(asset.source_key),
+    )
     .map((asset, index) => {
       const existing = existingCandidatesBySource.get(asset.source_key);
       if (existing) {
@@ -545,7 +645,9 @@ test("the immutable ledger supports a final manifest with all 29 videos approved
           approval_status: "approved",
         };
       }
-      const checksum = String(index + 1).repeat(64).slice(0, 64);
+      const checksum = String(index + 1)
+        .repeat(64)
+        .slice(0, 64);
       const localPath = `course-assets/review-final/${asset.source_key}.mp4`;
       finalLedger.records.push({
         source_key: asset.source_key,
@@ -565,15 +667,28 @@ test("the immutable ledger supports a final manifest with all 29 videos approved
       };
     });
 
-  const finalBySource = new Map(finalReviewAssets.map((asset) => [asset.source_key, asset]));
+  const finalBySource = new Map(
+    finalReviewAssets.map((asset) => [asset.source_key, asset]),
+  );
   const finalVideoAssets = manifest.assets
     .filter((asset) => asset.kind === "video")
     .map((asset) => finalBySource.get(asset.source_key) ?? asset);
   assert.equal(finalVideoAssets.length, 29);
-  assert.equal(finalVideoAssets.filter((asset) => asset.approval_status === "hold").length, 0);
-  assert.ok(finalVideoAssets.every((asset) => asset.approval_status === "approved"));
-  assert.deepEqual(validateHeldVideoApprovalLedger(finalLedger, finalReviewAssets), []);
-  assert.deepEqual(validateHeldVideoManifestApprovalState(finalLedger, finalReviewAssets), []);
+  assert.equal(
+    finalVideoAssets.filter((asset) => asset.approval_status === "hold").length,
+    0,
+  );
+  assert.ok(
+    finalVideoAssets.every((asset) => asset.approval_status === "approved"),
+  );
+  assert.deepEqual(
+    validateHeldVideoApprovalLedger(finalLedger, finalReviewAssets),
+    [],
+  );
+  assert.deepEqual(
+    validateHeldVideoManifestApprovalState(finalLedger, finalReviewAssets),
+    [],
+  );
 });
 
 test("the real manifest generator keeps a direct approved checksum ahead of a pending replacement", async () => {
@@ -581,7 +696,8 @@ test("the real manifest generator keeps a direct approved checksum ahead of a pe
   const replacement = {
     source_key: "video-slot-17-compensation",
     sha256: "a".repeat(64),
-    candidate_local_path: "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4",
+    candidate_local_path:
+      "course-assets/review-lesson17/LESSON-17-policy-safe-v2.mp4",
     title: "Compensation Engine policy-safe replacement",
     decision: "pending",
     approver: null,
@@ -592,21 +708,27 @@ test("the real manifest generator keeps a direct approved checksum ahead of a pe
 
   assert.deepEqual(
     currentReviewedVideoRecord("video-slot-17-compensation", ledger),
-    ledger.records.find((record) =>
-      record.source_key === "video-slot-17-compensation" &&
-      record.sha256 === "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"
+    ledger.records.find(
+      (record) =>
+        record.source_key === "video-slot-17-compensation" &&
+        record.sha256 ===
+          "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846",
     ),
   );
   assert.ok(
-    ledger.records.some((record) =>
-      record.sha256 === "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846"
-      && record.decision === "approved"),
+    ledger.records.some(
+      (record) =>
+        record.sha256 ===
+          "cecad85478bb1a8ba5bfed7404dc045440c567ed0eaaa90b11b644e124b27846" &&
+        record.decision === "approved",
+    ),
   );
 
   replacement.decision = "approved";
   replacement.approver = "Jarrad Henry";
   replacement.date = "2026-07-17";
-  replacement.notes = "Watched and approved the exact checksum-locked replacement.";
+  replacement.notes =
+    "Watched and approved the exact checksum-locked replacement.";
   assert.throws(
     () => currentReviewedVideoRecord("video-slot-17-compensation", ledger),
     /multiple approved corrected cuts.*explicit supersession/,
@@ -689,15 +811,19 @@ test("source-depth contracts reject compressed scripts and missing teaching cove
     );
 
     const missingBeat = structuredClone(pkg);
-    const removedBeat = missingBeat.source_depth_contract.required_teaching_beats[0].beat_id;
+    const removedBeat =
+      missingBeat.source_depth_contract.required_teaching_beats[0].beat_id;
     for (const scene of missingBeat.scenes) {
       scene.teaching_beat_ids = scene.teaching_beat_ids.filter(
         (beatId) => beatId !== removedBeat,
       );
     }
     assert.ok(
-      (await validateRecutPackage(missingBeat, manifest, policy)).some((error) =>
-        error.includes(`does not cover required teaching beat ${removedBeat}`),
+      (await validateRecutPackage(missingBeat, manifest, policy)).some(
+        (error) =>
+          error.includes(
+            `does not cover required teaching beat ${removedBeat}`,
+          ),
       ),
       `${pkg.source.source_key} missing beat must fail closed`,
     );
@@ -706,17 +832,21 @@ test("source-depth contracts reject compressed scripts and missing teaching cove
 
 test("the objection replacement retains 32 ordered seller-gap-response drills without narrated labels", async () => {
   const pkg = (await loadRecutPackages()).find(
-    (candidate) => candidate.source.source_key === "video-slot-10-objection-scripts",
+    (candidate) =>
+      candidate.source.source_key === "video-slot-10-objection-scripts",
   );
   assert.equal(pkg.source_depth_contract.required_examples.length, 32);
   assert.equal(
-    pkg.scenes.flatMap((scene) => scene.example_ids).filter((id) => id.startsWith("d")).length,
+    pkg.scenes
+      .flatMap((scene) => scene.example_ids)
+      .filter((id) => id.startsWith("d")).length,
     32,
   );
   const delivered = pkg.scenes.map(spokenDeliveryText).join("\n");
   assert.doesNotMatch(delivered, /(?:^|\n)Seller:|\bResponse:/);
   assert.equal(
-    pkg.scenes.filter((scene) => scene.spoken_text.startsWith("Seller:")).length,
+    pkg.scenes.filter((scene) => scene.spoken_text.startsWith("Seller:"))
+      .length,
     32,
   );
   const providerScenes = providerSceneSequence(pkg);
@@ -724,9 +854,10 @@ test("the objection replacement retains 32 ordered seller-gap-response drills wi
     (scene) => scene.pause_kind === "learner_think_gap",
   );
   const artifact = JSON.parse(renderHeygenDraftPackage(pkg));
-  const payloadThinkGaps = artifact.provider_preparation.scene_boundaries.filter(
-    (boundary) => boundary.pause_kind === "learner_think_gap",
-  );
+  const payloadThinkGaps =
+    artifact.provider_preparation.scene_boundaries.filter(
+      (boundary) => boundary.pause_kind === "learner_think_gap",
+    );
   assert.equal(providerScenes.length, pkg.scenes.length + 32);
   assert.equal(thinkGaps.length, 32);
   assert.equal(payloadThinkGaps.length, 32);
@@ -761,9 +892,7 @@ test("humanizer validation rejects negative parallelism before payload preparati
     loadRecutPackages(),
   ]);
   const career = structuredClone(
-    packages.find(
-      (pkg) => pkg.source.source_key === "video-slot-19-career",
-    ),
+    packages.find((pkg) => pkg.source.source_key === "video-slot-19-career"),
   );
   const scene = career.scenes.find(
     (candidate) => candidate.scene_id === "career-clean-output",
@@ -840,8 +969,8 @@ test("offline HeyGen draft packages are exact, humanized, and provider-gated", a
       providerScenes.length <= HEYGEN_MAX_VIDEO_INPUTS,
     );
     assert.deepEqual(
-      artifact.provider_preparation.scene_boundaries.map((boundary) =>
-        boundary.input_index
+      artifact.provider_preparation.scene_boundaries.map(
+        (boundary) => boundary.input_index,
       ),
       providerScenes.map((scene) => scene.input_index),
     );
@@ -881,8 +1010,7 @@ test("the post-approval Studio handoff contract locks folders, settings, and tit
     "video-slot-01-mindset": "Lesson 01 - Mindset - Draft",
     "video-slot-10-objection-scripts":
       "Lesson 10 - Objection Scripts Playbook - Draft",
-    "video-slot-15-closing":
-      "Lesson 15 - Closing and Deal Engineering - Draft",
+    "video-slot-15-closing": "Lesson 15 - Closing and Deal Engineering - Draft",
     "video-slot-17-compensation": "Lesson 17 - Compensation Engine - Draft",
     "video-slot-18-operator": "Lesson 18 - Operator Playbook - Draft",
     "video-slot-19-career": "Lesson 19 - Career Growth Path - Draft",
@@ -907,18 +1035,31 @@ test("one checksum-bound review surface covers all seven scripts and scene plans
   assert.equal(request.status, "pending-human-script-and-scene-approval");
   assert.equal(request.question, HELD_VIDEO_SCRIPT_REVIEW_QUESTION);
   assert.equal(request.scope.replacement_video_count, 7);
-  assert.deepEqual(request.scope.source_keys, packages.map((pkg) =>
-    pkg.source.source_key
-  ));
+  assert.deepEqual(
+    request.scope.source_keys,
+    packages.map((pkg) => pkg.source.source_key),
+  );
   assert.match(request.scope.bindings_sha256, /^[a-f0-9]{64}$/);
   assert.equal(request.records.length, 7);
   assert.equal(
     request.approval_effect.exact_rendered_cut_review_required_after_generation,
     true,
   );
-  assert.ok(request.approval_effect.does_not_authorize.includes("Codex clicking Generate"));
-  assert.ok(request.approval_effect.does_not_authorize.includes("any HeyGen or provider API call"));
-  assert.ok(request.approval_effect.does_not_authorize.includes("POST https://api.heygen.com/v2/video/generate"));
+  assert.ok(
+    request.approval_effect.does_not_authorize.includes(
+      "Codex clicking Generate",
+    ),
+  );
+  assert.ok(
+    request.approval_effect.does_not_authorize.includes(
+      "any HeyGen or provider API call",
+    ),
+  );
+  assert.ok(
+    request.approval_effect.does_not_authorize.includes(
+      "POST https://api.heygen.com/v2/video/generate",
+    ),
+  );
   assert.equal(request.response_contract.literal_response_required, true);
   assert.equal(
     request.response_contract.complete_request_sha256_binding_required,
@@ -929,7 +1070,9 @@ test("one checksum-bound review surface covers all seven scripts and scene plans
     false,
   );
   assert.equal(
-    sha256(Buffer.from(JSON.stringify(heldVideoScriptReviewBindingPayload(request)))),
+    sha256(
+      Buffer.from(JSON.stringify(heldVideoScriptReviewBindingPayload(request))),
+    ),
     request.scope.bindings_sha256,
   );
   for (const [index, record] of request.records.entries()) {
@@ -951,15 +1094,19 @@ test("one checksum-bound review surface covers all seven scripts and scene plans
     assert.match(surface, new RegExp(record.script_sha256));
     assert.match(
       surface,
-      new RegExp(`${record.replacement_scene_count} / ${record.provider_scene_count}`),
+      new RegExp(
+        `${record.replacement_scene_count} / ${record.provider_scene_count}`,
+      ),
     );
-    for (const scene of pkg.scenes) assert.match(surface, new RegExp(scene.scene_id));
+    for (const scene of pkg.scenes)
+      assert.match(surface, new RegExp(scene.scene_id));
   }
 });
 
 test("the hypothetical future-response shape must preserve literal approval and bind the complete request bytes and scope", async () => {
   const packages = await loadRecutPackages();
-  const { request: requestText } = await buildHeldVideoScriptReviewArtifacts(packages);
+  const { request: requestText } =
+    await buildHeldVideoScriptReviewArtifacts(packages);
   const request = JSON.parse(requestText);
   const hypotheticalResponseTime = new Date(Date.now() - 1_000).toISOString();
   const hypotheticalTurnStart = new Date(Date.now() - 60_000).toISOString();
@@ -982,32 +1129,39 @@ test("the hypothetical future-response shape must preserve literal approval and 
     response_text: "approved",
     response_context: {
       controller_prompt: request.question,
-      approved_action: request.approval_effect.authorizes_after_preserved_response,
+      approved_action:
+        request.approval_effect.authorizes_after_preserved_response,
       does_not_authorize: request.approval_effect.does_not_authorize,
     },
   };
-  await assert.doesNotReject(() => validateHeldVideoScriptReviewResponse({
-    requestText,
-    responseText: `${JSON.stringify(response, null, 2)}\n`,
-  }));
+  await assert.doesNotReject(() =>
+    validateHeldVideoScriptReviewResponse({
+      requestText,
+      responseText: `${JSON.stringify(response, null, 2)}\n`,
+    }),
+  );
 
   const changedQuestion = structuredClone(request);
   changedQuestion.question = `${changedQuestion.question} Changed.`;
   await assert.rejects(
-    () => validateHeldVideoScriptReviewResponse({
-      requestText: `${JSON.stringify(changedQuestion, null, 2)}\n`,
-      responseText: `${JSON.stringify(response, null, 2)}\n`,
-    }),
+    () =>
+      validateHeldVideoScriptReviewResponse({
+        requestText: `${JSON.stringify(changedQuestion, null, 2)}\n`,
+        responseText: `${JSON.stringify(response, null, 2)}\n`,
+      }),
     /not the canonical checked-in request/,
   );
 
   const forgedResponse = structuredClone(response);
-  forgedResponse.response_context.does_not_authorize = ["Codex clicking Generate"];
+  forgedResponse.response_context.does_not_authorize = [
+    "Codex clicking Generate",
+  ];
   await assert.rejects(
-    () => validateHeldVideoScriptReviewResponse({
-      requestText,
-      responseText: `${JSON.stringify(forgedResponse, null, 2)}\n`,
-    }),
+    () =>
+      validateHeldVideoScriptReviewResponse({
+        requestText,
+        responseText: `${JSON.stringify(forgedResponse, null, 2)}\n`,
+      }),
     /response scope is invalid/,
   );
 
@@ -1017,9 +1171,11 @@ test("the hypothetical future-response shape must preserve literal approval and 
   maliciousRequest.approval_effect.does_not_authorize = [
     "Codex clicking Generate in the browser",
   ];
-  const maliciousBindings = sha256(Buffer.from(JSON.stringify(
-    heldVideoScriptReviewBindingPayload(maliciousRequest),
-  )));
+  const maliciousBindings = sha256(
+    Buffer.from(
+      JSON.stringify(heldVideoScriptReviewBindingPayload(maliciousRequest)),
+    ),
+  );
   maliciousRequest.scope.bindings_sha256 = maliciousBindings;
   maliciousRequest.request_id = `bmh-held-video-script-review-${maliciousBindings}`;
   const maliciousRequestText = `${JSON.stringify(maliciousRequest, null, 2)}\n`;
@@ -1034,10 +1190,11 @@ test("the hypothetical future-response shape must preserve literal approval and 
   maliciousResponse.response_context.does_not_authorize =
     maliciousRequest.approval_effect.does_not_authorize;
   await assert.rejects(
-    () => validateHeldVideoScriptReviewResponse({
-      requestText: maliciousRequestText,
-      responseText: `${JSON.stringify(maliciousResponse, null, 2)}\n`,
-    }),
+    () =>
+      validateHeldVideoScriptReviewResponse({
+        requestText: maliciousRequestText,
+        responseText: `${JSON.stringify(maliciousResponse, null, 2)}\n`,
+      }),
     /not the canonical checked-in request/,
   );
 
@@ -1060,10 +1217,11 @@ test("the hypothetical future-response shape must preserve literal approval and 
     const provenanceDrift = structuredClone(response);
     mutate(provenanceDrift);
     await assert.rejects(
-      () => validateHeldVideoScriptReviewResponse({
-        requestText,
-        responseText: `${JSON.stringify(provenanceDrift, null, 2)}\n`,
-      }),
+      () =>
+        validateHeldVideoScriptReviewResponse({
+          requestText,
+          responseText: `${JSON.stringify(provenanceDrift, null, 2)}\n`,
+        }),
       /response is invalid/,
     );
   }
@@ -1075,7 +1233,10 @@ test("missing script approval remains pending and cannot authorize setup or rele
     (error) => error?.code === "ENOENT",
   );
   const result = await validateHeldVideoRecuts();
-  assert.equal(result.scriptReviewStatus, "pending-human-script-and-scene-approval");
+  assert.equal(
+    result.scriptReviewStatus,
+    "pending-human-script-and-scene-approval",
+  );
   assert.equal(result.studioSettingsVerificationAuthorized, false);
   assert.equal(result.releaseQaStatus, "pending-script-approval");
   assert.equal(result.heldVideoReleaseReady, false);
@@ -1086,14 +1247,20 @@ test("Studio setup preserves exact draft links while browser evidence cannot wid
   const [packages, requestText, ledgerText] = await Promise.all([
     loadRecutPackages(),
     readFile(HELD_VIDEO_SCRIPT_REVIEW_PATHS.request, "utf8"),
-    readFile(new URL(`../../${HELD_VIDEO_STUDIO_SETUP_PATH}`, import.meta.url), "utf8"),
+    readFile(
+      new URL(`../../${HELD_VIDEO_STUDIO_SETUP_PATH}`, import.meta.url),
+      "utf8",
+    ),
   ]);
   const ledger = JSON.parse(ledgerText);
-  assert.deepEqual(validateHeldVideoStudioSetup({
-    ledger,
-    packages,
-    requestText,
-  }), []);
+  assert.deepEqual(
+    validateHeldVideoStudioSetup({
+      ledger,
+      packages,
+      requestText,
+    }),
+    [],
+  );
   assert.equal(ledger.browser_audit.scene_selections_checked, 128);
   assert.equal(ledger.browser_audit.expected_scene_selections, 128);
   assert.deepEqual(ledger.browser_audit.visible_labels, {
@@ -1135,8 +1302,7 @@ test("Studio setup preserves exact draft links while browser evidence cannot wid
 
   const draftIdentityDrift = structuredClone(ledger);
   draftIdentityDrift.drafts[0].draft_id = "f".repeat(32);
-  draftIdentityDrift.drafts[0].url =
-    `https://app.heygen.com/create-v4/${draftIdentityDrift.drafts[0].draft_id}?vt=l&panel=scene`;
+  draftIdentityDrift.drafts[0].url = `https://app.heygen.com/create-v4/${draftIdentityDrift.drafts[0].draft_id}?vt=l&panel=scene`;
   assert.match(
     validateHeldVideoStudioSetup({
       ledger: draftIdentityDrift,
@@ -1187,7 +1353,10 @@ test("clean Studio imports match canonical narration and checksum-bound pause si
     loadRecutPackages(),
     studioImportInventoryPromise,
   ]);
-  assert.equal(inventory.schema_version, "bmh-held-video-studio-import-inventory/v1");
+  assert.equal(
+    inventory.schema_version,
+    "bmh-held-video-studio-import-inventory/v1",
+  );
   assert.equal(inventory.provider_call_allowed, false);
   assert.equal(inventory.records.length, packages.length);
   assert.equal(
@@ -1253,7 +1422,10 @@ test("clean Studio imports match canonical narration and checksum-bound pause si
     for (const [index, entry] of sidecar.scene_map.entries()) {
       assert.equal(entry.line_number, index + 1);
       assert.equal(entry.input_text_sha256, sha256(Buffer.from(lines[index])));
-      assert.equal(entry.pause_after_seconds, providerScenes[index].pause_after_seconds);
+      assert.equal(
+        entry.pause_after_seconds,
+        providerScenes[index].pause_after_seconds,
+      );
     }
 
     const record = inventory.records.find(
@@ -1316,7 +1488,7 @@ test("Studio import rendering rejects narratable structural and gap instructions
       "x".repeat(STUDIO_IMPORT_MAX_CHARS),
       "test-source",
       0,
-    )
+    ),
   );
 });
 
@@ -1338,7 +1510,10 @@ test("all seven deterministic Word team references match their locked source pac
       (candidate) => candidate.source.source_key === document.source_key,
     );
     assert.ok(pkg, `${document.source_key} must resolve to a recut package`);
-    assert.match(document.path, new RegExp(`${document.source_key}-script\\.docx$`));
+    assert.match(
+      document.path,
+      new RegExp(`${document.source_key}-script\\.docx$`),
+    );
 
     const [docx, packageBytes, scriptBytes, fileStats] = await Promise.all([
       readFile(new URL(`../../${document.path}`, import.meta.url)),
@@ -1351,10 +1526,15 @@ test("all seven deterministic Word team references match their locked source pac
     assert.equal(sha256(packageBytes), document.package_sha256);
     assert.equal(sha256(scriptBytes), document.script_sha256);
 
-    const documentXml = readZipEntry(docx, "word/document.xml").toString("utf8");
+    const documentXml = readZipEntry(docx, "word/document.xml").toString(
+      "utf8",
+    );
     assert.match(documentXml, new RegExp(document.source_key));
     assert.match(documentXml, new RegExp(pkg.source.held_sha256));
-    assert.match(documentXml, /does not authorize a HeyGen provider call or render/);
+    assert.match(
+      documentXml,
+      /does not authorize a HeyGen provider call or render/,
+    );
     for (const scene of pkg.scenes) {
       for (const segment of sceneDeliverySegments(scene)) {
         assert.ok(
