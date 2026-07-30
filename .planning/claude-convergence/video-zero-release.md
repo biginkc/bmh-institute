@@ -9,7 +9,7 @@
 - Caption SHA-256:
   `bf4519c61bfe9ccf1fde14bb66b866d29805546c40dbfbdaee3b378aec974939`
 - Rollback point before merge: `origin/main` at
-  `97a094e4ec654254a26fd4d9d3d10b006087057f`.
+  `047b94968ffcda145f8b860c048ac16fa825df79`.
 
 ## Acceptance gates
 
