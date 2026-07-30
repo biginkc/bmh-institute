@@ -43,11 +43,13 @@ begin
     return jsonb_build_object('saved', false, 'stale', true);
   end if;
   insert into public.user_video_progress (user_id, block_id, position_seconds, duration_seconds, watched_ranges, last_observed_position_seconds, last_observed_at, asset_version, updated_at)
-  values (p_user_id, p_block_id, least(p_position_seconds, (v_content ->> 'duration_seconds')::numeric), (v_content ->> 'duration_seconds')::numeric, '[]'::jsonb, 0, null, v_asset_version, p_client_updated_at)
+  values (p_user_id, p_block_id, least(p_position_seconds, (v_content ->> 'duration_seconds')::numeric), (v_content ->> 'duration_seconds')::numeric, '[]'::jsonb, least(p_position_seconds, (v_content ->> 'duration_seconds')::numeric), p_client_updated_at, v_asset_version, p_client_updated_at)
   on conflict (user_id, block_id) do update set
     position_seconds = excluded.position_seconds,
     duration_seconds = excluded.duration_seconds,
     watched_ranges = case when user_video_progress.asset_version is distinct from excluded.asset_version then '[]'::jsonb else user_video_progress.watched_ranges end,
+    last_observed_position_seconds = excluded.last_observed_position_seconds,
+    last_observed_at = excluded.last_observed_at,
     asset_version = excluded.asset_version,
     updated_at = excluded.updated_at;
   return jsonb_build_object('saved', true, 'stale', false, 'positionSeconds', p_position_seconds);

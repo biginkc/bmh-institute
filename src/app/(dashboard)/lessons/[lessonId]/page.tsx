@@ -252,18 +252,20 @@ async function ContentCompositeLesson({
   if (!resolution.requestedPartValid && requestedPart !== null && resolution.canonicalPartId) {
     redirect(`/lessons/${tile.id}?part=${encodeURIComponent(resolution.canonicalPartId)}`);
   }
-  const selected = await prepareLearnerPart({
-    parts,
-    requestedPart: resolution.part?.id ?? null,
-    signBlocks: (blocks) =>
-      withLessonTiming("selected-part-media-signing", () =>
-        enrichBlocksWithSignedUrls(blocks),
-      ),
-    attachEmbeds: (blocks) =>
-      withLessonTiming("selected-role-play-token", () =>
-        attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
-      ),
-  });
+  const selected = resolution.requestedPartLocked && resolution.part?.kind === "quiz"
+    ? resolution.part
+    : await prepareLearnerPart({
+        parts,
+        requestedPart: resolution.part?.id ?? null,
+        signBlocks: (blocks) =>
+          withLessonTiming("selected-part-media-signing", () =>
+            enrichBlocksWithSignedUrls(blocks),
+          ),
+        attachEmbeds: (blocks) =>
+          withLessonTiming("selected-role-play-token", () =>
+            attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
+          ),
+      });
   if (!selected)
     return (
       <LessonError
