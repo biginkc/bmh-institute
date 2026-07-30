@@ -10,6 +10,7 @@ import {
 } from "@/lib/assignments/validation";
 import { parseAssignmentRubric } from "@/lib/assignments/rubric";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import { validateAuthoredContent } from "@/lib/content-security/validate";
 
 export type ApprovalStatus = "approved" | "hold" | "missing";
 export type AssetKind =
@@ -449,6 +450,12 @@ function validateLesson(
       if (!isRecord(block.content)) {
         errors.push(`${blockPath}.content must be an object.`);
         continue;
+      }
+      const contentSecurity = validateAuthoredContent(block.type, block.content);
+      if (!contentSecurity.ok) {
+        for (const error of contentSecurity.errors) {
+          errors.push(`${blockPath}.content: ${error}`);
+        }
       }
       if (block.type === "text") {
         const html = block.content.html;

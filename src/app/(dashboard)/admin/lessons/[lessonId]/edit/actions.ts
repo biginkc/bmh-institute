@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/guard";
 import { validateArtworkChange } from "@/lib/artwork/paths";
 import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
+import { validateAuthoredContent } from "@/lib/content-security/validate";
 import {
   defaultRequiredForBlock,
   normalizeRequiredForBlock,
@@ -83,12 +84,12 @@ const DEFAULT_CONTENT: Record<BlockType, Json> = {
   text: { html: "<p>Start writing...</p>" },
   callout: { variant: "info", markdown: "Heads up." },
   external_link: {
-    url: "https://",
+    url: "",
     label: "Resource",
     description: "",
     open_in_new_tab: true,
   },
-  embed: { iframe_src: "https://", aspect_ratio: "16:9" },
+  embed: { iframe_src: "", aspect_ratio: "16:9" },
   role_play: { scenario_id: "", title: "Role play", height_px: 720 },
   divider: {},
   video: { source: "upload", file_path: "", url: "" },
@@ -222,6 +223,12 @@ export async function updateBlock(input: {
       };
     }
   }
+
+  const contentValidation = validateAuthoredContent(existing.block_type, safeContent);
+  if (!contentValidation.ok) {
+    return { ok: false, error: contentValidation.errors.join(" ") };
+  }
+  safeContent = contentValidation.value as Json;
 
   const requestedRequired =
     typeof input.is_required_for_completion === "boolean"

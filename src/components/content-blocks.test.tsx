@@ -230,6 +230,15 @@ describe("ContentBlockRenderer BMH treatments", () => {
     expect(iframe.getAttribute("allow")).toContain("clipboard-write");
   });
 
+  it("renders legacy invalid authored URLs inert", () => {
+    const { container } = renderBlock("embed", {
+      iframe_src: "javascript:alert(1)",
+      aspect_ratio: "16:9",
+    });
+    expect(screen.queryByTitle("Embedded content")).toBeNull();
+    expect(container).toHaveTextContent("Embed URL not set.");
+  });
+
   it("renders clear semantics for every resource block", () => {
     const pdf = renderBlock("pdf", {
       signed_url: "https://example.com/guide.pdf",

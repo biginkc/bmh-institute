@@ -25,6 +25,7 @@ import { Badge, Button, Card, IconButton, Input } from "@/components/bmh-ds";
 import { Label } from "@/components/ui/label";
 
 import { FileUpload } from "@/components/file-upload";
+import { parseFlashcardText } from "@/lib/content-security/validate";
 
 import {
   createBlock,
@@ -727,7 +728,14 @@ function FlashcardBlockEditor({
           variant="secondary"
           size="sm"
           disabled={pending}
-          onClick={() => save({ cards: parseFlashcardLines(lines) })}
+          onClick={() => {
+            const parsed = parseFlashcardText(lines);
+            if (!parsed.ok) {
+              toast.error(parsed.errors.join(" "));
+              return;
+            }
+            save({ cards: parsed.cards });
+          }}
         >
           Save cards
         </Button>
@@ -747,14 +755,6 @@ function flashcardLines(value: unknown): string {
         : [];
     })
     .join("\n");
-}
-
-function parseFlashcardLines(value: string) {
-  return value
-    .split("\n")
-    .map((line) => line.split("|", 2).map((part) => part.trim()))
-    .filter(([front, back]) => Boolean(front && back))
-    .map(([front, back]) => ({ front, back }));
 }
 
 function ImageBlockEditor({
