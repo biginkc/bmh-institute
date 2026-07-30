@@ -76,9 +76,15 @@ course-assets/posters/*
 !course-assets/posters/redesign-history/*.webp
 docs/course-production/oral-check-pilot-live-verification-receipt.json
 
-# NOTE: course-assets/**/_anchors/ files ARE tracked (force-added). A negation
-# cannot work here because the parent dir is excluded above. They are NOT
-# regenerable build output: they are the
-# approved on-model reference stills passed as image refs to every future
-# generation. Without them new art drifts off-model and prompting cannot
-# recover the look. Small, and the one course-assets exception worth versioning.
+# Character generation anchors ARE versioned. They are approved on-model
+# reference stills passed as image refs to every future generation; without
+# them new art drifts off-model and prompting cannot recover the look. They
+# are not regenerable build output. Re-included by walking the path back in
+# (a bare negation cannot reach inside an excluded parent directory), so new
+# anchors can be `git add`ed normally — no -f required.
+!course-assets/scenes/
+course-assets/scenes/*
+!course-assets/scenes/*/
+course-assets/scenes/*/*
+!course-assets/scenes/*/_anchors/
+!course-assets/scenes/*/_anchors/**
