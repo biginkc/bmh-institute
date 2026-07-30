@@ -209,17 +209,18 @@ test("deferred mapping scaffold covers the exact six authored scenario and assig
 // above (via base()/attachDeferredRolePlayFixture) strips ALL role_play
 // blocks out of the manifest and hand-rebuilds exactly the frozen six,
 // which means none of them ever exercise finalizeScenarioProductionMapping()
-// against the REAL, current 18-role-play manifest (6 frozen certification +
-// 12 Andrea Oral Check blocks: 3 pilot from PR #130, 9 expansion from PR
-// #132). rolePlayBindings() was already correctly scoped to
+// against the REAL, current 20-role-play manifest (6 frozen certification +
+// 14 Andrea Oral Check blocks: 3 pilot from PR #130, 9 expansion from PR
+// #132, 2 objection blocks closing the last coverage gap).
+// rolePlayBindings() was already correctly scoped to
 // `block-role-play-*` only, but finalizeScenarioProductionMapping()'s own
 // mutation loop re-derived its own unscoped `block.type === "role_play"`
 // walk and would throw trying to process a `block-oral-check-*` block
 // against a Closer Lab export that structurally cannot and should not
 // contain it. This test uses the real, unmodified manifest and asserts
 // finalization processes exactly the six certification entries and leaves
-// all twelve oral-check blocks completely untouched.
-test("finalization against the real current 18-role-play manifest processes exactly the six certification entries and leaves the twelve oral-check blocks untouched", async () => {
+// all fourteen oral-check blocks completely untouched.
+test("finalization against the real current 20-role-play manifest processes exactly the six certification entries and leaves the fourteen oral-check blocks untouched", async () => {
   const [manifestBytes, ledgerBytes, catalogBytes] = await Promise.all([
     readFile(MANIFEST_URL),
     readFile(LEDGER_URL),
@@ -237,9 +238,9 @@ test("finalization against the real current 18-role-play manifest processes exac
       .filter((block) => block.type === "role_play");
 
   const allRolePlayBlocks = rolePlayBlocksIn(manifest);
-  assert.equal(allRolePlayBlocks.length, 18, "the real manifest has 18 role_play blocks (6 certification + 12 oral-check), not a hand-crafted 6");
+  assert.equal(allRolePlayBlocks.length, 20, "the real manifest has 20 role_play blocks (6 certification + 14 oral-check), not a hand-crafted 6");
   const oralCheckBlocks = allRolePlayBlocks.filter((block) => block.source_key.startsWith("block-oral-check-"));
-  assert.equal(oralCheckBlocks.length, 12);
+  assert.equal(oralCheckBlocks.length, 14);
   const originalOralCheckContentBySourceKey = new Map(
     oralCheckBlocks.map((block) => [block.source_key, structuredClone(block.content)]),
   );
@@ -274,10 +275,10 @@ test("finalization against the real current 18-role-play manifest processes exac
   );
 
   const finalizedRolePlayBlocks = rolePlayBlocksIn(result.manifest);
-  assert.equal(finalizedRolePlayBlocks.length, 18, "finalization must not add or remove role_play blocks");
+  assert.equal(finalizedRolePlayBlocks.length, 20, "finalization must not add or remove role_play blocks");
 
   const finalizedOralCheckBlocks = finalizedRolePlayBlocks.filter((block) => block.source_key.startsWith("block-oral-check-"));
-  assert.equal(finalizedOralCheckBlocks.length, 12);
+  assert.equal(finalizedOralCheckBlocks.length, 14);
   for (const block of finalizedOralCheckBlocks) {
     assert.deepEqual(
       block.content,

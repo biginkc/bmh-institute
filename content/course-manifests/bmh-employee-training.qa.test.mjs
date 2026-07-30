@@ -29,7 +29,7 @@ test("the draft contains the locked course structure", async () => {
     videos: 29,
     quizQuestions: 920,
     flashcards: 152,
-    rolePlays: 18,
+    rolePlays: 20,
     posterAssets: 29,
     posterReferences: 29,
     guideAssets: 19,
@@ -166,6 +166,68 @@ test("all six reviewed assignments carry usable reviewer rubrics", async () => {
   }
 });
 
+// Assessment coverage is counted against the 19 instructional lessons, NOT
+// against the 44 required course rows that drive overall course completion
+// (19 content + 19 quiz + 6 assignment). Both denominators are correct; they
+// answer different questions. This test owns the 19 one: every instructional
+// lesson ends in a spoken check, either a frozen sales role-play
+// (block-role-play-*) or an Andrea Oral Check (block-oral-check-*). Objection
+// Architecture and Objection Scripts Playbook were the last two lessons with
+// no assessment of any kind; this locks the gap closed.
+test("every instructional lesson ends in a voice check -- 19 of 19, no lesson left unassessed", async () => {
+  const manifest = await loadManifest(MANIFEST_URL);
+  const contentLessons = manifest.program.courses
+    .flatMap((course) => course.modules)
+    .flatMap((module) => module.lessons)
+    .filter((lesson) => lesson.type === "content");
+
+  assert.equal(contentLessons.length, 19);
+  for (const lesson of contentLessons) {
+    const voiceChecks = (lesson.blocks ?? []).filter((block) => block.type === "role_play");
+    assert.ok(
+      voiceChecks.length >= 1,
+      `${lesson.source_key} (${lesson.title}) has no role-play voice check`,
+    );
+    assert.ok(
+      voiceChecks.every((block) => block.required === true),
+      `${lesson.source_key} voice checks are all required for completion`,
+    );
+    assert.ok(
+      voiceChecks.every((block) => UUID_PATTERN.test(block.content.scenario_id)),
+      `${lesson.source_key} voice checks bind real production scenario UUIDs`,
+    );
+  }
+
+  const oralChecks = contentLessons
+    .flatMap((lesson) => lesson.blocks ?? [])
+    .filter((block) => block.source_key.startsWith("block-oral-check-"));
+  assert.equal(oralChecks.length, 14, "3 pilot + 9 expansion + 2 objection Andrea Oral Checks");
+  assert.ok(
+    oralChecks.every((block) => block.content.mode === "oral_check"),
+    "every block-oral-check-* block renders in oral_check mode",
+  );
+  assert.equal(
+    new Set(oralChecks.map((block) => block.content.scenario_id.toLowerCase())).size,
+    14,
+    "no two oral checks share a Closer Lab scenario",
+  );
+
+  // The two blocks this coverage gap was closed with, pinned to the same
+  // lesson/scenario pairing the production migration inserts.
+  const byLesson = new Map(contentLessons.map((lesson) => [
+    lesson.source_key,
+    (lesson.blocks ?? []).filter((block) => block.type === "role_play"),
+  ]));
+  assert.deepEqual(
+    byLesson.get("lesson-content-slot-09").map((block) => [block.source_key, block.content.scenario_id, block.sort_order]),
+    [["block-oral-check-slot-09", "c3642915-deab-4b3d-9479-0fc71afee9e6", 6]],
+  );
+  assert.deepEqual(
+    byLesson.get("lesson-content-slot-10").map((block) => [block.source_key, block.content.scenario_id, block.sort_order]),
+    [["block-oral-check-slot-10", "c164bec1-fb24-46c7-8790-7ea3bf2fb7fb", 6]],
+  );
+});
+
 test("the current release includes the six production-bound Closer Lab interactive scenarios", async () => {
   const manifest = await loadManifest(MANIFEST_URL);
   const modules = manifest.program.courses.flatMap((course) => course.modules);
@@ -228,7 +290,7 @@ test("a malformed or duplicated production scenario ID is a publication blocker,
       error.includes("Duplicate role-play production scenario ID"),
     ),
   );
-  assert.ok(rolePlayBlocks.length === 18, "sanity: fixture still has eighteen role-play blocks to mutate (6 frozen sales role-plays + 12 Andrea Oral Check blocks: 3 pilot + 9 expansion)");
+  assert.ok(rolePlayBlocks.length === 20, "sanity: fixture still has twenty role-play blocks to mutate (6 frozen sales role-plays + 14 Andrea Oral Check blocks: 3 pilot + 9 expansion + 2 objection)");
 });
 
 test("marking a role-play block optional does not exempt it from scenario trust checks", async () => {

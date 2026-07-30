@@ -8,7 +8,7 @@
   "production_graph_checksum_sha256": "b9fc1ccf73bae2638b3d1a3b7570fae8715f14354646f822e2bc6830c8b6999f",
   "client_catalog_sha256": "523e0cf19ba7eaa96be1ce64c85ad3f4f44c46fdb1333f6268c8e8cae841e196",
   "client_graph_binding_sha256": "e7a310887c9a896f29ba51fd3a9fb9407c699a6576a98a68c8108b8afc47fa9e",
-  "manifest_sha256": "da3c5f5f1c6046d514847a21ca7ac1307e60f2c2098b4bd6a5010ff4267d02f9",
+  "manifest_sha256": "c90f4372ac66d962a73ac9d3021c13ab3a812eb1a76b13447022381c93f9b643",
   "mapping_ledger_sha256": "761cb7866d309e5b27e2e0f5d1f8c210c8d2ad620b99fbf33bae0287521e5386",
   "closer_export_sha256": "e0dab4b3f0b98cd0854c90985aa74381bb4679b9feff99f42dab9e43411ed645",
   "bindings": [
