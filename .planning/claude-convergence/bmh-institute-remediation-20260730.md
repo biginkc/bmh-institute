@@ -27,6 +27,7 @@
 - Iteration 3: PR #138 merged at `227a6cee` with all CI and seeded E2E checks green. Hugo lifecycle branch rebased onto that main, passed 234 tests plus migration replay/typecheck/lint, and opened as Hugo PR #7. Hugo PR CI is currently pending; Institute lifecycle must wait for that merge before rebasing.
 - Integration checkpoint: Hugo PR #7 has all checks green. Rollback point before merge: Hugo `origin/main` `ecf6e7217db394fd963587ca763567c3fd550105`.
 - Iteration 4: Hugo PR #7 merged at `b37abba64620347e264b2c0e4ef7256e05ccfc21`. Institute lifecycle rebased onto Institute main `227a6cee`, passed 1,275 unit + 167 RTL tests, typecheck, lint, and migration rehearsals, then opened as Institute PR #139. Its hosted checks are queued.
+- Iteration 5: PR #139 hosted seeded E2E completed with 7 passed, 2 failed, 2 flaky, and 1 skipped. Deterministic failures included lifecycle pilot role-group assignment after Save Changes, unrelated assignment submission visibility, and quiz completion visibility; embed sandbox and quiz path were flaky. Failure logs show post-commit notification errors. The failed portions were rerun at `2026-07-30T07:17:59Z`; merge remains held pending rerun evidence and root-cause classification.
 - Integration order: amended #138 -> Hugo lifecycle -> Institute lifecycle -> PR #137 reconsideration -> learner routing/video -> security -> deletion -> consolidated Chrome acceptance.
 - The broader 886-question/course acceptance campaign remains separate and must not be called complete by this tranche.
 
