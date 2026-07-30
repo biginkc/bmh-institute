@@ -8,6 +8,7 @@ type Query = PromiseLike<QueryResult> & {
   is: (...args: unknown[]) => Query;
   order: (...args: unknown[]) => Query;
   limit: (...args: unknown[]) => Query;
+  abortSignal: (signal: AbortSignal) => Query;
   select: (...args: unknown[]) => Query;
   maybeSingle: () => Promise<QueryResult>;
   single: () => Promise<QueryResult>;
@@ -21,6 +22,7 @@ function query(data: unknown, error: DbError = null): Query {
   value.is = () => value;
   value.order = () => value;
   value.limit = () => value;
+  value.abortSignal = () => value;
   value.select = () => value;
   value.maybeSingle = async () => result;
   value.single = async () => result;
@@ -82,12 +84,12 @@ let finalizeReads: number;
 let recordRpcData: unknown;
 let recordRpcError: DbError;
 
-const rpc = vi.fn(async (name: string) => {
+const rpc = vi.fn((name: string) => {
   if (name === "fn_lesson_is_unlocked") {
-    return { data: unlocked, error: null };
+    return query(unlocked);
   }
   if (name === "fn_record_quiz_answer") {
-    return { data: recordRpcData, error: recordRpcError };
+    return query(recordRpcData, recordRpcError);
   }
   throw new Error(`Unexpected RPC: ${name}`);
 });
@@ -140,11 +142,10 @@ const adminClient = {
     if (table === "questions") {
       return {
         select: () => ({
-          eq: () => ({ order: async () => ({ data: availableQuestions, error: null }) }),
-          in: async (_column: string, ids: string[]) => ({
-            data: availableQuestions.filter((question) => ids.includes(question.id)),
-            error: null,
-          }),
+          eq: () => ({ order: () => query(availableQuestions) }),
+          in: (_column: string, ids: string[]) => query(
+            availableQuestions.filter((question) => ids.includes(question.id)),
+          ),
         }),
       };
     }
@@ -168,7 +169,11 @@ const adminClient = {
 };
 
 const { revalidatePath } = vi.hoisted(() => ({ revalidatePath: vi.fn() }));
+const { schedulePostCommitEffect } = vi.hoisted(() => ({
+  schedulePostCommitEffect: vi.fn(),
+}));
 vi.mock("next/cache", () => ({ revalidatePath }));
+vi.mock("@/lib/actions/post-commit-effect", () => ({ schedulePostCommitEffect }));
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(async () => learnerClient),
 }));
@@ -185,8 +190,10 @@ vi.mock("@/lib/integrations/sandra/course-completed", () => ({
 import {
   answerQuizQuestion,
   finalizeQuizAttempt,
+  restoreQuizAttempt,
   startQuizAttempt,
 } from "./quiz-actions";
+import { QUIZ_SERVER_DEADLINES } from "@/lib/quizzes/with-timeout";
 
 describe("quiz server actions", () => {
   beforeEach(() => {
@@ -268,6 +275,34 @@ describe("quiz server actions", () => {
       expect(JSON.stringify(result.questions)).not.toContain("is_correct");
       expect(JSON.stringify(result.questions)).not.toContain("explanation");
     }
+  });
+
+  it("restores an incomplete attempt read-only without inserting on page open", async () => {
+    const result = await restoreQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" });
+    expect(result).toEqual({ ok: true, attempt: null });
+    expect(insertedAttempt).toBeNull();
+  });
+
+  it("does not restore an incomplete attempt after eligibility is exhausted", async () => {
+    priorAttempts = [
+      { passed: false, score: 20, completed_at: "2026-07-29T00:00:00.000Z" },
+      { passed: false, score: 30, completed_at: "2026-07-29T01:00:00.000Z" },
+      { passed: false, score: 40, completed_at: "2026-07-29T02:00:00.000Z" },
+    ];
+    incompleteAttempt = {
+      id: "attempt-stale",
+      question_order: ["q-1"],
+      answer_orders: { "q-1": ["q1-good", "q1-bad"] },
+      responses: {},
+      answer_results: {},
+    };
+
+    await expect(
+      restoreQuizAttempt({ quizId: "quiz-1", lessonId: "lesson-1" }),
+    ).resolves.toEqual({
+      ok: false,
+      error: "You've used all of your attempts on this quiz.",
+    });
   });
 
   it("resumes with persisted responses and reveals only answered questions", async () => {
@@ -694,6 +729,26 @@ describe("quiz server actions", () => {
     });
   });
 
+  it("bounds a hung auth lookup under the typed finalize deadline", async () => {
+    vi.useFakeTimers();
+    try {
+      learnerClient.auth.getUser = () => new Promise(() => {});
+      const pending = finalizeQuizAttempt({ attemptId: "attempt-1" });
+      const result = expect(pending).resolves.toEqual({
+        ok: false,
+        error: "That took too long. Try again.",
+      });
+
+      await vi.advanceTimersByTimeAsync(QUIZ_SERVER_DEADLINES.finalize);
+
+      await result;
+      expect(updatedAttempt).toBeNull();
+    } finally {
+      learnerClient.auth.getUser = async () => ({ data: { user: currentUser }, error: null });
+      vi.useRealTimers();
+    }
+  });
+
   it("finalizes only persisted responses and does not rewrite them", async () => {
     const result = await finalizeQuizAttempt({ attemptId: "attempt-1" });
 
@@ -707,6 +762,30 @@ describe("quiz server actions", () => {
         questionNumber: 1,
         explanation: "Because one is correct.",
       }]);
+    }
+  });
+
+  it("returns successful completion without waiting for Sandra writeback", async () => {
+    vi.useFakeTimers();
+    try {
+      const { emitSandraCourseCompletedForLesson } = await import(
+        "@/lib/integrations/sandra/course-completed"
+      );
+      vi.mocked(emitSandraCourseCompletedForLesson).mockImplementationOnce(
+        () => new Promise(() => {}),
+      );
+
+      await expect(finalizeQuizAttempt({ attemptId: "attempt-1" })).resolves.toMatchObject({
+        ok: true,
+        score: 100,
+        passed: true,
+      });
+      expect(schedulePostCommitEffect).toHaveBeenCalledWith(
+        "quiz Sandra completion",
+        expect.any(Function),
+      );
+    } finally {
+      vi.useRealTimers();
     }
   });
 

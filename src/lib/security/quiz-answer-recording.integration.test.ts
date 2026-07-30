@@ -89,17 +89,22 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
       const owner = createClient(url, anonKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
+      const ownerSecondConnection = createClient(url, anonKey, {
+        auth: { autoRefreshToken: false, persistSession: false },
+      });
       const other = createClient(url, anonKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
       const anonymous = createClient(url, anonKey, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
-      const [ownerSignIn, otherSignIn] = await Promise.all([
+      const [ownerSignIn, ownerSecondSignIn, otherSignIn] = await Promise.all([
         owner.auth.signInWithPassword({ email: ownerEmail, password }),
+        ownerSecondConnection.auth.signInWithPassword({ email: ownerEmail, password }),
         other.auth.signInWithPassword({ email: otherEmail, password }),
       ]);
       if (ownerSignIn.error) throw ownerSignIn.error;
+      if (ownerSecondSignIn.error) throw ownerSecondSignIn.error;
       if (otherSignIn.error) throw otherSignIn.error;
 
       const course = await admin
@@ -326,8 +331,11 @@ describe.skipIf(!envPresent)("atomic quiz answer recording", () => {
       const sameQuestionAttempt = await createAttempt([questionOne]);
       const sameQuestionResults = await Promise.all([
         recordAnswer(owner, sameQuestionAttempt, questionOne, [q1a]),
-        recordAnswer(owner, sameQuestionAttempt, questionOne, [q1b]),
+        recordAnswer(ownerSecondConnection, sameQuestionAttempt, questionOne, [q1b]),
       ]);
+      // These are two separately authenticated Supabase clients. The RPC's
+      // FOR UPDATE row lock must serialize them, so exactly one first-answer
+      // writer can succeed and the loser must observe the immutable result.
       expect(sameQuestionResults.filter((result) => result.error === null)).toHaveLength(1);
       expect(sameQuestionResults.find((result) => result.error)?.error?.message)
         .toContain("already been answered");

@@ -11,10 +11,12 @@ import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 
 import { COMPLETED_QUIZ_HARD_NAVIGATION_ATTRIBUTE } from "../../dashboard-events";
+import { QuizDeadlineError, withQuizDeadline } from "@/lib/quizzes/with-timeout";
 
 import {
   answerQuizQuestion,
   finalizeQuizAttempt,
+  restoreQuizAttempt,
   startQuizAttempt,
   type QuestionReveal,
   type QuizSubmitResult,
@@ -69,6 +71,13 @@ type RunnerAction =
       responses: Record<string, string[]>;
       reveals: QuestionReveal[];
     }
+  | {
+      type: "restored";
+      attemptId: string;
+      questions: QuizQuestion[];
+      responses: Record<string, string[]>;
+      reveals: QuestionReveal[];
+    }
   | { type: "start_error" }
   | { type: "toggle"; question: QuizQuestion; optionId: string }
   | { type: "checking" }
@@ -87,6 +96,13 @@ function runnerReducer(state: RunnerState, action: RunnerAction): RunnerState {
   if (action.type === "start") return { status: "starting" };
   if (action.type === "start_error") return { status: "idle" };
   if (action.type === "reset") return { status: "idle" };
+  if (action.type === "restored") {
+    // A page-open read is stale once the learner has started or completed a
+    // newer run. It must never replace that newer state when it eventually
+    // resolves.
+    if (state.status !== "idle") return state;
+    return runnerReducer(state, { ...action, type: "started" });
+  }
   if (action.type === "started") {
     const answers = Object.fromEntries(
       action.reveals.map((reveal) => [reveal.questionId, revealToAnswer(reveal)]),
@@ -207,6 +223,7 @@ export function QuizRunner({
   retakeCooldownHours: number;
 }) {
   const [state, dispatch] = useReducer(runnerReducer, { status: "idle" });
+  const restoreRequestRef = useRef(0);
   const [completedAttempts, updateCompletedAttempts] = useReducer(
     (count: number) => count + 1,
     attemptsUsed,
@@ -264,12 +281,59 @@ export function QuizRunner({
     };
   }, [state.status]);
 
+  useEffect(() => {
+    let active = true;
+    const requestId = restoreRequestRef.current + 1;
+    restoreRequestRef.current = requestId;
+    void withQuizDeadline("resume", () => restoreQuizAttempt({ quizId, lessonId }))
+      .then((response) => {
+        if (
+          !active ||
+          requestId !== restoreRequestRef.current ||
+          !response.ok ||
+          !response.attempt
+        ) return;
+        dispatch({
+          type: "restored",
+          attemptId: response.attempt.attemptId,
+          questions: response.attempt.questions,
+          responses: response.attempt.responses,
+          reveals: response.attempt.reveals,
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [quizId, lessonId]);
+
   async function loadAttempt(showStartingState: boolean) {
     if (showStartingState) dispatch({ type: "start" });
     let response: Awaited<ReturnType<typeof startQuizAttempt>>;
     try {
-      response = await startQuizAttempt({ quizId, lessonId });
-    } catch {
+      response = await withQuizDeadline("start", () => startQuizAttempt({ quizId, lessonId }));
+    } catch (error) {
+      if (error instanceof QuizDeadlineError) {
+        try {
+          const restored = await withQuizDeadline(
+            "resume",
+            () => restoreQuizAttempt({ quizId, lessonId }),
+          );
+          if (restored.ok && restored.attempt) {
+            dispatch({
+              type: "started",
+              attemptId: restored.attempt.attemptId,
+              questions: restored.attempt.questions,
+              responses: restored.attempt.responses,
+              reveals: restored.attempt.reveals,
+            });
+            return;
+          }
+        } catch {
+          // The next Start click is safe because the server reconciles the
+          // unique incomplete attempt before any insert.
+        }
+      }
       if (showStartingState) dispatch({ type: "start_error" });
       toast.error(
         showStartingState
@@ -293,6 +357,7 @@ export function QuizRunner({
   }
 
   async function beginAttempt() {
+    restoreRequestRef.current += 1;
     await loadAttempt(true);
   }
 
@@ -306,11 +371,11 @@ export function QuizRunner({
     dispatch({ type: "checking" });
     let response: Awaited<ReturnType<typeof answerQuizQuestion>>;
     try {
-      response = await answerQuizQuestion({
+      response = await withQuizDeadline("answer", () => answerQuizQuestion({
         attemptId: run.attemptId,
         questionId: question.id,
         selected,
-      });
+      }));
     } catch {
       dispatch({
         type: "check_error",
@@ -333,7 +398,10 @@ export function QuizRunner({
     dispatch({ type: "finalizing" });
     let response: Awaited<ReturnType<typeof finalizeQuizAttempt>>;
     try {
-      response = await finalizeQuizAttempt({ attemptId: run.attemptId });
+      response = await withQuizDeadline(
+        "finalize",
+        () => finalizeQuizAttempt({ attemptId: run.attemptId }),
+      );
     } catch {
       dispatch({
         type: "finalize_error",
@@ -398,6 +466,7 @@ export function QuizRunner({
         }
         attemptsExhausted={!state.result.passed && attemptsExhausted}
         onRetake={() => {
+          restoreRequestRef.current += 1;
           updateCompletedAttempts();
           dispatch({ type: "reset" });
         }}
