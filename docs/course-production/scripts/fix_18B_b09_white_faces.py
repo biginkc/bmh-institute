@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+import os
 import subprocess
 import tempfile
 from pathlib import Path
 
 from PIL import Image
 
-ROOT = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = Path(BMH_ROOT)
 SCENES = ROOT / "course-assets/scenes/module-18-lesson18B"
 SRC_STILL = SCENES / "m18_L18B_b09_daily-standup.png"
 DST_STILL = SCENES / "white-skin-fixes/m18_L18B_b09_daily-standup.png"

@@ -2,7 +2,7 @@
 # Lesson 7A base plates — one lane per image: zsh gen_stills_7A.sh <key>
 # Each recurring cast member is anchored to its crop in course-assets/scenes/module-07/_anchors/.
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 A="course-assets/scenes/module-07/_anchors"
 OUT="course-assets/scenes/module-07"

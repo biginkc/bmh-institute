@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 5B "The Fact Find" manifest. Audio = master clock; 1.0s silence between beats.
 Modes: hero | prop | contrast | checklist | emphasis | smile | mistakes.
 Text = word-timed Sticker (never baked). Stills normalized to canonical blue at ingest."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson5B"
 GROK = f"{HG}/grok"
 SCN = f"{B}/course-assets/scenes/module-05-lesson5B"

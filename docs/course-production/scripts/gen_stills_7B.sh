@@ -6,7 +6,7 @@
 #   seller  = man with bushy black hair, NO headset          — anchor _anchors/seller_male.png
 # Only Andrea wears the headset; never swap roles.
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-07-lesson7B"
 AN="$OUT/_anchors"

@@ -5,8 +5,10 @@ import pathlib
 import shutil
 import subprocess
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+
+ROOT = pathlib.Path(BMH_ROOT)
 HG = ROOT / "course-assets/heygen/lesson6B"
 SCENES = ROOT / "course-assets/scenes/module-06-lesson6B"
 PUBLIC = ROOT / "docs/course-production/remotion/public/lesson6B"

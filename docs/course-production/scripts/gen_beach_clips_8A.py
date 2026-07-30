@@ -1,7 +1,10 @@
 import json, os, time, urllib.request, subprocess
 import pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson8A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson8A"
 
 AV_BEACH = json.load(open(f"{OUT}/_beach_avatar.json"))["avatar_id"]
 MOTION = "relaxing in the beach chair, warm and friendly, hands resting easy on the chair arms, minimal natural gestures"

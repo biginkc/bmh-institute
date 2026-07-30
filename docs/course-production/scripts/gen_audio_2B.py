@@ -1,6 +1,9 @@
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson2B"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson2B"
 os.makedirs(OUT, exist_ok=True)
 FRIENDLY="55f8c0f546884f9cbdefa113f5e7b682"; EXCITED="91120f72682e4459a19e311ba2ee4cb2"
 WILLIAM="31e2fd6e7c924bc9be987ac4cfaac5e8"; AARON="66da5fabd6b944b3a42f35aed9631ad2"

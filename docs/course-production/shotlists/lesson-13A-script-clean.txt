@@ -1,0 +1,49 @@
+# ⛔ WITHDRAWN (2026-07-09) — DO NOT PRODUCE FROM THIS FILE
+# Jarrad content decision 2026-07-07: no fixed comp numbers/tiers/bonuses/commissions in any
+# training content. Superseded by the generic compensation lesson: `lesson-17-script-clean.txt` (v2).
+# Kept for history only.
+
+# Lesson 13A "Compensation Engine" - clean script (2026-07-07)
+# Source: locked master _master-transcripts.md Slot 17 (`Chapter 12 - FINAL.srt`), cues 1-13 VERBATIM.
+# Raw source cleanup: SRT cue numbers/timestamps/fence stripped. No stage directions were present.
+# Narrator: Andrea (Elizabeth-Friendly later). Cafe Andrea opens and closes. No audio/stills/clips/render before storyboard approval.
+# Scope note: full Slot 17 retained as ONE lesson (~4:54); no A/B split.
+
+# b01_money_connection - cue 1
+Alright, let's talk about money. Specifically, how your performance turns into a paycheck. I'm going to lay out the whole compensation structure so there's no mystery about it. The more you understand this, the clearer the connection between your daily work and what you earn.
+
+# b02_three_pieces - cue 2
+There are three pieces to your compensation. Base pay during your ramp period, commissions on deals you source, and bonuses for hitting appointment milestones.
+
+# b03_ramp_to_commission - cue 3
+When you start, you receive an hourly base rate while you're ramping up. You're learning, building skills, getting comfortable with the process. The base pay makes sure you've got income coming in while your pipeline is still developing. Once you're consistently hitting your KPIs for 30 or more consecutive days, you graduate to the full commission structure. That's the transition point.
+
+# b04_your_deal - cue 4
+Commissions are where the real money is. You earn a commission on every deal that closes where you were the person who sourced and qualified the lead. You did the follow-up. You built the relationship. You handed it off with a clean, complete package. And the acquisition team closed it. That's your deal.
+
+# b05_commission_tiers - cue 5
+The commission amount scales with how many deals you source in a given month. If you source one or two deals in a month, you earn $500 per deal. Three or four deals, that goes up to $750 per deal. Five or more, it's $1,000 per deal. And the way the tiers work, all your deals for the month pay at the highest tier you reached. So if you hit five deals, all five of them pay at a thousand each. That's five grand in commissions in a single month, and that's on top of your base during ramp.
+
+# b06_appointment_bonus - cue 6
+On top of commissions, there's an appointment bonus. Every 25 qualified appointments you set in a month earns you a $250 bonus. And just to be clear, an appointment counts when the seller actually shows up for the call with the acquisition team. Not when you schedule it. When they actually show. So if you set 50 kept appointments in a month, that's $500 in appointment bonuses on top of whatever you're earning in commissions.
+
+# b07_example_tier_two - cue 7
+Let me run through an example so you can see how this adds up. Say you're a few months in. You're hitting your stride. In a given month, you set 30 kept appointments and you sourced 3 deals that closed. Your base hourly is whatever your rate is for the month. You hit the 25 appointment threshold, so that's a $250 bonus. And 3 deals puts you at Tier 2, which is $750 per deal, so $2,250 in commissions. Total bonus and commission on top of your base is $2,500.
+
+# b08_example_tier_three - cue 8
+Imagine this: a few months down the line, you improve your performance. You secure 40 appointments and close 5 deals. Exciting, right? You've just earned a $250 bonus for hitting the 25 appointment milestone. However, the next bonus threshold is at 50 appointments, so you only receive that one bonus. Now, since you closed 5 deals, you're in Tier 3, which means you earn $1,000 for each deal. That's a total of $5,000 in commissions. When you add the $250 appointment bonus, your total for the month is $5,250. And if you reach 50 appointments, you can add another $250 to that total.
+
+# b09_direct_math_no_cap - cue 9
+The math is direct. The better you get at follow-up and qualification, the more you make. There's no cap on commissions.
+
+# b10_attribution_pipeline - cue 10
+A deal gets attributed to you when you were the person who worked the lead, you completed the handoff to the acquisition team, and the deal closed with a signed contract and completed transaction. If a lead you worked three months ago finally closes, you still get credit. Your pipeline stays with you. You're not getting punished because a seller took their time.
+
+# b11_what_top_earners_do - cue 11
+The people who earn the most here aren't necessarily the ones with the most raw volume. They're the ones who are thorough, consistent, and don't let good leads die from neglect. More quality conversations means more deals in your pipeline. Consistent follow-up means those deals actually convert instead of going cold. And clean handoffs mean the acquisition team can close efficiently instead of scrambling for missing information.
+
+# b12_money_on_table - cue 12
+Every lead you let slip is potential commission you left on the table. Every thorough handoff is money you're putting in your own pocket. It's that direct.
+
+# b13_operator_playbook_tease - cue 13
+Alright, next up: what a real day actually looks like here — how you run your day and how the team stays in sync. Then we'll close out with where you can go from here.

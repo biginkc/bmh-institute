@@ -2,7 +2,7 @@
 # Lesson 4A wordless vignette stills — one lane per image: zsh gen_stills_4A.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-04"
 mkdir -p "$OUT"

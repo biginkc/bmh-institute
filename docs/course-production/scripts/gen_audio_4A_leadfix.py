@@ -1,6 +1,9 @@
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson4A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson4A"
 FRIENDLY = "55f8c0f546884f9cbdefa113f5e7b682"
 FIX = {
  "b01_intro": "Okay so in the last few modules, you got the lay of the land. You know who we are, you know who our sellers are, and you know what we actually offer them. Now let's talk about how deals move through our system. Like, from the very first time a leed pops into our CRM all the way through to a signed contract. Because there is a system. And you need to know it cold.",

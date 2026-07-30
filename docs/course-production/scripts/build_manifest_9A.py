@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 9A manifest ("Seller FAQ Decoder", Slot 12). v2 label model (Jarrad 2026-07-08):
 every transient teaching label is a SINGLE bottom-center queue (one at a time, out-then-in) — emit
 `overlays: [{text, delay}]` per beat, word-timed + min-spaced (matches approved 11A). Transitions =
 1A camera-travel slide (in Lesson9A.tsx). Full-scene Seedance clips + own-last-frame freeze tail."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson9A"
 GK = f"{HG}/grok"
 PUB = f"{B}/docs/course-production/remotion/public/lesson9A"

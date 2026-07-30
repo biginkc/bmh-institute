@@ -17,9 +17,12 @@
 # the UNTOUCHED v5 b17 wav (approved audio preserved bit-for-bit), then lip-sync the
 # combined wav with the new photo avatar (same pipeline as gen_fix_b05_1A.py).
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-BASE = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen"
+BASE = f"{BMH_ROOT}/course-assets/heygen"
 V5 = f"{BASE}/lessonA-v5"
 OUT = f"{BASE}/lessonA-v7"
 os.makedirs(OUT, exist_ok=True)

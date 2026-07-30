@@ -10,8 +10,10 @@ import subprocess
 import sys
 import unicodedata
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT = ROOT / "course-assets/heygen/lessonISP"
 STATE_PATH = OUT / "_state.json"
 WHISPER_OUT = OUT / "_whisper"

@@ -1,9 +1,12 @@
 import json, os, time, urllib.request, subprocess
 import pathlib
 import hashlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson10A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson10A"
 AV_CAFE = "b2cd05454d284058ad8d7303545821e6"
 AV_HEADSET = "e527528e584a404f9da68ee4faca1353"
 BLUE = "#62b3f3"

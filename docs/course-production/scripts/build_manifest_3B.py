@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 3B manifest ("BMH Offer Playbook B") — 8 beats, verbatim master Slot 05-B.
 audio = master clock + 1.0s inter-beat gaps (PLAYBOOK 7.14). 1A solo-Andrea hero bookends.
 Modes: hero | panel | rows(check/x) | transform | monologue. All text/marks = CODE, word-timed,
@@ -6,7 +7,9 @@ and each appears ONLY on its trigger word — no empty placeholder (Jarrad 2026-
 Zero Seedance. B6 uses the talking-doodle clip if present, else the homeowner still (placeholder)."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson3B"
 SCN = f"{B}/course-assets/scenes/module-03-lesson3B"
 PUB = f"{B}/docs/course-production/remotion/public/lesson3B"

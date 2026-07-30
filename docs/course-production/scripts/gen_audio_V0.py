@@ -16,8 +16,10 @@ import time
 import urllib.error
 import urllib.request
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT = ROOT / "course-assets/heygen/lessonV0"
 STATE_PATH = OUT / "_state.json"
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()

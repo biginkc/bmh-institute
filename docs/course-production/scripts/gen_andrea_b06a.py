@@ -1,6 +1,9 @@
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson4A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson4A"
 HEADSET = "e527528e584a404f9da68ee4faca1353"  # standing full-body Andrea
 state = json.load(open(f"{OUT}/_state.json"))
 def api(method, path, body=None):

@@ -10,8 +10,10 @@ import time
 import urllib.error
 import urllib.request
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+
+ROOT = pathlib.Path(BMH_ROOT)
 SCENECARDS = ROOT / "docs/course-production/shotlists/module-isp-lessonISP-scenecards.md"
 OUT = ROOT / "course-assets/heygen/lessonISP"
 STATE_PATH = OUT / "_state.json"

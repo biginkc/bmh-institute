@@ -3,7 +3,7 @@
 #   zsh docs/course-production/scripts/gen_stills_8B.sh <key>
 set -u
 
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 
 D="docs/design"
 OUT="course-assets/scenes/module-08-lesson8B"

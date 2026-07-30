@@ -1,7 +1,10 @@
+import os
 import json, os, time, urllib.request, subprocess, pathlib
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-BASE = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BASE = BMH_ROOT
 OUT = f"{BASE}/course-assets/heygen/lesson1C"
 IMG = f"{BASE}/course-assets/scenes/module-01/andrea_car_v2.png"
 TEST_WAV = f"{OUT}/smoke/smoke.wav"

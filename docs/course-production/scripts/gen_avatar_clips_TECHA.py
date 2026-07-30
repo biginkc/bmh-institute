@@ -1,7 +1,7 @@
 import json, os, time, urllib.request, subprocess
 import pathlib
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lessonTECHA"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lessonTECHA"
 AV_OFFICE = "e527528e584a404f9da68ee4faca1353"  # 1A solo headset Andrea (Jarrad watch-through pick 2026-07-10) — render on course blue via background param (2A recipe)
 MOTION = "standing alone, hands resting still at her sides, barely any hand movement, NO large or sweeping gestures, warm calm delivery"
 
@@ -69,6 +69,9 @@ for _ in range(90):
 print("TECHA CLIPS DONE:", sum(1 for c in C.values() if c.get("file")), "/", len(CLIPS), flush=True)
 
 import glob
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 for f in glob.glob(f"{OUT}/hero_b*.mp4") + glob.glob(f"{OUT}/circle_b*.mp4"):
     mov = f.replace(".mp4", "_alpha.mov")
     subprocess.run(["ffmpeg","-v","error","-i",f,

@@ -6,8 +6,11 @@ Remotion chroma-key. Resumable via _clips.json (shared with Andrea clips). Hard-
 Usage:  python3 gen_sellers_v2_7B.py [N]     # N = optional cap for a partial batch (default all 32)
 """
 import json, os, time, urllib.request, subprocess, pathlib, sys
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson7B"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson7B"
 BLUE = "#62b3f3"
 
 def api(method, path, body=None):

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 9B manifest — drill format per module-09-lesson9B-scenecards-v2-drill.md (APPROVED).
 Structure: bench b01 bridge -> (seller ask -> bench Andrea answer) x5 (Q6-Q10) -> b07 close ->
 b08 practice (+code tiles) -> b09 outro (split take b09a/b09b, straight cut).
@@ -10,7 +11,9 @@ b08 practice (+code tiles) -> b09 outro (split take b09a/b09b, straight cut).
 Outputs: remotion/public/lesson9B/{clips,tails}/*, master.m4a, manifest.json."""
 import json, os, subprocess
 
-B   = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B   = BMH_ROOT
 HG  = f"{B}/course-assets/heygen/lesson9B"
 PUB = f"{B}/docs/course-production/remotion/public/lesson9B"
 FPS = 30; GAP = 1.0; BLUE = "62b3f3"

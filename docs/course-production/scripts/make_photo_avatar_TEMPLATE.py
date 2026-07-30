@@ -1,8 +1,11 @@
 import json, os, time, urllib.request, subprocess
 import pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-SC = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/scenes/module-01"
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lessonB"
+SC = f"{BMH_ROOT}/course-assets/scenes/module-01"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lessonB"
 os.makedirs(OUT, exist_ok=True)
 GROUP = "3a544482e48d40e38c70960df82e4b11"  # Doodle Andrea (course)
 FRIENDLY = "55f8c0f546884f9cbdefa113f5e7b682"

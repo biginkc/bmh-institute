@@ -1,6 +1,9 @@
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson9A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson9A"
 def api(method, path, body=None):
     req = urllib.request.Request(f"https://api.heygen.com{path}", method=method,
         headers={"x-api-key": KEY, "Content-Type": "application/json"},

@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 3A manifest ("BMH Offer Playbook A") — verbatim master Slot 05-A, 18 beats.
 audio = master clock + 1.0s inter-beat gaps (PLAYBOOK 7.14). Office-Andrea hero bookends.
 Modes: hero | panel | wand | roadmap. All text = code white-card Stickers (positioned/word-timed).
 Stills normalized to canonical blue at ingest. Zero Seedance (all code motion)."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson3A"
 SCN = f"{B}/course-assets/scenes/module-03"
 PUB = f"{B}/docs/course-production/remotion/public/lesson3A"

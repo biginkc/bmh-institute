@@ -2,7 +2,7 @@
 # Lesson 19 v6 still corrections. Run one lane per image or `all`.
 set -eu
 SCRIPT_PATH="${0:A}"
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 
 D="docs/design"
 OUT="course-assets/scenes/module-19"

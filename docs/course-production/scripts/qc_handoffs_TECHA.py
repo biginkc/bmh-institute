@@ -4,8 +4,11 @@
 tails fail at 2.7-4.4; master-cut tails pass at <=0.14).
 Usage: qc_handoffs_TECHA.py <render.mp4>"""
 import json, subprocess, sys
+import os
 
-PUB = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/docs/course-production/remotion/public/lessonTECHA"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+PUB = f"{BMH_ROOT}/docs/course-production/remotion/public/lessonTECHA"
 render = sys.argv[1]
 m = json.load(open(f"{PUB}/manifest.json"))
 fps = m["fps"]

@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+import os
 """Generate Lesson ISP v4 standing 1A Andrea bookends from locked WAVs."""
 import hashlib, json, mimetypes, os, pathlib, time, urllib.request, uuid
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT = ROOT / "course-assets/heygen/lessonISP"
 STATE = json.loads((OUT / "_state.json").read_text())
 CLIPS_PATH = OUT / "_clips_v4.json"

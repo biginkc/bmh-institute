@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 4A manifest ("Sales Pipeline & Stage Ownership") — master Slot 06 cues 1-12, 13 beats.
 audio = master clock + 1.0s inter-beat gaps (PLAYBOOK 7.14). Cafe-Andrea hero bookends (b01/b10),
 headset corner-circles (b02/b09). Visual spine = code-rendered SIX-stage pipeline diagram (Lesson4A.tsx).
@@ -12,7 +13,9 @@ Modes: hero | pipeline | crm.
 """
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson4A"
 GK = f"{HG}/grok"
 SCN = f"{B}/course-assets/scenes/module-04"

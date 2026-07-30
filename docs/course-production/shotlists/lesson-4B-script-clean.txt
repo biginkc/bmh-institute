@@ -1,0 +1,39 @@
+LESSON 4B - "The Five-Step Conversation Framework"
+Module 04 / Chapter 4, Slot 06 overflow
+Source of truth: ~/BMH-OS/BMH Training Course/Thinkific/_master-transcripts.md
+Source range: Slot 06, cues 13-17 only.
+
+Production note:
+- This clean script is a beat split of the locked master text for TTS and Remotion timing.
+- Do not generate paid assets until the storyboard in module-04-lesson4B-scenecards.md is approved.
+- Outro must remain the exact master cue 17 handoff to Slot 07.
+
+BEAT b01_bridge
+Now, inside each of these pipeline stages, there's a conversation happening. And every conversation you have follows a five-step framework.
+
+BEAT b02_step1_intro
+Step one is the Intro, where you set expectations. You tell them who you are, why you're calling, and what they'll get out of the conversation.
+
+BEAT b03_step2_factfind
+Step two is the Fact Find, where you ask questions, qualify, and listen. This is where you should be spending about eighty percent of your conversation time. And notice I said talking about the person, not the house.
+
+BEAT b04a_pitch
+Step three is the Pitch, where you present what BMH does. This is actually the only part of the conversation that's really about the property and the transaction itself.
+
+BEAT b04b_offer
+Step four is the Offer, where you transition toward next steps. For you, that usually means teeing up the handoff rather than throwing out a number.
+
+BEAT b05_step5_close
+And step five is the Close, where you get commitment. That might be setting an appointment with the acquisition team, getting agreement to receive an offer, or just locking in a firm follow-up time.
+
+BEAT b06_structure_vs_execution
+Here's the thing that ties all this together. The pipeline stages are the organizational structure. They tell you where a lead is in the overall process. The five-step framework is how you actually execute within each conversation. Pipeline stages move leads forward through the system. Conversation steps move each individual call forward.
+
+BEAT b07_8020_rule
+One more thing, and this is important. About eighty percent of your conversation should NOT be about the property. Only about twenty percent should actually be about the house itself. The rest is intro, rapport building, fact finding, understanding the person. Because the house is not the problem. The person's situation is the problem. Your job is to find the solution to their problem, and the house just happens to be the vehicle for that solution.
+
+BEAT b08_slow_down
+New people make the mistake of jumping straight to "tell me about the house" and trying to race toward an offer as fast as possible. Don't do that. Slow down. Build the relationship. Actually care about what's going on. The deals will follow.
+
+BEAT b09_outro
+Alright, let's keep going. Next up we're going to break down exactly how to open a call and run a fact find.

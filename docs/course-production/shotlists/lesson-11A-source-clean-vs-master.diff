@@ -1,0 +1,5 @@
+# Diff result: no textual differences.
+
+Compared `lesson-11A-script-clean.txt` against locked master `_master-transcripts.md` Slot 15 (`Chapter 10 - FINAL.srt`) after stripping only SRT cue numbers, timestamps, blank lines, and code-fence markers from the master and stripping only comment/beat header lines from the clean script.
+
+Result: clean script is verbatim Slot 15 master text. No master deviations.

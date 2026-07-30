@@ -1,0 +1,38 @@
+# Lesson 11A "Closing & Deal Engineering" - clean script (2026-07-07)
+# Source: locked master _master-transcripts.md Slot 15 (`Chapter 10 - FINAL.srt`), cues 1-11 VERBATIM.
+# Raw source cleanup: SRT cue numbers/timestamps/fence stripped. No stage directions were present.
+# Narrator: Andrea (Elizabeth-Friendly). 2026-07-07 avatar correction: use the approved Lesson 9A park-bench Andrea; the generated 11A table-avatar was rejected for scary teeth/mouth. Priya/BMH rep is the headset ponytail character.
+# Scope note: full Slot 15 retained as ONE lesson (~5:39); no A/B split.
+
+# b01_reframe_close - cue 1
+I want to reframe how you think about closing. Because if you've done everything right up to this point, if you've built real rapport, done thorough discovery, handled objections with empathy, and stayed consistent in your follow-up, closing should actually be the easiest part. Seriously.
+
+# b02_formal_agreement - cue 2
+By the time you get to this stage, the seller is talking to someone they like, someone they trust, and someone they want to do business with. They've already decided. The close is really just the formal agreement that makes it official. The hard work already happened in the calls and follow-ups that got you here.
+
+# b03_role_boundary - cue 3
+Now, you're not the person presenting the offer or negotiating the final terms. That's the acquisition team's job. But you play a real role in making the close possible because you're the one who delivered a qualified, motivated, well-documented lead. And you'll continue to support the process after the handoff. You need to understand how closing works for a few practical reasons. You'll sometimes be asked to help with follow-ups during the offer stage. Understanding closing also makes you better at discovery because you know what information the acquisition team actually needs. And as you grow in your career, you may take on acquisition responsibilities yourself.
+
+# b04_offer_review - cue 4
+After you hand off a qualified lead, the acquisition team reviews your notes and the property data. They use comparable sales to generate an offer range. Then they contact the seller, ideally on a call that you helped set up, and present the offer. A good offer presentation is clean and simple. Something like "Based on everything we've looked at, the condition of the property, what similar homes have sold for, and the repairs that would be needed, we're able to offer $X in cash. We'd close on your timeline, handle all the paperwork, and you wouldn't need to do any repairs or pay any fees. How does that sound?" No pressure. No gimmicks. Just a clear, honest offer.
+
+# b05_hoping_for_more - cue 5
+The most common response to any offer is some version of "I was hoping for more." That's normal. Expected. Not a dealbreaker. The acquisition team handles negotiation, but the framework they use is worth understanding. They start by acknowledging. "I hear you, and I completely understand." Then they reframe the value. Then they ask what works. "What number would you need to see to feel good about this?" And from there they figure out if there's a gap they can close.
+
+# b06_respected_number - cue 6
+The thing about negotiation that matters most is this: it's not about winning. It's about finding a number both sides can feel good about. If the seller walks away feeling like they lost, the deal falls apart after the contract is signed. Both parties need to feel respected.
+
+# b07_contract_to_close - cue 7
+When the seller agrees to the offer verbally, the next step is getting the contract signed. The acquisition team confirms all terms on the call. A purchase agreement gets prepared and sent to the seller. The seller reviews and signs, usually electronically. And once it's signed, the deal moves to the transaction team for closing. After the contract is signed, there's still work happening. The title company verifies ownership, checks for liens, and prepares for closing. The team may inspect the property. Closing logistics get coordinated, including the date, signing location, and funds transfer. The transaction coordinator manages all of this. Your involvement is minimal at this stage, but you might be asked to reassure a seller if they're getting nervous, help with scheduling if they have questions, or relay any new information that comes up.
+
+# b08_sellers_remorse - cue 8
+Deals do fall apart sometimes, and it's worth knowing why so you can help prevent it. Seller's remorse is one of the most common reasons. They signed but now they're second-guessing the decision. This usually happens when the seller didn't feel heard during the process. It's exactly why good discovery and genuine rapport matter so much.
+
+# b09_other_risks - cue 9
+Family interference is another one. A relative finds out about the deal and talks the seller into backing out. This is why identifying all the decision-makers during discovery is so critical. Title issues come up too. Liens, boundary disputes, unclear ownership. And occasionally another buyer comes in with a higher number. It happens. But here's what's interesting. If you built a genuine relationship with the seller, they often stick with you even when a competitor offers more. Because they trust you. Trust beats price more often than you'd think.
+
+# b10_your_impact - cue 10
+Even though you're not the one signing the contract, don't lose sight of the fact that you're the person who made the deal possible. That lead wouldn't have gotten anywhere near a closing table without your follow-up. Your discovery built the foundation. Your empathy built the trust. Your consistency kept the opportunity alive when another rep would have moved on. When a deal closes and revenue comes in, it started with a conversation you had.
+
+# b11_outro - cue 11
+That's the real impact of the work you do every day. On to the next section.

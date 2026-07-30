@@ -1,0 +1,5 @@
+# Diff result: no textual differences.
+
+Compared `lesson-18B-script-clean.txt` against locked master `_master-transcripts.md` Slot 18 Daily Mission Control (`Chapter 18 - Draft.srt`) after stripping only SRT cue numbers, timestamps, blank lines, and code-fence markers from the master; stripping only comment/beat header lines from the clean script; and normalizing paragraph breaks/whitespace so sentence-level beat splits do not count as wording changes.
+
+Result: clean script is verbatim Slot 18 Daily Mission Control master text. No master deviations.

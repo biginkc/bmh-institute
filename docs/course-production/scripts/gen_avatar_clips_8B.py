@@ -5,11 +5,14 @@ import secrets
 import time
 import urllib.error
 import urllib.request
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson8B")
-AV_BEACH = json.load(open("/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson8A/_beach_avatar.json"))["avatar_id"]
+OUT = pathlib.Path(f"{BMH_ROOT}/course-assets/heygen/lesson8B")
+AV_BEACH = json.load(open(f"{BMH_ROOT}/course-assets/heygen/lesson8A/_beach_avatar.json"))["avatar_id"]
 
 CALM_BEACH = (
     "relaxing in the beach chair, warm and direct, both hands resting easy on the chair arms "

@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Lesson 1B redo pass — one lane per image: zsh gen_1b_v2.sh <key>
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-01"
 

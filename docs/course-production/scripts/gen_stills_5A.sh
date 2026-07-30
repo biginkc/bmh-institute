@@ -2,7 +2,7 @@
 # Lesson 5A "Opening the Call" stills — one lane per image: zsh gen_stills_5A.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-05"
 REP="course-assets/avatar-candidates/andrea_headset_v2.png"   # headset-Andrea identity ref

@@ -35,14 +35,25 @@ are the ones in Drive.
   access for TTS and animation
 - Python 3 with the scripts' imports available
 
-## Known limitation: scripts are machine-specific
+## Portability
 
-The `gen_*` and `build_manifest_*` scripts hardcode the absolute repo path
-`/Users/jarradhenry/Sites/BMH apps/BMH Institute`. They run on Jarrad's
-machine as-is; **a clean clone elsewhere requires editing those paths.** This
-is pre-existing and was not introduced by versioning them. Making the root
-derived rather than hardcoded is a worthwhile follow-up, deliberately kept out
-of the commit that merely puts these files under version control.
+Scripts derive the repo root rather than hardcoding it:
+
+- Python/shell: `BMH_ROOT` / `${BMH_INSTITUTE_ROOT:-...}` resolved from the
+  script's own location (`docs/course-production/scripts/../../..`)
+- Override with `BMH_INSTITUTE_ROOT=/path/to/checkout` if running from elsewhere
+
+They therefore operate on **the checkout they live in**, so a worktree or a
+clean clone builds into itself rather than writing back to another checkout.
+
+## Known gap: some Seedance animation recipes were not preserved
+
+Scene stills are fully reproducible — the generating prompt for each is kept
+in `course-assets/scenes/<module>/_logs/<beat>.log` (mirrored to Drive). But a
+few lessons' Seedance animation job records were lost with the deleted media;
+lesson 10A's `anim_b03/b08/b09` have no surviving recipe. The underlying stills
+survive, so those beats can be re-animated, but not to the same recipe. The
+shipped cuts remain intact in Drive.
 
 ## Typechecking
 

@@ -1,7 +1,10 @@
 import json, os, time, urllib.request, subprocess
 import pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lessonGLOA"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lessonGLOA"
 AV_OFFICE = "e527528e584a404f9da68ee4faca1353"  # 1A solo headset Andrea (Jarrad watch-through pick 2026-07-10) — render on course blue via background param (2A recipe)
 MOTION = "standing alone, hands resting still at her sides, barely any hand movement, NO large or sweeping gestures, warm calm delivery"
 

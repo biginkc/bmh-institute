@@ -1,0 +1,37 @@
+# Lesson 19 approved source deviations
+
+Compared `lesson-19-script-clean.txt` against locked master `_master-transcripts.md`, Slot 19 `Career Growth Path` (`Chapter 13 - FINAL.srt`). SRT cue numbers, timestamps, blank lines, code-fence markers, comment lines, and beat headers were ignored. The wording differences below are intentional Jarrad-approved deviations and must not be reverted.
+
+## b02 foundation role (master cue 2, first half)
+
+- Master: `When you start, your job is working leads, qualifying sellers, building a pipeline, and handing off to the acquisition team. That's the foundation. Everything else at this company builds on top of that.`
+- Approved: `Regardless of the role, you're either working leads, qualifying sellers, or building pipelines. That's the foundation. Everything else at this company builds on top of that.`
+- Reason: role-agnostic course wording.
+
+## b03 clean handoffs (master cue 2, second half)
+
+- Master: `Master it. Understand the sellers. Internalize the pipeline. Hit your KPIs consistently. Become the kind of person the acquisition team loves getting handoffs from, because your leads are clean, well-documented, and actually ready.`
+- Approved: `Master it. Understand the sellers. Internalize the pipeline. Hit your KPIs consistently. Become the kind of person the team can rely on — because what you deliver is clean, well-documented, and actually ready.`
+- Reason: role-agnostic course wording.
+
+## b05 complex leads and mentoring (master cue 3)
+
+- Master sentence: `Your commission tier increases.`
+- Approved sentence: `Earnings can grow with performance.`
+- Reason: evergreen compensation language with no fixed tier promise.
+
+## b12 revenue and opportunity (master cue 9)
+
+- Master question: `Are your leads producing revenue?`
+- Approved question: `Is your work producing revenue?`
+- Reason: role-agnostic performance language.
+
+## b13 career-growth topic close (master cue 10)
+
+- Master: `And that's the end of your onboarding training. You know who we help, what we offer, how to run a call, how to handle objections, and how to run your day. There's only one thing left to do: pick up the phone. Welcome to the BMH Group — we're glad you're here. Now let's get to work.`
+- Approved: `I hope this gives you a clear picture of the growth paths available at BMH. Your path will depend on what you're good at, where you want to go, and the results you produce. We're confident you can continue growing here if you keep improving and stay open to coaching. Keep the conversation going about where you want to grow next.`
+- Reason: Lesson 19 closes the career-growth topic only; it does not end onboarding or the full training program.
+
+All other narration remains the locked Slot 19 master wording.
+
+Note: the repository search did not find a local `Chapter 13 - FINAL.srt`; the locked master block was used as the source of truth per the production guide.

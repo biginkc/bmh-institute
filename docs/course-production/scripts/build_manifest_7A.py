@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 7A manifest ("Objection Architecture") — master Slot 09 cues 1-11 + 17 + 18, 13 beats.
 audio = master clock + 1.0s inter-beat gaps (PLAYBOOK 7.14). Cafe-Andrea hero bookends (b01/b13),
 headset corner-circles (b03/b05/b11). Seedance anim clips -> alpha ProRes .mov over CODE blue
@@ -9,7 +10,9 @@ Modes: hero | video | calltype | grid4 | steps | lockup (see remotion/src/Lesson
 """
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson7A"
 GK = f"{HG}/grok"
 SCN = f"{B}/course-assets/scenes/module-07"

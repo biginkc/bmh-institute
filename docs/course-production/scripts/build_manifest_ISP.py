@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+import os
 """Build the word-timed Lesson ISP Remotion manifest and master audio."""
 import json, math, os, re, shutil, subprocess
 from pathlib import Path
 
-ROOT = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = Path(BMH_ROOT)
 HG = ROOT / "course-assets/heygen/lessonISP"
 SEEDANCE_WHITE = HG / "seedance-white-skin"
 SCN = ROOT / "course-assets/scenes/module-isp"

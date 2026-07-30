@@ -3,8 +3,11 @@
 (the public avatars reject /v3 Avatar IV). Proves endpoint + colored-background swap before batching.
 Renders drill 1 (Teodor) only. Poll via /v1/video_status.get."""
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson7B"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson7B"
 row = json.load(open(OUT+"/_seller_map.json"))[0]      # drill 1 = Teodor
 AV, TAG = row["avatar_id"], row["tag"]
 state = json.load(open(OUT+"/_state.json"))

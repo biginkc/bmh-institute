@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+import os
 """9B v3 outro: standing full-body 1A Andrea (Jarrad redline 2026-07-10) speaking the full
 b09_outro wav — replaces the bench b09a/b09b split take. Calm-hands motion prompt."""
 import json, subprocess, time, urllib.request, pathlib
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT  = ROOT/"course-assets/heygen/lesson9B"
 KEY  = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
 AV_STANDING = "e527528e584a404f9da68ee4faca1353"   # 1A standing full-body Andrea

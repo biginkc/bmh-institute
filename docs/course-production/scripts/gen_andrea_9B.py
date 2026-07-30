@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+import os
 """Lesson 9B: (1) Q9 seller swap Imelda→Zosia (Jarrad-board alternate; framing mismatch fix),
 (2) all 9 park-bench Andrea clips from the banked wavs (9A bench recipe: /v3/videos, 720p, 16:9,
 expressiveness low, calm-hands motion prompts)."""
 import json, os, time, urllib.request, subprocess, pathlib
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT  = ROOT/"course-assets/heygen/lesson9B"
 KEY  = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
 BENCH = "05fa4c66c4504b929d4d7dd6f679cd4b"   # park-bench Andrea (9A bookends)

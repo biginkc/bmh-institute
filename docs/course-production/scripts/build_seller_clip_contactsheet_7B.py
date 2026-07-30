@@ -3,7 +3,10 @@
 Output: course-assets/heygen/lesson7B/_seller_clips_contactsheet.jpg  (8 rows x 4 cols)."""
 import json, subprocess, os, pathlib
 from PIL import Image, ImageDraw, ImageFont
-HG = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson7B")
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+HG = pathlib.Path(f"{BMH_ROOT}/course-assets/heygen/lesson7B")
 rows = json.load(open(HG/"_seller_map.json"))
 TW, TH, COLS = 320, 180, 4
 ROWS = (len(rows)+COLS-1)//COLS

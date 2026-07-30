@@ -1,6 +1,6 @@
 import json, os, time, urllib.request, subprocess, pathlib
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson7B"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson7B"
 os.makedirs(OUT, exist_ok=True)
 FRIENDLY = "55f8c0f546884f9cbdefa113f5e7b682"   # Elizabeth-Friendly (all Andrea narration)
 EXCITED  = "91120f72682e4459a19e311ba2ee4cb2"   # Elizabeth-Excited (unused for now)
@@ -75,6 +75,9 @@ state = json.load(open(sp)) if os.path.exists(sp) else {}
 def save(): json.dump(state, open(sp, "w"), indent=1)
 
 import sys
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 SELLER_SILENCE = 2.5  # trailing idle tail seconds for seller clips
 do_sellers = "--sellers" in sys.argv
 BEATS = ANDREA + THEME + (SELLER if do_sellers else [])

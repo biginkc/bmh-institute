@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 8A manifest ("Complex Objections") — master Slot 11 cues 1-9 + written bridge outro, 10 beats.
 audio = master clock + 1.0s inter-beat gaps (PLAYBOOK 7.14). BEACH-Andrea hero bookends (b01/b10, Jarrad
 2026-07-06 override of cafe) + beach-Andrea corner circles (b04/b07/b09 — crop MEASURED per 9.4, seated
@@ -10,7 +11,9 @@ Trigger notes from the 11.5 audit: b02 label triggers on "framework" (not "depth
 b07 caption triggers on the SECOND "leaseback" (the definition, not the opening word)."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson8A"
 GK = f"{HG}/grok"
 SCN = f"{B}/course-assets/scenes/module-08"

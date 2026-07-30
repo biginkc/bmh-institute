@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Lesson 2A v2 stills — one lane per image: zsh gen_stills_2A_v2.sh <key>
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-02"
 ANDREA="course-assets/avatar-candidates/andrea_headset_v2.png"

@@ -4,7 +4,10 @@ The HeyGen clip renders the avatar speaking + idling on camera for the full 25s 
 Re-uses the existing *_raw.wav takes (no new TTS calls). Updates _state.json durations.
 """
 import json, os, subprocess, pathlib
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson7B"
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson7B"
 TOTAL = 25.0
 state = json.load(open(OUT+"/_state.json"))
 rows = json.load(open(OUT+"/_seller_map.json"))

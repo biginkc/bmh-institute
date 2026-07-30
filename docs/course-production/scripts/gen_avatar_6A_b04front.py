@@ -1,9 +1,12 @@
 import json, os, time, urllib.request, subprocess
 import pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 # b04 "maskreveal" front phase: cafe Andrea speaks the front portion (b04_front.wav) to camera,
 # then Remotion cuts to the mask still at swapFrame. Output -> hero_b04_front.mp4.
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson6A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson6A"
 AV_CAFE = "b2cd05454d284058ad8d7303545821e6"   # Cafe Andrea (bookends + b04 front)
 WAV = f"{OUT}/b04_front.wav"
 NAME = "hero_b04_front"

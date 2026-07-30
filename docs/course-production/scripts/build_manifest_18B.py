@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 import json
 import math
 import shutil
@@ -6,7 +7,9 @@ import subprocess
 import wave
 from pathlib import Path
 
-ROOT = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = Path(BMH_ROOT)
 SRC = ROOT / "course-assets/heygen/lesson18B"
 SCENES = ROOT / "course-assets/scenes/module-18-lesson18B"
 REMOTION = ROOT / "docs/course-production/remotion"

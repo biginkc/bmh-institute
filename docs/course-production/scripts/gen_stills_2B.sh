@@ -3,7 +3,7 @@
 # Head-and-shoulders doodle portraits, ONE person each, generous even blue margin
 # so each crops cleanly into the b07 recap grid AND serves as the HeyGen talking-avatar source.
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-02-lesson2B"
 mkdir -p "$OUT"

@@ -7,9 +7,12 @@
 # the script that produced lessonB v2's b01) — same voice, same speed, same loudnorm,
 # same cafe avatar + motion prompt. Only b01_intro touched; nothing else in lessonB.
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lessonB"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lessonB"
 FRIENDLY = "55f8c0f546884f9cbdefa113f5e7b682"  # same TTS voice as every other lessonB beat
 AV = json.load(open(f"{OUT}/_avatars.json"))
 AV_CAFE = AV["cafe"]["avatar_id"]

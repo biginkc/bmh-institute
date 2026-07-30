@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+import os
 """Lesson 2B manifest — multi-voice seller beats. audio=master clock, 1.0s inter-beat gaps.
 Seller beat: portrait (canonical blue, push-in) during Andrea setup+tag; talking-avatar clip during the seller line.
 All stills + clips normalized/re-keyed to canonical blue so switches & beats stay seamless."""
 import json, os, subprocess
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson2B"
 SCN = f"{B}/course-assets/scenes/module-02-lesson2B"
 PUB = f"{B}/docs/course-production/remotion/public/lesson2B"

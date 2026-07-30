@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build post-model-selection animation queues for Lesson 4B.
 
 This script does not call Higgsfield and does not choose a model. It creates
@@ -10,7 +11,9 @@ import json
 import math
 from pathlib import Path
 
-B = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = Path(BMH_ROOT)
 STATE = B / "course-assets/heygen/lesson4B/_state.json"
 SCENES = B / "course-assets/scenes/module-04-lesson4B"
 OUT_ROOT = B / "course-assets/review-lesson4B/animation-queue"

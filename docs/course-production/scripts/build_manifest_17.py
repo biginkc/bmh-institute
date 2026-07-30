@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 17 manifest ("Compensation Engine", Slot 17) — v3 script "master texture,
 no numbers", v5.1 board, 12 beats. Mirrors build_manifest_7A.py.
 
@@ -30,7 +31,9 @@ without writing anything or running ffmpeg. Safe while stills/anims are still la
 """
 import json, os, subprocess, sys
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson17"
 SCN = f"{B}/course-assets/scenes/module-17"
 ANIM = f"{SCN}/anim"

@@ -5,8 +5,10 @@ import subprocess
 import time
 import urllib.request
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+ROOT = pathlib.Path(BMH_ROOT)
 OUT = ROOT / "course-assets/heygen/lesson11A"
 IMG = ROOT / "course-assets/scenes/module-11/m11_L11A_andrea-table.png"
 OUT.mkdir(parents=True, exist_ok=True)

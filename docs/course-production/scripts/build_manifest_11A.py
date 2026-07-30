@@ -9,7 +9,9 @@ import json
 import os
 import subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson11A"
 SD = f"{HG}/seedance"
 PUB = f"{B}/docs/course-production/remotion/public/lesson11A"

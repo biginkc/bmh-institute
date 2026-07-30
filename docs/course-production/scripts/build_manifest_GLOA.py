@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson GLO-A manifest. Audio = master clock; 1.0s inter-beat gaps (7.14);
 anim beats hold their clip's OWN last frame (7.7/11.7); label QUEUE per beat (3b);
 modes: hero | scene (still/anim, optional circle) | swap (hero clip -> still)."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lessonGLOA"
 SCN = f"{B}/course-assets/scenes/module-glossary"
 PUB = f"{B}/docs/course-production/remotion/public/lessonGLOA"

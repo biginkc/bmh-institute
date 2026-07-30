@@ -2,7 +2,7 @@
 # Carol v2 — TWO-person "arguing with the contractor" still (source for the Seedance animated tag).
 # Bespoke (not gen_scenes_2B.sh) so the ONE-PERSON clause is replaced by a TWO-person anti-clone guard.
 set -u
-cd "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-02-lesson2B"
 STYLE='STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black, light gray) on a single flat cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective grid. Icon-level faces: tiny dot eyes, one small nose line, one simple mouth line, minimal features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading (faces are pale near-white cream). No ambient doodles (no hearts, sparkles, music notes, speech bubbles, motion marks). 16:9 wide composition, 1600x900, both figures fully in frame with even cornflower-blue margin, nothing clipped at the edges.'

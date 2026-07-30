@@ -8,7 +8,9 @@ import os
 import subprocess
 from pathlib import Path
 
-B = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = Path(BMH_ROOT)
 REPORT = B / "course-assets/review-lesson4B/LESSON-4B-goal-audit.md"
 REPORT_JSON = B / "course-assets/review-lesson4B/LESSON-4B-goal-audit.json"
 

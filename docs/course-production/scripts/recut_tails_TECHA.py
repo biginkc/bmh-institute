@@ -12,8 +12,11 @@ SAME renderer decode path, minus the h264 roundtrip -> exact color match, no bak
 Frame index = beat start (naive cumsum of durationInFrames) + animFrames - 2.
 Usage: recut_tails_TECHA.py   (then render)."""
 import json, subprocess
+import os
 
-BASE = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/docs/course-production/remotion"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+BASE = f"{BMH_ROOT}/docs/course-production/remotion"
 PUB = f"{BASE}/public/lessonTECHA"
 m = json.load(open(f"{PUB}/manifest.json"))
 cursor = 0

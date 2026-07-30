@@ -6,8 +6,10 @@ import subprocess
 import time
 import urllib.request
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+ROOT = pathlib.Path(BMH_ROOT)
 OUT = ROOT / "course-assets/heygen/lesson11A"
 BENCH_AVATAR = json.load(open(ROOT / "course-assets/heygen/lesson9A/_avatars.json"))["bench"]["avatar_id"]
 

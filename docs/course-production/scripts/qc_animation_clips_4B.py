@@ -11,7 +11,9 @@ import os
 import subprocess
 from pathlib import Path
 
-B = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = Path(BMH_ROOT)
 HG = B / "course-assets/heygen/lesson4B"
 GK = HG / "grok"
 REVIEW = B / "course-assets/review-lesson4B/animation-qc"

@@ -5,7 +5,9 @@ import os
 import shutil
 import subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson18A"
 SCN = f"{B}/course-assets/scenes/module-18-lesson18A"
 PUB = f"{B}/docs/course-production/remotion/public/lesson18A"

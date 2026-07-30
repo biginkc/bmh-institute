@@ -2,10 +2,13 @@ from collections import deque
 from pathlib import Path
 
 from PIL import Image, ImageDraw
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 
 SCENE_DIR = Path(
-    "/Users/jarradhenry/Sites/BMH apps/BMH Institute/"
+    f"{BMH_ROOT}/"
     "course-assets/scenes/module-06-lesson6B"
 )
 CANONICAL_BLUE = (0x62, 0xB3, 0xF3)

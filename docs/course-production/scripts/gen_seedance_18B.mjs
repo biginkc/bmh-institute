@@ -5,7 +5,9 @@ import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const ROOT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute";
+const BMH_ROOT = process.env.BMH_INSTITUTE_ROOT || decodeURIComponent(new URL("../../..", import.meta.url).pathname);
+
+const ROOT = `${BMH_ROOT}`;
 const ENDPOINT = "https://mcp.higgsfield.ai/mcp";
 const VARIANT = process.env.LESSON18B_SEEDANCE_VARIANT || "v1";
 const OUT = path.join(

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Lesson 9B smoke test — 2 seller ask-clips (Q6 Aditya M, Q7 Jin F) via the proven 7B recipe.
 Builds the durable 5-row seller map (voices distinct from 7B's 32), TTS's the two smoke lines
 (/v3/voices/speech, speed 1.0, loudnorm + 2.5s idle tail), then renders both avatars on canonical
@@ -7,7 +8,9 @@ Approved by Jarrad 2026-07-09 (storyboard v2 drill + 5 picks). Owns only lesson9
 """
 import json, os, re, sys, time, urllib.request, subprocess, pathlib
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT  = ROOT/"course-assets/heygen/lesson9B"; OUT.mkdir(parents=True, exist_ok=True)
 KEY  = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
 

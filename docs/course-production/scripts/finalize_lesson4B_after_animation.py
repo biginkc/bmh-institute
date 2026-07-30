@@ -11,7 +11,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-B = Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = Path(BMH_ROOT)
 REMOTION = B / "docs/course-production/remotion"
 SCRIPTS = B / "docs/course-production/scripts"
 STATE = B / "course-assets/heygen/lesson4B/_state.json"

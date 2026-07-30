@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build the durable Lesson 7B seller map: drill -> (avatar_id, voice_id, pushback line).
 Reads:  course-assets/heygen/lesson7B/_seller_picks.json  (32 avatars, alternating M/F)
         docs/course-production/shotlists/lesson-7B-script-clean.txt  (32 SELLER: lines)
@@ -9,7 +10,9 @@ Idempotent: never touches lesson7A / module-07 paths.
 """
 import json, re, urllib.request, pathlib
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = pathlib.Path(BMH_ROOT)
 HG   = ROOT/"course-assets/heygen/lesson7B"
 DOCS = ROOT/"docs/course-production"
 KEY  = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()

@@ -5,9 +5,12 @@
 # concat onto the UNTOUCHED v5 b05 wav (approved audio preserved bit-for-bit),
 # lip-sync the combined wav with the 1A headset Andrea avatar (same pipeline as v5).
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-BASE = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen"
+BASE = f"{BMH_ROOT}/course-assets/heygen"
 V5 = f"{BASE}/lessonA-v5"
 OUT = f"{BASE}/lessonA-v6"
 os.makedirs(OUT, exist_ok=True)

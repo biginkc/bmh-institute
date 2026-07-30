@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Lesson 7B manifest — 32 objection drills, theme-grouped under the 6 approved dividers.
 Structure:  intro(hero) -> yourturn(hero) -> [ for each of 6 themes: theme_card -> (seller -> comeback) x drills ]
             -> summary(hero) -> outro(hero).
@@ -10,7 +11,9 @@ Outputs: remotion/public/lesson7B/{clips,hero,stills}/*, master.m4a, manifest.js
 Never touches lesson7A / module-07 assets.
 """
 import json, os, subprocess, pathlib
-B   = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+B   = BMH_ROOT
 HG  = f"{B}/course-assets/heygen/lesson7B"
 SCN = f"{B}/course-assets/scenes/module-07-lesson7B"
 PUB = f"{B}/docs/course-production/remotion/public/lesson7B"

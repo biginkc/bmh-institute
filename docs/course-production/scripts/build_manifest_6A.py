@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 6A manifest ("Discovery") — master Slot 08 cues 1-8, 9 beats.
 audio = master clock + 1.0s inter-beat gaps (PLAYBOOK 7.14). Cafe-Andrea hero bookends (b01/b09).
 Modes:
@@ -13,7 +14,9 @@ Stills normalized to canonical blue at ingest (sample native bg -> colorkey -> o
 """
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson6A"
 SCN = f"{B}/course-assets/scenes/module-06"
 ANIM = f"{B}/remotion/public/lesson6A/anim"          # Seedance clips already downloaded here

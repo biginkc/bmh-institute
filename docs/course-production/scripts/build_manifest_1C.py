@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 1C manifest: audio = master clock + 1.75s inter-beat gaps (NEW vs 1B).
 Modes: hero|scene|card|calendar|movie|drive. Anim clips re-keyed to canonical blue."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson1C"
 SCN = f"{B}/course-assets/scenes/module-01"
 PUB = f"{B}/docs/course-production/remotion/public/lesson1C"

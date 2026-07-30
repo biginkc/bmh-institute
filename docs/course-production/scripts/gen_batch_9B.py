@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Lesson 9B batch — smoke test approved by Jarrad 2026-07-09.
 Part A: remaining 3 seller ask-clips (q8 Justin, q9 Imelda, q10 Minho) — same recipe as gen_smoke_9B.py.
 Part B: all Andrea beat wavs (Elizabeth-Friendly, speed 1.0, word timestamps) — bridge, 5 answers,
@@ -7,7 +8,9 @@ Park-bench Andrea avatar CLIPS generate in a later step from these wavs.
 """
 import json, os, time, urllib.request, subprocess, pathlib
 
-ROOT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute")
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+ROOT = pathlib.Path(BMH_ROOT)
 OUT  = ROOT/"course-assets/heygen/lesson9B"
 KEY  = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
 FRIENDLY = "55f8c0f546884f9cbdefa113f5e7b682"   # Elizabeth-Friendly (all Andrea narration)

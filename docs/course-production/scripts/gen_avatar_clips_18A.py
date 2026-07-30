@@ -8,9 +8,11 @@ import time
 import urllib.error
 import urllib.request
 
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
 
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = pathlib.Path("/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson18A")
+OUT = pathlib.Path(f"{BMH_ROOT}/course-assets/heygen/lesson18A")
 AV_CAFE = "b2cd05454d284058ad8d7303545821e6"
 FORCE_CLIPS = {name.strip() for name in os.environ.get("FORCE_CLIPS_18A", "").split(",") if name.strip()}
 

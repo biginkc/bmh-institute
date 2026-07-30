@@ -1,6 +1,9 @@
 import json, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lessonGLOA"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lessonGLOA"
 FRIENDLY = "55f8c0f546884f9cbdefa113f5e7b682"
 AV = "e527528e584a404f9da68ee4faca1353"
 TEXT = "That's your core vocabulary. Hang onto these terms — you'll hear them again and again out in the field. Let's keep moving."

@@ -1,0 +1,29 @@
+# Lesson 8B — Complex Objections (Part 2: Trust & People Objections) — OVERFLOW from Slot 11 split
+# Source: locked master _master-transcripts.md Slot 11 (Chapter 14 - Draft.srt), VERBATIM cues 10-16.
+# Split rationale: full slot ~1126 words / 7:04 (over the ~900w/6min ceiling); pivot at cue 9->10 where
+# the situation objections (8A: underwater/tenants/squatters/leaseback/privacy/contract) hand off to the
+# trust & people cluster below. 8B needs a short WRITTEN intro bridge when produced (deviation to flag).
+# The closing cue 16 carries the master's own verbatim tease -> Slot 12 "Seller FAQ Decoder" — keep exact.
+# NOTE: on-disk "Chapter 14 - Draft.srt" is a stale 2-cue rough draft ("give a damn", no closing tease) —
+#       the master's embedded block is canonical ("genuinely care") and is what this script derives from.
+
+[cue 10 — flip for profit]
+When someone asks "are you going to flip this for a profit?" they're really asking whether they're getting taken advantage of. Be honest. Yes, we're a business. We buy properties, improve them, and resell them. That's how we're able to offer a fast cash sale with no repairs and no commissions on their end. Don't apologize for the business model. Just frame it honestly. Both sides get something they want.
+
+[cue 11 — scam concerns]
+Scam concerns come up a lot, especially with sellers who have been burned before. If someone says "I've been scammed" or "is this even legitimate?" do not get defensive. Say you're sorry they went through that. Explain that everything goes through a licensed title company. There's attorney review available. We never ask for money upfront. They never pay us anything. And offer to share company information so they can verify everything before moving forward.
+
+[cue 12 — the attorney]
+When a seller says their attorney told them not to sign anything, welcome that. Never fight the attorney. Say "that's great advice, and I'd encourage you to have your attorney review everything. We work with attorneys regularly. If they have questions about our process or the contract, we're happy to connect with them directly." Making the attorney your ally instead of your opponent is one of the smartest things you can do.
+
+[cue 13 — family dynamics]
+Family dynamics show up constantly. "I want to sell but my brother doesn't agree." Or "my co-owner doesn't want to do this." These are tricky because you're dealing with multiple people who have different priorities. Ask what the other person's main concern is. A lot of times once they understand the full picture, the costs of continuing to hold the property, the market conditions, what their actual options are, they come around. Offer to talk to the other party directly. Sometimes hearing it from an outside person helps more than hearing it from family.
+
+[cue 14 — property issues & belongings]
+Property issues. Sellers worry about disclosing problems. Code violations, asbestos, mold, foundation issues, all the stuff in the house they've been ignoring. For all of these, the answer is the same. We buy properties in any condition. That's literally what we do. Whatever the issue is, it doesn't change our interest. We just factor it into the evaluation. For personal belongings, tell them they can take whatever they want. Anything they leave behind, we handle. A lot of sellers, especially elderly ones and people dealing with inherited properties, find huge relief in hearing that they don't have to clean the whole place out themselves.
+
+[cue 15 — the pattern]
+The pattern across every one of these is the same framework you already know. Listen to the concern fully. Acknowledge it so they know you heard them. Ask questions to get to the real issue underneath. And redirect toward a solution or a next step. The specific words change depending on the situation. The framework doesn't.
+
+[cue 16 — the heart + roleplay + tease (MASTER'S VERBATIM CLOSING — keep exact)]
+One thing worth saying about these advanced situations. They often carry heavy emotional weight. Grief, embarrassment, fear, family conflict. The people who handle them best on the phone aren't the ones with the smoothest rebuttals. They're the ones who genuinely care about the person on the other end of the line. You can't fake that. Sellers can tell. Your roleplay for this section is a cold outreach to someone in pre-foreclosure who thinks you're running a scam. It's as real as it gets. Once you've run it, one more stop in this section: the questions sellers ask that aren't objections at all — and how to answer them without flinching.

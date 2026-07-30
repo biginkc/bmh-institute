@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import os
 """Stage-7 QC harness for the Lesson 8A render (custom-video-qc procedure).
 1. Audio: volumedetect (mean -20+/-6dB) + silencedetect (expect the 9x 1.0s inter-beat gaps, no others).
 2. Per-beat frame harvest (start+18 / mid / end-18, transition-safe) -> scratchpad for visual judgment.
@@ -7,7 +8,9 @@
    boundary — flag any 1-frame delta > 1.5."""
 import json, re, subprocess, sys
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 MP4 = f"{B}/docs/course-production/remotion/out/lesson8A.mp4"
 PUB = f"{B}/docs/course-production/remotion/public/lesson8A"
 SCRATCH = "/private/tmp/claude-502/-Users-jarradhenry-BMH-OS/3f4055bf-1d2d-4364-9da3-3e41211b64d5/scratchpad"

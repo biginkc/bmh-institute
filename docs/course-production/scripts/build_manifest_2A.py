@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
+import os
 """Build Lesson 2A manifest (Module 02 "Who Sells to Us") — near-verbatim Chapter 2A, 21 beats.
 audio = master clock + 1.5s inter-beat gaps. Office-Andrea bookends + mid (b17 full-body + labels).
 Modes: hero|herolabels|grid|scene|vs|anim|cascade|card. Anim clips → alpha ProRes; missing → fallback."""
 import json, os, subprocess
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 HG = f"{B}/course-assets/heygen/lesson2A"
 SCN = f"{B}/course-assets/scenes/module-02"
 PUB = f"{B}/docs/course-production/remotion/public/lesson2A"

@@ -14,7 +14,9 @@ import time
 import urllib.error
 import urllib.request
 
-B = "/Users/jarradhenry/Sites/BMH apps/BMH Institute"
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
+
+B = BMH_ROOT
 OUT = f"{B}/course-assets/heygen/lesson12A"
 STATE_PATH = f"{OUT}/_state.json"
 CLIPS_PATH = f"{OUT}/_clips.json"

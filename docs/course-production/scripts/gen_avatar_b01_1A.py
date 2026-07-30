@@ -1,6 +1,9 @@
 import json, os, time, urllib.request, subprocess, pathlib
+import os
+
+BMH_ROOT = os.environ.get("BMH_INSTITUTE_ROOT") or os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".."))
 KEY = pathlib.Path.home().joinpath(".config/bmh-course/heygen.key").read_text().strip()
-OUT = "/Users/jarradhenry/Sites/BMH apps/BMH Institute/course-assets/heygen/lesson2A"
+OUT = f"{BMH_ROOT}/course-assets/heygen/lesson2A"
 AV = "e527528e584a404f9da68ee4faca1353"  # 1A headset Andrea (on plain blue)
 WAV = f"{OUT}/b01_intro.wav"  # merged b01+b02 intro
 
