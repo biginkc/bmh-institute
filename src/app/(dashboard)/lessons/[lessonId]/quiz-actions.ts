@@ -15,6 +15,7 @@ import {
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { withQuizTiming } from "@/lib/performance/quiz-timing";
+import { withQuizDeadline } from "@/lib/quizzes/with-timeout";
 
 export type QuestionReveal =
   | {
@@ -66,7 +67,9 @@ export async function startQuizAttempt(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizStartResult> {
-  return withQuizTiming("start", () => startQuizAttemptInternal(input));
+  return withQuizDeadline("start", () =>
+    withQuizTiming("start", () => startQuizAttemptInternal(input)),
+  );
 }
 
 async function startQuizAttemptInternal(input: {
@@ -145,10 +148,21 @@ export async function restoreQuizAttempt(input: {
   quizId: string;
   lessonId: string;
 }): Promise<QuizRestoreResult> {
+  return withQuizDeadline("resume", () =>
+    withQuizTiming("resume", () => restoreQuizAttemptInternal(input)),
+  );
+}
+
+async function restoreQuizAttemptInternal(input: {
+  quizId: string;
+  lessonId: string;
+}): Promise<QuizRestoreResult> {
   const access = await authorizedQuizContext(input);
   if (!access.ok) return access;
-  const { data: existing, error } = await withQuizTiming("resume", () =>
-    loadIncompleteAttempt(access.learner, access.userId, input.quizId),
+  const { data: existing, error } = await loadIncompleteAttempt(
+    access.learner,
+    access.userId,
+    input.quizId,
   );
   if (error) return { ok: false, error: error.message };
   if (!existing) return { ok: true, attempt: null };
@@ -157,9 +171,7 @@ export async function restoreQuizAttempt(input: {
   if (!admin.ok) return admin;
   const questionsResult = await loadAttemptQuestions(admin.client, input.quizId);
   if (!questionsResult.ok) return questionsResult;
-  const restored = await withQuizTiming("resume", () =>
-    resumeAttempt(existing, questionsResult.questions),
-  );
+  const restored = await resumeAttempt(existing, questionsResult.questions);
   if (!restored.ok) return restored;
   return {
     ok: true,
@@ -168,6 +180,14 @@ export async function restoreQuizAttempt(input: {
 }
 
 export async function answerQuizQuestion(input: {
+  attemptId: string;
+  questionId: string;
+  selected: string[];
+}): Promise<QuizAnswerResult> {
+  return withQuizDeadline("answer", () => answerQuizQuestionInternal(input));
+}
+
+async function answerQuizQuestionInternal(input: {
   attemptId: string;
   questionId: string;
   selected: string[];
@@ -262,6 +282,12 @@ export async function answerQuizQuestion(input: {
 }
 
 export async function finalizeQuizAttempt(input: {
+  attemptId: string;
+}): Promise<QuizSubmitResult> {
+  return withQuizDeadline("finalize", () => finalizeQuizAttemptInternal(input));
+}
+
+async function finalizeQuizAttemptInternal(input: {
   attemptId: string;
 }): Promise<QuizSubmitResult> {
   const learner = await createClient();

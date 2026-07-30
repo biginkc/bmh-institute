@@ -293,6 +293,7 @@ describe("<QuizRunner />", () => {
     vi.mocked(restoreQuizAttempt).mockResolvedValue({
       ok: true,
       attempt: {
+        ok: true,
         attemptId: "attempt-existing",
         questions: attemptQuestions,
         resumed: true,
@@ -315,6 +316,7 @@ describe("<QuizRunner />", () => {
       .mockResolvedValueOnce({
         ok: true,
         attempt: {
+          ok: true,
           attemptId: "attempt-existing",
           questions: attemptQuestions,
           resumed: true,

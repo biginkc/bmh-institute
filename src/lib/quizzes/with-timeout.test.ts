@@ -36,6 +36,32 @@ describe("quiz deadlines", () => {
     await expect(withQuizDeadline("answer", async () => "ok")).resolves.toBe("ok");
   });
 
+  it("ignores a late original response after the deadline has settled", async () => {
+    vi.useFakeTimers();
+    try {
+      let resolveLate!: (value: string) => void;
+      const original = new Promise<string>((resolve) => {
+        resolveLate = resolve;
+      });
+      const pending = withQuizDeadline("start", () => original);
+      const rejection = expect(pending).rejects.toMatchObject({
+        name: "QuizDeadlineError",
+        stage: "start",
+      });
+      await vi.advanceTimersByTimeAsync(QUIZ_DEADLINES.start);
+      await rejection;
+
+      resolveLate("late original response");
+      await Promise.resolve();
+      expect(await Promise.race([
+        original,
+        Promise.resolve("late original response"),
+      ])).toBe("late original response");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("exposes a typed timeout error for reconciliation", () => {
     const error = new QuizDeadlineError("finalize", QUIZ_DEADLINES.finalize);
     expect(error.stage).toBe("finalize");
