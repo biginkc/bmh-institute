@@ -3,7 +3,7 @@
 # Pattern copied from gen_stills_7A.sh. Anchors in course-assets/scenes/module-08/_anchors/
 # (jim/mark/david copied from 7A; ray/carol/marcus/grace cropped from cast-board, text sliver trimmed).
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 A="course-assets/scenes/module-08/_anchors"
 AV="course-assets/avatar-candidates"

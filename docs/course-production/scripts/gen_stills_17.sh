@@ -3,7 +3,7 @@
 # Fresh-gen beats: b04 your-deal, b05 strong-months, b06 real-outcomes, b09 finish-line (Priya), b10 wallet.
 # Reuse (do NOT regen): b02 three-blocks, b03 ramp-calendar, b08 credit-loop, b11 comp-sheet.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 
 D="docs/design"
 OUT="course-assets/scenes/module-17"

@@ -2,7 +2,7 @@
 # Lesson 5B "The Fact Find" stills — one lane per image: zsh gen_stills_5B.sh <key>
 # Fire each key as its own background bash call (all lanes in one turn).
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-05-lesson5B"          # ISOLATED from 5A's module-05
 REP="course-assets/avatar-candidates/andrea_headset_v2.png"   # headset-Andrea identity ref

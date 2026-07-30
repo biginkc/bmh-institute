@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Regenerate b02 interrogation still with the LOCKED 5B seller (couch-picture seller anchor).
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-05-lesson5B"
 REP="course-assets/avatar-candidates/andrea_headset_v2.png"

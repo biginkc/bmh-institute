@@ -5,6 +5,7 @@ import difflib
 import json
 import os
 import pathlib
+import shutil
 import re
 import subprocess
 import sys
@@ -17,7 +18,7 @@ ROOT = pathlib.Path(BMH_ROOT)
 OUT = ROOT / "course-assets/heygen/lessonISP"
 STATE_PATH = OUT / "_state.json"
 WHISPER_OUT = OUT / "_whisper"
-WHISPER = pathlib.Path("/Users/jarradhenry/Library/Python/3.9/bin/whisper")
+WHISPER = pathlib.Path(os.environ.get("WHISPER_BIN") or shutil.which("whisper") or "whisper")
 MODEL = os.environ.get("WHISPER_MODEL_ISP", "small.en")
 
 

@@ -2,7 +2,7 @@
 # Beth v2 — interior living room, elderly late-mother's framed portrait on the wall.
 # Bespoke (not gen_scenes_2B.sh) so the ONE-PERSON clause allows the mother's memorial PHOTO.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-02-lesson2B"
 STYLE='STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black, light gray) on a single flat cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective grid. Icon-level faces: tiny dot eyes, one small nose line, one simple mouth line, minimal features. Confidently imperfect, hand-drawn. No skin-tone shading (faces are pale near-white cream). No ambient doodles (no hearts, sparkles, music notes, speech bubbles, motion marks). 16:9 wide composition, 1600x900, the whole scene fully in frame with even margin, nothing clipped at the edges.'

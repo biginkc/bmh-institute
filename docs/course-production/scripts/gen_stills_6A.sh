@@ -3,7 +3,7 @@
 # Fire each key as its own background bash call (all lanes in one turn).
 # Keys: office iceberg fork (Seedance start-images) · mask pyramid notices deciders (code-motion stills)
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-06"
 mkdir -p "$OUT"

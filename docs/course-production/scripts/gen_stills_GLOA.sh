@@ -4,7 +4,7 @@
 # (ONLY listed elements), no code visuals (every board/diagram is art), static text BAKED
 # into the art. Model: gpt-image-2 via codex exec. Claude judges, generator never self-grades.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 PRIYA="course-assets/scenes/module-12/_anchors/priya.png"
 SELLER="course-assets/scenes/module-05-lesson5B/_anchors/seller.png"

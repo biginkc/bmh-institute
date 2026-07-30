@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Lesson 1C stills — one lane per image: zsh gen_stills_1C.sh <key>
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-01"
 
@@ -27,7 +27,7 @@ genL() {
   local file="$1"; local desc="$2"
   echo "=== GEN $file ==="
   echo "Generate one image with gpt-image-2 and save it to $OUT/$file (PNG, 1600x900). Match the attached style references exactly. COMPOSITION: $desc $STYLE_LOGO" | \
-  codex exec -i "$D/style-ref-1.png" -i "$D/style-ref-2.png" -i "$D/cast-board.png" -i "docs/course-production/remotion/public/lessonA/bmh-endcard.png" -i "/Users/jarradhenry/Sites/bmh-training-videos/public/bmh-logo.png" --skip-git-repo-check --sandbox workspace-write 2>&1 | tail -3
+  codex exec -i "$D/style-ref-1.png" -i "$D/style-ref-2.png" -i "$D/cast-board.png" -i "docs/course-production/remotion/public/lessonA/bmh-endcard.png" -i "${BMH_LOGO_PNG:-$(cd "${0:A:h}/../../../.." && pwd)/bmh-training-videos/public/bmh-logo.png}" --skip-git-repo-check --sandbox workspace-write 2>&1 | tail -3
   [ -f "$OUT/$file" ] && echo "OK $file" || echo "MISSING $file"
 }
 

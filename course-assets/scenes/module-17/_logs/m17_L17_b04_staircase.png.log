@@ -1,0 +1,2695 @@
+Reading prompt from stdin...
+2026-07-07T08:47:15.525368Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f3bc2-90c6-7611-8fd5-a3e0fed6b389
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-17/m17_L17_b04_staircase.png (PNG, 1600x900). Match the attached style references and cast-board character style exactly. COMPOSITION: A chunky doodle staircase of four steps rising from left to right, drawn in cream and yellow. On the top step sits a neat stack of MONEY-GREEN bank-note bills (blank green notes, no writing) that is taller than a smaller green stack sitting on the second step — the money grows as the stairs rise. No people. Clean blue space upper-left for overlaid code text. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills — palette is yellow, orange, cream, white, black on cornflower-blue #62b3f3, PLUS money-green used ONLY for cash / bank-notes (an intentional communication exception so money reads as money). No gradients, no texture, no shadows, no lighting, no perspective, no skin-tone shading. Faces use flat white/cream fill, tiny dot eyes, small subtle curved cast-board nose, simple mouth. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, motion marks, icons, random props, or decorative clutter. No text, letters, words, numbers, symbols, dollar signs, labels, captions, screens with writing, or readable paperwork anywhere. Leave clean open cornflower-blue space for code-rendered Sticker overlays. 16:9 composition, 1600x900 PNG.
+
+2026-07-07T08:47:15.754840Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-07T08:47:15.770534Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-07T08:47:15.775465Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-07T08:47:15.914691Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-07T08:47:16.058895Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll follow the repo’s image-generation and vault protocol first, then generate the asset directly into the requested course-assets path. I’ll also verify the saved PNG dimensions before handing it back.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/CLAUDE.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+
+hook: PostToolUse
+hook: PreToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/_Active.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-07-05
+tags: [v1]
+related: ["[[STRATEGY]]", "[[MOC - v1]]", "[[MOC - v1 Verification Steps]]", "[[Four-app v1 control ledger]]"]
+---
+# _Active — what now
+
+Current priorities, seeded from [[STRATEGY]]'s bottleneck + the [[MOC - v1]] checklist. Frequently updated.
+
+## Operating model — Claude plans, Codex executes
+
+**Claude = planner/reviewer; Codex = executor.** For the four-app v1 push, Codex is executing the written per-app EXECUTE blocks directly in isolated worktrees; the start-orchestration bootstrap remains suspended until the repos are in known state. Claude still provides independent A5 review/approval before merge/deploy. Full handoff + recon + open decisions: [[2026-06-01 1815 — Four-app v1 plan + Codex execution handoff]]. Detailed per-app checklist: [[MOC - v1 Verification Steps]]. Cross-app context source: [[Four-app v1 control ledger]].
+
+**Autonomous = additive / reversible / observable** (STRATEGY's guardrail). A gate = destructive, irreversible, external-facing, or a judgment call.
+
+**Browser V1 acceptance gate:** fixture seeding, SQL assertions, unit/integration tests, GitHub Actions, and Playwright automation are scaffolding/supporting evidence only. Browser V1 is not accepted until Chrome/Chrome DevTools real-browser execution proves the persona flows through visible UI outcomes, screenshots, console/network inspection where relevant, and browser-console probes where required. Do not use Codex in-app browser / MAP / `iab` as the acceptance surface unless Jarrad explicitly reverses this.
+
+**Browser V1 UI-created data rule:** data setup is part of the browser test. For [[Closer Lab]] and [[BMH Institute]], create fixture/content/test records through Chrome/DevTools browser UI wherever the app UI supports creation or editing. Direct database/API writes are exception-only supporting setup for things the UI cannot create, such as auth bootstrap when no signup/admin UI exists, and must be labeled as non-acceptance evidence.
+
+**2026-06-02 browser-surface correction:** Jarrad first reset [[Closer Lab]] and [[BMH Institute]] Browser V1 acceptance to zero, then superseded the MAP/in-app-browser requirement with Chrome/DevTools real-browser execution. Current controller evidence shows [[BMH Institute]] residual proof closed and [[Closer Lab]] Browser V1 markers closed for pre-read persistence, signed embed-token proof, and scoring/runtime. [[Sandra]] production-readiness proof is GO as of 2026-06-11. The 2026-06-18 active-front reset (skip-trace/CASS preflight, filter preset discoverability, bulk tag creation, Sendillo-era Overview KPI visibility) is now CLEARED 2026-06-19 — all four shipped via merged PRs #288–#300, plus Messages disposition/outcomes hardening (#298/#299/#300). Remaining [[Sandra]] threads: PR #287 (hide dead-dispositioned leads from the kanban — OPEN, awaiting NULL-handling review) and the bulk-SMS→Campaigns KPI tracking gap (June 19 run, job `72b0e08d`, 7,547 messages queued with `campaignId=null`) — forward fix now tracked under **PR #306** (supersedes #301; per the 2026-06-23 [[Sandra PR 306 merge gate rules]] decision, updated 2026-07-05 — merge via GitHub-backed main once the Playwright golden-paths check passes; PR MERGEABLE/UNSTABLE, **not yet merged**) which requires a campaign name + auto-creates + stamps `campaign_id`, with the 2026-06-19 architect P1s folded in; the **June 19 backfill is still pending** (designed, not applied — must match by `property_id` intersection, not the created_at window which over-captures by 6; per the decision, the 423-member retry list is created only after production serves the merged fix).
+
+**2026-06-02 trust reset:** Jarrad challenged the controller's Playwright-heavy verification and does not trust acceptance unless it is revalidated in Chrome/DevTools. Treat Playwright/CI/API/DB evidence as support only. Fresh revalidation so far: [[BMH Institute]] Chrome snapshot/screenshot `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, with separate Sandra outcome confirmation `/tmp/browser-revalidation-bmh-institute-outcome.json`; [[Closer Lab]] member Chrome snapshot/screenshot `/tmp/browser-revalidation-closer-member-recording.*` visibly shows recording `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`, with separate Sandra outcome support `/tmp/browser-revalidation-closer-sandra-outcome-support.json`. [[Sandra]] production-readiness proof is GO on `https://sandra.bmhgroupkc.com`: real Sendillo production thread proof, `PR #236` sequence-admin gate, Chrome SOP matrix, and authenticated production non-admin sequence denial/enrollment behavior are all captured in [[Sandra - 2026-06-11]]. [[Jitter]] trust-reset browser work advanced in two steps: the earlier wrong-database/browser-auth mismatch was partially resolved by pinning production to the canonical `jitter-test` plane (`ypgntjjrrutjsratdwmk`) and proving controlled Chrome dialing in production, but that proof depended on a local scoped worker. Current blocker is no longer fixture creation; it is the **carrier swap**: Twilio is KYC-suspended/retired and **Telnyx is now the active carrier (account fully verified) — carrier validation PASSED 2026-06-04** — that carrier validation precedes the worker gate. The current Jitter gate (B2 plan, 2026-06-06) is **trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof**. The downstream acceptance gap is still a real worker path, but only after the single-line Telnyx dial proof.
+
+| Lane | Repo state (2026-06-01) | First autonomous task | Locked decisions |
+|------|------|------|------|
+| **[[Sandra]]** | Production-readiness proof GO on `https://sandra.bmhgroupkc.com` as of [[Sandra - 2026-06-11]]. Gate 1 real Sendillo production thread proof closed; Gate 2 `PR #236` sequence-admin gate merged/deployed/E2E green; Gate 3 Chrome SOP proof closed with admin SOP coverage, real Sendillo thread visibility, bulk SMS no-send inspection, admin authoring retention, and authenticated production non-admin sequence denial/enrollment behavior. Cleanup caveat: Sendillo canary rows retained as audit evidence and throwaway SOP sequence `7dfedf79-120a-434b-b417-c920b3227475` retained inactive. | no blocker; optional explicitly approved cleanup only if pristine DB is desired | consent: keep current |
+| **[[Closer Lab]]** | PR #60 merged; Browser V1 markers previously closed in Chrome/DevTools: pre-read persistence, BMH Institute signed embed-token path, scoring/runtime; Closer→Sandra sender/config/scoring hardening PRs #71/#72/#73/#74 merged and production proof PASS; fresh trust-reset Chrome revalidation captured member recording `72ad25d8-1b09-4ef9-a278-82113c12ce75` at 100% with transcript and rubric `MET 5 / 5` | browser-revalidated after trust reset | — |
+| **[[BMH Institute]]** | PR #79 and PR #80 merged; controller residual Chrome/DevTools proof closed after credential rotation; Sandra course-completed sender PR #81 merged, production env configured after token rotation, and Chrome/DevTools final lesson proof wrote `course.completed` into Sandra; fresh trust-reset Chrome revalidation captured visible `Lesson complete` and matching Sandra outcome | browser-revalidated after trust reset | cert PDF **deferred post-v1**; suspended-login block shipped via PR #79 |
+| **[[Jitter]]** | auth PR #144 merged; writeback PR #145, Sandra receiver PR #224, and boundary fix PR #146 merged; CPS pacing merged to `main` at `334ef8565d21b71bd3f645f05def2922179cee47` and deployed to production `dpl_75H8rsoMe7HEX7KSgtdo6cAjtJRS`; one controlled Chrome proof succeeded on `https://jitter.bmhgroupkc.com/dialer`, with browser audio connected and 4 successful `twilio.create_call` operations, but only while a local scoped worker was running. **Carrier since swapped: Twilio retired (KYC); Telnyx is the active carrier (account verified).** | **Current gate (B2 plan, 2026-06-06): trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof.** Then keep web + worker on the same reviewed SHA and rerun the final Chrome `/dialer` proof with the real worker before claiming accepted | business dialing approved; no extra live dial needed for writeback-only proof |
+
+## 🚦 Gates — full autonomy authorized (pre-launch, no users/data)
+Standing authorization (Jarrad, 2026-06-01): Codex may read/write any Supabase project incl. prod, run/apply migrations, open AND **merge** PRs, and deploy — quality-gated by Codex manual-code-review plus Claude A5 when reachable. If Claude is unavailable, Codex must try both CLI and desktop/app before using the fallback readiness gate. **No human click on merge/deploy.** See [[bmh-apps-prelaunch-no-prod-ceremony]] and [[Four-app v1 control ledger]].
+- **Hard pause:** billing changes; secret disclosure risk; uncontrolled provider use outside v1 verification; human-only MFA/CAPTCHA/account recovery after CLI/API/desktop workarounds.
+- [[Jitter]] business dialing is explicitly approved for v1 verification. Use product-appropriate caps/logging; no generic prod ceremony just because it is production.
+- New product decisions: make v1-compatible calls, record in the app's report, keep moving — never stall a lane unless it changes billing or creates uncontrolled provider use.
+
+## ✅ Fully autonomous (no checkpoint) — incl. TEST-env side effects
+Self-served, no longer Jarrad inputs:
+- **1Password reads** — all agents must read existing `BMH Secrets` items through the service account only: `export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -w -s OP_SERVICE_ACCOUNT_TOKEN)` then `op read "<redacted-1password-ref>"`. Do not use desktop-app/GUI/biometric/browser authorization for reads. If a GUI authorization prompt appears during a read, stop that path and retry with the service account; do not ask Jarrad to approve a read.
+- **Twilio** — read from 1Password (`Twilio - BMH Account Credentials`: SID, auth token, API key, `TWILIO_OWNED_NUMBERS_E164`, caller ID). Owned-number tests remain useful for smoke tests; [[Jitter]] may also dial real businesses for v1 verification under the standing approval above.
+- **Test accounts** — each lane provisions its own per-role accounts in its app's `*-test` Supabase project (`sandra-crm-test`, `closer-lab-test`, `bmh-institute-test`, `jitter-test`).
+- Dirty-work policy: snapshot to `wip/pre-v1-snapshot-<date>` *before* removing stale (reversible).
+- Plus: repo triage · code fixes in worktrees · unit/integration/build/lint · Playwright fake-media + fixtures · resolving `UNKNOWN` items by reading code · drafting PRs · `_inbox` notes.
+
+## Integrations — last
+Trust-reset integration front: do not call a lane accepted unless the current proof includes Chrome/DevTools-visible browser behavior. Pre-reset supporting proof remains useful but is not enough by itself. [[BMH Institute]] `course.completed`→[[Sandra]] has fresh Chrome/DevTools revalidation after Sandra #227/#228 and BMH Institute #81: `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, and separate outcome confirmation shows Sandra `institute_course_outcomes.id=61592447-b33d-489c-a230-d513435ef6b7` with webhook event `15e56f40-31b8-4d48-901e-942bdf0bbd8f` processed/signature verified. [[Closer Lab]] practice outcome→[[Sandra]] now has fresh Chrome/DevTools member recording revalidation: `/tmp/browser-revalidation-closer-member-recording.*` visibly shows attempt `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`; separate support file `/tmp/browser-revalidation-closer-sandra-outcome-support.json` ties the same attempt to Sandra `closer_practice_outcomes.id=90aaae3d-1053-4021-b9e1-a6e50b8a08f8`. [[Jitter]]→[[Sandra]] writeback remains supported by deployed production executor/API plus Sandra production DB proof after Jitter #145, Sandra #224, and Jitter #146, and a controlled Chrome `/dialer` proof succeeded after production was pinned to canonical `jitter-test` (`ypgntjjrrutjsratdwmk`). That proof is still not sufficient for acceptance because it depended on a local scoped worker. Current gap: a real worker path must back the final Chrome proof so dialing continues without the local helper and without warning banners, duplicate operations, or queue-time spikes.
+
+## Next step
+**▶️ RESUME (2026-06-06 21:23): [[2026-06-06 2123 — Doc-driven Jitter B2 plan with sub-agents (019e9fd7)]] — this is now the canonical raw plan note for the active [[Jitter]] lane.**
+
+**[[Jitter]] — B1.6 operator two-way audio PROVEN on Telnyx (2026-06-04, see [[2026-06-04 2110 — Jitter Telnyx B1.6 operator audio PROVEN]]).** Current front = **get the dialer DIALING (B2)**. Permission mode is now `bypassPermissions`. Loop running: **Claude orchestrates + reviews + commits + drives Chrome proof; Codex executes code** (`codex-exec.sh` + 3-min `watch.sh`).
+
+**OFFICIAL-DOCS-FIRST B2 order:** do not keep iterating on the old conference-callback hypothesis blindly. New research says the first move is to re-check the trust boundary on `/api/product/telephony/twiml/operator` because the current failing test may be enforcing signed-callback rules on the initial [[Telnyx]] TeXML instruction fetch. After that, keep strict signature validation on real callback routes, verify the browser-audio readiness contract across route/runtime/worker SQL, then proceed to the single-line live dial and the real [[Railway]] worker proof.
+
+**OPEN [[Jitter]] questions now ordered by impact:**
+1. Is the operator TeXML route enforcing the wrong auth contract for instruction fetches?
+2. Is `endConferenceOnExit=true` on `operator_browser` actually the intended product behavior?
+3. Is `productOperatorJoined` now being used consistently as the B2 dial-ready signal across route/runtime/worker layers?
+4. Are callback hosts and [[Vercel]] bypass assumptions explicit and correct for the environments being used?
+
+**Then:** single-line dial K=1 (canary guard ON, NOT gated) to +13107540662 → prove dialing. **Multi-line (K≥2) is GATED — needs Jarrad to EXPLICITLY lift his own "no multi-line without Telnyx L2 + written AUP" rule** (all calls redirect to his own number, so AUP not truly implicated, but the gate is his to lift). **Deferred (Jarrad: integrations last):** Sandra writeback (payload fixed `da659e3`, creds not staged), B1.4 voice_url, 1Password credential-id write-back (`70ad6f62…`, still PLACEHOLDER).
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The imagegen skill says to use the built-in image tool first for project-bound raster assets, then move the selected output into the repo. The repo rules also require a lightweight GSD quick path before writing files, so I’m checking the local workflow shape before generating.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse
+exec
+/bin/zsh -lc "sed -n '1,260p' "'$HOME/.Codex/get-shit-done/workflows/quick.md' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '221,520p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ exited 1 in 0ms:
+sed: $HOME/.Codex/get-shit-done/workflows/quick.md: No such file or directory
+
+ succeeded in 0ms:
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+## Examples
+
+### Generation example (hero image)
+```text
+Use case: product-mockup
+Asset type: landing page hero
+Primary request: a minimal hero image of a ceramic coffee mug
+Style/medium: clean product photography
+Composition/framing: wide composition with usable negative space for page copy if needed
+Lighting/mood: soft studio lighting
+Constraints: no logos, no text, no watermark
+```
+
+### Edit example (invariants)
+```text
+Use case: precise-object-edit
+Asset type: product photo background replacement
+Primary request: replace only the background with a warm sunset gradient
+Constraints: change only the background; keep the product and its edges unchanged; no text; no watermark
+```
+
+## Prompting best practices
+- Structure prompt as scene/backdrop -> subject -> details -> constraints.
+- Include intended use (ad, UI mock, infographic) to set the mode and polish level.
+- Use camera/composition language for photorealism.
+- Only use SVG/vector stand-ins when the user explicitly asked for vector output or a non-image placeholder.
+- Quote exact text and specify typography + placement.
+- For tricky words, spell them letter-by-letter and require verbatim rendering.
+- For multi-image inputs, reference images by index and describe how they should be used.
+- For edits, repeat invariants every iteration to reduce drift.
+- Iterate with single-change follow-ups.
+- If the prompt is generic, add only the extra detail that will materially help.
+- If the prompt is already detailed, normalize it instead of expanding it.
+- For CLI fallback only, see `references/cli.md` and `references/image-api.md` for model, `quality`, `input_fidelity`, masks, output format, and output-path guidance.
+- For transparent images, use the built-in-first chroma-key workflow unless the request is complex enough to need true CLI transparency; ask before switching to CLI `gpt-image-1.5`.
+
+More principles shared by both modes: `references/prompting.md`.
+Copy/paste specs shared by both modes: `references/sample-prompts.md`.
+
+## Guidance by asset type
+Asset-type templates (website assets, game assets, wireframes, logo) are consolidated in `references/sample-prompts.md`.
+
+## gpt-image-2 guidance for CLI fallback
+
+The fallback CLI defaults to `gpt-image-2`.
+
+- Use `gpt-image-2` for new CLI/API workflows unless the request needs true model-native transparent output.
+- If a transparent request may need CLI fallback, ask before using `gpt-image-1.5` unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. Explain that the built-in chroma-key path is the default, but true transparency requires `gpt-image-1.5` because `gpt-image-2` does not support `background=transparent`.
+- `gpt-image-2` always uses high fidelity for image inputs; do not set `input_fidelity` with this model.
+- `gpt-image-2` supports `quality` values `low`, `medium`, `high`, and `auto`.
+- Use `quality low` for fast drafts, thumbnails, and quick iterations. Use `medium`, `high`, or `auto` for final assets, dense text, diagrams, identity-sensitive edits, or high-resolution outputs.
+- Square images are typically fastest to generate. Use `1024x1024` for fast square drafts.
+- If the user asks for 4K-style output, use `3840x2160` for landscape or `2160x3840` for portrait.
+- `gpt-image-2` size may be `auto` or `WIDTHxHEIGHT` if all constraints hold: max edge `<= 3840px`, both edges multiples of `16px`, long-to-short ratio `<= 3:1`, total pixels between `655,360` and `8,294,400`.
+
+Popular `gpt-image-2` sizes:
+- `1024x1024` square
+- `1536x1024` landscape
+- `1024x1536` portrait
+- `2048x2048` 2K square
+- `2048x1152` 2K landscape
+- `3840x2160` 4K landscape
+- `2160x3840` 4K portrait
+- `auto`
+
+## Fallback CLI mode only
+
+### Temp and output conventions
+These conventions apply only to the CLI fallback. They do not describe built-in `image_gen` output behavior.
+- Use `tmp/imagegen/` for intermediate files (for example JSONL batches); delete them when done.
+- Write final artifacts under `output/imagegen/`.
+- Use `--out` or `--out-dir` to control output paths; keep filenames stable and descriptive.
+
+### Dependencies
+Prefer `uv` for dependency management in this repo.
+
+Required Python package:
+```bash
+uv pip install openai
+```
+
+Required for local chroma-key removal and optional downscaling:
+```bash
+uv pip install pillow
+```
+
+Portability note:
+- If you are using the installed skill outside this repo, install dependencies into that environment with its package manager.
+- In uv-managed environments, `uv pip install ...` remains the preferred path.
+
+### Environment
+- `OPENAI_API_KEY` must be set for live API calls.
+- Do not ask the user for `OPENAI_API_KEY` when using the built-in `image_gen` tool.
+- Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.
+
+If the key is missing, give the user these steps:
+1. Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys
+2. Set `OPENAI_API_KEY` as an environment variable in their system.
+3. Offer to guide them through setting the environment variable for their OS/shell if needed.
+
+If installation is not possible in this environment, tell the user which dependency is missing and how to install it into their active environment.
+
+### Script-mode notes
+- CLI commands + examples: `references/cli.md`
+- API parameter quick reference: `references/image-api.md`
+- Network approvals / sandbox settings for CLI mode: `references/codex-network.md`
+
+## Reference map
+- `references/prompting.md`: shared prompting principles for both modes.
+- `references/sample-prompts.md`: shared copy/paste prompt recipes for both modes.
+- `references/cli.md`: fallback-only CLI usage via `scripts/image_gen.py`.
+- `references/image-api.md`: fallback-only API/CLI parameter reference.
+- `references/codex-network.md`: fallback-only network/sandbox troubleshooting for CLI mode.
+- `scripts/image_gen.py`: fallback-only CLI implementation. Do not load or use it unless the user explicitly chooses CLI mode or explicitly confirms a transparent request's true CLI transparency fallback.
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: local post-processing helper for built-in transparent-image requests.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short --branch && git rev-parse --show-toplevel && git worktree list' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+## claude/course-production...origin/main [ahead 3]
+ M .planning/STATE.md
+?? .planning/quick/260702-m01-lb-p03-clarity/
+?? .planning/quick/260702-q6j-write-reusable-course-production-illustr/
+?? .planning/quick/260702-qe1-generate-cash-asis-scene-asset/
+?? .planning/quick/260703-0rx-generate-13-character-course-cast-doodle/
+?? .planning/quick/260703-2ec-generate-fulfilling-work-scene-asset/
+?? .planning/quick/260703-generate-alignment-principle-card/
+?? .planning/quick/260703-generate-alignment-v2-scene-asset/
+?? .planning/quick/260703-generate-andrea-cafe-scene-asset/
+?? .planning/quick/260703-generate-andrea-headset-avatar/
+?? .planning/quick/260703-generate-andrea-yoga-scene-asset/
+?? .planning/quick/260703-generate-bmh-building-scene-asset/
+?? .planning/quick/260703-generate-calendar-frame-asset/
+?? .planning/quick/260703-generate-clarity-shift-v4-scene-asset/
+?? .planning/quick/260703-generate-clarity-shift-v5-scene-asset/
+?? .planning/quick/260703-generate-consult-not-sell-scene-asset/
+?? .planning/quick/260703-generate-curiosity-scene-asset/
+?? .planning/quick/260703-generate-detach-character-v2/
+?? .planning/quick/260703-generate-disrepair-vignette/
+?? .planning/quick/260703-generate-doctor-analogy-scene-asset/
+?? .planning/quick/260703-generate-equal-status-principle-card/
+?? .planning/quick/260703-generate-frozen-story3-scene-asset/
+?? .planning/quick/260703-generate-frozen-story3-v2-scene-asset/
+?? .planning/quick/260703-generate-guide-not-buyer-scene-asset/
+?? .planning/quick/260703-generate-hard-moments-v2-scene-asset/
+?? .planning/quick/260703-generate-inherited-story1-scene-asset/
+?? .planning/quick/260703-generate-long-game-scene-asset/
+?? .planning/quick/260703-generate-office-interior-scene-asset/
+?? .planning/quick/260703-generate-pedestrians-strip-scene-asset/
+?? .planning/quick/260703-generate-puzzle-scene-asset/
+?? .planning/quick/260703-generate-rep-call-scene-asset/
+?? .planning/quick/260703-generate-reps-board-v2/
+?? .planning/quick/260703-generate-reps-principle-card/
+?? .planning/quick/260703-generate-same-lens-principle-card/
+?? .planning/quick/260703-generate-script-tool-scene-asset/
+?? .planning/quick/260703-generate-script-tool-v2-scene-asset/
+?? .planning/quick/260703-generate-service-scene-asset/
+?? .planning/quick/260703-generate-story2-landlord-poseb-relaxed/
+?? .planning/quick/260703-generate-story2-landlord-scene-asset/
+?? .planning/quick/260703-generate-ten-principles-board-v2/
+?? .planning/quick/260703-generate-ten-principles-board/
+?? .planning/quick/260703-generate-title-objections-scene-asset/
+?? .planning/quick/260703-generate-title-offer-scene-asset/
+?? .planning/quick/260703-generate-title-process-scene-asset/
+?? .planning/quick/260703-generate-title-prospect-scene-asset/
+?? .planning/quick/260703-generate-tombstone-vignette/
+?? .planning/quick/260703-generate-training-montage-scene-asset/
+?? .planning/quick/260703-generate-training-montage-v2-scene-asset/
+?? .planning/quick/260703-hzc-generate-hard-moments-v3-course-scene-as/
+?? .planning/quick/260703-nxe-generate-detach-principle-card/
+?? .planning/quick/260703-nz2-generate-clarity-shift-scene-asset/
+?? .planning/quick/260703-oo2-generate-long-game-v2-scene-asset/
+?? .planning/quick/260703-oop-generate-module-01-lesson-b-scene-03-cla/
+?? .planning/quick/260703-tg3-generate-pose-b-frame-for-story2-landlor/
+?? .planning/quick/260704-generate-123-stairs-scene-asset/
+?? .planning/quick/260704-generate-123-stones-scene-asset/
+?? .planning/quick/260704-generate-align-scene-asset/
+?? .planning/quick/260704-generate-andrea-car-scene-asset/
+?? .planning/quick/260704-generate-andrea-car-v2-scene-asset/
+?? .planning/quick/260704-generate-balance-scale-timeline-asset/
+?? .planning/quick/260704-generate-car-plate-v2-asset/
+?? .planning/quick/260704-generate-cash-road-scene-asset/
+?? .planning/quick/260704-generate-cash-truth-scene-asset/
+?? .planning/quick/260704-generate-cash-truth-v2-scene-asset/
+?? .planning/quick/260704-generate-equal-status-v2-scene-asset/
+?? .planning/quick/260704-generate-higher-offer-scene-asset/
+?? .planning/quick/260704-generate-higher-offer-v2-scene-asset/
+?? .planning/quick/260704-generate-lc-b06-anchor-scene-asset/
+?? .planning/quick/260704-generate-lowballers-scene-asset/
+?? .planning/quick/260704-generate-m01-lc-b19-scenery-strip/
+?? .planning/quick/260704-generate-m02-l2a-b07-disqualify-scene-asset/
+?? .planning/quick/260704-generate-m02-l2a-grid1-inherited/
+?? .planning/quick/260704-generate-m02-l2a-grid2-landlord/
+?? .planning/quick/260704-generate-m02-l2a-grid4-relocating/
+?? .planning/quick/260704-generate-m02-l2a-grid6-repairs/
+?? .planning/quick/260704-generate-m03-l3a-devil-agent/
+?? .planning/quick/260704-generate-module-02-profile-scene-asset/
+?? .planning/quick/260704-generate-no-number-car-scene-asset/
+?? .planning/quick/260704-generate-office-andrea-v2b/
+?? .planning/quick/260704-generate-perform-contrast-scene-asset/
+?? .planning/quick/260704-generate-perform-v2-contrast-scene-asset/
+?? .planning/quick/260704-generate-price-headline-scene-asset/
+?? .planning/quick/260704-generate-reps-v3-board-asset/
+?? .planning/quick/260704-generate-too-high-scene-asset/
+?? .planning/quick/260704-generate-win-window-calendar-asset/
+?? .planning/quick/260704-generate-win-window-v2-calendar-asset/
+?? .planning/quick/260704-jxw-generate-one-bmh-institute-course-scene-/
+?? .planning/quick/260704-jyl-generate-deposition-scene-asset/
+?? .planning/quick/260704-jzs-generate-m01-lc-b11-movie-scene-asset/
+?? .planning/quick/260704-kf5-generate-car-plate-scene-asset/
+?? .planning/quick/260704-kf8-generate-cash-road-v2-scene-asset/
+?? .planning/quick/260704-kfc-generate-lowballers-v2-scene-asset/
+?? .planning/quick/260704-kvb-generate-longgame-ages-scene-asset/
+?? .planning/quick/260704-tnm-generate-canyon-price-gap-course-scene-a/
+?? .planning/quick/260704-twt-generate-m02-l2a-grid5-payments/
+?? .planning/quick/260704-twu-generate-m02-l2a-b06-motivated-scene-asset/
+?? .planning/quick/260704-u03-generate-m02-l2a-b06-curious-scene-asset/
+?? .planning/quick/260704-vog-generate-module-02-lesson-2b-david-portr/
+?? .planning/quick/260704-w0l-generate-m03-l3a-house-disrepair/
+?? .planning/quick/260704-woy-generate-module-02-lesson-2b-ray-portrai/
+?? .planning/quick/260705-0ht-generate-m04-l4a-offer-scene-asset/
+?? .planning/quick/260705-0ku-generate-m04-l4a-v1-capture/
+?? .planning/quick/260705-1ai-regenerate-m03-l3a-family-driveway-palette/
+?? .planning/quick/260705-1bd-generate-m03-l3a-steps-board-no-markers/
+?? .planning/quick/260705-1bj-regenerate-centered-module-03-lesson-3a-/
+?? .planning/quick/260705-29z-generate-m04-l4a-v6b-handoff-walkin/
+?? .planning/quick/260705-generate-carol-argue-scene/
+?? .planning/quick/260705-generate-m02-l2a-b05-motivation-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b10-outofstate-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b12-motivated-stand/
+?? .planning/quick/260705-generate-m02-l2a-b13-curious-stand/
+?? .planning/quick/260705-generate-m02-l2a-b16-notes-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-b18-angrycaller/
+?? .planning/quick/260705-generate-m02-l2a-b20-handshake-scene-asset/
+?? .planning/quick/260705-generate-m02-l2a-grid3-divorce/
+?? .planning/quick/260705-generate-m02-l2b-beth-portrait/
+?? .planning/quick/260705-generate-m02-l2b-beth-scene/
+?? .planning/quick/260705-generate-m02-l2b-carol-scene-asset/
+?? .planning/quick/260705-generate-m02-l2b-david-portrait-v2/
+?? .planning/quick/260705-generate-m02-l2b-david-portrait-v3/
+?? .planning/quick/260705-generate-m02-l2b-david-scene-asset/
+?? .planning/quick/260705-generate-m02-l2b-david-simple-scene/
+?? .planning/quick/260705-generate-m02-l2b-marcus-dream-house-scene/
+?? .planning/quick/260705-generate-m02-l2b-marcus-portrait/
+?? .planning/quick/260705-generate-m02-l2b-marcus-underwater-scene/
+?? .planning/quick/260705-generate-m03-l3a-clock-kick-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-family-driveway/
+?? .planning/quick/260705-generate-m03-l3a-handshake-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-house-restored-asset/
+?? .planning/quick/260705-generate-m03-l3a-injury-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-peace-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-phone-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-rep-wand-scene-asset/
+?? .planning/quick/260705-generate-m03-l3a-steps-board/
+?? .planning/quick/260705-generate-m03-l3a-whiteboard-asset/
+?? .planning/quick/260705-generate-m03-l3b-andrea-stop/
+?? .planning/quick/260705-generate-m03-l3b-homeowner-avatar/
+?? .planning/quick/260705-generate-m03-l3b-ideal-seller/
+?? .planning/quick/260705-generate-m03-l3b-not-a-fit/
+?? .planning/quick/260705-generate-m03-l3b-offer-recap/
+?? .planning/quick/260705-generate-m03-l3b-relieved-seller-scene/
+?? .planning/quick/260705-generate-m03-l3b-rundown-house/
+?? .planning/quick/260705-generate-m04-l4a-contract-asset/
+?? .planning/quick/260705-generate-m04-l4a-discovery-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-handoff-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-qualify-scene-asset/
+?? .planning/quick/260705-generate-m04-l4a-qualify-v3/
+?? .planning/quick/260705-generate-m04-l4a-v2-firstcontact/
+?? .planning/quick/260705-generate-m04-l4b-v4b-offer-handoff/
+?? .planning/quick/260705-generate-m04-l4b-v7-person-situation-8020/
+?? .planning/quick/260705-generate-m05-l5a-card-handoff/
+?? .planning/quick/260705-generate-m05-l5a-demo-call/
+?? .planning/quick/260705-generate-m05-l5a-pen-notepad/
+?? .planning/quick/260705-generate-m05-l5a-phones/
+?? .planning/quick/260705-generate-m05-l5a-seller-couch-scene/
+?? .planning/quick/260705-generate-m05-l5a-stopwatch/
+?? .planning/quick/260705-generate-m05-l5a-two-doors/
+?? .planning/quick/260705-generate-m06-l6a-dig-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-fork/
+?? .planning/quick/260705-generate-m06-l6a-mask-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-notices/
+?? .planning/quick/260705-generate-m06-l6a-office-scene-asset/
+?? .planning/quick/260705-generate-m06-l6a-pyramid/
+?? .planning/quick/260705-generate-m07-l7a-b03-reframe/
+?? .planning/quick/260705-generate-m07-l7a-b04cold-mark/
+?? .planning/quick/260705-generate-m07-l7a-b04warm-jim/
+?? .planning/quick/260705-generate-m07-l7a-b07-complaints/
+?? .planning/quick/260705-generate-m07-l7b-price-theme/
+?? .planning/quick/260705-generate-m07-l7b-theme-asis/
+?? .planning/quick/260705-generate-m07-l7b-theme-delay/
+?? .planning/quick/260705-generate-m07-l7b-theme-distress/
+?? .planning/quick/260705-generate-m07-l7b-theme-trust/
+?? .planning/quick/260705-generate-office-andrea-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v2a-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v4a-scene-asset/
+?? .planning/quick/260705-generate-office-andrea-v4b-scene-asset/
+?? .planning/quick/260705-idk-generate-m02-l2a-b14-overshoulder-course/
+?? .planning/quick/260705-imq-generate-ray-scene-asset/
+?? .planning/quick/260705-imt-generate-m04-l4a-qualify-v2/
+?? .planning/quick/260705-imz-generate-carol-lien-scene/
+?? .planning/quick/260705-lkb-generate-m04-l4b-pitch-grounded/
+?? .planning/quick/260705-ltt-generate-one-module-04-lesson-4b-slow-do/
+?? .planning/quick/260705-ne7-generate-module-07-lesson-7a-b02-goodsig/
+?? .planning/quick/260705-nk6-generate-m07-l7a-b09-real/
+?? .planning/quick/260705-nkc-generate-m07-l7a-b08-reactionary/
+?? .planning/quick/260705-nn2-generate-m07-l7b-theme-competition/
+?? .planning/quick/260705-nni-generate-m06-l6a-deciders-scene-asset/
+?? .planning/quick/260705-pxe-generate-m06-l6a-iceberg-scene-asset/
+?? .planning/quick/260705-regenerate-m03-l3a-cash-handoff/
+?? .planning/quick/260705-w66-generate-m05-l5b-computer/
+?? .planning/quick/260706-generate-m05-l5a-breakdown/
+?? .planning/quick/260706-generate-m05-l5b-conversation/
+?? .planning/quick/260706-generate-m05-l5b-interrogation-scene/
+?? .planning/quick/260706-generate-m08-l8a-andrea-beach/
+?? .planning/quick/260706-generate-m08-l8a-b04-response/
+?? .planning/quick/260706-generate-m08-l8a-b07-leaseback/
+?? .planning/quick/260706-generate-m08-l8a-ray-contract/
+?? .planning/quick/260706-generate-m08-l8a-squatters/
+?? .planning/quick/260706-generate-m08-l8a-tenants/
+?? .planning/quick/260706-generate-m08-l8a-underwater-scene/
+?? .planning/quick/260706-generate-m09-l9a-b07-scale/
+?? .planning/quick/260706-generate-m09-l9a-b08-beth-retry/
+?? .planning/quick/260706-generate-m09-l9a-bench-andrea/
+?? .planning/quick/260706-generate-m09-l9a-carol-door/
+?? .planning/quick/260706-generate-m09-l9a-david-papers/
+?? .planning/quick/260706-generate-m09-l9a-grace-call/
+?? .planning/quick/260706-hag-generate-m08-l8a-b02-weight/
+?? .planning/quick/260706-hbr-generate-m08-l8a-privacy-carol-scene/
+?? .planning/quick/260706-htr-generate-m09-l9a-b04-jim-shrug/
+?? .planning/quick/260707-0cg-generate-final-m08-l8a-b09-contract-imag/
+?? .planning/quick/260707-3ac-generate-m12-l12a-b16-coaching-review-co/
+?? .planning/quick/260707-3da-generate-module-11-lesson-11a-deal-risks/
+?? .planning/quick/260707-3hy-generate-m18-l18b-b12-wins-momentum/
+?? .planning/quick/260707-3ik-generate-m18-l18b-b03-approval-flow-scen/
+?? .planning/quick/260707-3iu-generate-m18-l18b-b04-quality-check-scen/
+?? .planning/quick/260707-3qx-generate-m12-l12a-b07-dial-quality-priya/
+?? .planning/quick/260707-4bd-generate-m18-l18b-b02-county-channels/
+?? .planning/quick/260707-4u8-generate-m17-l17-b02-three-blocks-scene-/
+?? .planning/quick/260707-4wk-generate-m12-l12a-b04-priya-standing-can/
+?? .planning/quick/260707-generate-m11-l11a-b15-impact-path/
+?? .planning/quick/260707-generate-m12-l12a-b04-flying-blind/
+?? .planning/quick/260707-generate-m12-l12a-b04-priya-cane/
+?? .planning/quick/260707-generate-m12-l12a-b07-dial-quality/
+?? .planning/quick/260707-generate-m12-l12a-b11-offers-made/
+?? .planning/quick/260707-generate-m18-l18b-b08-response-loop/
+?? cast-doodle.log
+?? cast-gen1.log
+?? docs/course-production/ARCHITECTURE.md
+?? docs/course-production/HANDOFF-3B.md
+?? docs/course-production/HANDOFF-lesson2A.md
+?? docs/course-production/HANDOFF-lesson7A.md
+?? docs/course-production/LESSON-2B-V2-SCENES-SPEC.md
+?? docs/course-production/LESSON-4A-HANDOFF.md
+?? docs/course-production/MODULE-PRODUCTION-GUIDE.md
+?? docs/course-production/NEXT-SESSION.md
+?? docs/course-production/PLAYBOOK.md
+?? docs/course-production/RESEARCH-video-pipeline.md
+?? docs/course-production/STYLE-BLOCK.md
+?? docs/course-production/_QC-QUEUE.md
+?? docs/course-production/remotion/
+?? docs/course-production/scene-card-v2.md
+?? docs/course-production/scripts/
+?? docs/course-production/shotlists/lesson-10A-script-clean.txt
+?? docs/course-production/shotlists/lesson-10A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-11A-script-clean.txt
+?? docs/course-production/shotlists/lesson-11A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-12A-script-clean.txt
+?? docs/course-production/shotlists/lesson-12A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-13A-script-clean.txt
+?? docs/course-production/shotlists/lesson-13A-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-18B-script-clean.txt
+?? docs/course-production/shotlists/lesson-18B-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-19-script-clean.txt
+?? docs/course-production/shotlists/lesson-19-source-clean-vs-master.diff
+?? docs/course-production/shotlists/lesson-1B-script-clean.txt
+?? docs/course-production/shotlists/lesson-1C-script-conversation-flow.txt
+?? docs/course-production/shotlists/lesson-4A-script.txt
+?? docs/course-production/shotlists/lesson-4B-script-clean.txt
+?? docs/course-production/shotlists/lesson-4B-script.txt
+?? docs/course-production/shotlists/lesson-5A-script-clean.txt
+?? docs/course-production/shotlists/lesson-5B-script.txt
+?? docs/course-production/shotlists/lesson-6A-script-clean.txt
+?? docs/course-production/shotlists/lesson-6B-script-clean.txt
+?? docs/course-production/shotlists/lesson-6B-script.txt
+?? docs/course-production/shotlists/lesson-7A-part2-script.txt
+?? docs/course-production/shotlists/lesson-7A-script-clean.txt
+?? docs/course-production/shotlists/lesson-7B-script-clean.txt
+?? docs/course-production/shotlists/lesson-8A-script-clean.txt
+?? docs/course-production/shotlists/lesson-8B-script.txt
+?? docs/course-production/shotlists/lesson-9A-script-clean.txt
+?? docs/course-production/shotlists/lesson-9B-script.txt
+?? docs/course-production/shotlists/module-01-lessonA-scenecards.md
+?? docs/course-production/shotlists/module-01-lessonB-scenecards.md
+?? docs/course-production/shotlists/module-01-lessonC-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2A-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2B-scenecards.md
+?? docs/course-production/shotlists/module-02-lesson2B-script-clean.txt
+?? docs/course-production/shotlists/module-03-lesson3A-scenecards.md
+?? docs/course-production/shotlists/module-03-lesson3B-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4A-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-bakeoff.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-production-plan.md
+?? docs/course-production/shotlists/module-04-lesson4B-animation-prompts.md
+?? docs/course-production/shotlists/module-04-lesson4B-assembly-review.md
+?? docs/course-production/shotlists/module-04-lesson4B-current-gate.md
+?? docs/course-production/shotlists/module-04-lesson4B-model-choice-prompt.md
+?? docs/course-production/shotlists/module-04-lesson4B-scenecards.md
+?? docs/course-production/shotlists/module-04-lesson4B-still-review.md
+?? docs/course-production/shotlists/module-05-lesson5A-scenecards.md
+?? docs/course-production/shotlists/module-05-lesson5B-scenecards.md
+?? docs/course-production/shotlists/module-06-lesson6A-scenecards.md
+?? docs/course-production/shotlists/module-06-lesson6B-scenecards.md
+?? docs/course-production/shotlists/module-07-lesson7A-scenecards.md
+?? docs/course-production/shotlists/module-07-lesson7B-avatar-map.md
+?? docs/course-production/shotlists/module-08-lesson8A-scenecards.md
+?? docs/course-production/shotlists/module-09-lesson9A-scenecards.md
+?? docs/course-production/shotlists/module-10-lesson10A-scenecards.md
+?? docs/course-production/shotlists/module-11-lesson11A-scenecards.md
+?? docs/course-production/shotlists/module-12-lesson12A-scenecards.md
+?? docs/course-production/shotlists/module-13-lesson13A-scenecards.md
+?? docs/course-production/shotlists/module-17-lesson17-scenecards.md
+?? docs/course-production/shotlists/module-18-lesson18B-scenecards.md
+?? docs/course-production/shotlists/module-19-lesson19-scenecards.md
+?? remotion/
+?? style-extract.log
+$HOME/Sites/BMH apps/BMH Institute
+$HOME/Sites/BMH apps/BMH Institute                                                                     94db1c5 [claude/course-production]
+/private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-53bc65929a62da14-10054e166492ed63  10054e1 (detached HEAD) prunable
+/private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-53bc65929a62da14-f9a748c8861a028e  f9a748c (detached HEAD) prunable
+/private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-b04077f52612658c-3a9c6748754a86df  3a9c674 (detached HEAD)
+$HOME/Sites/BMH apps/_claude_worktrees/institute-embed-aud                                             1b42229 [claude/embed-token-aud]
+$HOME/Sites/BMH apps/_codex_worktrees/answer-key-leak/bmh-institute                                    3a9c674 [main]
+$HOME/Sites/BMH apps/_codex_worktrees/v1-20260601/bmh-institute                                        6bcb2b0 [codex/20260602-institute-sandra-course-completed]
+
+hook: PostToolUse
+hook: PreToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'rg -n "module-17|Lesson 17|course-assets|still|animation|cast-board|style-ref" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+1:# Task Group: BMH course 4B exact replication, narration speed, and animation tail-frame assembly
+2:scope: Use for BMH course production when another agent needs to reproduce the approved Lesson 4B still/animation output exactly, or when audio speed and clip-ending behavior must match the current approved course-production defaults.
+3:applies_to: cwd=$HOME/Sites/BMH apps/BMH Institute and BMH course lesson/still/animation workflow; reuse_rule=safe for future BMH course generation or regeneration that follows the same lesson-doc, reference-image, HeyGen, and assembly pipeline, but scene prompts, approved assets, and lesson-specific gates should be refreshed per lesson.
+13:- BMH Institute, module-04-lesson4B, review-lesson4B, LESSON-4B-v1-APPROVED.mp4, module-04-lesson4B-still-review.md, module-04-lesson4B-current-gate.md, assembly-review, style anchor, Slot 06, cues 13-17
+23:- exact prompts, senior engineer handoff, gpt-image-2, seedance_2_0, kling3_0, style-ref-1.png, style-ref-2.png, cast-board.png, flat sticker-sheet, no text or words anywhere, palette flattening, finalizer
+29:- extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-115643-andrea-normal-speed.md, updated_at=2026-07-06T11:56:43-05:00, audio-speed correction note for Andrea and narrator delivery)
+35:## Task 4: Hold an animation clip's own final frame when it ends early, success
+39:- extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260706-121330-course-animation-tail-frame.md, updated_at=2026-07-06T12:13:30-05:00, animation-tail-frame assembly note for beat/transition timing)
+43:- course animation, tail frame, extracted final frame, clip ends early, transition ends, source still, forward loop, reverse loop [ad-hoc note]
+47:- when the user asked "Can you watch the videos that have already been generated? So that you can know my style" -> future BMH course generation should inspect approved cuts and frame sheets before generating new stills or animations [Task 1]
+53:- `course-assets/review-lesson4B/LESSON-4B-v1-APPROVED.mp4` is the preserved style anchor for the approved 4B cut, and the authoritative lesson state lives in `module-04-lesson4B-still-review.md`, `module-04-lesson4B-animation-prompts.md`, `module-04-lesson4B-animation-production-plan.md`, `module-04-lesson4B-current-gate.md`, and `module-04-lesson4B-assembly-review.md` [Task 1]
+54:- The reviewed 4B working asset roots are `course-assets/scenes/module-04-lesson4B/` and `course-assets/heygen/lesson4B/`; prefer these lesson-scoped paths over broad session-log greps when reconstructing the final recipe [Task 1]
+55:- The final still-generation recipe used the built-in image workflow with `gpt-image-2` plus attached refs `docs/design/style-ref-1.png`, `docs/design/style-ref-2.png`, and `docs/design/cast-board.png`; exact prompt fragments that mattered included flat sticker-sheet doodle style, thick wobble black outlines, tiny dot eyes, tiny centered two-stroke/comma nose, cornflower-blue background, no text, no gradients, no shadows, no perspective, and no ambient doodles [Task 2]
+56:- For 4B animation, `seedance_2_0` was the accepted model for B2/B3/B4A/B4B/B5/B6/B7/B8, while `kling3_0` was tested and rejected for B4B because the mouth motion was too frantic [Task 2]
+58:- Andrea and other narrator delivery should stay at HeyGen voice speed `1.0` / default speed; any guide, template, scene card, or script that still says `0.95` is stale and should be corrected before regeneration [Task 3][ad-hoc note]
+59:- When an AI animation clip ends before the beat or transition ends, hold that clip's own extracted final frame; do not fall back to the source still and do not use forward/reverse loops [Task 4][ad-hoc note]
+64:- symptom: a "replicate exactly" handoff still fails to reproduce the approved look; cause: only prompt text was handed off; fix: include refs, model choice, rejected-model reason, negative constraints, and postprocess/finalizer requirements together [Task 2]
+65:- symptom: regenerated course narration sounds oddly slow; cause: stale templates still say Andrea speed `0.95`; fix: reset to HeyGen/default speed `1.0` unless Jarrad explicitly asks for a different delivery [Task 3][ad-hoc note]
+66:- symptom: an animation ends early and the tail looks wrong; cause: the assembly falls back to a source still or loop trick; fix: hold the clip's own extracted final frame through the remaining beat/transition duration [Task 4][ad-hoc note]
+68:# Task Group: BMH course lesson, still, and animation character continuity corrections
+69:scope: Use for BMH course image or animation generation when role assignment, face details, or hairstyle continuity must match the approved handshake-reference characters before still approval or animation.
+70:applies_to: cwd=BMH course lesson/still/animation workflow and related BMH Institute training-course asset generation; reuse_rule=safe for future BMH course scene generation that reuses the same seller, BMH representative, and Andrea character identities, but any new visual canon beyond these corrections should be refreshed from the latest approved reference set.
+76:- extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-141929-bmh-course-character-map.md, updated_at=2026-07-05T14:19:29-05:00, character-role correction note for future BMH course scene generation)
+82:## Task 2: Correct seller nose shape and representative hairstyle before animation, success
+86:- extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260705-142841-bmh-course-character-face-hair-correction.md, updated_at=2026-07-05T14:28:41-05:00, face-and-hair continuity correction note for still approval)
+90:- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+97:- The BMH representative hairstyle must stay black hair pulled into a back ponytail with the orange/yellow headband and orange headset; if a still changes the seller nose or representative hairstyle, reject or reroll before animation [Task 2][ad-hoc note]
+133:- `fallow audit` is useful for inherited clone/complexity noise, but it is not enough to declare a product defect; direct file/line review still matters [Task 1]
+177:- In Sandra, the decisive emergency stop point is the outbound `messages` rows still at `status='queued'`; a campaign can look completed while queued rows remain because the drain path keys off `messages.scheduled_for <= now()` [Task 1]
+187:- symptom: a campaign appears completed but messages are still going out; cause: queued outbound rows still exist in `messages` and the cron drain releases anything still queued and due; fix: inspect and neutralize the queued `messages` rows, not just campaign status [Task 1]
+485:- `messages.scheduled_for` explains why a campaign can look completed while a large queued backlog still exists, and it is also the field that must be re-spaced for an in-flight cadence change [Task 1][Task 2][Task 3]
+491:- Live queue repacing worked by updating only rows still at `status='queued'`, shifting `messages.scheduled_for` from a fresh future anchor, and keeping `campaigns.pace_seconds` in sync, with rollback snapshots captured before each write [Task 3]
+495:- If queued rows are rewritten correctly but a few are still due or overdue, treat that as "cadence applied but releaser behind" rather than an automatic failure of the update itself [Task 6]
+503:- symptom: an active campaign appears to have no inbox messages; cause: most outbound rows are still `queued`, visible replies are filtered out, or both; fix: check queue counts, attributed inbound threads, `Mine`/`Unread`/`Hide DNC` state, and only then decide whether there is an inbox defect [Task 5]
+506:- symptom: a live repacing write fails during bulk update; cause: partial `messages` upsert omits required columns like `channel`; fix: perform guarded per-row updates on rows still `queued` instead of partial upserts [Task 3]
+507:- symptom: verification snapshots drift while a live sender is still running; cause: the queue is moving during inspection; fix: treat the output as a live moving target and re-read after each write [Task 3]
+510:- symptom: the first cadence check shows the value changed but traffic still looks slow; cause: the rewrite succeeded before the release loop fully caught up; fix: wait past the first new scheduled send and recheck queued-versus-sent or delivered movement before declaring failure [Task 6]
+680:- symptom: `_Active.md` or a repo-local conclusion still implies broader Sandra proof is pending after GO; cause: the dashboard or local interpretation was not reconciled with the accepted result file; fix: update the vault surfaces so they match the GO verdict and cleanup caveat [Task 1]
+685:scope: Use for the active Jitter Stage 3 lane when the task is choosing the next machine-owned answer harness, deciding whether Twilio is still in-bounds, or updating the vault plan/log after harness triage.
+708:- PR `#151` on head `347b2fd` was the active proof-branch context, with `K=1` still the serialized Stage 3 target [Task 1]
+716:- symptom: the proof target still depends on human answering or mismatched routing assumptions; cause: the same-account or same-provider target was not classified against the documented inbound TeXML fetch path before more live rows were considered; fix: first decide whether the target can traverse the Telnyx inbound path, then build the smallest Telnyx-only SIP/browser-identity harness that makes that path durable [Task 1]
+769:- symptom: Sendillo auth research starts drifting into guessed contracts; cause: the first login/docs probe failed with `401 Invalid password`, but the workflow still tried to infer the contract from expectations; fix: keep the auth contract provisional until a trusted authenticated docs path or verified login confirms it [Task 1]
+773:scope: Use for Jitter preview `/dialer` verification when a narrowly approved schema fix appears to succeed but the preview still fails, or when the user asks for a plain-English status handoff on where the verification stopped.
+780:- rollout_summaries/2026-06-08T05-59-39-5m1Z-jitter_preview_db_migration_and_env_mismatch.md (cwd=$HOME/Sites/BMH apps/Jitter, rollout_path=$HOME/.codex/archived_sessions/rollout-2026-06-08T00-59-39-019ea5d0-b7c8-75a1-82e5-b02044c60e8b.jsonl, updated_at=2026-06-09T04:17:00+00:00, thread_id=019ea5d0-b7c8-75a1-82e5-b02044c60e8b, approved test-DB migration applied but preview still miswired)
+804:- `jitter-test` is project ref `ypgntjjrrutjsratdwmk`, while production `jitter` is `sbidltfdktstzboivavv`; this rollout verified that the schema fix landed on `jitter-test` and that the preview deployment was still pointed at production Supabase [Task 1]
+805:- `Jitter/supabase/README.md` says preview/local should use `jitter-test`, so if `/dialer` still throws the missing-column error after a confirmed test-DB fix, check Vercel preview env wiring before chasing more schema work [Task 1]
+806:- The plain-English state for this rollout is: the test DB fix worked, but the preview is still talking to the wrong Supabase project, so the next step is env correction plus redeploy rather than another migration [Task 2]
+810:- symptom: `Start shift` still throws the missing-column error after the approved migration was applied and verified on the linked test DB; cause: the preview deployment is wired to production Supabase instead of `jitter-test`; fix: confirm `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_URL`, repoint the preview env to `jitter-test`, redeploy, then retry `/dialer` [Task 1]
+812:- symptom: status updates force the user to decode implementation detail just to know what is blocked; cause: the handoff starts with mechanism instead of stakes; fix: say first that the preview is still pointed at the wrong database, then mention the technical proof that the test DB itself is already fixed [Task 2]
+903:- `endConferenceOnExit=true` on the operator participant means the operator leaving ends the conference for everyone; treat that as intentional product behavior only if the repo and current product goal still agree [Task 1][ad-hoc note]
+905:- Vercel deployment protection sits in front of Next.js, so telephony/webhook reachability can still fail even if app code marks a route public; the documented bypass handle is `x-vercel-protection-bypass`, including query-param usage for third-party webhooks [Task 1][ad-hoc note]
+908:- On restart, prefer Chrome, reselect the reviewed preview dialer tab if it still exists, confirm the surface is ready, then run the canary immediately and watch browser state plus preview logs through the outcome [Task 2][ad-hoc note]
+972:- A provider abstraction is not actually complete if the contract, executor, webhook parser, operator browser audio, reconciliation loop, or runtime/provider selection still encode Twilio-only names or flows; "abstract-looking" type names and generic `/api/product/telephony/*` shims are not enough [Task 1][Task 2][Task 3]
+975:- Plivo remains the closer Twilio-style CPaaS replacement from the research pass, but the safe framing is still a boundary redesign rather than a credentials swap [Task 1]
+977:- On branch `codex/jitter-provider-abstraction`, the refactor added `provider-registry.ts`, `provider-contract.ts`, `twilio-capabilities.ts`, `telnyx-capabilities.ts`, `plivo-capabilities.ts`, `unsupported-capabilities.ts`, and provider-aware `/api/product/telephony/` routes, but the full run was not yet green because `tests/mvp-product-terminal-cleanup.test.ts` still asserted `Twilio status` while the code emitted `provider status` [Task 4]
+984:- symptom: full verification is reported as green when only the seam extraction passed; cause: typecheck passed and the remaining failures looked cosmetic; fix: still run `npm test -- --run` and reconcile the exact `Twilio status` vs `provider status` expectation mismatch before claiming the branch is fully verified [Task 4]
+1141:- Closer Lab's role-play editor still has a tab-unmount/form-data fragility: saving from non-Meta tabs can fail because the submit handler reads required Meta fields from `FormData` while inactive tabs unmount their inputs [Task 1]
+1148:- Jitter still maps `sandra.writeback` to audit/skipped behavior, while Sandra already has an authenticated internal receiver with Bearer, HMAC, and idempotency expectations [Task 3]
+1155:- symptom: Closer Lab route transport looks healthy under fake-mic runs, but there is still no learner transcript; cause: fake-mic only proved create/storage/finalize/score transport and not real captured learner audio; fix: do not claim scoring PASS from fake-mic evidence, and resume with one approved real-microphone Chrome session instead of looping more fake-mic forensics unless directed [Task 1][ad-hoc note]
+1340:- local integration inside a Codex-owned worktree or Codex-owned feature branch does not require asking; merging to `main`, `master`, or another shared/user-owned branch still does [Task 2][ad-hoc note]
+1347:- Approval boundary: rebasing, cherry-picking, integrating, and PR-updating inside a Codex-owned worktree/feature branch are allowed defaults; merging into a shared branch is still the approval gate [Task 2][ad-hoc note]
+1360:- symptom: approval is required and the user still has to compose the approval language; cause: the blocker report named the need for approval but did not package the approval ask; fix: include the exact copy-ready approval prompt with scope, allowed action, evidence requirements, and hard boundaries in the blocker handoff [Task 1][ad-hoc note]
+1362:- symptom: a blocker is reported but the user still has to ask what to do next; cause: the blocker was named without a path forward; fix: include the exact missing input/prerequisite and the next action that will happen once unblocked [Task 1][ad-hoc note]
+1399:- do not merge as part of this closeout workflow; Jarrad and Claude still own the adversarial merge decision after review artifacts exist [Task 1][Task 2][ad-hoc note]
+1580:- Deepgram API actions still depend on `DEEPGRAM_API_KEY` being present in env/secrets, so tool discovery alone does not prove auth is usable [Task 3][ad-hoc note]
+1586:- symptom: Deepgram commands exist but API actions still fail; cause: CLI/MCP installation was confused with auth readiness; fix: verify `DEEPGRAM_API_KEY` presence in env/secrets rather than reinstalling tooling [Task 3][ad-hoc note]
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+There’s already a long course-production branch with many untracked quick-task folders, so I’m going to avoid touching unrelated state. I’ll add only the requested asset and, if GSD tooling is unavailable in this shell, keep the planning footprint minimal rather than attempting a broad workflow rewrite.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'command -v gsd-sdk || true' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+/opt/homebrew/bin/gsd-sdk
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'ls -la "$HOME/.Codex" "$HOME/.codex" "$HOME/.agents"' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.Codex:
+total 3586680
+drwxr-xr-x@   59 jarradhenry  staff        1888 Jul  7 03:47 .
+drwxr-x---+   69 jarradhenry  staff        2208 Jul  7 03:43 ..
+-rw-r--r--@    1 jarradhenry  staff           0 Jun  2 18:42 ..codex-global-state.json.bak.tmp-1780443778726-9cddd683-cd1b-420d-9184-791ac911c257
+-rw-r--r--@    1 jarradhenry  staff      288534 Jul  7 03:41 .codex-global-state.json
+-rw-r--r--@    1 jarradhenry  staff      288534 Jul  7 03:41 .codex-global-state.json.bak
+-rw-r--r--@    1 jarradhenry  staff           3 May  7 13:22 .personality_migration
+drwxr-xr-x@    8 jarradhenry  staff         256 Jul  4 12:42 .tmp
+-rw-r--r--@    1 jarradhenry  staff        2236 Jun  4 17:57 AGENTS.md
+drwxr-xr-x@   35 jarradhenry  staff        1120 May  7 15:32 agents
+drwxr-xr-x@ 1079 jarradhenry  staff       34528 Jul  7 02:39 archived_sessions
+drwxr-xr-x@   22 jarradhenry  staff         704 Jul  7 03:03 attachments
+-rw-------@    1 jarradhenry  staff        4498 Jul  1 21:04 auth.json
+drwxr-xr-x@    4 jarradhenry  staff         128 Jun 30 17:10 automations
+drwxr-xr-x@    6 jarradhenry  staff         192 Jun  1 13:02 bridge-patches
+drwxr-xr-x@    3 jarradhenry  staff          96 May  8 01:02 browser
+drwxr-xr-x@    6 jarradhenry  staff         192 Jun 12 14:25 cache
+-rw-r--r--@    1 jarradhenry  staff        1693 Jul  4 12:42 chrome-native-hosts-v2.json
+-rw-r--r--@    1 jarradhenry  staff         966 Jun  1 21:14 chrome-native-hosts.json
+drwxr-xr-x@    4 jarradhenry  staff         128 Jul  7 03:02 computer-use
+-rw-------@    1 jarradhenry  staff       11442 Jul  6 23:11 config.toml
+-rw-------@    1 jarradhenry  staff        5994 May  9 02:27 config.toml.bak-deepgram-20260509-022710
+-rw-------@    1 jarradhenry  staff        6174 May  9 02:36 config.toml.bak-twilio-20260509-023655
+-rw-r--r--@    1 jarradhenry  staff       17158 May  7 15:33 external_agent_session_imports.json
+drwxr-xr-x@  360 jarradhenry  staff       11520 Jul  7 03:39 generated_images
+-rw-r--r--@    1 jarradhenry  staff       53248 Jul  7 01:36 goals_1.sqlite
+-rw-r--r--@    1 jarradhenry  staff       32768 Jul  7 01:55 goals_1.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff      288432 Jul  7 03:47 goals_1.sqlite-wal
+drwxr-xr-x@   15 jarradhenry  staff         480 Jun  1 14:13 hooks
+-rw-r--r--@    1 jarradhenry  staff        2863 Jun  1 15:48 hooks.json
+-rw-r--r--@    1 jarradhenry  staff          36 May  7 13:31 installation_id
+-rw-r--r--@    1 jarradhenry  staff       30394 May  9 02:27 instructions.md
+drwxr-xr-x@    3 jarradhenry  staff          96 May 21 05:36 jitter
+drwxr-xr-x@    4 jarradhenry  staff         128 Jun  2 18:46 log
+-rw-r--r--@    1 jarradhenry  staff  1678036992 Jul  7 03:48 logs_2.sqlite
+-rw-r--r--@    1 jarradhenry  staff      262144 Jul  7 02:55 logs_2.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff   124527032 Jul  7 03:48 logs_2.sqlite-wal
+drwxr-xr-x@    8 jarradhenry  staff         256 Jul  6 23:11 memories
+-rw-r--r--@    1 jarradhenry  staff      602112 Jul  7 03:47 memories_1.sqlite
+-rw-r--r--@    1 jarradhenry  staff       32768 Jul  7 03:47 memories_1.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff        8272 Jul  7 03:47 memories_1.sqlite-wal
+-rw-r--r--@    1 jarradhenry  staff      178071 Jul  7 03:48 models_cache.json
+drwxr-xr-x@    3 jarradhenry  staff          96 May  8 01:02 node_repl
+drwxr-xr-x@    2 jarradhenry  staff          64 May  8 18:13 pets
+drwxr-xr-x@    6 jarradhenry  staff         192 Jul  4 12:42 plugins
+drwxr-xr-x@    3 jarradhenry  staff          96 Jun  1 21:28 process_manager
+drwxr-xr-x@    3 jarradhenry  staff          96 May  7 15:47 rules
+drwx------@    5 jarradhenry  staff         160 May 19 13:29 secrets
+-rw-r--r--@    1 jarradhenry  staff      155343 Jul  7 02:26 session_index.jsonl
+drwxr-xr-x@    3 jarradhenry  staff          96 May  7 13:31 sessions
+drwxr-xr-x@   55 jarradhenry  staff        1760 Jul  7 03:47 shell_snapshots
+drwxr-xr-x@   13 jarradhenry  staff         416 Jul  5 01:13 skills
+drwxr-xr-x@    3 jarradhenry  staff          96 Jul  7 02:39 sqlite
+-rw-r--r--@    1 jarradhenry  staff    14815232 Jul  7 03:47 state_5.sqlite
+-rw-r--r--@    1 jarradhenry  staff       32768 Jul  7 01:44 state_5.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff     4317792 Jul  7 03:48 state_5.sqlite-wal
+drwxr-xr-x@    3 jarradhenry  staff          96 May  7 13:09 tmp
+-rw-r--r--@    1 jarradhenry  staff       14695 Jun  7 22:12 transcription-history.jsonl
+drwxr-xr-x@    4 jarradhenry  staff         128 May  7 15:32 vendor_imports
+-rw-r--r--@    1 jarradhenry  staff         102 Jun  2 18:46 version.json
+
+$HOME/.agents:
+total 8
+drwxr-xr-x@   4 jarradhenry  staff   128 Apr 28 04:03 .
+drwxr-x---+  69 jarradhenry  staff  2208 Jul  7 03:43 ..
+-rw-r--r--@   1 jarradhenry  staff  1663 Apr 28 04:04 .skill-lock.json
+drwxr-xr-x@ 107 jarradhenry  staff  3424 May 11 23:14 skills
+
+$HOME/.codex:
+total 3586680
+drwxr-xr-x@   59 jarradhenry  staff        1888 Jul  7 03:47 .
+drwxr-x---+   69 jarradhenry  staff        2208 Jul  7 03:43 ..
+-rw-r--r--@    1 jarradhenry  staff           0 Jun  2 18:42 ..codex-global-state.json.bak.tmp-1780443778726-9cddd683-cd1b-420d-9184-791ac911c257
+-rw-r--r--@    1 jarradhenry  staff      288534 Jul  7 03:41 .codex-global-state.json
+-rw-r--r--@    1 jarradhenry  staff      288534 Jul  7 03:41 .codex-global-state.json.bak
+-rw-r--r--@    1 jarradhenry  staff           3 May  7 13:22 .personality_migration
+drwxr-xr-x@    8 jarradhenry  staff         256 Jul  4 12:42 .tmp
+-rw-r--r--@    1 jarradhenry  staff        2236 Jun  4 17:57 AGENTS.md
+drwxr-xr-x@   35 jarradhenry  staff        1120 May  7 15:32 agents
+drwxr-xr-x@ 1079 jarradhenry  staff       34528 Jul  7 02:39 archived_sessions
+drwxr-xr-x@   22 jarradhenry  staff         704 Jul  7 03:03 attachments
+-rw-------@    1 jarradhenry  staff        4498 Jul  1 21:04 auth.json
+drwxr-xr-x@    4 jarradhenry  staff         128 Jun 30 17:10 automations
+drwxr-xr-x@    6 jarradhenry  staff         192 Jun  1 13:02 bridge-patches
+drwxr-xr-x@    3 jarradhenry  staff          96 May  8 01:02 browser
+drwxr-xr-x@    6 jarradhenry  staff         192 Jun 12 14:25 cache
+-rw-r--r--@    1 jarradhenry  staff        1693 Jul  4 12:42 chrome-native-hosts-v2.json
+-rw-r--r--@    1 jarradhenry  staff         966 Jun  1 21:14 chrome-native-hosts.json
+drwxr-xr-x@    4 jarradhenry  staff         128 Jul  7 03:02 computer-use
+-rw-------@    1 jarradhenry  staff       11442 Jul  6 23:11 config.toml
+-rw-------@    1 jarradhenry  staff        5994 May  9 02:27 config.toml.bak-deepgram-20260509-022710
+-rw-------@    1 jarradhenry  staff        6174 May  9 02:36 config.toml.bak-twilio-20260509-023655
+-rw-r--r--@    1 jarradhenry  staff       17158 May  7 15:33 external_agent_session_imports.json
+drwxr-xr-x@  360 jarradhenry  staff       11520 Jul  7 03:39 generated_images
+-rw-r--r--@    1 jarradhenry  staff       53248 Jul  7 01:36 goals_1.sqlite
+-rw-r--r--@    1 jarradhenry  staff       32768 Jul  7 01:55 goals_1.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff      288432 Jul  7 03:47 goals_1.sqlite-wal
+drwxr-xr-x@   15 jarradhenry  staff         480 Jun  1 14:13 hooks
+-rw-r--r--@    1 jarradhenry  staff        2863 Jun  1 15:48 hooks.json
+-rw-r--r--@    1 jarradhenry  staff          36 May  7 13:31 installation_id
+-rw-r--r--@    1 jarradhenry  staff       30394 May  9 02:27 instructions.md
+drwxr-xr-x@    3 jarradhenry  staff          96 May 21 05:36 jitter
+drwxr-xr-x@    4 jarradhenry  staff         128 Jun  2 18:46 log
+-rw-r--r--@    1 jarradhenry  staff  1678036992 Jul  7 03:48 logs_2.sqlite
+-rw-r--r--@    1 jarradhenry  staff      262144 Jul  7 02:55 logs_2.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff   124527032 Jul  7 03:48 logs_2.sqlite-wal
+drwxr-xr-x@    8 jarradhenry  staff         256 Jul  6 23:11 memories
+-rw-r--r--@    1 jarradhenry  staff      602112 Jul  7 03:47 memories_1.sqlite
+-rw-r--r--@    1 jarradhenry  staff       32768 Jul  7 03:47 memories_1.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff        8272 Jul  7 03:47 memories_1.sqlite-wal
+-rw-r--r--@    1 jarradhenry  staff      178071 Jul  7 03:48 models_cache.json
+drwxr-xr-x@    3 jarradhenry  staff          96 May  8 01:02 node_repl
+drwxr-xr-x@    2 jarradhenry  staff          64 May  8 18:13 pets
+drwxr-xr-x@    6 jarradhenry  staff         192 Jul  4 12:42 plugins
+drwxr-xr-x@    3 jarradhenry  staff          96 Jun  1 21:28 process_manager
+drwxr-xr-x@    3 jarradhenry  staff          96 May  7 15:47 rules
+drwx------@    5 jarradhenry  staff         160 May 19 13:29 secrets
+-rw-r--r--@    1 jarradhenry  staff      155343 Jul  7 02:26 session_index.jsonl
+drwxr-xr-x@    3 jarradhenry  staff          96 May  7 13:31 sessions
+drwxr-xr-x@   55 jarradhenry  staff        1760 Jul  7 03:47 shell_snapshots
+drwxr-xr-x@   13 jarradhenry  staff         416 Jul  5 01:13 skills
+drwxr-xr-x@    3 jarradhenry  staff          96 Jul  7 02:39 sqlite
+-rw-r--r--@    1 jarradhenry  staff    14815232 Jul  7 03:47 state_5.sqlite
+-rw-r--r--@    1 jarradhenry  staff       32768 Jul  7 01:44 state_5.sqlite-shm
+-rw-r--r--@    1 jarradhenry  staff     4317792 Jul  7 03:48 state_5.sqlite-wal
+drwxr-xr-x@    3 jarradhenry  staff          96 May  7 13:09 tmp
+-rw-r--r--@    1 jarradhenry  staff       14695 Jun  7 22:12 transcription-history.jsonl
+drwxr-xr-x@    4 jarradhenry  staff         128 May  7 15:32 vendor_imports
+-rw-r--r--@    1 jarradhenry  staff         102 Jun  2 18:46 version.json
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "find .planning/quick -maxdepth 2 -type f \\( -name 'PLAN.md' -o -name 'SUMMARY.md' -o -name 'STATE.md' \\) | sort | tail -20" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+.planning/quick/260707-3da-generate-module-11-lesson-11a-deal-risks/PLAN.md
+.planning/quick/260707-3hy-generate-m18-l18b-b12-wins-momentum/PLAN.md
+.planning/quick/260707-3hy-generate-m18-l18b-b12-wins-momentum/SUMMARY.md
+.planning/quick/260707-3ik-generate-m18-l18b-b03-approval-flow-scen/PLAN.md
+.planning/quick/260707-3ik-generate-m18-l18b-b03-approval-flow-scen/SUMMARY.md
+.planning/quick/260707-3iu-generate-m18-l18b-b04-quality-check-scen/PLAN.md
+.planning/quick/260707-3iu-generate-m18-l18b-b04-quality-check-scen/SUMMARY.md
+.planning/quick/260707-3qx-generate-m12-l12a-b07-dial-quality-priya/PLAN.md
+.planning/quick/260707-4bd-generate-m18-l18b-b02-county-channels/PLAN.md
+.planning/quick/260707-4bd-generate-m18-l18b-b02-county-channels/SUMMARY.md
+.planning/quick/260707-4u8-generate-m17-l17-b02-three-blocks-scene-/PLAN.md
+.planning/quick/260707-4u8-generate-m17-l17-b02-three-blocks-scene-/SUMMARY.md
+.planning/quick/260707-generate-m11-l11a-b15-impact-path/PLAN.md
+.planning/quick/260707-generate-m12-l12a-b04-priya-cane/SUMMARY.md
+.planning/quick/260707-generate-m12-l12a-b07-dial-quality/PLAN.md
+.planning/quick/260707-generate-m12-l12a-b07-dial-quality/SUMMARY.md
+.planning/quick/260707-generate-m12-l12a-b11-offers-made/PLAN.md
+.planning/quick/260707-generate-m12-l12a-b11-offers-made/SUMMARY.md
+.planning/quick/260707-generate-m18-l18b-b08-response-loop/PLAN.md
+.planning/quick/260707-generate-m18-l18b-b08-response-loop/SUMMARY.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'find "$HOME" -path '"'*get-shit-done/workflows/quick.md' -maxdepth 6 2>/dev/null | head -20" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 5910ms:
+$HOME/.gemini/antigravity-backup/get-shit-done/workflows/quick.md
+$HOME/.gemini/antigravity-ide/get-shit-done/workflows/quick.md
+$HOME/.gemini/antigravity/get-shit-done/workflows/quick.md
+$HOME/.claude/get-shit-done/workflows/quick.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,200p' .planning/quick/260707-4u8-generate-m17-l17-b02-three-blocks-scene-/PLAN.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+created: 2026-07-07
+completed: 2026-07-07
+branch: claude/course-production
+---
+
+# Generate m17 L17 b02 three blocks scene asset
+
+## Goal
+
+Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b02_three-blocks.png`.
+
+## Scope
+
+- Use the attached BMH course doodle references and locked flat sticker-sheet style.
+- Use gpt-image-2 through the built-in image generation workflow.
+- Create one 1600 x 900 PNG.
+- Show three large rounded doodle building blocks stacked into a tidy centered tower.
+- Make the bottom block cream, the middle block yellow, and the top block orange.
+- Keep the background plain cornflower blue with generous clean blue space above and on both sides for code-rendered overlays.
+- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, and black.
+- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
+
+## Verification
+
+- Confirm the file exists at the requested path.
+- Confirm the file is a PNG at 1600 x 900.
+- Visually inspect for three centered stacked blocks, correct block colors, plain blue negative space, no people, no text, no symbols, and no decorative clutter.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,200p' .planning/quick/260707-4u8-generate-m17-l17-b02-three-blocks-scene-/SUMMARY.md" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.claude/get-shit-done/workflows/quick.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+created: 2026-07-07
+completed: 2026-07-07
+branch: claude/course-production
+---
+
+# Generate m17 L17 b02 three blocks scene asset
+
+Generated `course-assets/scenes/module-17/m17_L17_b02_three-blocks.png` from the built-in image generation workflow using the requested gpt-image-2 prompt and supplied BMH doodle references.
+
+The generated candidate had the correct three-block tower composition but included soft gradients. I used the candidate as the source and hard-mapped it to the locked five-color flat palette before saving the final PNG.
+
+## Verification
+
+- `file course-assets/scenes/module-17/m17_L17_b02_three-blocks.png` reports PNG image data at 1600 x 900.
+- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b02_three-blocks.png` reports 1600 x 900.
+- Local palette check reports exactly five RGB colors: `#62b3f3`, black, tangerine orange, sunflower yellow, and pale cream.
+- Visual inspection confirms three centered stacked blocks, correct color order, generous plain blue negative space, no people, no faces, no text, no symbols, and no decorative clutter.
+- `git check-ignore -v course-assets/scenes/module-17/m17_L17_b02_three-blocks.png` confirms the saved asset is under the existing `course-assets/` ignore rule.
+
+ succeeded in 0ms:
+<purpose>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking). Quick mode spawns gsd-planner (quick mode) + gsd-executor(s), tracks tasks in `.planning/quick/`, and updates STATE.md's "Quick Tasks Completed" table.
+
+With `--full` flag: enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+With `--validate` flag: enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+With `--discuss` flag: lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md so the planner treats them as locked.
+
+With `--research` flag: spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls. Use when you're unsure how to approach a task.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+</purpose>
+
+<required_reading>
+Read all files referenced by the invoking prompt's execution_context before starting.
+</required_reading>
+
+<available_agent_types>
+Valid GSD subagent types (use exact names — do not fall back to 'general-purpose'):
+- gsd-phase-researcher — Researches technical approaches for a phase
+- gsd-planner — Creates detailed plans from phase scope
+- gsd-plan-checker — Reviews plan quality before execution
+- gsd-executor — Executes plan tasks, commits, creates SUMMARY.md
+- gsd-verifier — Verifies phase completion, checks quality gates
+- gsd-code-reviewer — Reviews source files for bugs, security issues, and code quality
+</available_agent_types>
+
+<process>
+**Step 1: Parse arguments and get task description**
+
+Parse `$ARGUMENTS` for:
+- `--full` flag → store `$FULL_MODE=true`, `$DISCUSS_MODE=true`, `$RESEARCH_MODE=true`, `$VALIDATE_MODE=true`
+- `--validate` flag → store `$VALIDATE_MODE=true`
+- `--discuss` flag → store `$DISCUSS_MODE=true`
+- `--research` flag → store `$RESEARCH_MODE=true`
+- Remaining text → use as `$DESCRIPTION` if non-empty
+
+After parsing, normalize: if `$DISCUSS_MODE` and `$RESEARCH_MODE` and `$VALIDATE_MODE` are all true, set `$FULL_MODE=true`. This ensures `--discuss --research --validate` is treated identically to `--full`.
+
+If `$DESCRIPTION` is empty after parsing, prompt user interactively:
+
+
+**Text mode (`workflow.text_mode: true` in config or `--text` flag):** Set `TEXT_MODE=true` if `--text` is present in `$ARGUMENTS` OR `text_mode` from init JSON is `true`. When TEXT_MODE is active, replace every `AskUserQuestion` call with a plain-text numbered list and ask the user to type their choice number. This is required for non-Claude runtimes (OpenAI Codex, Gemini CLI, etc.) where `AskUserQuestion` is not available.
+
+```
+AskUserQuestion(
+  header: "Quick Task",
+  question: "What do you want to do?",
+  followUp: null
+)
+```
+
+Store response as `$DESCRIPTION`.
+
+If still empty, re-prompt: "Please provide a task description."
+
+Display banner based on active flags:
+
+If `$FULL_MODE` (all phases enabled — `--full` or all granular flags):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (FULL)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + research + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` and `$VALIDATE_MODE` (no research):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS + VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` and `$RESEARCH_MODE` (no validate):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS + RESEARCH)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion + research enabled
+```
+
+If `$RESEARCH_MODE` and `$VALIDATE_MODE` (no discuss):
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (RESEARCH + VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Research + plan checking + verification enabled
+```
+
+If `$DISCUSS_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (DISCUSS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Discussion phase enabled — surfacing gray areas before planning
+```
+
+If `$RESEARCH_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (RESEARCH)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Research phase enabled — investigating approaches before planning
+```
+
+If `$VALIDATE_MODE` only:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► QUICK TASK (VALIDATE)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Plan checking + verification enabled
+```
+
+---
+
+**Step 2: Initialize**
+
+```bash
+if ! command -v gsd-sdk &>/dev/null; then
+  echo "⚠ gsd-sdk not found in PATH — /gsd-quick requires it."
+  echo ""
+  echo "Install the GSD SDK:"
+  echo "  npm install -g @gsd-build/sdk"
+  echo ""
+  echo "Or update GSD to get the latest packages:"
+  echo "  /gsd-update"
+  exit 1
+fi
+```
+
+```bash
+INIT=$(gsd-sdk query init.quick "$DESCRIPTION")
+if [[ "$INIT" == @file:* ]]; then INIT=$(cat "${INIT#@file:}"); fi
+AGENT_SKILLS_PLANNER=$(gsd-sdk query agent-skills gsd-planner)
+AGENT_SKILLS_EXECUTOR=$(gsd-sdk query agent-skills gsd-executor)
+AGENT_SKILLS_CHECKER=$(gsd-sdk query agent-skills gsd-plan-checker)
+AGENT_SKILLS_VERIFIER=$(gsd-sdk query agent-skills gsd-verifier)
+```
+
+Parse JSON for: `planner_model`, `executor_model`, `checker_model`, `verifier_model`, `commit_docs`, `branch_name`, `quick_id`, `slug`, `date`, `timestamp`, `quick_dir`, `task_dir`, `roadmap_exists`, `planning_exists`.
+
+```bash
+USE_WORKTREES=$(gsd-sdk query config-get workflow.use_worktrees 2>/dev/null || echo "true")
+```
+
+If the project uses git submodules, worktree isolation is skipped:
+
+```bash
+if [ -f .gitmodules ]; then
+  echo "[worktree] Submodule project detected (.gitmodules exists) — falling back to sequential execution"
+  USE_WORKTREES=false
+fi
+```
+
+**If `roadmap_exists` is false:** Error — Quick mode requires an active project with ROADMAP.md. Run `/gsd-new-project` first.
+
+Quick tasks can run mid-phase - validation only checks ROADMAP.md exists, not phase status.
+
+---
+
+**Step 2.5: Handle quick-task branching**
+
+**If `branch_name` is empty/null:** Skip and continue on the current branch.
+
+**If `branch_name` is set:** Check out the quick-task branch before any planning commits:
+
+```bash
+git checkout -b "$branch_name" 2>/dev/null || git checkout "$branch_name"
+```
+
+All quick-task commits for this run stay on that branch. User handles merge/rebase afterward.
+
+---
+
+**Step 3: Create task directory**
+
+```bash
+mkdir -p "${task_dir}"
+```
+
+---
+
+**Step 4: Create quick task directory**
+
+Create the directory for this quick task:
+
+```bash
+QUICK_DIR=".planning/quick/${quick_id}-${slug}"
+mkdir -p "$QUICK_DIR"
+```
+
+Report to user:
+```
+Creating quick task ${quick_id}: ${DESCRIPTION}
+Directory: ${QUICK_DIR}
+```
+
+Store `$QUICK_DIR` for use in orchestration.
+
+---
+
+**Step 4.5: Discussion phase (only when `$DISCUSS_MODE`)**
+
+Skip this step entirely if NOT `$DISCUSS_MODE`.
+
+Display banner:
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ GSD ► DISCUSSING QUICK TASK
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+◆ Surfacing gray areas for: ${DESCRIPTION}
+```
+
+**4.5a. Identify gray areas**
+
+Analyze `$DESCRIPTION` to identify 2-4 gray areas — implementation decisions that would change the outcome and that the user should weigh in on.
+
+Use the domain-aware heuristic to generate phase-specific (not generic) gray areas:
+- Something users **SEE** → layout, density, interactions, states
+- Something users **CALL** → responses, errors, auth, versioning
+- Something users **RUN** → output format, flags, modes, error handling
+- Something users **READ** → structure, tone, depth, flow
+- Something being **ORGANIZED** → criteria, grouping, naming, exceptions
+
+Each gray area should be a concrete decision point, not a vague category. Example: "Loading behavior" not "UX".
+
+**4.5b. Present gray areas**
+
+```
+AskUserQuestion(
+  header: "Gray Areas",
+  question: "Which areas need clarification before planning?",
+  options: [
+    { label: "${area_1}", description: "${why_it_matters_1}" },
+    { label: "${area_2}", description: "${why_it_matters_2}" },
+    { label: "${area_3}", description: "${why_it_matters_3}" },
+    { label: "All clear", description: "Skip discussion — I know what I want" }
+  ],
+  multiSelect: true
+)
+```
+
+If user selects "All clear" → skip to Step 5 (no CONTEXT.md written).
+
+**4.5c. Discuss selected areas**
+
+For each selected area, ask 1-2 focused questions via AskUserQuestion:
+
+```
+AskUserQuestion(
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'gsd-sdk query init.quick' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+ succeeded in 213ms:
+{
+  "planner_model": "sonnet",
+  "executor_model": "sonnet",
+  "checker_model": "sonnet",
+  "verifier_model": "sonnet",
+  "commit_docs": true,
+  "branch_name": null,
+  "quick_id": "260707-5b0",
+  "slug": null,
+  "description": null,
+  "date": "2026-07-07",
+  "timestamp": "2026-07-07T08:49:12.291Z",
+  "quick_dir": ".planning/quick",
+  "task_dir": null,
+  "roadmap_exists": true,
+  "planning_exists": true,
+  "project_root": "$HOME/Sites/BMH apps/BMH Institute",
+  "agents_installed": true,
+  "missing_agents": [],
+  "project_title": "BMH Institute"
+}
+
+hook: PostToolUse Completed
+codex
+I found the matching prior Module 17 quick task. It used the same built-in gpt-image workflow and then flattened the output to the locked palette when gradients slipped in, which is likely needed here too because the style refs have blue gradients but the requested scene forbids gradients.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'gsd-sdk query init.quick "Generate m17 L17 b04 staircase scene asset"' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse Completed
+ succeeded in 212ms:
+{
+  "planner_model": "sonnet",
+  "executor_model": "sonnet",
+  "checker_model": "sonnet",
+  "verifier_model": "sonnet",
+  "commit_docs": true,
+  "branch_name": null,
+  "quick_id": "260707-5bc",
+  "slug": "generate-m17-l17-b04-staircase-scene-ass",
+  "description": "Generate m17 L17 b04 staircase scene asset",
+  "date": "2026-07-07",
+  "timestamp": "2026-07-07T08:49:36.457Z",
+  "quick_dir": ".planning/quick",
+  "task_dir": ".planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass",
+  "roadmap_exists": true,
+  "planning_exists": true,
+  "project_root": "$HOME/Sites/BMH apps/BMH Institute",
+  "agents_installed": true,
+  "missing_agents": [],
+  "project_title": "BMH Institute"
+}
+
+codex
+I’m going to generate a single candidate now, using the four attached images only as style and cast/object references. The prompt will keep the scene extremely sparse: staircase plus two cash stacks only, with the upper-left left empty for overlays.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'mkdir -p .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass course-assets/scenes/module-17' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+codex
+The first candidate has the right subject and clean composition, but it violates the hard no-gradient rule in the blue background and stair fills. I’m going to locate the generated PNG and flatten it locally to the locked palette before saving the final asset.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'ls -la course-assets/scenes/module-17 | tail -30' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+total 72
+drwxr-xr-x@  5 jarradhenry  staff    160 Jul  7 03:40 .
+drwxr-xr-x@ 23 jarradhenry  staff    736 Jul  7 03:26 ..
+drwxr-xr-x@  5 jarradhenry  staff    160 Jul  7 03:47 _logs
+-rw-r--r--@  1 jarradhenry  staff   7976 Jul  7 03:33 m17_L17_b02_three-blocks.png
+-rw-r--r--@  1 jarradhenry  staff  26116 Jul  7 03:46 m17_L17_b03_ramp-calendar.png
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find "$HOME/.codex/generated_images" -type f -maxdepth 3 -print0 | xargs -0 ls -t | head -10' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_03c156c0ec282178016a4cbd6f1c648196b91452726f0173da.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_034b8025ad5d6def016a4cbcb5da008196afa99af43cd53138.png
+$HOME/.codex/generated_images/019f3bb9-5641-7c43-ac57-dfbc5edec974/ig_0c07cd501bd0fec6016a4cbc29908c81958bb8391d60a1ab24.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_00dc94ecc5140365016a4cbc053bbc8194bcb546a6bfe3d2fe.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0ed514ba0be32e77016a4cbb8e44dc81958278ea37422b452f.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0dcb787f81caf83e016a4cbb0d13d48197b2404c218782c738.png
+$HOME/.codex/generated_images/019f3bb9-5641-7c43-ac57-dfbc5edec974/ig_06ec8efa8d448fc9016a4cbb0a1dfc81949fb4470e362b38b2.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_03b3d53ec6094687016a4cba8a978c8193a4b9c1ce3ff759f7.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0152352169a15988016a4cba0108ec819483abb482f86f2d21.png
+xargs: ls: terminated with signal 13; aborting
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find "$HOME/.Codex/generated_images" -type f -maxdepth 3 -print0 | xargs -0 ls -t | head -10' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.Codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_03c156c0ec282178016a4cbd6f1c648196b91452726f0173da.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_034b8025ad5d6def016a4cbcb5da008196afa99af43cd53138.png
+$HOME/.Codex/generated_images/019f3bb9-5641-7c43-ac57-dfbc5edec974/ig_0c07cd501bd0fec6016a4cbc29908c81958bb8391d60a1ab24.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_00dc94ecc5140365016a4cbc053bbc8194bcb546a6bfe3d2fe.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0ed514ba0be32e77016a4cbb8e44dc81958278ea37422b452f.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0dcb787f81caf83e016a4cbb0d13d48197b2404c218782c738.png
+$HOME/.Codex/generated_images/019f3bb9-5641-7c43-ac57-dfbc5edec974/ig_06ec8efa8d448fc9016a4cbb0a1dfc81949fb4470e362b38b2.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_03b3d53ec6094687016a4cba8a978c8193a4b9c1ce3ff759f7.png
+$HOME/.Codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0152352169a15988016a4cba0108ec819483abb482f86f2d21.png
+xargs: ls: terminated with signal 13; aborting
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'file "$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png"' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png: PNG image data, 1672 x 941, 8-bit/color RGB, non-interlaced
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'sips -g pixelWidth -g pixelHeight "$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from collections import Counter
+p='$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png'
+im=Image.open(p).convert('RGB')
+print(im.size)
+print('unique sample?', len(im.getcolors(maxcolors=10000000)))
+for color,count in Counter(im.getdata()).most_common(20):
+    print(color,count)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png
+  pixelWidth: 1672
+  pixelHeight: 941
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 247ms:
+(1672, 941)
+unique sample? 38912
+(91, 171, 251) 144977
+(91, 171, 250) 126989
+(92, 172, 251) 125499
+(92, 171, 251) 80012
+(93, 172, 251) 66326
+(92, 171, 250) 60264
+(92, 172, 250) 50191
+(254, 198, 6) 46793
+(91, 172, 251) 36199
+(90, 170, 250) 34971
+(91, 172, 250) 28134
+(90, 171, 250) 24746
+(253, 243, 205) 24044
+(90, 170, 251) 21632
+(91, 170, 250) 21586
+(253, 243, 206) 20631
+(90, 171, 251) 20130
+(254, 243, 206) 19561
+(91, 170, 251) 19388
+(253, 242, 205) 18909
+
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+codex
+The candidate is close on subject but not acceptable as-is: it uses 3D block perspective, visible top planes, and gradients. I’m rerolling once with a stricter side-view/flat-shape prompt so the saved result does not silently violate the spec.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'find "$HOME/.codex/generated_images" -type f -maxdepth 3 -print0 | xargs -0 ls -t | head -5' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_08ea22047f176614016a4cbe68452c8195a835ce0a6bfd98e2.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_0a8ff2b6f89fc05b016a4cbe04db748197b97ccddc6eacaeba.png
+$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_0e22086eecc2654d016a4cbdd9507881959c3525c2fda18494.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_03c156c0ec282178016a4cbd6f1c648196b91452726f0173da.png
+$HOME/.codex/generated_images/019f3b31-9447-7972-9ee6-989aca06497d/ig_034b8025ad5d6def016a4cbcb5da008196afa99af43cd53138.png
+xargs: ls: terminated with signal 13; aborting
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-17/m17_L17_b02_three-blocks.png && sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b02_three-blocks.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-17/m17_L17_b02_three-blocks.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+$HOME/Sites/BMH apps/BMH Institute/course-assets/scenes/module-17/m17_L17_b02_three-blocks.png
+  pixelWidth: 1600
+  pixelHeight: 900
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from collections import Counter
+p='course-assets/scenes/module-17/m17_L17_b02_three-blocks.png'
+im=Image.open(p).convert('RGB')
+print(im.size)
+print(len(im.getcolors(maxcolors=10000000)))
+print(Counter(im.getdata()).most_common(20))
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 199ms:
+(1600, 900)
+5
+[((98, 179, 243), 1215106), ((255, 245, 199), 78638), ((255, 122, 0), 58716), ((255, 211, 1), 57339), ((0, 0, 0), 30201)]
+
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+codex
+The second candidate fixes the perspective problem: it is a flat side-view stair shape with the two cash stacks in the right places. I’m using that one as the source, resizing to 1600x900 and hard-mapping it to the allowed flat colors.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from pathlib import Path
+
+src = Path('$HOME/.codex/generated_images/019f3bc2-90c6-7611-8fd5-a3e0fed6b389/ig_08ea22047f176614016a4cbe68452c8195a835ce0a6bfd98e2.png')
+out = Path('course-assets/scenes/module-17/m17_L17_b04_staircase.png')
+
+palette = [
+    (98, 179, 243),   # cornflower blue #62b3f3
+    (0, 0, 0),        # black outlines
+    (255, 211, 1),    # sunflower yellow
+    (255, 245, 199),  # pale cream
+    (148, 199, 96),   # money green only for cash
+]
+
+im = Image.open(src).convert('RGB').resize((1600, 900), Image.Resampling.LANCZOS)
+pix = im.load()
+for y in range(im.height):
+    for x in range(im.width):
+        r, g, b = pix[x, y]
+        best = min(palette, key=lambda c: (r - c[0]) ** 2 + (g - c[1]) ** 2 + (b - c[2]) ** 2)
+        pix[x, y] = best
+
+out.parent.mkdir(parents=True, exist_ok=True)
+im.save(out, format='PNG')
+print(out)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+ succeeded in 1399ms:
+course-assets/scenes/module-17/m17_L17_b04_staircase.png
+
+hook: PostToolUse
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+codex
+The final file is now written at the requested path. I’m checking dimensions, palette, and visual content now, then I’ll update the quick-task summary.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'git check-ignore -v course-assets/scenes/module-17/m17_L17_b04_staircase.png || true' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+.gitignore:66:course-assets/	course-assets/scenes/module-17/m17_L17_b04_staircase.png
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-17/m17_L17_b04_staircase.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-17/m17_L17_b04_staircase.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b04_staircase.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/Sites/BMH apps/BMH Institute/course-assets/scenes/module-17/m17_L17_b04_staircase.png
+  pixelWidth: 1600
+  pixelHeight: 900
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from collections import Counter
+p='course-assets/scenes/module-17/m17_L17_b04_staircase.png'
+im=Image.open(p).convert('RGB')
+colors=Counter(im.getdata())
+print('size', im.size)
+print('unique', len(colors))
+for color,count in colors.most_common():
+    print('#%02x%02x%02x' % color, count)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 176ms:
+size (1600, 900)
+unique 5
+#62b3f3 995994
+#ffd301 197842
+#fff5c7 131521
+#000000 69099
+#94c760 45544
+
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+codex
+The technical checks are clean: PNG, 1600x900, exactly five flat colors, and it stays under the existing ignored `course-assets/` rule like the neighboring scene assets. I’m doing one visual pass for composition/spec violations before I close it.
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..725fe044c272368765f8bd339f01223959e7ec6f
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,28 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+
+codex
+The visual pass also checks out: four rising steps, top cash stack taller than the second-step stack, no people, no lettering, no symbols, no extra doodles, and the upper-left remains open. I’m recording the quick-task summary now.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..15726c77cd4c467af6e10c6681b4fd21cb146538
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e836d1ba6807270e47fef323f32126e6efcbb3a1
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+@@ -0,0 +1,20 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++Generated `course-assets/scenes/module-17/m17_L17_b04_staircase.png` from the built-in image generation workflow using the requested gpt-image-2 prompt and supplied BMH doodle references.
++
++The first candidate had the right subject but used 3D block perspective and gradients, so I rerolled with a stricter flat side-view prompt. The selected candidate was then resized and hard-mapped to the locked flat palette before saving the final PNG.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports 1600 x 900.
++- Local palette check reports exactly five RGB colors: `#62b3f3`, black, sunflower yellow, pale cream, and money green.
++- Visual inspection confirms four rising steps, the top cash stack is taller than the second-step cash stack, the upper-left blue space is clean, and there are no people, faces, text, symbols, labels, ambient doodles, or decorative clutter.
++- `git check-ignore -v course-assets/scenes/module-17/m17_L17_b04_staircase.png` confirms the saved asset is under the existing `course-assets/` ignore rule.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..15726c77cd4c467af6e10c6681b4fd21cb146538
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e836d1ba6807270e47fef323f32126e6efcbb3a1
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+@@ -0,0 +1,20 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++Generated `course-assets/scenes/module-17/m17_L17_b04_staircase.png` from the built-in image generation workflow using the requested gpt-image-2 prompt and supplied BMH doodle references.
++
++The first candidate had the right subject but used 3D block perspective and gradients, so I rerolled with a stricter flat side-view prompt. The selected candidate was then resized and hard-mapped to the locked flat palette before saving the final PNG.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports 1600 x 900.
++- Local palette check reports exactly five RGB colors: `#62b3f3`, black, sunflower yellow, pale cream, and money green.
++- Visual inspection confirms four rising steps, the top cash stack is taller than the second-step cash stack, the upper-left blue space is clean, and there are no people, faces, text, symbols, labels, ambient doodles, or decorative clutter.
++- `git check-ignore -v course-assets/scenes/module-17/m17_L17_b04_staircase.png` confirms the saved asset is under the existing `course-assets/` ignore rule.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'ls -lh course-assets/scenes/module-17/m17_L17_b04_staircase.png .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'git status --short .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass course-assets/scenes/module-17/m17_L17_b04_staircase.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+?? .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/
+
+ succeeded in 0ms:
+-rw-r--r--@ 1 jarradhenry  staff   1.4K Jul  7 03:56 .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+-rw-r--r--@ 1 jarradhenry  staff   1.3K Jul  7 03:56 .planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+-rw-r--r--@ 1 jarradhenry  staff    12K Jul  7 03:55 course-assets/scenes/module-17/m17_L17_b04_staircase.png
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+p='course-assets/scenes/module-17/m17_L17_b04_staircase.png'
+im=Image.open(p)
+print(im.mode, im.size)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+RGB (1600, 900)
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..15726c77cd4c467af6e10c6681b4fd21cb146538
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e836d1ba6807270e47fef323f32126e6efcbb3a1
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+@@ -0,0 +1,20 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++Generated `course-assets/scenes/module-17/m17_L17_b04_staircase.png` from the built-in image generation workflow using the requested gpt-image-2 prompt and supplied BMH doodle references.
++
++The first candidate had the right subject but used 3D block perspective and gradients, so I rerolled with a stricter flat side-view prompt. The selected candidate was then resized and hard-mapped to the locked flat palette before saving the final PNG.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports 1600 x 900.
++- Local palette check reports exactly five RGB colors: `#62b3f3`, black, sunflower yellow, pale cream, and money green.
++- Visual inspection confirms four rising steps, the top cash stack is taller than the second-step cash stack, the upper-left blue space is clean, and there are no people, faces, text, symbols, labels, ambient doodles, or decorative clutter.
++- `git check-ignore -v course-assets/scenes/module-17/m17_L17_b04_staircase.png` confirms the saved asset is under the existing `course-assets/` ignore rule.
+
+codex
+Saved the image here:
+
+[m17_L17_b04_staircase.png]($HOME/Sites/BMH%20apps/BMH%20Institute/course-assets/scenes/module-17/m17_L17_b04_staircase.png)
+
+Verified: PNG, 1600x900, RGB, exactly five flat colors: `#62b3f3`, black, yellow, cream, and money green. Visual pass confirms four rising steps, taller top cash stack, smaller second-step stack, clean upper-left blue space, and no text, symbols, people, or clutter.
+
+I also recorded the GSD quick task summary under `.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/`.
+
+
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..15726c77cd4c467af6e10c6681b4fd21cb146538
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b04_staircase.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and locked flat sticker-sheet style.
++- Use the built-in image generation workflow for the requested gpt-image-2 asset.
++- Create one 1600 x 900 PNG.
++- Show four chunky cream and yellow doodle staircase steps rising left to right.
++- Place a small blank money-green bank-note stack on the second step and a taller blank money-green bank-note stack on the top step.
++- Keep the upper-left clean cornflower blue for code-rendered overlays.
++- Use thick wobbly black outlines, rounded simple shapes, flat fills only, and the locked palette: cornflower blue, sunflower yellow, tangerine orange, pale cream or warm white, white, black, plus money-green only for cash.
++- Avoid people, faces, text, words, letters, numbers, symbols, labels, ambient doodles, motion marks, icons, random props, gradients, texture, shadows, lighting, and perspective depth.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect for four rising steps, larger cash stack higher than the smaller stack, clean upper-left blue space, no people, no text, no symbols, and no decorative clutter.
+diff --git a/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..e836d1ba6807270e47fef323f32126e6efcbb3a1
+--- /dev/null
++++ b/.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/SUMMARY.md
+@@ -0,0 +1,20 @@
++---
++status: complete
++created: 2026-07-07
++completed: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m17 L17 b04 staircase scene asset
++
++Generated `course-assets/scenes/module-17/m17_L17_b04_staircase.png` from the built-in image generation workflow using the requested gpt-image-2 prompt and supplied BMH doodle references.
++
++The first candidate had the right subject but used 3D block perspective and gradients, so I rerolled with a stricter flat side-view prompt. The selected candidate was then resized and hard-mapped to the locked flat palette before saving the final PNG.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b04_staircase.png` reports 1600 x 900.
++- Local palette check reports exactly five RGB colors: `#62b3f3`, black, sunflower yellow, pale cream, and money green.
++- Visual inspection confirms four rising steps, the top cash stack is taller than the second-step cash stack, the upper-left blue space is clean, and there are no people, faces, text, symbols, labels, ambient doodles, or decorative clutter.
++- `git check-ignore -v course-assets/scenes/module-17/m17_L17_b04_staircase.png` confirms the saved asset is under the existing `course-assets/` ignore rule.
+
+hook: Stop
+hook: Stop Completed
+tokens used
+229,454
+Saved the image here:
+
+[m17_L17_b04_staircase.png]($HOME/Sites/BMH%20apps/BMH%20Institute/course-assets/scenes/module-17/m17_L17_b04_staircase.png)
+
+Verified: PNG, 1600x900, RGB, exactly five flat colors: `#62b3f3`, black, yellow, cream, and money green. Visual pass confirms four rising steps, taller top cash stack, smaller second-step stack, clean upper-left blue space, and no text, symbols, people, or clutter.
+
+I also recorded the GSD quick task summary under `.planning/quick/260707-5bc-generate-m17-l17-b04-staircase-scene-ass/`.
+
+

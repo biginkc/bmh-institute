@@ -3,7 +3,7 @@
 # usage: zsh gen_scenes_2B.sh <david|beth|ray|carol|marcus>
 # Full doodle SCENE (not head-shoulders): the seller is IN the scene, weary/frustrated, depicting their problem.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-02-lesson2B"
 mkdir -p "$OUT"

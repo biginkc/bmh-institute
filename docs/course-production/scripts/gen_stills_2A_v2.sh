@@ -1,12 +1,12 @@
 #!/bin/zsh
 # Lesson 2A v2 stills — one lane per image: zsh gen_stills_2A_v2.sh <key>
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 OUT="course-assets/scenes/module-02"
 ANDREA="course-assets/avatar-candidates/andrea_headset_v2.png"
 ENDCARD="docs/course-production/remotion/public/lessonA/bmh-endcard.png"
-LOGO="/Users/jarradhenry/Sites/bmh-training-videos/public/bmh-logo.png"
+LOGO="${BMH_LOGO_PNG:-$(cd "${0:A:h}/../../../.." && pwd)/bmh-training-videos/public/bmh-logo.png}"
 
 STYLE='STYLE: flat sticker-sheet illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only (yellow, orange, cream, white, black) on cornflower-blue background, no gradients, no texture, no shadows, no lighting, no perspective. Tiny dot eyes, minimal facial features, cylindrical limbs, strong simple silhouettes. Confidently imperfect, hand-drawn. No skin-tone shading. No text or words anywhere. 16:9 composition, 1600x900.'
 # palette-stretch variant for the two-setting split (snow + beach need their own colors)

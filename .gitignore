@@ -88,3 +88,8 @@ course-assets/scenes/*
 course-assets/scenes/*/*
 !course-assets/scenes/*/_anchors/
 !course-assets/scenes/*/_anchors/**
+
+# Scene generation logs hold the exact prompt used to produce each still.
+# They ARE the regeneration recipe for scene art, so they are versioned.
+!course-assets/scenes/*/_logs/
+!course-assets/scenes/*/_logs/**

@@ -49,7 +49,7 @@ const BmhBadge: React.FC = () => (
 const pop = (frame: number, fps: number, delay: number) =>
   Math.max(0, Math.min(1, spring({frame: frame - delay, fps, config: {damping: 12, stiffness: 170}, durationInFrames: 18})));
 
-const place = (p: string): React.ComponentProps<typeof Sticker> => {
+const place = (p: string): Partial<React.ComponentProps<typeof Sticker>> => {
   if (p === 'propTop') return {topCenter: true, top: 54};
   if (p === 'propLeft') return {top: 235, left: 70};
   if (p === 'propRight') return {top: 235, left: 1060};

@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Lesson 18A v2 correction stills.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 SELF="${0:A}"
 
 D="docs/design"

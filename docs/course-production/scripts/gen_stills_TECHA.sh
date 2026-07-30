@@ -11,7 +11,7 @@
 #    (squiggle text lines, house thumbnails, chart shapes) — still NO readable words.
 # Model: gpt-image-2 via codex exec.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 PRIYA="course-assets/scenes/module-12/_anchors/priya.png"
 ROBOT="course-assets/scenes/module-techstack/_anchors/sandra-robot.png"

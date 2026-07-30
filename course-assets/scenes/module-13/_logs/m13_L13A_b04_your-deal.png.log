@@ -1,0 +1,1349 @@
+Reading prompt from stdin...
+2026-07-07T08:27:58.806380Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f3bb0-e751-7c01-bd9d-295a5f49ec92
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-13/m13_L13A_b04_your-deal.png (PNG, 1600x900). Match the attached style references and cast-board character style exactly. COMPOSITION: Winner podium scene on a plain cornflower-blue field, like after a race. CENTER: one BMH follow-up representative woman inspired by PRIYA on the cast-board: black hair pulled into a back ponytail, orange/yellow headband, simple orange phone headset, yellow top, cream pants. She stands proudly on the tallest center winner platform and wears several round gold/yellow medals around her neck on simple orange ribbons. LEFT and RIGHT: two shorter podium platforms beside her, one medium height and one low height. Put one cast-board-inspired competitor character standing on each shorter platform, both visibly disappointed by posture only: slumped shoulders, arms crossed or hands down, tiny dot eyes, tiny downturned mouth. They must not wear headsets and must not look like clones of the winner. NO numerals, no 1/2/3, no trophy text, no race banners, no names. Exactly three people total. Keep upper left and lower center open for later code labels. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow, orange, cream, white, and black. No gradients, no texture, no shadows, no lighting, no perspective, no skin-tone shading. Faces must match the cast-board: flat white/cream fill, tiny black dot eyes only, tiny centered two-stroke/comma nose, and a very small simple mouth. Do not use ring eyes, side-eye eyeballs, large open mouths, teeth, eyebrows, sunglasses, or detailed expressions. Show emotion mainly through body posture, not altered facial anatomy. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, motion marks, icons, random props, or decorative clutter. No text, letters, words, numbers, symbols, dollar signs, labels, captions, screens with writing, or readable paperwork anywhere unless the composition explicitly requests the exact plaque phrase EMPLOYEE OF THE MONTH. Leave clean open cornflower-blue space for code-rendered Sticker overlays. 16:9 composition, 1600x900 PNG.
+
+2026-07-07T08:27:59.065175Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-07T08:27:59.079027Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-07T08:27:59.124370Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-07T08:27:59.318116Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-07T08:28:00.564552Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill here because the request is an asset creation task, then I’ll save the output into the requested course asset path and verify the file shape.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' \""'$HOME/BMH-OS/_Active.md"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' \""'$HOME/BMH-OS/CLAUDE.md"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-07-05
+tags: [v1]
+related: ["[[STRATEGY]]", "[[MOC - v1]]", "[[MOC - v1 Verification Steps]]", "[[Four-app v1 control ledger]]"]
+---
+# _Active — what now
+
+Current priorities, seeded from [[STRATEGY]]'s bottleneck + the [[MOC - v1]] checklist. Frequently updated.
+
+## Operating model — Claude plans, Codex executes
+
+**Claude = planner/reviewer; Codex = executor.** For the four-app v1 push, Codex is executing the written per-app EXECUTE blocks directly in isolated worktrees; the start-orchestration bootstrap remains suspended until the repos are in known state. Claude still provides independent A5 review/approval before merge/deploy. Full handoff + recon + open decisions: [[2026-06-01 1815 — Four-app v1 plan + Codex execution handoff]]. Detailed per-app checklist: [[MOC - v1 Verification Steps]]. Cross-app context source: [[Four-app v1 control ledger]].
+
+**Autonomous = additive / reversible / observable** (STRATEGY's guardrail). A gate = destructive, irreversible, external-facing, or a judgment call.
+
+**Browser V1 acceptance gate:** fixture seeding, SQL assertions, unit/integration tests, GitHub Actions, and Playwright automation are scaffolding/supporting evidence only. Browser V1 is not accepted until Chrome/Chrome DevTools real-browser execution proves the persona flows through visible UI outcomes, screenshots, console/network inspection where relevant, and browser-console probes where required. Do not use Codex in-app browser / MAP / `iab` as the acceptance surface unless Jarrad explicitly reverses this.
+
+**Browser V1 UI-created data rule:** data setup is part of the browser test. For [[Closer Lab]] and [[BMH Institute]], create fixture/content/test records through Chrome/DevTools browser UI wherever the app UI supports creation or editing. Direct database/API writes are exception-only supporting setup for things the UI cannot create, such as auth bootstrap when no signup/admin UI exists, and must be labeled as non-acceptance evidence.
+
+**2026-06-02 browser-surface correction:** Jarrad first reset [[Closer Lab]] and [[BMH Institute]] Browser V1 acceptance to zero, then superseded the MAP/in-app-browser requirement with Chrome/DevTools real-browser execution. Current controller evidence shows [[BMH Institute]] residual proof closed and [[Closer Lab]] Browser V1 markers closed for pre-read persistence, signed embed-token proof, and scoring/runtime. [[Sandra]] production-readiness proof is GO as of 2026-06-11. The 2026-06-18 active-front reset (skip-trace/CASS preflight, filter preset discoverability, bulk tag creation, Sendillo-era Overview KPI visibility) is now CLEARED 2026-06-19 — all four shipped via merged PRs #288–#300, plus Messages disposition/outcomes hardening (#298/#299/#300). Remaining [[Sandra]] threads: PR #287 (hide dead-dispositioned leads from the kanban — OPEN, awaiting NULL-handling review) and the bulk-SMS→Campaigns KPI tracking gap (June 19 run, job `72b0e08d`, 7,547 messages queued with `campaignId=null`) — forward fix now tracked under **PR #306** (supersedes #301; per the 2026-06-23 [[Sandra PR 306 merge gate rules]] decision, updated 2026-07-05 — merge via GitHub-backed main once the Playwright golden-paths check passes; PR MERGEABLE/UNSTABLE, **not yet merged**) which requires a campaign name + auto-creates + stamps `campaign_id`, with the 2026-06-19 architect P1s folded in; the **June 19 backfill is still pending** (designed, not applied — must match by `property_id` intersection, not the created_at window which over-captures by 6; per the decision, the 423-member retry list is created only after production serves the merged fix).
+
+**2026-06-02 trust reset:** Jarrad challenged the controller's Playwright-heavy verification and does not trust acceptance unless it is revalidated in Chrome/DevTools. Treat Playwright/CI/API/DB evidence as support only. Fresh revalidation so far: [[BMH Institute]] Chrome snapshot/screenshot `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, with separate Sandra outcome confirmation `/tmp/browser-revalidation-bmh-institute-outcome.json`; [[Closer Lab]] member Chrome snapshot/screenshot `/tmp/browser-revalidation-closer-member-recording.*` visibly shows recording `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`, with separate Sandra outcome support `/tmp/browser-revalidation-closer-sandra-outcome-support.json`. [[Sandra]] production-readiness proof is GO on `https://sandra.bmhgroupkc.com`: real Sendillo production thread proof, `PR #236` sequence-admin gate, Chrome SOP matrix, and authenticated production non-admin sequence denial/enrollment behavior are all captured in [[Sandra - 2026-06-11]]. [[Jitter]] trust-reset browser work advanced in two steps: the earlier wrong-database/browser-auth mismatch was partially resolved by pinning production to the canonical `jitter-test` plane (`ypgntjjrrutjsratdwmk`) and proving controlled Chrome dialing in production, but that proof depended on a local scoped worker. Current blocker is no longer fixture creation; it is the **carrier swap**: Twilio is KYC-suspended/retired and **Telnyx is now the active carrier (account fully verified) — carrier validation PASSED 2026-06-04** — that carrier validation precedes the worker gate. The current Jitter gate (B2 plan, 2026-06-06) is **trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof**. The downstream acceptance gap is still a real worker path, but only after the single-line Telnyx dial proof.
+
+| Lane | Repo state (2026-06-01) | First autonomous task | Locked decisions |
+|------|------|------|------|
+| **[[Sandra]]** | Production-readiness proof GO on `https://sandra.bmhgroupkc.com` as of [[Sandra - 2026-06-11]]. Gate 1 real Sendillo production thread proof closed; Gate 2 `PR #236` sequence-admin gate merged/deployed/E2E green; Gate 3 Chrome SOP proof closed with admin SOP coverage, real Sendillo thread visibility, bulk SMS no-send inspection, admin authoring retention, and authenticated production non-admin sequence denial/enrollment behavior. Cleanup caveat: Sendillo canary rows retained as audit evidence and throwaway SOP sequence `7dfedf79-120a-434b-b417-c920b3227475` retained inactive. | no blocker; optional explicitly approved cleanup only if pristine DB is desired | consent: keep current |
+| **[[Closer Lab]]** | PR #60 merged; Browser V1 markers previously closed in Chrome/DevTools: pre-read persistence, BMH Institute signed embed-token path, scoring/runtime; Closer→Sandra sender/config/scoring hardening PRs #71/#72/#73/#74 merged and production proof PASS; fresh trust-reset Chrome revalidation captured member recording `72ad25d8-1b09-4ef9-a278-82113c12ce75` at 100% with transcript and rubric `MET 5 / 5` | browser-revalidated after trust reset | — |
+| **[[BMH Institute]]** | PR #79 and PR #80 merged; controller residual Chrome/DevTools proof closed after credential rotation; Sandra course-completed sender PR #81 merged, production env configured after token rotation, and Chrome/DevTools final lesson proof wrote `course.completed` into Sandra; fresh trust-reset Chrome revalidation captured visible `Lesson complete` and matching Sandra outcome | browser-revalidated after trust reset | cert PDF **deferred post-v1**; suspended-login block shipped via PR #79 |
+| **[[Jitter]]** | auth PR #144 merged; writeback PR #145, Sandra receiver PR #224, and boundary fix PR #146 merged; CPS pacing merged to `main` at `334ef8565d21b71bd3f645f05def2922179cee47` and deployed to production `dpl_75H8rsoMe7HEX7KSgtdo6cAjtJRS`; one controlled Chrome proof succeeded on `https://jitter.bmhgroupkc.com/dialer`, with browser audio connected and 4 successful `twilio.create_call` operations, but only while a local scoped worker was running. **Carrier since swapped: Twilio retired (KYC); Telnyx is the active carrier (account verified).** | **Current gate (B2 plan, 2026-06-06): trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof.** Then keep web + worker on the same reviewed SHA and rerun the final Chrome `/dialer` proof with the real worker before claiming accepted | business dialing approved; no extra live dial needed for writeback-only proof |
+
+## 🚦 Gates — full autonomy authorized (pre-launch, no users/data)
+Standing authorization (Jarrad, 2026-06-01): Codex may read/write any Supabase project incl. prod, run/apply migrations, open AND **merge** PRs, and deploy — quality-gated by Codex manual-code-review plus Claude A5 when reachable. If Claude is unavailable, Codex must try both CLI and desktop/app before using the fallback readiness gate. **No human click on merge/deploy.** See [[bmh-apps-prelaunch-no-prod-ceremony]] and [[Four-app v1 control ledger]].
+- **Hard pause:** billing changes; secret disclosure risk; uncontrolled provider use outside v1 verification; human-only MFA/CAPTCHA/account recovery after CLI/API/desktop workarounds.
+- [[Jitter]] business dialing is explicitly approved for v1 verification. Use product-appropriate caps/logging; no generic prod ceremony just because it is production.
+- New product decisions: make v1-compatible calls, record in the app's report, keep moving — never stall a lane unless it changes billing or creates uncontrolled provider use.
+
+## ✅ Fully autonomous (no checkpoint) — incl. TEST-env side effects
+Self-served, no longer Jarrad inputs:
+- **1Password reads** — all agents must read existing `BMH Secrets` items through the service account only: `export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -w -s OP_SERVICE_ACCOUNT_TOKEN)` then `op read "<redacted-1password-ref>"`. Do not use desktop-app/GUI/biometric/browser authorization for reads. If a GUI authorization prompt appears during a read, stop that path and retry with the service account; do not ask Jarrad to approve a read.
+- **Twilio** — read from 1Password (`Twilio - BMH Account Credentials`: SID, auth token, API key, `TWILIO_OWNED_NUMBERS_E164`, caller ID). Owned-number tests remain useful for smoke tests; [[Jitter]] may also dial real businesses for v1 verification under the standing approval above.
+- **Test accounts** — each lane provisions its own per-role accounts in its app's `*-test` Supabase project (`sandra-crm-test`, `closer-lab-test`, `bmh-institute-test`, `jitter-test`).
+- Dirty-work policy: snapshot to `wip/pre-v1-snapshot-<date>` *before* removing stale (reversible).
+- Plus: repo triage · code fixes in worktrees · unit/integration/build/lint · Playwright fake-media + fixtures · resolving `UNKNOWN` items by reading code · drafting PRs · `_inbox` notes.
+
+## Integrations — last
+Trust-reset integration front: do not call a lane accepted unless the current proof includes Chrome/DevTools-visible browser behavior. Pre-reset supporting proof remains useful but is not enough by itself. [[BMH Institute]] `course.completed`→[[Sandra]] has fresh Chrome/DevTools revalidation after Sandra #227/#228 and BMH Institute #81: `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, and separate outcome confirmation shows Sandra `institute_course_outcomes.id=61592447-b33d-489c-a230-d513435ef6b7` with webhook event `15e56f40-31b8-4d48-901e-942bdf0bbd8f` processed/signature verified. [[Closer Lab]] practice outcome→[[Sandra]] now has fresh Chrome/DevTools member recording revalidation: `/tmp/browser-revalidation-closer-member-recording.*` visibly shows attempt `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`; separate support file `/tmp/browser-revalidation-closer-sandra-outcome-support.json` ties the same attempt to Sandra `closer_practice_outcomes.id=90aaae3d-1053-4021-b9e1-a6e50b8a08f8`. [[Jitter]]→[[Sandra]] writeback remains supported by deployed production executor/API plus Sandra production DB proof after Jitter #145, Sandra #224, and Jitter #146, and a controlled Chrome `/dialer` proof succeeded after production was pinned to canonical `jitter-test` (`ypgntjjrrutjsratdwmk`). That proof is still not sufficient for acceptance because it depended on a local scoped worker. Current gap: a real worker path must back the final Chrome proof so dialing continues without the local helper and without warning banners, duplicate operations, or queue-time spikes.
+
+## Next step
+**▶️ RESUME (2026-06-06 21:23): [[2026-06-06 2123 — Doc-driven Jitter B2 plan with sub-agents (019e9fd7)]] — this is now the canonical raw plan note for the active [[Jitter]] lane.**
+
+**[[Jitter]] — B1.6 operator two-way audio PROVEN on Telnyx (2026-06-04, see [[2026-06-04 2110 — Jitter Telnyx B1.6 operator audio PROVEN]]).** Current front = **get the dialer DIALING (B2)**. Permission mode is now `bypassPermissions`. Loop running: **Claude orchestrates + reviews + commits + drives Chrome proof; Codex executes code** (`codex-exec.sh` + 3-min `watch.sh`).
+
+**OFFICIAL-DOCS-FIRST B2 order:** do not keep iterating on the old conference-callback hypothesis blindly. New research says the first move is to re-check the trust boundary on `/api/product/telephony/twiml/operator` because the current failing test may be enforcing signed-callback rules on the initial [[Telnyx]] TeXML instruction fetch. After that, keep strict signature validation on real callback routes, verify the browser-audio readiness contract across route/runtime/worker SQL, then proceed to the single-line live dial and the real [[Railway]] worker proof.
+
+**OPEN [[Jitter]] questions now ordered by impact:**
+1. Is the operator TeXML route enforcing the wrong auth contract for instruction fetches?
+2. Is `endConferenceOnExit=true` on `operator_browser` actually the intended product behavior?
+3. Is `productOperatorJoined` now being used consistently as the B2 dial-ready signal across route/runtime/worker layers?
+4. Are callback hosts and [[Vercel]] bypass assumptions explicit and correct for the environments being used?
+
+**Then:** single-line dial K=1 (canary guard ON, NOT gated) to +13107540662 → prove dialing. **Multi-line (K≥2) is GATED — needs Jarrad to EXPLICITLY lift his own "no multi-line without Telnyx L2 + written AUP" rule** (all calls redirect to his own number, so AUP not truly implicated, but the gate is his to lift). **Deferred (Jarrad: integrations last):** Sandra writeback (payload fixed `da659e3`, creds not staged), B1.4 voice_url, 1Password credential-id write-back (`70ad6f62…`, still PLACEHOLDER).
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'rg -n "module-13|Lesson 13|L13A|Priya|PRIYA|course-assets/scenes" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+54:- The reviewed 4B working asset roots are `course-assets/scenes/module-04-lesson4B/` and `course-assets/heygen/lesson4B/`; prefer these lesson-scoped paths over broad session-log greps when reconstructing the final recipe [Task 1]
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+I found the image skill’s save-path rule: generate first, then move the selected output into the workspace path. I’m also checking the repo workflow rule because this repo asks agents to enter a GSD workflow before creating project files.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '221,520p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+## Examples
+
+### Generation example (hero image)
+```text
+Use case: product-mockup
+Asset type: landing page hero
+Primary request: a minimal hero image of a ceramic coffee mug
+Style/medium: clean product photography
+Composition/framing: wide composition with usable negative space for page copy if needed
+Lighting/mood: soft studio lighting
+Constraints: no logos, no text, no watermark
+```
+
+### Edit example (invariants)
+```text
+Use case: precise-object-edit
+Asset type: product photo background replacement
+Primary request: replace only the background with a warm sunset gradient
+Constraints: change only the background; keep the product and its edges unchanged; no text; no watermark
+```
+
+## Prompting best practices
+- Structure prompt as scene/backdrop -> subject -> details -> constraints.
+- Include intended use (ad, UI mock, infographic) to set the mode and polish level.
+- Use camera/composition language for photorealism.
+- Only use SVG/vector stand-ins when the user explicitly asked for vector output or a non-image placeholder.
+- Quote exact text and specify typography + placement.
+- For tricky words, spell them letter-by-letter and require verbatim rendering.
+- For multi-image inputs, reference images by index and describe how they should be used.
+- For edits, repeat invariants every iteration to reduce drift.
+- Iterate with single-change follow-ups.
+- If the prompt is generic, add only the extra detail that will materially help.
+- If the prompt is already detailed, normalize it instead of expanding it.
+- For CLI fallback only, see `references/cli.md` and `references/image-api.md` for model, `quality`, `input_fidelity`, masks, output format, and output-path guidance.
+- For transparent images, use the built-in-first chroma-key workflow unless the request is complex enough to need true CLI transparency; ask before switching to CLI `gpt-image-1.5`.
+
+More principles shared by both modes: `references/prompting.md`.
+Copy/paste specs shared by both modes: `references/sample-prompts.md`.
+
+## Guidance by asset type
+Asset-type templates (website assets, game assets, wireframes, logo) are consolidated in `references/sample-prompts.md`.
+
+## gpt-image-2 guidance for CLI fallback
+
+The fallback CLI defaults to `gpt-image-2`.
+
+- Use `gpt-image-2` for new CLI/API workflows unless the request needs true model-native transparent output.
+- If a transparent request may need CLI fallback, ask before using `gpt-image-1.5` unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. Explain that the built-in chroma-key path is the default, but true transparency requires `gpt-image-1.5` because `gpt-image-2` does not support `background=transparent`.
+- `gpt-image-2` always uses high fidelity for image inputs; do not set `input_fidelity` with this model.
+- `gpt-image-2` supports `quality` values `low`, `medium`, `high`, and `auto`.
+- Use `quality low` for fast drafts, thumbnails, and quick iterations. Use `medium`, `high`, or `auto` for final assets, dense text, diagrams, identity-sensitive edits, or high-resolution outputs.
+- Square images are typically fastest to generate. Use `1024x1024` for fast square drafts.
+- If the user asks for 4K-style output, use `3840x2160` for landscape or `2160x3840` for portrait.
+- `gpt-image-2` size may be `auto` or `WIDTHxHEIGHT` if all constraints hold: max edge `<= 3840px`, both edges multiples of `16px`, long-to-short ratio `<= 3:1`, total pixels between `655,360` and `8,294,400`.
+
+Popular `gpt-image-2` sizes:
+- `1024x1024` square
+- `1536x1024` landscape
+- `1024x1536` portrait
+- `2048x2048` 2K square
+- `2048x1152` 2K landscape
+- `3840x2160` 4K landscape
+- `2160x3840` 4K portrait
+- `auto`
+
+## Fallback CLI mode only
+
+### Temp and output conventions
+These conventions apply only to the CLI fallback. They do not describe built-in `image_gen` output behavior.
+- Use `tmp/imagegen/` for intermediate files (for example JSONL batches); delete them when done.
+- Write final artifacts under `output/imagegen/`.
+- Use `--out` or `--out-dir` to control output paths; keep filenames stable and descriptive.
+
+### Dependencies
+Prefer `uv` for dependency management in this repo.
+
+Required Python package:
+```bash
+uv pip install openai
+```
+
+Required for local chroma-key removal and optional downscaling:
+```bash
+uv pip install pillow
+```
+
+Portability note:
+- If you are using the installed skill outside this repo, install dependencies into that environment with its package manager.
+- In uv-managed environments, `uv pip install ...` remains the preferred path.
+
+### Environment
+- `OPENAI_API_KEY` must be set for live API calls.
+- Do not ask the user for `OPENAI_API_KEY` when using the built-in `image_gen` tool.
+- Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.
+
+If the key is missing, give the user these steps:
+1. Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys
+2. Set `OPENAI_API_KEY` as an environment variable in their system.
+3. Offer to guide them through setting the environment variable for their OS/shell if needed.
+
+If installation is not possible in this environment, tell the user which dependency is missing and how to install it into their active environment.
+
+### Script-mode notes
+- CLI commands + examples: `references/cli.md`
+- API parameter quick reference: `references/image-api.md`
+- Network approvals / sandbox settings for CLI mode: `references/codex-network.md`
+
+## Reference map
+- `references/prompting.md`: shared prompting principles for both modes.
+- `references/sample-prompts.md`: shared copy/paste prompt recipes for both modes.
+- `references/cli.md`: fallback-only CLI usage via `scripts/image_gen.py`.
+- `references/image-api.md`: fallback-only API/CLI parameter reference.
+- `references/codex-network.md`: fallback-only network/sandbox troubleshooting for CLI mode.
+- `scripts/image_gen.py`: fallback-only CLI implementation. Do not load or use it unless the user explicitly chooses CLI mode or explicitly confirms a transparent request's true CLI transparency fallback.
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: local post-processing helper for built-in transparent-image requests.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "ls -la course-assets/scenes || true && find course-assets/scenes -maxdepth 3 -type d | sort | sed -n '1,120p'" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short --branch && git rev-parse --show-toplevel && find . -maxdepth 3 -name AGENTS.md -print' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 110ms:
+course-assets/scenes
+course-assets/scenes/module-01
+course-assets/scenes/module-02
+course-assets/scenes/module-02-lesson2B
+course-assets/scenes/module-03
+course-assets/scenes/module-03-lesson3B
+course-assets/scenes/module-04
+course-assets/scenes/module-04-lesson4B
+course-assets/scenes/module-04-lesson4B/.reroll_tmp
+course-assets/scenes/module-04-lesson4B/rejected
+course-assets/scenes/module-05
+course-assets/scenes/module-05-lesson5B
+course-assets/scenes/module-05-lesson5B/_anchors
+course-assets/scenes/module-06
+course-assets/scenes/module-07
+course-assets/scenes/module-07-lesson7B
+course-assets/scenes/module-07-lesson7B/_anchors
+course-assets/scenes/module-07-lesson7B/_logs
+course-assets/scenes/module-07/_anchors
+course-assets/scenes/module-08
+course-assets/scenes/module-08/_anchors
+course-assets/scenes/module-09
+course-assets/scenes/module-09/_v1_nosed
+course-assets/scenes/module-09/_v2_noseless
+course-assets/scenes/module-09/_v3_rejected
+course-assets/scenes/module-09/_v4_terrifying
+course-assets/scenes/module-10
+course-assets/scenes/module-10/_logs
+course-assets/scenes/module-11
+course-assets/scenes/module-11/_rejected-first-pass-20260707
+course-assets/scenes/module-12
+course-assets/scenes/module-12/_anchors
+course-assets/scenes/module-13
+course-assets/scenes/module-13/_logs
+course-assets/scenes/module-13/_superseded
+course-assets/scenes/module-17
+course-assets/scenes/module-17/_logs
+course-assets/scenes/module-18-lesson18B
+course-assets/scenes/module-18-lesson18B/_logs
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 174ms:
+$HOME/Sites/BMH apps/BMH Institute
+./AGENTS.md
+
+hook: PostToolUse Completed
+codex
+The repo already has a long trail of GSD quick tasks for these course images, so I’m going to follow that pattern instead of inventing a new tracking shape. I’m also checking nearby Module 13 assets so the new file lands consistently with the current lesson naming.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' .planning/quick/260707-generate-m12-l12a-b11-offers-made/SUMMARY.md 2>/dev/null || true" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+completed: 2026-07-07
+branch: claude/course-production
+---
+
+# Generate m12 L12A b11 offers-made scene asset summary
+
+Generated `course-assets/scenes/module-12/m12_L12A_b11_offers-made.png`.
+
+## Notes
+
+- Used the built-in image generation workflow with the requested `gpt-image-2` style prompt and supplied style references.
+- Selected the clean flat-desk reroll source from `$HOME/.codex/generated_images/019f3b70-90b8-7e91-bce7-ed248d775e6e/ig_04ba6da98e2eab96016a4ca9e351c08195ae4263439e04c843.png`.
+- Resized the workspace PNG to 1600 x 900.
+- Flattened the workspace PNG to the five-color course palette so the background and fills are flat.
+- `course-assets/` is ignored by git, so the PNG is saved locally but not tracked by default.
+
+## Verification
+
+- `file course-assets/scenes/module-12/m12_L12A_b11_offers-made.png` reports PNG image data at 1600 x 900.
+- `sips -g format -g pixelWidth -g pixelHeight course-assets/scenes/module-12/m12_L12A_b11_offers-made.png` reports PNG, 1600 x 900.
+- PNG signature check reports `89504e470d0a1a0a`.
+- Local Sharp palette check reports 5 unique colors: `#62B3F3`, `#FFF7DE`, `#111111`, `#FFD310`, and `#FF7A00`.
+- Visual inspection confirms no people, no text, no labels, no numbers, no decorative filler, a flat front-facing desk, the blank lead packet folder, blank calculator, plain house photo card, blank offer sheet with pseudo-lines, and generous open blue space for overlays.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find .planning/quick/260707-generate-m12-l12a-b11-offers-made -maxdepth 2 -type f -print' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+.planning/quick/260707-generate-m12-l12a-b11-offers-made/SUMMARY.md
+.planning/quick/260707-generate-m12-l12a-b11-offers-made/PLAN.md
+
+exec
+/bin/zsh -lc "sed -n '1,220p' .planning/quick/260707-generate-m12-l12a-b11-offers-made/PLAN.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: in_progress
+created: 2026-07-07
+branch: claude/course-production
+---
+
+# Generate m12 L12A b11 offers-made scene asset
+
+## Goal
+
+Generate the requested course scene PNG at `course-assets/scenes/module-12/m12_L12A_b11_offers-made.png`.
+
+## Scope
+
+- Use the supplied BMH course doodle style references.
+- Create one PNG at 1600 x 900.
+- Show a clean acquisition-side offer desk scene with no people.
+- Include a blank lead packet folder entering from the left, a simple calculator, a property photo represented by a plain little house drawing with no labels, and one blank official offer sheet on the right with only generic pseudo-lines.
+- Leave generous open cornflower-blue space around the desk for later code-rendered counters.
+- Use flat sticker-sheet style, thick wobble black outlines, rounded simple shapes, and the locked course palette.
+- Avoid text, labels, numbers, logos, people, charts, speech bubbles, thought bubbles, ambient doodles, gradients, texture, shadows, lighting, and perspective depth.
+
+## Verification
+
+- Confirm the file exists at the requested path.
+- Confirm the file is PNG and 1600 x 900.
+- Confirm palette is flat and close to the locked course colors.
+- Visually inspect for no people, requested desk objects, no baked text or numbers, no decorative filler, and enough open blue margin for code overlays.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find course-assets/scenes/module-13 -maxdepth 2 -type f -print | sort' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-13/_logs/m13_L13A_b04_your-deal.png.log
+course-assets/scenes/module-13/_logs/m13_L13A_b10_attribution-pipeline.png.log
+course-assets/scenes/module-13/_logs/m13_L13A_b11_top-earners.png.log
+course-assets/scenes/module-13/_logs/m13_L13A_b12_money-table.png.log
+course-assets/scenes/module-13/_superseded/m13_L13A_b04_your-deal-v1-handoff.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b04_your-deal-v2-podium-one-person.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b10_attribution-pipeline-v1-superseded.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b11_top-earners-v1-desk.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b11_top-earners-v2-blank-square-plaques.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v1-table.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b12_money-table-v2-offbrand-eyes.png
+course-assets/scenes/module-13/m13_L13A_b04_your-deal.png
+course-assets/scenes/module-13/m13_L13A_b11_top-earners.png
+course-assets/scenes/module-13/m13_L13A_b12_money-table.png
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' docs/course-production/shotlists/module-13-lesson13A-scenecards.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+# Module 13 - Lesson 13A "Compensation Engine" scene cards (2026-07-07)
+
+Script: `lesson-13A-script-clean.txt` (locked master Slot 17, `Chapter 12 - FINAL.srt`, cues 1-13, verbatim). Format follows `scene-card-v2.md` with later guide/playbook overrides: Andrea voice speed stays `1.0`; all text is code-rendered via `Sticker`; no text is baked into generated stills.
+
+**Gate:** text storyboard only. Generate no audio, stills, avatar clips, animations, or render until Jarrad approves this storyboard.
+
+## Source cleanup
+- SRT cue numbers, timestamps, blank lines, and code fences stripped.
+- No stage directions were present.
+- Andrea narrator wording is unchanged.
+- Diff artifact: `lesson-13A-source-clean-vs-master.diff`.
+- Master deviations: **none**. The closing meaning is preserved verbatim: this tees up Slot 18, Operator Playbook / the real day workflow.
+
+## Scope call
+This is one cohesive lesson. I do **not** recommend an A/B split because the compensation structure builds in one sequence: base/ramp -> commissions -> appointment bonus -> worked examples -> attribution -> daily behaviors -> next-slot real-day workflow.
+
+## Cast and visual rules
+- Narrator = Andrea: cafe hero bookends (`b2cd0545...`) on b01 and b13. Opening beat carries `<BmhBadge/>` lower-right.
+- Compensation visuals are primarily code-rendered tiers, counters, bonus math, payout examples, ledgers, and attribution timelines.
+- Generated stills are reserved for human/context beats: race-podium winner metaphor, top-performer awards wall, and comedic chase warning.
+- Remotion owns all dollar amounts, tier labels, formulas, counters, thresholds, and next-lesson cards.
+- Do not generate or bake text into stills. Every number and label appears later via `Sticker`/code overlays.
+- Seedance only animates approved illustrated scene beats later; pure math/dashboard beats stay code-driven.
+- Transitions later: slide/camera-travel between teaching beats; fade only into b01 and out of b13.
+
+## Storyboard
+
+| Beat | Cue | Andrea mode | Transcript context | Visual idea | Motion / assembly plan | Text via Sticker/code (trigger) |
+|---|---|---|---|---|---|---|
+| b01_money_connection | 1 | hero-cafe + BMH badge | "let's talk about money" / "how your performance turns into a paycheck" / "connection between your daily work and what you earn" | Cafe Andrea opener on cornflower blue. A code-rendered line draws from a daily-work icon cluster to a paycheck card as she frames the lesson. | HeyGen cafe hero later; BMH badge on opener; code pay-line appears behind/alongside Andrea. | `PERFORMANCE -> PAYCHECK` (performance), `NO MYSTERY` (mystery) |
+| b02_three_pieces | 2 | voice-only | "three pieces to your compensation" / "Base pay" / "commissions" / "bonuses" | Pure code three-part compensation engine: three large white cards lock together into one machine. No generated still. | Remotion cards spring in one at a time, then connect with thin black lines. | `3 PIECES` (three), `BASE PAY` (Base), `COMMISSIONS` (commissions), `BONUSES` (bonuses) |
+| b03_ramp_to_commission | 3 | voice-only | "hourly base rate while you're ramping up" / "pipeline is still developing" / "KPIs for 30 or more consecutive days" / "graduate to the full commission structure" | Code ramp/bridge: base-pay safety pad on the left, 30-day KPI streak counter in the middle, full commission structure gate on the right. | Remotion ramp line fills over 30 tick marks; gate opens on "transition point." | `RAMP PERIOD` (ramping), `30+ KPI DAYS` (30), `FULL COMMISSION` (full commission), `TRANSITION POINT` (transition) |
+| b04_your_deal | 4 | voice-only | "person who sourced and qualified the lead" / "follow-up" / "relationship" / "clean, complete package" / "acquisition team closed it" / "That's your deal" | Doodle still: BMH rep with headset stands proudly on the tallest winner podium after the race, wearing several gold medals around her neck. Two cast-board-inspired competitors stand on shorter second- and third-place platforms, disappointed by posture and tiny downturned mouths. No baked numbers or names. | Generate still after approval; Seedance candidate for subtle proud winner idle. Remotion owns podium labels and deal/pipeline callouts. | `THAT'S YOUR DEAL` (your deal), `WINNING DEAL` (closed), `1ST / 2ND / 3RD` later in code only |
+| b05_commission_tiers | 5 | voice-only | "one or two deals" / "$500 per deal" / "Three or four" / "$750 per deal" / "Five or more" / "$1,000 per deal" / "all your deals for the month pay at the highest tier you reached" | Pure code tier ladder with three deal-count bands. The active tier climbs from 1-2 to 3-4 to 5+, then rewrites all five deal chips at the top tier. | Remotion ladder/counters. Deal chips animate upward; final formula shows 5 x $1,000 = $5,000. | `TIER 1: $500` (one or two), `TIER 2: $750` (Three), `TIER 3: $1,000` (Five), `HIGHEST TIER PAYS ALL DEALS` (highest tier), `5 x $1,000 = $5,000` (five grand) |
+| b06_appointment_bonus | 6 | voice-only | "Every 25 qualified appointments" / "$250 bonus" / "seller actually shows up" / "Not when you schedule it" / "50 kept appointments" / "$500" | Pure code kept-appointment milestone track. Scheduled appointments stay gray; showed appointments turn into checked chips; every 25 checked chips releases a $250 bonus badge. | Remotion counter and milestone track. The "schedule" chip does not count; "show" chip does. | `KEPT APPOINTMENTS COUNT` (actually shows), `25 KEPT = $250` (25), `50 KEPT = $500` (50) |
+| b07_example_tier_two | 7 | voice-only | "30 kept appointments" / "3 deals that closed" / "Tier 2" / "$750 per deal" / "$2,250 in commissions" / "Total bonus and commission... $2,500" | Pure code worked example board. Left column inputs: 30 kept appointments + 3 closed deals. Right column math: appointment bonus + Tier 2 commissions = total above base. | Remotion calculator board with row-by-row reveal; base remains a separate gray placeholder because master says rate varies. | `30 KEPT APPTS` (30), `3 CLOSED DEALS` (3 deals), `3 x $750 = $2,250` ($2,250), `$250 + $2,250 = $2,500` ($2,500) |
+| b08_example_tier_three | 8 | voice-only | "40 appointments" / "5 deals" / "one bonus" / "Tier 3" / "$5,000 in commissions" / "$5,250" / "if you reach 50 appointments" | Pure code improvement board. The same calculator steps up: 40 appointments / 5 deals, Tier 3 active, 50-appointment bonus threshold visible but not filled yet. | Remotion before/after comparison from b07 to b08; optional +$250 chip appears at the 50 threshold. | `40 APPTS + 5 DEALS` (40), `TIER 3` (Tier 3), `5 x $1,000 = $5,000` ($5,000), `TOTAL: $5,250` ($5,250), `50 APPTS = +$250` (50) |
+| b09_direct_math_no_cap | 9 | voice-only | "The math is direct" / "better you get at follow-up and qualification" / "more you make" / "no cap on commissions" | Pure code performance-to-pay curve. Follow-up and qualification sliders push a commission line upward through an open top border. | Remotion curve and sliders; the ceiling line lifts away on "no cap." | `THE MATH IS DIRECT` (direct), `FOLLOW-UP + QUALIFICATION` (follow-up), `NO CAP` (no cap) |
+| b10_attribution_pipeline | 10 | hero-solo / Andrea digital-avatar | "worked the lead" / "completed the handoff" / "signed contract and completed transaction" / "three months ago finally closes" / "pipeline stays with you" | Andrea digital-avatar speaking beat on cornflower blue, with simple code-rendered attribution/timeline labels around her. No generated still. | HeyGen/Andrea avatar later; Remotion owns the attribution timeline, 3-month marker, and credit-stays labels. No Seedance. | `CREDIT STAYS WITH YOU` (still get credit), `WORKED -> HANDOFF -> CLOSED` (worked), `3 MONTHS LATER` (three months) |
+| b11_what_top_earners_do | 11 | voice-only | "thorough, consistent" / "don't let good leads die from neglect" / "quality conversations" / "consistent follow-up" / "clean handoffs" / "acquisition team can close efficiently" | Doodle still: BMH rep with headset stands proudly in front of a wall of actual award plaques: shield plaques, framed certificate plaques, and ribbon-top plaques. Latest Jarrad override: plaques may bake the exact phrase "EMPLOYEE OF THE MONTH" so they read as awards, not random squares. | Generate still after approval; Seedance candidate for subtle proud stance only; no extra characters or ambient marks. | `THOROUGH` (thorough), `CONSISTENT` (consistent), `CLEAN HANDOFFS` (clean handoffs) |
+| b12_money_on_table | 12 | voice-only | "Every lead you let slip" / "potential commission you left on the table" / "Every thorough handoff" / "money you're putting in your own pocket" / "It's that direct" | Doodle still: comedic cautionary image of the BMH rep chasing a frightened seller, but faces must stay cast-board consistent: tiny dot eyes, centered two-stroke nose, tiny simple mouth. Emotion should come from posture, not off-brand eye/mouth shapes. | Generate still after approval; likely static or very subtle Seedance chase motion. Remotion adds the warning/commission labels. | `LEFT ON THE TABLE` (left on the table), `DON'T LET LEADS SLIP` (let slip), `IT'S THAT DIRECT` (direct) |
+| b13_operator_playbook_tease | 13 | hero-cafe | "what a real day actually looks like here" / "how you run your day" / "team stays in sync" / "where you can go from here" | Cafe Andrea close on cornflower blue. Code-rendered next-slot card tees up Operator Playbook / real-day workflow. | HeyGen cafe hero later; fade out only at close. | `NEXT: OPERATOR PLAYBOOK` (next up), `REAL DAY WORKFLOW` (real day), `RUN YOUR DAY + STAY IN SYNC` (stays in sync) |
+
+## Planned stills after approval
+- `m13_L13A_b04_your-deal.png` - winner podium metaphor: headset rep on first-place platform with gold medals; disappointed second/third-place cast-board-inspired competitors on shorter platforms; podium labels code-rendered later.
+- `m13_L13A_b11_top-earners.png` - proud headset rep in front of a wall of real-looking award plaques that say "EMPLOYEE OF THE MONTH" per latest Jarrad override.
+- `m13_L13A_b12_money-table.png` - comedic chase scene: determined rep chasing frightened seller with cast-board-consistent dot eyes and tiny mouths; no violence.
+
+## Pure code beats after approval
+- b02: three-part compensation engine.
+- b03: ramp-to-commission bridge with 30-day KPI streak.
+- b05: commission tier ladder and all-deals-at-highest-tier rule.
+- b06: kept-appointment bonus milestone track.
+- b07: Tier 2 worked payout example.
+- b08: Tier 3 worked payout example plus optional 50-appointment threshold.
+- b09: performance-to-pay curve with no-cap ceiling.
+- b10: Andrea digital-avatar attribution timeline labels; no generated still.
+
+## Andrea clips after approval
+- b01 cafe Andrea opening, with BMH badge.
+- b10 Andrea digital-avatar speaking beat for attribution/pipeline-stays-with-you.
+- b13 cafe Andrea closing.
+
+## Animation candidates after still approval
+- b04 winner podium: subtle proud winner idle; keep medal/podium composition stable.
+- b11 awards wall: subtle proud stance only; avoid extra characters, ambient marks, or readable plaque text.
+- b12 chase warning: subtle chase motion only if it stays cartoon-safe and readable; still fallback is acceptable.
+
+All animation must use Seedance triple-clamp with style refs after approval. If Higgsfield/MCP is unavailable, use static stills with code push-in and flag the fallback.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+The requested file already exists, and Module 13’s storyboard confirms this exact beat is the winner-podium metaphor. Since you named the same destination, I’m treating this as an intentional replacement and will preserve the older state through the existing `_superseded` pattern if needed.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' course-assets/scenes/module-13/_logs/m13_L13A_b04_your-deal.png.log" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-13/m13_L13A_b04_your-deal.png && sips -g format -g pixelWidth -g pixelHeight course-assets/scenes/module-13/m13_L13A_b04_your-deal.png' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "find course-assets/scenes/module-13/_superseded -maxdepth 1 -type f -name 'm13_L13A_b04_your-deal*' -print | sort" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "find $HOME/.codex/generated_images -maxdepth 2 -type f -name '*.png' -mtime -2 -print 2>/dev/null | tail -30" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 204ms:
+Reading prompt from stdin...
+2026-07-07T08:27:58.806380Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f3bb0-e751-7c01-bd9d-295a5f49ec92
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-13/m13_L13A_b04_your-deal.png (PNG, 1600x900). Match the attached style references and cast-board character style exactly. COMPOSITION: Winner podium scene on a plain cornflower-blue field, like after a race. CENTER: one BMH follow-up representative woman inspired by PRIYA on the cast-board: black hair pulled into a back ponytail, orange/yellow headband, simple orange phone headset, yellow top, cream pants. She stands proudly on the tallest center winner platform and wears several round gold/yellow medals around her neck on simple orange ribbons. LEFT and RIGHT: two shorter podium platforms beside her, one medium height and one low height. Put one cast-board-inspired competitor character standing on each shorter platform, both visibly disappointed by posture only: slumped shoulders, arms crossed or hands down, tiny dot eyes, tiny downturned mouth. They must not wear headsets and must not look like clones of the winner. NO numerals, no 1/2/3, no trophy text, no race banners, no names. Exactly three people total. Keep upper left and lower center open for later code labels. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow, orange, cream, white, and black. No gradients, no texture, no shadows, no lighting, no perspective, no skin-tone shading. Faces must match the cast-board: flat white/cream fill, tiny black dot eyes only, tiny centered two-stroke/comma nose, and a very small simple mouth. Do not use ring eyes, side-eye eyeballs, large open mouths, teeth, eyebrows, sunglasses, or detailed expressions. Show emotion mainly through body posture, not altered facial anatomy. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, motion marks, icons, random props, or decorative clutter. No text, letters, words, numbers, symbols, dollar signs, labels, captions, screens with writing, or readable paperwork anywhere unless the composition explicitly requests the exact plaque phrase EMPLOYEE OF THE MONTH. Leave clean open cornflower-blue space for code-rendered Sticker overlays. 16:9 composition, 1600x900 PNG.
+
+2026-07-07T08:27:59.065175Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-07T08:27:59.079027Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-07T08:27:59.124370Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-07T08:27:59.318116Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-07T08:28:00.564552Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’ll use the image generation skill here because the request is an asset creation task, then I’ll save the output into the requested course asset path and verify the file shape.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,220p' \""'$HOME/BMH-OS/_Active.md"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' \""'$HOME/BMH-OS/CLAUDE.md"' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+
+ succeeded in 168ms:
+$HOME/.codex/generated_images/019f3aeb-6692-7842-a3c4-21064474068a/ig_078e499dc3a0a175016a4c865577e081938eb17680806776d4.png
+$HOME/.codex/generated_images/019f3383-7f61-7401-907b-2a4d90614b04/ig_096db6438d7060c8016a4aa15d652081909ebc78c6d15cba57.png
+$HOME/.codex/generated_images/019f3b96-82ba-7fd2-8ccd-68dfbfba8e01/ig_09501ab6407436e5016a4cb25a8ad88197bb63912ce6f5764d.png
+$HOME/.codex/generated_images/019f3b70-90e5-7680-9dba-596f0ff41025/ig_0e774dab722b6940016a4ca96acf888197966222fa781ca4bc.png
+$HOME/.codex/generated_images/019f3b70-90e5-7680-9dba-596f0ff41025/ig_0e774dab722b6940016a4ca89f5698819798fb1d116b63b06b.png
+$HOME/.codex/generated_images/019f3448-8ac4-7ce3-9b7c-b282b1f0e721/ig_05b075136f43007b016a4ad3738ac48197bfce48c75a6a11d2.png
+$HOME/.codex/generated_images/019f3869-7d16-7231-ab2a-bdd4de18b014/ig_06a83e780aae0887016a4be1f358dc8194b8a45869595265b7.png
+$HOME/.codex/generated_images/019f3869-7d16-7231-ab2a-bdd4de18b014/ig_06a83e780aae0887016a4be23437d08194a60c0816f89cc205.png
+$HOME/.codex/generated_images/019f3b84-db08-7020-b98a-cc2dc343872c/ig_0511923548e6ecf8016a4cae15d18481939cd7d4486a50f41b.png
+$HOME/.codex/generated_images/019f3b84-db08-7020-b98a-cc2dc343872c/ig_046df9fded161883016a4cadba97b08197bcf8e8b1502ae51d.png
+$HOME/.codex/generated_images/019f3392-fd3e-7e60-b42d-540e67e90b56/ig_07c1c968fa739074016a4aa54144b08195880bf2642d897fa4.png
+$HOME/.codex/generated_images/019f3384-b1c4-7413-8049-bb6ee38a3a56/ig_07bf8f14ad802ac5016a4aa1b95e348196bf274c766ea06efa.png
+$HOME/.codex/generated_images/019f3384-b1c4-7413-8049-bb6ee38a3a56/ig_07bf8f14ad802ac5016a4aa1fe4c4081969442b841e74bd58e.png
+$HOME/.codex/generated_images/019f3b7b-90d6-7ba3-8786-e53ff47cf5ce/ig_04471e69935e5a07016a4cab387284819cbc072ec021c210c0.png
+$HOME/.codex/generated_images/019f3b70-c03e-7f90-84d8-df5d1d36491f/ig_02e19bc0f1132f71016a4ca8af0eec81959e45e5fc600c71dc.png
+$HOME/.codex/generated_images/019f388a-dd11-78b3-ac86-e7597760acc6/ig_03e636d46036374c016a4beaa9de588197822097ac6c6a1314.png
+$HOME/.codex/generated_images/019f33d1-fd84-7682-9c9f-fbf17f6d24c4/ig_0dea4284cc7849fc016a4ab5531450819391d5e17c59e1ba14.png
+$HOME/.codex/generated_images/019f38be-4477-71d1-b3d4-fda3ac0efeb0/ig_068c631c6811e6c4016a4bf799b79c819083c26fee599de523.png
+$HOME/.codex/generated_images/019f38be-4477-71d1-b3d4-fda3ac0efeb0/ig_068c631c6811e6c4016a4bf7d000248190b001229a855e0964.png
+$HOME/.codex/generated_images/019f3384-b1cb-7f62-b6c4-ca50083dcfb3/ig_01a339dfd2586077016a4aa18471d88197bed0dd2904fbeee7.png
+$HOME/.codex/generated_images/019f3445-e487-7270-b8c7-bb4790dca6d1/ig_0ad32a4e814424e2016a4ad2d3951481908831422fb5e200be.png
+$HOME/.codex/generated_images/019f3ac5-f769-7e90-adad-8b7c4151d7b0/ig_0d01ac778b0fea83016a4c7c76ac2881979b35b1a997daeca3.png
+$HOME/.codex/generated_images/019f343f-62ef-75c2-959b-b6d10861e7cf/ig_063ba7fe38a663ac016a4ad11a5ca881968fe82c25b6b33665.png
+$HOME/.codex/generated_images/019f38cf-2634-7032-88d3-565a78174062/ig_02d31bc23f74ff93016a4bfbec2898819582339f74599c4623.png
+$HOME/.codex/generated_images/019f3384-b1c1-7af1-8b9b-5e29bf6b493c/ig_04e83c4f8542fca1016a4aa1f9683c819081e020cbfdd3ab18.png
+$HOME/.codex/generated_images/019f3384-b1c1-7af1-8b9b-5e29bf6b493c/ig_04e83c4f8542fca1016a4aa1b358b88190b6d5821ac4769926.png
+$HOME/.codex/generated_images/019f3385-4a7e-78a1-8c8b-7fd32f3b3aec/ig_09f706f71338ce74016a4aa1df51ac8196aae5cd0c4d7aa815.png
+$HOME/.codex/generated_images/019f3385-2cc6-7b70-bfec-5d3762917c66/ig_0dc826f067a3a1dc016a4aa174a67c8194b5eec80f35f8148a.png
+$HOME/.codex/generated_images/019f3445-da13-7380-a277-9224e546aec2/ig_0b9b780d8e506abd016a4ad2d3b9548193bd0a7a606957c248.png
+$HOME/.codex/generated_images/019f3448-5576-7d71-96a5-9d9b3845bf60/ig_0cddf52f1b61dd11016a4ad3949ae08197877b8bd7248f67fa.png
+
+ succeeded in 204ms:
+course-assets/scenes/module-13/_superseded/m13_L13A_b04_your-deal-v1-handoff.png
+course-assets/scenes/module-13/_superseded/m13_L13A_b04_your-deal-v2-podium-one-person.png
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 475ms:
+course-assets/scenes/module-13/m13_L13A_b04_your-deal.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+$HOME/Sites/BMH apps/BMH Institute/course-assets/scenes/module-13/m13_L13A_b04_your-deal.png
+  format: png
+  pixelWidth: 1600
+  pixelHeight: 900
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+Next I’m creating the minimal GSD quick record for this asset, then I’ll run the image generation. Verification will be concrete: file type, dimensions, palette, and a visual check for the three-person podium constraints.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md
+diff --git a/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md b/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..906cb4034d1a0283f02a89c14ef83a7ef06208e8
+--- /dev/null
++++ b/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m13 L13A b04 your-deal scene asset
++
++## Goal
++
++Generate the requested course scene PNG at `course-assets/scenes/module-13/m13_L13A_b04_your-deal.png`.
++
++## Scope
++
++- Use the supplied BMH course doodle style references and cast-board character rules.
++- Create one PNG at 1600 x 900.
++- Show a winner podium scene on a clean cornflower-blue field.
++- Put one Priya-inspired BMH follow-up representative on the tallest center platform with headset and gold/yellow medals.
++- Put exactly two disappointed competitor characters on the shorter side platforms.
++- Keep upper left and lower center open for later code labels.
++- Avoid baked text, numerals, banners, names, symbols, ambient doodles, props, shadows, texture, gradients, and extra people.
++- Use only the locked course palette.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is PNG and 1600 x 900.
++- Confirm the palette is flat and close to the locked course colors.
++- Visually inspect for exactly three people, center headset winner with medals, two non-headset competitors, open upper-left and lower-center space, and no baked text or decorative clutter.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md b/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..906cb4034d1a0283f02a89c14ef83a7ef06208e8
+--- /dev/null
++++ b/.planning/quick/260707-generate-m13-l13a-b04-your-deal/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-07
++branch: claude/course-production
++---
++
++# Generate m13 L13A b04 your-deal scene asset
++
++## Goal
++
++Generate the requested course scene PNG at `course-assets/scenes/module-13/m13_L13A_b04_your-deal.png`.
++
++## Scope
++
++- Use the supplied BMH course doodle style references and cast-board character rules.
++- Create one PNG at 1600 x 900.
++- Show a winner podium scene on a clean cornflower-blue field.
++- Put one Priya-inspired BMH follow-up representative on the tallest center platform with headset and gold/yellow medals.
++- Put exactly two disappointed competitor characters on the shorter side platforms.
++- Keep upper left and lower center open for later code labels.
++- Avoid baked text, numerals, banners, names, symbols, ambient doodles, props, shadows, texture, gradients, and extra people.
++- Use only the locked course palette.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is PNG and 1600 x 900.
++- Confirm the palette is flat and close to the locked course colors.
++- Visually inspect for exactly three people, center headset winner with medals, two non-headset competitors, open upper-left and lower-center space, and no baked text or decorative clutter.
+

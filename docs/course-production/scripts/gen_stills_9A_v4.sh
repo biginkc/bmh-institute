@@ -2,7 +2,7 @@
 # Lesson 9A v4 — fix bench Andrea (skeletal→canonical full face) + b08 mover (man, real cardboard).
 # zsh gen_stills_9A_v4.sh <bench|mover>
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 D="docs/design"
 CAFE="course-assets/scenes/module-01/andrea_cafe.png"
 OUT="course-assets/scenes/module-09"

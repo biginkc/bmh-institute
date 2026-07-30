@@ -1,7 +1,7 @@
 #!/bin/zsh
 # Lesson 18B stills — run one lane per image or `all`.
 set -u
-cd "${BMH_INSTITUTE_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+cd "${BMH_INSTITUTE_ROOT:-$(cd "${0:A:h}/../../.." && pwd)}"
 
 D="docs/design"
 OUT="course-assets/scenes/module-18-lesson18B"

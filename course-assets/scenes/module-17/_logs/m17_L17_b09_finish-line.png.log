@@ -1,0 +1,1880 @@
+Reading prompt from stdin...
+2026-07-10T00:30:34.955076Z ERROR codex_core::session::session: failed to load skill $HOME/.agents/skills/heygen-com-skills/platforms/nanoclaw/heygen/SKILL.md: missing YAML frontmatter delimited by ---
+OpenAI Codex v0.142.5
+--------
+workdir: $HOME/Sites/BMH apps/BMH Institute
+model: gpt-5.5
+provider: openai
+approval: never
+sandbox: workspace-write [workdir, /tmp, $TMPDIR]
+reasoning effort: xhigh
+reasoning summaries: none
+session id: 019f496e-ec33-7122-8979-a656eb81bef3
+--------
+user
+Generate one image with gpt-image-2 and save it to course-assets/scenes/module-17/m17_L17_b09_finish-line.png (PNG, 1600x900). Match the attached BMH course doodle references exactly. PRIYA IDENTITY LOCK: the attached left-reference screenshot and crop are the positive source of truth. Keep Priya identical to that accepted character: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, pure flat white face and hands, tiny black dot eyes, tiny curved cast-board nose, simple friendly smile, thick wobbly black outlines, rounded simple limbs. Do not turn her into a generic computer-desk worker. Do not change her face, nose, mouth, hairstyle, headset, proportions, or outfit. No large gray monitor, no laptop-dominant workstation, no black corporate desk scene, no portrait bubble, no second person, no extra face. COMPOSITION: Priya joyfully breaking the tape at a race finish line, mid-stride, chest through a cream ribbon tape that is snapping into two pieces, arms raised in calm celebration. The finish line is two simple yellow posts holding the breaking tape. She still wears her orange headset — she is the same BMH rep, just crossing a finish line. Exactly one person: no other runners, no crowd, no podium, no medals, no trophies, no confetti, no rankings, no numbers on a bib — her top stays plain yellow. Simple flat ground line only. Leave clean bottom-center blue space for code-rendered Sticker text. STYLE: flat sticker-sheet doodle illustration, thick black hand-drawn outlines with a slight wobble, rounded corners, flat fills only in the locked palette: cornflower-blue #62b3f3 background, yellow, orange, cream, white, and black. No gradients, no texture, no shadows, no lighting, no perspective, no skin-tone shading. Faces use flat white/cream fill, tiny dot eyes, small subtle curved cast-board nose, simple mouth. Cylindrical limbs, strong simple silhouettes, confidently imperfect hand-drawn. No ambient doodles: no hearts, sparkles, notes, thought bubbles, motion marks, icons, random props, or decorative clutter. No text, letters, words, numbers, symbols, dollar signs, labels, captions, screens with writing, or readable paperwork anywhere. Leave clean open cornflower-blue space for code-rendered Sticker overlays. 16:9 composition, 1600x900 PNG.
+
+2026-07-10T00:30:35.148318Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer resource_metadata=\"https://api.dx.deepgram.com/.well-known/oauth-protected-resource/kapa/mcp\"" })
+2026-07-10T00:30:35.183775Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_token\", error_description=\"No authorization provided\", resource_metadata=\"https://mcp.vercel.com/.well-known/oauth-protected-resource\"" })
+2026-07-10T00:30:35.197388Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when AuthRequired(AuthRequiredError { www_authenticate_header: "Bearer error=\"invalid_request\", error_description=\"No access token was provided in this request\", resource_metadata=\"https://api.githubcopilot.com/.well-known/oauth-protected-resource/mcp/\"" })
+2026-07-10T00:30:35.380494Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+2026-07-10T00:30:35.496051Z ERROR rmcp::transport::worker: worker quit with fatal: Transport channel closed, when Auth(AuthorizationRequired)
+warning: Skill descriptions were shortened to fit the 2% skills context budget. Codex can still see every skill, but some descriptions are shorter. Disable unused skills or plugins to leave more room for the rest.
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: SessionStart Completed
+hook: UserPromptSubmit
+hook: UserPromptSubmit Completed
+codex
+I’m going to use the image generation skill because this is an asset-generation task, then I’ll place the result at the requested module path and verify the file properties.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'rg -n "Priya|module-17|lesson17|image generation|course still|Sticker" $HOME/.codex/memories/MEMORY.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+24:- The active Lesson 17 source set was updated in `docs/course-production/shotlists/lesson-17-script-clean.txt`, `docs/course-production/shotlists/module-17-lesson17-scenecards.md`, `docs/course-production/scripts/gen_audio_17.py`, and `docs/course-production/scripts/gen_stills_17.sh` [Task 1]
+94:- The final approved Lesson 11A cut was `course-assets/review-lesson11A/LESSON-11A-v2.mp4` with 16 beats, 1600x900 H.264/AAC, yuv420p limited BT.709, loudness `-17.2 LUFS`; the approved visual direction reused the Lesson 9A park-bench Andrea for b01/b08/b15/b16 plus Priya/seller trust beats and the acquisition-team scene set [Task 1]
+255:- extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md, updated_at=2026-07-07T11:23:27-05:00, control-frame guardrail for BMH course still and animation source selection)
+
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+name: "imagegen"
+description: "Generate or edit raster images when the task benefits from AI-created bitmap visuals such as photos, illustrations, textures, sprites, mockups, or transparent-background cutouts. Use when Codex should create a brand-new image, transform an existing image, or derive visual variants from references, and the output should be a bitmap asset rather than repo-native code or vector. Do not use when the task is better handled by editing existing SVG/vector/code-native assets, extending an established icon or logo system, or building the visual directly in HTML/CSS/canvas."
+---
+
+# Image Generation Skill
+
+Generates or edits images for the current project (for example website assets, game assets, UI mockups, product mockups, wireframes, logo design, photorealistic images, or infographics).
+
+## Top-level modes and rules
+
+This skill has exactly two top-level modes:
+
+- **Default built-in tool mode (preferred):** built-in `image_gen` tool for normal image generation, editing, and simple transparent-image requests. Does not require `OPENAI_API_KEY`.
+- **Fallback CLI mode:** `scripts/image_gen.py` CLI. Use when the user explicitly asks for the CLI/API/model path, or after the user explicitly confirms a true model-native transparency fallback with `gpt-image-1.5`. Requires `OPENAI_API_KEY`.
+
+Within CLI fallback, the CLI exposes three subcommands:
+
+- `generate`
+- `edit`
+- `generate-batch`
+
+Rules:
+- Use the built-in `image_gen` tool by default for normal image generation and editing requests.
+- Do not switch to CLI fallback for ordinary quality, size, or file-path control.
+- If the user explicitly asks for a transparent image/background, stay on built-in `image_gen` first: prompt for a flat removable chroma-key background, then remove it locally with the installed helper at `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`.
+- Never silently switch from built-in `image_gen` or CLI `gpt-image-2` to CLI `gpt-image-1.5`. Treat this as a model/path downgrade and ask the user before doing it, unless the user has already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback.
+- If a transparent request appears too complex for clean chroma-key removal, asks for true/native transparency, or local removal fails validation, explain that true transparency requires CLI `gpt-image-1.5 --background transparent --output-format png` because `gpt-image-2` does not support `background=transparent`, then ask whether to proceed. Run the CLI fallback only after the user confirms.
+- The word `batch` by itself does not mean CLI fallback. If the user asks for many assets or says to batch-generate assets without explicitly asking for CLI/API/model controls, stay on the built-in path and issue one built-in call per requested asset or variant.
+- If the built-in tool fails or is unavailable, tell the user the CLI fallback exists and that it requires `OPENAI_API_KEY`. Proceed only if the user explicitly asks for that fallback.
+- If the user explicitly asks for CLI mode, use the bundled `scripts/image_gen.py` workflow. Do not create one-off SDK runners.
+- Never modify `scripts/image_gen.py`. If something is missing, ask the user before doing anything else.
+
+Built-in save-path policy:
+- In built-in tool mode, Codex saves generated images under `$CODEX_HOME/*` by default.
+- Do not describe or rely on OS temp as the default built-in destination.
+- Do not describe or rely on a destination-path argument (if any) on the built-in `image_gen` tool. If a specific location is needed, generate first and then move or copy the selected output from `$CODEX_HOME/generated_images/...`.
+- Save-path precedence in built-in mode:
+  1. If the user names a destination, move or copy the selected output there.
+  2. If the image is meant for the current project, move or copy the final selected image into the workspace before finishing.
+  3. If the image is only for preview or brainstorming, render it inline; the underlying file can remain at the default `$CODEX_HOME/*` path.
+- Never leave a project-referenced asset only at the default `$CODEX_HOME/*` path.
+- Do not overwrite an existing asset unless the user explicitly asked for replacement; otherwise create a sibling versioned filename such as `hero-v2.png` or `item-icon-edited.png`.
+
+Shared prompt guidance for both modes lives in `references/prompting.md` and `references/sample-prompts.md`.
+
+Fallback-only docs/resources for CLI mode:
+- `references/cli.md`
+- `references/image-api.md`
+- `references/codex-network.md`
+- `scripts/image_gen.py`
+
+Local post-processing helper:
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: removes a flat chroma-key background from a generated image and writes a PNG/WebP with alpha. Prefer auto-key sampling, soft matte, and despill for antialiased edges.
+
+## When to use
+- Generate a new image (concept art, product shot, cover, website hero)
+- Generate a new image using one or more reference images for style, composition, or mood
+- Edit an existing image (inpainting, lighting or weather transformations, background replacement, object removal, compositing, transparent background)
+- Produce many assets or variants for one task
+
+## When not to use
+- Extending or matching an existing SVG/vector icon set, logo system, or illustration library inside the repo
+- Creating simple shapes, diagrams, wireframes, or icons that are better produced directly in SVG, HTML/CSS, or canvas
+- Making a small project-local asset edit when the source file already exists in an editable native format
+- Any task where the user clearly wants deterministic code-native output instead of a generated bitmap
+
+## Decision tree
+
+Think about two separate questions:
+
+1. **Intent:** is this a new image or an edit of an existing image?
+2. **Execution strategy:** is this one asset or many assets/variants?
+
+Intent:
+- If the user wants to modify an existing image while preserving parts of it, treat the request as **edit**.
+- If the user provides images only as references for style, composition, mood, or subject guidance, treat the request as **generate**.
+- If the user provides no images, treat the request as **generate**.
+
+Built-in edit semantics:
+- Built-in edit mode is for images already visible in the conversation context, such as attached images or images generated earlier in the thread.
+- If the user wants to edit a local image file with the built-in tool, first load it with built-in `view_image` tool so the image is visible in the conversation context, then proceed with the built-in edit flow.
+- Do not promise arbitrary filesystem-path editing through the built-in tool.
+- If a local file still needs direct file-path control, masks, or other explicit CLI-only parameters, use the explicit CLI fallback only when the user asks for it.
+- For edits, preserve invariants aggressively and save non-destructively by default.
+
+Execution strategy:
+- In the built-in default path, produce many assets or variants by issuing one `image_gen` call per requested asset or variant.
+- In the CLI fallback path, use the CLI `generate-batch` subcommand only when the user explicitly chose CLI mode and needs many prompts/assets.
+- For many distinct assets, do not use `n` as a substitute for separate prompts. `n` is for variants of one prompt; distinct assets need distinct built-in calls or distinct CLI `generate-batch` jobs.
+
+Assume the user wants a new image unless they clearly ask to change an existing one.
+
+## Workflow
+1. Decide the top-level mode: built-in by default, including simple transparent-output requests; fallback CLI only if explicitly requested or after the user explicitly confirms a transparent-output fallback.
+2. Decide the intent: `generate` or `edit`.
+3. Decide whether the output is preview-only or meant to be consumed by the current project.
+4. Decide the execution strategy: single asset vs repeated built-in calls vs CLI `generate-batch`.
+5. Collect inputs up front: prompt(s), exact text (verbatim), constraints/avoid list, and any input images.
+6. For every input image, label its role explicitly:
+   - reference image
+   - edit target
+   - supporting insert/style/compositing input
+7. If the edit target is only on the local filesystem and you are staying on the built-in path, inspect it with `view_image` first so the image is available in conversation context.
+8. If the user asked for a photo, illustration, sprite, product image, banner, or other explicitly raster-style asset, use `image_gen` rather than substituting SVG/HTML/CSS placeholders. If the request is for an icon, logo, or UI graphic that should match existing repo-native SVG/vector/code assets, prefer editing those directly instead.
+9. Augment the prompt based on specificity:
+   - If the user's prompt is already specific and detailed, normalize it into a clear spec without adding creative requirements.
+   - If the user's prompt is generic, add tasteful augmentation only when it materially improves output quality.
+10. Use the built-in `image_gen` tool by default.
+11. For transparent-output requests, follow the transparent image guidance below: generate with built-in `image_gen` on a flat chroma-key background, copy the selected output into the workspace or `tmp/imagegen/`, run the installed `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py` helper, and validate the alpha result before using it. If this path looks unsuitable or fails, ask before switching to CLI `gpt-image-1.5`.
+12. Inspect outputs and validate: subject, style, composition, text accuracy, and invariants/avoid items.
+13. Iterate with a single targeted change, then re-check.
+14. For preview-only work, render the image inline; the underlying file may remain at the default `$CODEX_HOME/generated_images/...` path.
+15. For project-bound work, move or copy the selected artifact into the workspace and update any consuming code or references. Never leave a project-referenced asset only at the default `$CODEX_HOME/generated_images/...` path.
+16. For batches or multi-asset requests, persist every requested deliverable final in the workspace unless the user explicitly asked to keep outputs preview-only. Discarded variants do not need to be kept unless requested.
+17. If the user explicitly chooses or confirms the CLI fallback, then use the fallback-only docs for model, quality, size, `input_fidelity`, masks, output format, output paths, and network setup.
+18. Always report the final saved path(s) for any workspace-bound asset(s), plus the final prompt or prompt set and whether the built-in tool or fallback CLI mode was used.
+
+## Transparent image requests
+
+Transparent-image requests still use built-in `image_gen` first. Because the built-in tool does not expose a true transparent-background control, create a removable chroma-key source image and then convert the key color to alpha locally.
+
+Default sequence:
+1. Use built-in `image_gen` to generate the requested subject on a perfectly flat solid chroma-key background.
+2. Choose a key color that is unlikely to appear in the subject: default `#00ff00`, use `#ff00ff` for green subjects, and avoid `#0000ff` for blue subjects.
+3. After generation, move or copy the selected source image from `$CODEX_HOME/generated_images/...` into the workspace or `tmp/imagegen/`.
+4. Run the installed helper path, not a project-relative script path:
+   ```bash
+   python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py" \
+     --input <source> \
+     --out <final.png> \
+     --auto-key border \
+     --soft-matte \
+     --transparent-threshold 12 \
+     --opaque-threshold 220 \
+     --despill
+   ```
+5. Validate that the output has an alpha channel, transparent corners, plausible subject coverage, and no obvious key-color fringe. If a thin fringe remains, retry once with `--edge-contract 1`; use `--edge-feather 0.25` only when the edge is visibly stair-stepped and the subject is not shiny or reflective.
+6. Save the final alpha PNG/WebP in the project if the asset is project-bound. Never leave a project-referenced transparent asset only under `$CODEX_HOME/*`.
+
+Prompt transparent requests like this:
+
+```text
+Create the requested subject on a perfectly flat solid #00ff00 chroma-key background for background removal.
+The background must be one uniform color with no shadows, gradients, texture, reflections, floor plane, or lighting variation.
+Keep the subject fully separated from the background with crisp edges and generous padding.
+Do not use #00ff00 anywhere in the subject.
+No cast shadow, no contact shadow, no reflection, no watermark, and no text unless explicitly requested.
+```
+
+Do not automatically use CLI `gpt-image-1.5 --background transparent --output-format png` instead of chroma keying. Ask the user first when the user asks for true/native transparency, when local removal fails validation, or when the requested image is complex: hair, fur, feathers, smoke, glass, liquids, translucent materials, reflective objects, soft shadows, realistic product grounding, or subject colors that conflict with all practical key colors.
+
+Use a concise confirmation like:
+
+```text
+This likely needs true native transparency. The default built-in path uses a chroma-key background plus local removal, but true transparency requires the CLI fallback with gpt-image-1.5 because gpt-image-2 does not support background=transparent. It also requires OPENAI_API_KEY. Should I proceed with that CLI fallback?
+```
+
+## Prompt augmentation
+
+Reformat user prompts into a structured, production-oriented spec. Make the user's goal clearer and more actionable, but do not blindly add detail.
+
+Treat this as prompt-shaping guidance, not a closed schema. Use only the lines that help, and add a short extra labeled line when it materially improves clarity.
+
+### Specificity policy
+
+Use the user's prompt specificity to decide how much augmentation is appropriate:
+
+- If the prompt is already specific and detailed, preserve that specificity and only normalize/structure it.
+- If the prompt is generic, you may add tasteful augmentation when it will materially improve the result.
+
+Allowed augmentations:
+- composition or framing hints
+- polish level or intended-use hints
+- practical layout guidance
+- reasonable scene concreteness that supports the stated request
+
+Not allowed augmentations:
+- extra characters or objects that are not implied by the request
+- brand names, slogans, palettes, or narrative beats that are not implied
+- arbitrary side-specific placement unless the surrounding layout supports it
+
+## Use-case taxonomy (exact slugs)
+
+Classify each request into one of these buckets and keep the slug consistent across prompts and references.
+
+Generate:
+- photorealistic-natural — candid/editorial lifestyle scenes with real texture and natural lighting.
+- product-mockup — product/packaging shots, catalog imagery, merch concepts.
+- ui-mockup — app/web interface mockups and wireframes; specify the desired fidelity.
+- infographic-diagram — diagrams/infographics with structured layout and text.
+- scientific-educational — classroom explainers, scientific diagrams, and learning visuals with required labels and accuracy constraints.
+- ads-marketing — campaign concepts and ad creatives with audience, brand position, scene, and exact tagline/copy.
+- productivity-visual — slide, chart, workflow, and data-heavy business visuals.
+- logo-brand — logo/mark exploration, vector-friendly.
+- illustration-story — comics, children’s book art, narrative scenes.
+- stylized-concept — style-driven concept art, 3D/stylized renders.
+- historical-scene — period-accurate/world-knowledge scenes.
+
+Edit:
+- text-localization — translate/replace in-image text, preserve layout.
+- identity-preserve — try-on, person-in-scene; lock face/body/pose.
+- precise-object-edit — remove/replace a specific element (including interior swaps).
+- lighting-weather — time-of-day/season/atmosphere changes only.
+- background-extraction — transparent background / clean cutout. Use built-in `image_gen` with chroma-key removal first for simple opaque subjects; ask before using CLI true transparency for complex subjects.
+- style-transfer — apply reference style while changing subject/scene.
+- compositing — multi-image insert/merge with matched lighting/perspective.
+- sketch-to-render — drawing/line art to photoreal render.
+
+## Shared prompt schema
+
+Use the following labeled spec as shared prompt scaffolding for both top-level modes:
+
+```text
+Use case: <taxonomy slug>
+Asset type: <where the asset will be used>
+Primary request: <user's main prompt>
+Input images: <Image 1: role; Image 2: role> (optional)
+Scene/backdrop: <environment>
+Subject: <main subject>
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'pwd && git status --short && find .. -name AGENTS.md -print' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+codex
+I found the repo already has the image-generation workflow pattern in `.planning/quick`, and there are existing uncommitted planning artifacts. I’ll avoid touching unrelated files and start a small GSD quick record for this asset before writing the generated PNG.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,260p' $HOME/.agents/skills/gsd-quick/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+exec
+/bin/zsh -lc "nl -ba $HOME/.codex/memories/MEMORY.md | sed -n '18,30p;248,260p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+    18	- when the user asked for the script to be "more generic here" and "applicable irrespective of the role" -> keep compensation framing role-agnostic instead of assuming everyone is on performance pay [Task 1]
+    19	- when the user asked "Ask Claude with Fable 5 about your script" -> do a second-review pass when available, but do not get stuck if the local Claude path is blocked; pivot to a paste-ready or other verified review surface quickly [Task 1]
+    20	
+    21	## Reusable knowledge
+    22	
+    23	- The compensation framing that survived critique is: compensation is role-dependent, the current written plan / offer letter / role-specific sheet is the source of truth, scorecards can change as the business changes, and the lesson should teach how to think about the engine rather than fixed mechanics [Task 1]
+    24	- The active Lesson 17 source set was updated in `docs/course-production/shotlists/lesson-17-script-clean.txt`, `docs/course-production/shotlists/module-17-lesson17-scenecards.md`, `docs/course-production/scripts/gen_audio_17.py`, and `docs/course-production/scripts/gen_stills_17.sh` [Task 1]
+    25	- The older fixed-comp lane stayed superseded; the durable lesson state is generic Lesson 17 content, with earlier generated audio/stills marked stale in `docs/course-production/NEXT-SESSION.md` until the v2 script and v3 storyboard are approved [Task 1]
+    26	
+    27	## Failures and how to do differently
+    28	
+    29	- symptom: `claude auth status` looks healthy but Claude review still does not run; cause: local CLI auth can report `loggedIn: true` while `claude -p` fails with `401 Invalid authentication credentials`; fix: verify reachability with a real `claude -p` call and pivot immediately to a paste-ready prompt or another verified review surface if it 401s [Task 1]
+    30	- symptom: compensation visuals imply fixed pay mechanics even after the script is softened; cause: downstream still/audio/storyboard prompts kept stale fixed-comp metaphors; fix: remove cash stacks, no-cap ceilings, thresholds, tiers, credit-loop entitlement imagery, and any slide text that makes the video sound like the source of truth [Task 1]
+   248	
+   249	- BMH course, seller nose, representative hairstyle, ponytail, headband, orange headset, reroll before animation, handshake reference [ad-hoc note]
+   250	
+   251	## Task 3: Reject crude control frames as production still or animation sources, success
+   252	
+   253	### rollout_summary_files
+   254	
+   255	- extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md (cwd=BMH course lesson/still/animation workflow, rollout_path=extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md, updated_at=2026-07-07T11:23:27-05:00, control-frame guardrail for BMH course still and animation source selection)
+   256	
+   257	### keywords
+   258	
+   259	- BMH course, control frame, rough SVG composite, geometry-fix image, production still, animation source, reference-only, visually acceptable, doodle style [ad-hoc note]
+   260	
+
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/CLAUDE.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-05-31
+tags: [ai-os]
+related: ["[[STRATEGY]]", "[[Home]]", "[[_Active]]", "[[conventions]]", "[[claude-codex-loop]]"]
+---
+# CLAUDE.md — vault boot file
+
+You are **Claude** (built by Anthropic). This file is Jarrad's instruction to you, read when a Claude tab's working directory is this vault.
+
+## Identity
+- This vault `~/BMH-OS` is Jarrad's single source of truth and persistent memory. It is **canonical** — if `MEMORY.md` or anything else disagrees with the vault, **the vault wins**.
+- Treat notes here as durable context, not chat scratch.
+
+## New-session protocol
+On a fresh session:
+1. You've been handed a briefing via the SessionStart hook. Read **this file** + **[[_Active]]** for current priorities.
+2. Emit a ONE-LINE confirmation, exactly this shape:
+   `✅ BMH-OS loaded — goal: <…> · bottleneck: <…>`
+3. Ask how Jarrad wants to proceed.
+
+One line, never a wall of text.
+
+## Vault structure
+- `Home.md` — the map / navigation index. Start here.
+- `STRATEGY.md` — the one goal + the current bottleneck. Everything filters through it.
+- `_Active.md` — current priorities ("what now"). Frequently updated.
+- `projects/` — promoted, human-curated project notes (the four apps).
+- `decisions/` — ADR-style decision records.
+- `contracts/` — the agreed shape of data passed between apps (e.g. the `call.completed` event), written once so neither side drifts.
+- `sources/` — reference material, extracted source notes.
+- `mocs/` — Maps of Content (e.g. [[MOC - v1]]).
+- `_inbox/` — **AI write zone**: raw per-session captures land here first.
+- `_meta/` — conventions, tags, credentials, skills index, the capture daemon, the session briefing.
+- `_ai-context/` — AI-integration docs (orchestration, loop history).
+
+## Standing vault behavior
+- AI writes **only** to `_inbox/`. Promotion to `projects/ decisions/ components/ sources/` needs Jarrad's **explicit OK** (per [[conventions]]).
+- **Underscore prefix = AI-generated** (`_inbox`, `_meta`, `_ai-context`, `_Active*`).
+- Wikilink every named entity (project/decision/component) on first mention.
+- Keep updates terse. Bump `updated:` on every edit.
+- Log every AI write to `_meta/log.md`.
+- Use only tags registered in `_meta/tags.md`. No Dataview/Templater — pure markdown.
+
+## Jarrad's context
+Jarrad Henry, Kansas City, Missouri. Runs **BMH Group** (real-estate investment / wholesaling). Current goal: get the four apps — [[Sandra]], [[Closer Lab]], [[BMH Institute]], [[Jitter]] — to **version 1**.
+
+## Orchestration
+To run autonomous execution, see [[claude-codex-loop]].
+
+exec
+/bin/zsh -lc "sed -n '221,520p' $HOME/.codex/skills/.system/imagegen/SKILL.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+Style/medium: <photo/illustration/3D/etc>
+Composition/framing: <wide/close/top-down; placement>
+Lighting/mood: <lighting + mood>
+Color palette: <palette notes>
+Materials/textures: <surface details>
+Text (verbatim): "<exact text>"
+Constraints: <must keep/must avoid>
+Avoid: <negative constraints>
+```
+
+Notes:
+- `Asset type` and `Input images` are prompt scaffolding, not dedicated CLI flags.
+- `Scene/backdrop` refers to the visual setting. It is not the same as the fallback CLI `background` parameter, which controls output transparency behavior.
+- Fallback-only execution notes such as `Quality:`, `Input fidelity:`, masks, output format, and output paths belong in the CLI path only. Do not treat them as built-in `image_gen` tool arguments.
+
+Augmentation rules:
+- Keep it short.
+- Add only the details needed to improve the prompt materially.
+- For edits, explicitly list invariants (`change only X; keep Y unchanged`).
+- If any critical detail is missing and blocks success, ask a question; otherwise proceed.
+
+## Examples
+
+### Generation example (hero image)
+```text
+Use case: product-mockup
+Asset type: landing page hero
+Primary request: a minimal hero image of a ceramic coffee mug
+Style/medium: clean product photography
+Composition/framing: wide composition with usable negative space for page copy if needed
+Lighting/mood: soft studio lighting
+Constraints: no logos, no text, no watermark
+```
+
+### Edit example (invariants)
+```text
+Use case: precise-object-edit
+Asset type: product photo background replacement
+Primary request: replace only the background with a warm sunset gradient
+Constraints: change only the background; keep the product and its edges unchanged; no text; no watermark
+```
+
+## Prompting best practices
+- Structure prompt as scene/backdrop -> subject -> details -> constraints.
+- Include intended use (ad, UI mock, infographic) to set the mode and polish level.
+- Use camera/composition language for photorealism.
+- Only use SVG/vector stand-ins when the user explicitly asked for vector output or a non-image placeholder.
+- Quote exact text and specify typography + placement.
+- For tricky words, spell them letter-by-letter and require verbatim rendering.
+- For multi-image inputs, reference images by index and describe how they should be used.
+- For edits, repeat invariants every iteration to reduce drift.
+- Iterate with single-change follow-ups.
+- If the prompt is generic, add only the extra detail that will materially help.
+- If the prompt is already detailed, normalize it instead of expanding it.
+- For CLI fallback only, see `references/cli.md` and `references/image-api.md` for model, `quality`, `input_fidelity`, masks, output format, and output-path guidance.
+- For transparent images, use the built-in-first chroma-key workflow unless the request is complex enough to need true CLI transparency; ask before switching to CLI `gpt-image-1.5`.
+
+More principles shared by both modes: `references/prompting.md`.
+Copy/paste specs shared by both modes: `references/sample-prompts.md`.
+
+## Guidance by asset type
+Asset-type templates (website assets, game assets, wireframes, logo) are consolidated in `references/sample-prompts.md`.
+
+## gpt-image-2 guidance for CLI fallback
+
+The fallback CLI defaults to `gpt-image-2`.
+
+- Use `gpt-image-2` for new CLI/API workflows unless the request needs true model-native transparent output.
+- If a transparent request may need CLI fallback, ask before using `gpt-image-1.5` unless the user already explicitly requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. Explain that the built-in chroma-key path is the default, but true transparency requires `gpt-image-1.5` because `gpt-image-2` does not support `background=transparent`.
+- `gpt-image-2` always uses high fidelity for image inputs; do not set `input_fidelity` with this model.
+- `gpt-image-2` supports `quality` values `low`, `medium`, `high`, and `auto`.
+- Use `quality low` for fast drafts, thumbnails, and quick iterations. Use `medium`, `high`, or `auto` for final assets, dense text, diagrams, identity-sensitive edits, or high-resolution outputs.
+- Square images are typically fastest to generate. Use `1024x1024` for fast square drafts.
+- If the user asks for 4K-style output, use `3840x2160` for landscape or `2160x3840` for portrait.
+- `gpt-image-2` size may be `auto` or `WIDTHxHEIGHT` if all constraints hold: max edge `<= 3840px`, both edges multiples of `16px`, long-to-short ratio `<= 3:1`, total pixels between `655,360` and `8,294,400`.
+
+Popular `gpt-image-2` sizes:
+- `1024x1024` square
+- `1536x1024` landscape
+- `1024x1536` portrait
+- `2048x2048` 2K square
+- `2048x1152` 2K landscape
+- `3840x2160` 4K landscape
+- `2160x3840` 4K portrait
+- `auto`
+
+## Fallback CLI mode only
+
+### Temp and output conventions
+These conventions apply only to the CLI fallback. They do not describe built-in `image_gen` output behavior.
+- Use `tmp/imagegen/` for intermediate files (for example JSONL batches); delete them when done.
+- Write final artifacts under `output/imagegen/`.
+- Use `--out` or `--out-dir` to control output paths; keep filenames stable and descriptive.
+
+### Dependencies
+Prefer `uv` for dependency management in this repo.
+
+Required Python package:
+```bash
+uv pip install openai
+```
+
+Required for local chroma-key removal and optional downscaling:
+```bash
+uv pip install pillow
+```
+
+Portability note:
+- If you are using the installed skill outside this repo, install dependencies into that environment with its package manager.
+- In uv-managed environments, `uv pip install ...` remains the preferred path.
+
+### Environment
+- `OPENAI_API_KEY` must be set for live API calls.
+- Do not ask the user for `OPENAI_API_KEY` when using the built-in `image_gen` tool.
+- Never ask the user to paste the full key in chat. Ask them to set it locally and confirm when ready.
+
+If the key is missing, give the user these steps:
+1. Create an API key in the OpenAI platform UI: https://platform.openai.com/api-keys
+2. Set `OPENAI_API_KEY` as an environment variable in their system.
+3. Offer to guide them through setting the environment variable for their OS/shell if needed.
+
+If installation is not possible in this environment, tell the user which dependency is missing and how to install it into their active environment.
+
+### Script-mode notes
+- CLI commands + examples: `references/cli.md`
+- API parameter quick reference: `references/image-api.md`
+- Network approvals / sandbox settings for CLI mode: `references/codex-network.md`
+
+## Reference map
+- `references/prompting.md`: shared prompting principles for both modes.
+- `references/sample-prompts.md`: shared copy/paste prompt recipes for both modes.
+- `references/cli.md`: fallback-only CLI usage via `scripts/image_gen.py`.
+- `references/image-api.md`: fallback-only API/CLI parameter reference.
+- `references/codex-network.md`: fallback-only network/sandbox troubleshooting for CLI mode.
+- `scripts/image_gen.py`: fallback-only CLI implementation. Do not load or use it unless the user explicitly chooses CLI mode or explicitly confirms a transparent request's true CLI transparency fallback.
+- `$CODEX_HOME/skills/.system/imagegen/scripts/remove_chroma_key.py`: local post-processing helper for built-in transparent-image requests.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' $HOME/.codex/memories/extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+exec
+/bin/zsh -lc "sed -n '1,220p' ~/BMH-OS/_Active.md" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 105ms:
+---
+name: gsd:quick
+description: "Execute a quick task with GSD guarantees (atomic commits, state tracking) but skip optional agents"
+argument-hint: "[list | status <slug> | resume <slug> | --full] [--validate] [--discuss] [--research] [task description]"
+allowed-tools:
+  - Read
+  - Write
+  - Edit
+  - Glob
+  - Grep
+  - Bash
+  - Task
+  - AskUserQuestion
+---
+
+<objective>
+Execute small, ad-hoc tasks with GSD guarantees (atomic commits, STATE.md tracking).
+
+Quick mode is the same system with a shorter path:
+- Spawns gsd-planner (quick mode) + gsd-executor(s)
+- Quick tasks live in `.planning/quick/` separate from planned phases
+- Updates STATE.md "Quick Tasks Completed" table (NOT ROADMAP.md)
+
+**Default:** Skips research, discussion, plan-checker, verifier. Use when you know exactly what to do.
+
+**`--discuss` flag:** Lightweight discussion phase before planning. Surfaces assumptions, clarifies gray areas, captures decisions in CONTEXT.md. Use when the task has ambiguity worth resolving upfront.
+
+**`--full` flag:** Enables the complete quality pipeline — discussion + research + plan-checking + verification. One flag for everything.
+
+**`--validate` flag:** Enables plan-checking (max 2 iterations) and post-execution verification only. Use when you want quality guarantees without discussion or research.
+
+**`--research` flag:** Spawns a focused research agent before planning. Investigates implementation approaches, library options, and pitfalls for the task. Use when you're unsure of the best approach.
+
+Granular flags are composable: `--discuss --research --validate` gives the same result as `--full`.
+
+**Subcommands:**
+- `list` — List all quick tasks with status
+- `status <slug>` — Show status of a specific quick task
+- `resume <slug>` — Resume a specific quick task by slug
+</objective>
+
+<execution_context>
+@$HOME/.Codex/get-shit-done/workflows/quick.md
+</execution_context>
+
+<context>
+$ARGUMENTS
+
+Context files are resolved inside the workflow (`init quick`) and delegated via `<files_to_read>` blocks.
+</context>
+
+<process>
+
+**Parse $ARGUMENTS for subcommands FIRST:**
+
+- If $ARGUMENTS starts with "list": SUBCMD=list
+- If $ARGUMENTS starts with "status ": SUBCMD=status, SLUG=remainder (strip whitespace, sanitize)
+- If $ARGUMENTS starts with "resume ": SUBCMD=resume, SLUG=remainder (strip whitespace, sanitize)
+- Otherwise: SUBCMD=run, pass full $ARGUMENTS to the quick workflow as-is
+
+**Slug sanitization (for status and resume):** Strip any characters not matching `[a-z0-9-]`. Reject slugs longer than 60 chars or containing `..` or `/`. If invalid, output "Invalid session slug." and stop.
+
+## LIST subcommand
+
+When SUBCMD=list:
+
+```bash
+ls -d .planning/quick/*/  2>/dev/null
+```
+
+For each directory found:
+- Check if PLAN.md exists
+- Check if SUMMARY.md exists; if so, read `status` from its frontmatter via:
+  ```bash
+  gsd-sdk query frontmatter.get .planning/quick/{dir}/SUMMARY.md status
+  ```
+- Determine directory creation date: `stat -f "%SB" -t "%Y-%m-%d"` (macOS) or `stat -c "%w"` (Linux); fall back to the date prefix in the directory name (format: `YYYYMMDD-` prefix)
+- Derive display status:
+  - SUMMARY.md exists, frontmatter status=complete → `complete ✓`
+  - SUMMARY.md exists, frontmatter status=incomplete OR status missing → `incomplete`
+  - SUMMARY.md missing, dir created <7 days ago → `in-progress`
+  - SUMMARY.md missing, dir created ≥7 days ago → `abandoned? (>7 days, no summary)`
+
+**SECURITY:** Directory names are read from the filesystem. Before displaying any slug, sanitize: strip non-printable characters, ANSI escape sequences, and path separators using: `name.replace(/[^\x20-\x7E]/g, '').replace(/[/\\]/g, '')`. Never pass raw directory names to shell commands via string interpolation.
+
+Display format:
+```
+Quick Tasks
+────────────────────────────────────────────────────────────
+slug                           date        status
+backup-s3-policy               2026-04-10  in-progress
+auth-token-refresh-fix         2026-04-09  complete ✓
+update-node-deps               2026-04-08  abandoned? (>7 days, no summary)
+────────────────────────────────────────────────────────────
+3 tasks (1 complete, 2 incomplete/in-progress)
+```
+
+If no directories found: print `No quick tasks found.` and stop.
+
+STOP after displaying the list. Do NOT proceed to further steps.
+
+## STATUS subcommand
+
+When SUBCMD=status and SLUG is set (already sanitized):
+
+Find directory matching `*-{SLUG}` pattern:
+```bash
+dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+```
+
+If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+Read PLAN.md and SUMMARY.md (if exists) for the given slug. Display:
+```
+Quick Task: {slug}
+─────────────────────────────────────
+Plan file: .planning/quick/{dir}/PLAN.md
+Status: {status from SUMMARY.md frontmatter, or "no summary yet"}
+Description: {first non-empty line from PLAN.md after frontmatter}
+Last action: {last meaningful line of SUMMARY.md, or "none"}
+─────────────────────────────────────
+Resume with: /gsd-quick resume {slug}
+```
+
+No agent spawn. STOP after printing.
+
+## RESUME subcommand
+
+When SUBCMD=resume and SLUG is set (already sanitized):
+
+1. Find the directory matching `*-{SLUG}` pattern:
+   ```bash
+   dir=$(ls -d .planning/quick/*-{SLUG}/ 2>/dev/null | head -1)
+   ```
+2. If no directory found, print `No quick task found with slug: {SLUG}` and stop.
+
+3. Read PLAN.md to extract description and SUMMARY.md (if exists) to extract status.
+
+4. Print before spawning:
+   ```
+   [quick] Resuming: .planning/quick/{dir}/
+   [quick] Plan: {description from PLAN.md}
+   [quick] Status: {status from SUMMARY.md, or "in-progress"}
+   ```
+
+5. Load context via:
+   ```bash
+   gsd-sdk query init.quick
+   ```
+
+6. Proceed to execute the quick workflow with resume context, passing the slug and plan directory so the executor picks up where it left off.
+
+## RUN subcommand (default)
+
+When SUBCMD=run:
+
+Execute the quick workflow from @$HOME/.Codex/get-shit-done/workflows/quick.md end-to-end.
+Preserve all workflow gates (validation, task description, planning, execution, state updates, commits).
+
+</process>
+
+<notes>
+- Quick tasks live in `.planning/quick/` — separate from phases, not tracked in ROADMAP.md
+- Each quick task gets a `YYYYMMDD-{slug}/` directory with PLAN.md and eventually SUMMARY.md
+- STATE.md "Quick Tasks Completed" table is updated on completion
+- Use `list` to audit accumulated tasks; use `resume` to continue in-progress work
+</notes>
+
+<security_notes>
+- Slugs from $ARGUMENTS are sanitized before use in file paths: only [a-z0-9-] allowed, max 60 chars, reject ".." and "/"
+- File names from readdir/ls are sanitized before display: strip non-printable chars and ANSI sequences
+- Artifact content (plan descriptions, task titles) rendered as plain text only — never executed or passed to agent prompts without DATA_START/DATA_END boundaries
+- Status fields read via `gsd-sdk query frontmatter.get` — never eval'd or shell-expanded
+</security_notes>
+
+ succeeded in 107ms:
+# BMH course visual generation guardrail
+
+For BMH course stills/animations, never use a crude hand-built control frame, rough SVG/composite, or visibly unpolished geometry-fix image as a production still or animation source just because it fixes one layout issue. If a control frame is used, it is reference-only. Before spending animation credits, the source still itself must be visually acceptable in the BMH doodle style and must not carry known defects. Do not animate from a failed or merely diagnostic source frame.
+
+ succeeded in 124ms:
+---
+type: meta
+status: active
+created: 2026-05-31
+updated: 2026-07-05
+tags: [v1]
+related: ["[[STRATEGY]]", "[[MOC - v1]]", "[[MOC - v1 Verification Steps]]", "[[Four-app v1 control ledger]]"]
+---
+# _Active — what now
+
+Current priorities, seeded from [[STRATEGY]]'s bottleneck + the [[MOC - v1]] checklist. Frequently updated.
+
+## Operating model — Claude plans, Codex executes
+
+**Claude = planner/reviewer; Codex = executor.** For the four-app v1 push, Codex is executing the written per-app EXECUTE blocks directly in isolated worktrees; the start-orchestration bootstrap remains suspended until the repos are in known state. Claude still provides independent A5 review/approval before merge/deploy. Full handoff + recon + open decisions: [[2026-06-01 1815 — Four-app v1 plan + Codex execution handoff]]. Detailed per-app checklist: [[MOC - v1 Verification Steps]]. Cross-app context source: [[Four-app v1 control ledger]].
+
+**Autonomous = additive / reversible / observable** (STRATEGY's guardrail). A gate = destructive, irreversible, external-facing, or a judgment call.
+
+**Browser V1 acceptance gate:** fixture seeding, SQL assertions, unit/integration tests, GitHub Actions, and Playwright automation are scaffolding/supporting evidence only. Browser V1 is not accepted until Chrome/Chrome DevTools real-browser execution proves the persona flows through visible UI outcomes, screenshots, console/network inspection where relevant, and browser-console probes where required. Do not use Codex in-app browser / MAP / `iab` as the acceptance surface unless Jarrad explicitly reverses this.
+
+**Browser V1 UI-created data rule:** data setup is part of the browser test. For [[Closer Lab]] and [[BMH Institute]], create fixture/content/test records through Chrome/DevTools browser UI wherever the app UI supports creation or editing. Direct database/API writes are exception-only supporting setup for things the UI cannot create, such as auth bootstrap when no signup/admin UI exists, and must be labeled as non-acceptance evidence.
+
+**2026-06-02 browser-surface correction:** Jarrad first reset [[Closer Lab]] and [[BMH Institute]] Browser V1 acceptance to zero, then superseded the MAP/in-app-browser requirement with Chrome/DevTools real-browser execution. Current controller evidence shows [[BMH Institute]] residual proof closed and [[Closer Lab]] Browser V1 markers closed for pre-read persistence, signed embed-token proof, and scoring/runtime. [[Sandra]] production-readiness proof is GO as of 2026-06-11. The 2026-06-18 active-front reset (skip-trace/CASS preflight, filter preset discoverability, bulk tag creation, Sendillo-era Overview KPI visibility) is now CLEARED 2026-06-19 — all four shipped via merged PRs #288–#300, plus Messages disposition/outcomes hardening (#298/#299/#300). Remaining [[Sandra]] threads: PR #287 (hide dead-dispositioned leads from the kanban — OPEN, awaiting NULL-handling review) and the bulk-SMS→Campaigns KPI tracking gap (June 19 run, job `72b0e08d`, 7,547 messages queued with `campaignId=null`) — forward fix now tracked under **PR #306** (supersedes #301; per the 2026-06-23 [[Sandra PR 306 merge gate rules]] decision, updated 2026-07-05 — merge via GitHub-backed main once the Playwright golden-paths check passes; PR MERGEABLE/UNSTABLE, **not yet merged**) which requires a campaign name + auto-creates + stamps `campaign_id`, with the 2026-06-19 architect P1s folded in; the **June 19 backfill is still pending** (designed, not applied — must match by `property_id` intersection, not the created_at window which over-captures by 6; per the decision, the 423-member retry list is created only after production serves the merged fix).
+
+**2026-06-02 trust reset:** Jarrad challenged the controller's Playwright-heavy verification and does not trust acceptance unless it is revalidated in Chrome/DevTools. Treat Playwright/CI/API/DB evidence as support only. Fresh revalidation so far: [[BMH Institute]] Chrome snapshot/screenshot `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, with separate Sandra outcome confirmation `/tmp/browser-revalidation-bmh-institute-outcome.json`; [[Closer Lab]] member Chrome snapshot/screenshot `/tmp/browser-revalidation-closer-member-recording.*` visibly shows recording `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`, with separate Sandra outcome support `/tmp/browser-revalidation-closer-sandra-outcome-support.json`. [[Sandra]] production-readiness proof is GO on `https://sandra.bmhgroupkc.com`: real Sendillo production thread proof, `PR #236` sequence-admin gate, Chrome SOP matrix, and authenticated production non-admin sequence denial/enrollment behavior are all captured in [[Sandra - 2026-06-11]]. [[Jitter]] trust-reset browser work advanced in two steps: the earlier wrong-database/browser-auth mismatch was partially resolved by pinning production to the canonical `jitter-test` plane (`ypgntjjrrutjsratdwmk`) and proving controlled Chrome dialing in production, but that proof depended on a local scoped worker. Current blocker is no longer fixture creation; it is the **carrier swap**: Twilio is KYC-suspended/retired and **Telnyx is now the active carrier (account fully verified) — carrier validation PASSED 2026-06-04** — that carrier validation precedes the worker gate. The current Jitter gate (B2 plan, 2026-06-06) is **trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof**. The downstream acceptance gap is still a real worker path, but only after the single-line Telnyx dial proof.
+
+| Lane | Repo state (2026-06-01) | First autonomous task | Locked decisions |
+|------|------|------|------|
+| **[[Sandra]]** | Production-readiness proof GO on `https://sandra.bmhgroupkc.com` as of [[Sandra - 2026-06-11]]. Gate 1 real Sendillo production thread proof closed; Gate 2 `PR #236` sequence-admin gate merged/deployed/E2E green; Gate 3 Chrome SOP proof closed with admin SOP coverage, real Sendillo thread visibility, bulk SMS no-send inspection, admin authoring retention, and authenticated production non-admin sequence denial/enrollment behavior. Cleanup caveat: Sendillo canary rows retained as audit evidence and throwaway SOP sequence `7dfedf79-120a-434b-b417-c920b3227475` retained inactive. | no blocker; optional explicitly approved cleanup only if pristine DB is desired | consent: keep current |
+| **[[Closer Lab]]** | PR #60 merged; Browser V1 markers previously closed in Chrome/DevTools: pre-read persistence, BMH Institute signed embed-token path, scoring/runtime; Closer→Sandra sender/config/scoring hardening PRs #71/#72/#73/#74 merged and production proof PASS; fresh trust-reset Chrome revalidation captured member recording `72ad25d8-1b09-4ef9-a278-82113c12ce75` at 100% with transcript and rubric `MET 5 / 5` | browser-revalidated after trust reset | — |
+| **[[BMH Institute]]** | PR #79 and PR #80 merged; controller residual Chrome/DevTools proof closed after credential rotation; Sandra course-completed sender PR #81 merged, production env configured after token rotation, and Chrome/DevTools final lesson proof wrote `course.completed` into Sandra; fresh trust-reset Chrome revalidation captured visible `Lesson complete` and matching Sandra outcome | browser-revalidated after trust reset | cert PDF **deferred post-v1**; suspended-login block shipped via PR #79 |
+| **[[Jitter]]** | auth PR #144 merged; writeback PR #145, Sandra receiver PR #224, and boundary fix PR #146 merged; CPS pacing merged to `main` at `334ef8565d21b71bd3f645f05def2922179cee47` and deployed to production `dpl_75H8rsoMe7HEX7KSgtdo6cAjtJRS`; one controlled Chrome proof succeeded on `https://jitter.bmhgroupkc.com/dialer`, with browser audio connected and 4 successful `twilio.create_call` operations, but only while a local scoped worker was running. **Carrier since swapped: Twilio retired (KYC); Telnyx is the active carrier (account verified).** | **Current gate (B2 plan, 2026-06-06): trust-boundary fix → browser-audio readiness contract → single-line live dial on Telnyx → Railway worker-backed unattended proof.** Then keep web + worker on the same reviewed SHA and rerun the final Chrome `/dialer` proof with the real worker before claiming accepted | business dialing approved; no extra live dial needed for writeback-only proof |
+
+## 🚦 Gates — full autonomy authorized (pre-launch, no users/data)
+Standing authorization (Jarrad, 2026-06-01): Codex may read/write any Supabase project incl. prod, run/apply migrations, open AND **merge** PRs, and deploy — quality-gated by Codex manual-code-review plus Claude A5 when reachable. If Claude is unavailable, Codex must try both CLI and desktop/app before using the fallback readiness gate. **No human click on merge/deploy.** See [[bmh-apps-prelaunch-no-prod-ceremony]] and [[Four-app v1 control ledger]].
+- **Hard pause:** billing changes; secret disclosure risk; uncontrolled provider use outside v1 verification; human-only MFA/CAPTCHA/account recovery after CLI/API/desktop workarounds.
+- [[Jitter]] business dialing is explicitly approved for v1 verification. Use product-appropriate caps/logging; no generic prod ceremony just because it is production.
+- New product decisions: make v1-compatible calls, record in the app's report, keep moving — never stall a lane unless it changes billing or creates uncontrolled provider use.
+
+## ✅ Fully autonomous (no checkpoint) — incl. TEST-env side effects
+Self-served, no longer Jarrad inputs:
+- **1Password reads** — all agents must read existing `BMH Secrets` items through the service account only: `export OP_SERVICE_ACCOUNT_TOKEN=$(security find-generic-password -w -s OP_SERVICE_ACCOUNT_TOKEN)` then `op read "<redacted-1password-ref>"`. Do not use desktop-app/GUI/biometric/browser authorization for reads. If a GUI authorization prompt appears during a read, stop that path and retry with the service account; do not ask Jarrad to approve a read.
+- **Twilio** — read from 1Password (`Twilio - BMH Account Credentials`: SID, auth token, API key, `TWILIO_OWNED_NUMBERS_E164`, caller ID). Owned-number tests remain useful for smoke tests; [[Jitter]] may also dial real businesses for v1 verification under the standing approval above.
+- **Test accounts** — each lane provisions its own per-role accounts in its app's `*-test` Supabase project (`sandra-crm-test`, `closer-lab-test`, `bmh-institute-test`, `jitter-test`).
+- Dirty-work policy: snapshot to `wip/pre-v1-snapshot-<date>` *before* removing stale (reversible).
+- Plus: repo triage · code fixes in worktrees · unit/integration/build/lint · Playwright fake-media + fixtures · resolving `UNKNOWN` items by reading code · drafting PRs · `_inbox` notes.
+
+## Integrations — last
+Trust-reset integration front: do not call a lane accepted unless the current proof includes Chrome/DevTools-visible browser behavior. Pre-reset supporting proof remains useful but is not enough by itself. [[BMH Institute]] `course.completed`→[[Sandra]] has fresh Chrome/DevTools revalidation after Sandra #227/#228 and BMH Institute #81: `/tmp/browser-revalidation-bmh-institute-current.*` visibly shows `Lesson complete`, and separate outcome confirmation shows Sandra `institute_course_outcomes.id=61592447-b33d-489c-a230-d513435ef6b7` with webhook event `15e56f40-31b8-4d48-901e-942bdf0bbd8f` processed/signature verified. [[Closer Lab]] practice outcome→[[Sandra]] now has fresh Chrome/DevTools member recording revalidation: `/tmp/browser-revalidation-closer-member-recording.*` visibly shows attempt `72ad25d8-1b09-4ef9-a278-82113c12ce75`, `100%`, transcript, and rubric `MET 5 / 5`; separate support file `/tmp/browser-revalidation-closer-sandra-outcome-support.json` ties the same attempt to Sandra `closer_practice_outcomes.id=90aaae3d-1053-4021-b9e1-a6e50b8a08f8`. [[Jitter]]→[[Sandra]] writeback remains supported by deployed production executor/API plus Sandra production DB proof after Jitter #145, Sandra #224, and Jitter #146, and a controlled Chrome `/dialer` proof succeeded after production was pinned to canonical `jitter-test` (`ypgntjjrrutjsratdwmk`). That proof is still not sufficient for acceptance because it depended on a local scoped worker. Current gap: a real worker path must back the final Chrome proof so dialing continues without the local helper and without warning banners, duplicate operations, or queue-time spikes.
+
+## Next step
+**▶️ RESUME (2026-06-06 21:23): [[2026-06-06 2123 — Doc-driven Jitter B2 plan with sub-agents (019e9fd7)]] — this is now the canonical raw plan note for the active [[Jitter]] lane.**
+
+**[[Jitter]] — B1.6 operator two-way audio PROVEN on Telnyx (2026-06-04, see [[2026-06-04 2110 — Jitter Telnyx B1.6 operator audio PROVEN]]).** Current front = **get the dialer DIALING (B2)**. Permission mode is now `bypassPermissions`. Loop running: **Claude orchestrates + reviews + commits + drives Chrome proof; Codex executes code** (`codex-exec.sh` + 3-min `watch.sh`).
+
+**OFFICIAL-DOCS-FIRST B2 order:** do not keep iterating on the old conference-callback hypothesis blindly. New research says the first move is to re-check the trust boundary on `/api/product/telephony/twiml/operator` because the current failing test may be enforcing signed-callback rules on the initial [[Telnyx]] TeXML instruction fetch. After that, keep strict signature validation on real callback routes, verify the browser-audio readiness contract across route/runtime/worker SQL, then proceed to the single-line live dial and the real [[Railway]] worker proof.
+
+**OPEN [[Jitter]] questions now ordered by impact:**
+1. Is the operator TeXML route enforcing the wrong auth contract for instruction fetches?
+2. Is `endConferenceOnExit=true` on `operator_browser` actually the intended product behavior?
+3. Is `productOperatorJoined` now being used consistently as the B2 dial-ready signal across route/runtime/worker layers?
+4. Are callback hosts and [[Vercel]] bypass assumptions explicit and correct for the environments being used?
+
+**Then:** single-line dial K=1 (canary guard ON, NOT gated) to +13107540662 → prove dialing. **Multi-line (K≥2) is GATED — needs Jarrad to EXPLICITLY lift his own "no multi-line without Telnyx L2 + written AUP" rule** (all calls redirect to his own number, so AUP not truly implicated, but the gate is his to lift). **Deferred (Jarrad: integrations last):** Sandra writeback (payload fixed `da659e3`, creds not staged), B1.4 voice_url, 1Password credential-id write-back (`70ad6f62…`, still PLACEHOLDER).
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+ succeeded in 50186ms:
+../Closer Lab/node_modules/@elevenlabs/elevenlabs-js/AGENTS.md
+../Closer Lab/AGENTS.md
+../_codex_worktrees/v1-20260601/bmh-institute/AGENTS.md
+../_codex_worktrees/v1-20260601/closer-lab/node_modules/@elevenlabs/elevenlabs-js/AGENTS.md
+../_codex_worktrees/v1-20260601/closer-lab/AGENTS.md
+../_codex_worktrees/v1-20260601/sandra-jitter-minimal-writeback/AGENTS.md
+../_codex_worktrees/sandra-campaign-launch-preflight/AGENTS.md
+../_codex_worktrees/closer-browser-v1/node_modules/@elevenlabs/elevenlabs-js/AGENTS.md
+../_codex_worktrees/closer-browser-v1/AGENTS.md
+../_codex_worktrees/closer-practice-404/node_modules/@elevenlabs/elevenlabs-js/AGENTS.md
+../_codex_worktrees/closer-practice-404/AGENTS.md
+../_codex_worktrees/sandra-campaigns-pr1/AGENTS.md
+../_codex_worktrees/sandra-login-video-bg/AGENTS.md
+../_codex_worktrees/sandra-campaign-cadence-apply-guards/AGENTS.md
+../_codex_worktrees/sandra-sms-soft-delete-routing/AGENTS.md
+../_codex_worktrees/closer-rubric-tabs-persist/node_modules/@elevenlabs/elevenlabs-js/AGENTS.md
+../_codex_worktrees/closer-rubric-tabs-persist/AGENTS.md
+../_codex_worktrees/sandra-soft-delete-guards/AGENTS.md
+../_codex_worktrees/answer-key-leak/bmh-institute/AGENTS.md
+../BMH Institute/AGENTS.md
+../_worktrees/sandra-ai-visibility/AGENTS.md
+../_worktrees/sandra-dealmachine-dnc/AGENTS.md
+../_worktrees/sandra-messages-filter-counts/AGENTS.md
+../Sandra/_codex_worktrees/campaign-cadence-active-job-fix/AGENTS.md
+../Sandra/_codex_worktrees/messages-live-campaign-stats/AGENTS.md
+../Sandra/.claude/worktrees/loving-sinoussi-6e58b4/AGENTS.md
+../Sandra/AGENTS.md
+../_claude_worktrees/closer-hardening/AGENTS.md
+../_claude_worktrees/institute-embed-aud/AGENTS.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+The target is a single project asset, so the useful checks are narrow: confirm whether the file already exists, create the quick-task record, generate, then inspect dimensions and format. I’m also keeping the source references as visual references only, not using a rough control frame as the production source.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'ls -l course-assets/scenes/module-17 || true' in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "date '+%Y-%m-%d %H:%M:%S %Z'" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc 'git branch --show-current && git rev-parse --show-toplevel && git worktree list --porcelain' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'test -f course-assets/scenes/module-17/m17_L17_b09_finish-line.png && file course-assets/scenes/module-17/m17_L17_b09_finish-line.png || true' in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse
+ succeeded in 141ms:
+2026-07-09 19:32:35 CDT
+
+ succeeded in 164ms:
+total 896
+drwxr-xr-x@  4 jarradhenry  staff    128 Jul  9 02:17 _anchors
+drwxr-xr-x@ 24 jarradhenry  staff    768 Jul  9 19:30 _logs
+drwxr-xr-x@  4 jarradhenry  staff    128 Jul  9 02:26 _rejected
+drwxr-xr-x@  5 jarradhenry  staff    160 Jul  9 02:25 _sources
+-rw-r--r--@  1 jarradhenry  staff  11084 Jul  9 01:57 m17_L17_b02_role-value.png
+-rw-r--r--@  1 jarradhenry  staff   7976 Jul  7 03:33 m17_L17_b02_three-blocks.png
+-rw-r--r--@  1 jarradhenry  staff  26116 Jul  7 03:46 m17_L17_b03_ramp-calendar.png
+-rw-r--r--@  1 jarradhenry  staff  25734 Jul  9 01:58 m17_L17_b03_role-outcomes.png
+-rw-r--r--@  1 jarradhenry  staff  12726 Jul  7 03:55 m17_L17_b04_staircase.png
+-rw-r--r--@  1 jarradhenry  staff  23141 Jul  9 01:57 m17_L17_b04_written-plan.png
+-rw-r--r--@  1 jarradhenry  staff  21015 Jul  9 19:13 m17_L17_b04_your-deal.png
+-rw-r--r--@  1 jarradhenry  staff  27125 Jul  9 02:06 m17_L17_b05_adjustable-scorecard.png
+-rw-r--r--@  1 jarradhenry  staff  15291 Jul  7 10:05 m17_L17_b05_milestone-path.png
+-rw-r--r--@  1 jarradhenry  staff   9419 Jul  9 19:21 m17_L17_b05_strong-months.png
+-rw-r--r--@  1 jarradhenry  staff  10935 Jul  7 10:30 m17_L17_b06_ceiling-break.png
+-rw-r--r--@  1 jarradhenry  staff  26356 Jul  9 02:06 m17_L17_b06_engine-loop.png
+-rw-r--r--@  1 jarradhenry  staff  21685 Jul  9 19:28 m17_L17_b06_real-outcomes.png
+-rw-r--r--@  1 jarradhenry  staff  15788 Jul  7 10:38 m17_L17_b07_credit-loop.png
+-rw-r--r--@  1 jarradhenry  staff  29571 Jul  9 02:27 m17_L17_b07_current-plan-manager.png
+-rw-r--r--@  1 jarradhenry  staff  25499 Jul  9 02:12 m17_L17_b08_clean-process.png
+-rw-r--r--@  1 jarradhenry  staff  12619 Jul  7 10:15 m17_L17_b08_funnel.png
+-rw-r--r--@  1 jarradhenry  staff  29622 Jul  9 02:11 m17_L17_b09_scoreboard.png
+-rw-r--r--@  1 jarradhenry  staff  17452 Jul  7 10:44 m17_L17_b09_slip-vs-pocket.png
+-rw-r--r--@  1 jarradhenry  staff  10198 Jul  7 10:55 m17_L17_b10_comp-sheet.png
+-rw-r--r--@  1 jarradhenry  staff  30864 Jul  9 02:11 m17_L17_b10_written-plan-scores.png
+
+ succeeded in 112ms:
+hook: PostToolUse Completed
+ succeeded in 198ms:
+claude/course-production
+$HOME/Sites/BMH apps/BMH Institute
+worktree $HOME/Sites/BMH apps/BMH Institute
+HEAD 94db1c533ad2b6eaee9e6494b3e16272a86a16dd
+branch refs/heads/claude/course-production
+
+worktree /private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-53bc65929a62da14-10054e166492ed63
+HEAD 10054e166492ed63c9367ff1615116639034896a
+detached
+prunable gitdir file points to non-existent location
+
+worktree /private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-53bc65929a62da14-f9a748c8861a028e
+HEAD f9a748c8861a028e79adbfdc0982cad311e12978
+detached
+prunable gitdir file points to non-existent location
+
+worktree /private/var/folders/0r/4drnlg354fbbqgc9r55237j80000gp/T/fallow-audit-base-cache-b04077f52612658c-3a9c6748754a86df
+HEAD 3a9c6748754a86dfc0c2dfddda163594a2ad1238
+detached
+
+worktree $HOME/Sites/BMH apps/_claude_worktrees/institute-embed-aud
+HEAD 1b4222991ebe5b6379679d290f2ef116ccc51ae7
+branch refs/heads/claude/embed-token-aud
+
+worktree $HOME/Sites/BMH apps/_codex_worktrees/answer-key-leak/bmh-institute
+HEAD 3a9c6748754a86dfc0c2dfddda163594a2ad1238
+branch refs/heads/main
+
+worktree $HOME/Sites/BMH apps/_codex_worktrees/v1-20260601/bmh-institute
+HEAD 6bcb2b0f748d3e393f6eb2cdcb5728e83a36b61e
+branch refs/heads/codex/20260602-institute-sandra-course-completed
+
+
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+codex
+There is no existing `m17_L17_b09_finish-line.png`, so this will be a new asset rather than an overwrite. The repo is already on a course-production worktree branch, which satisfies the isolated-worktree requirement for this scoped asset work.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,120p' .planning/quick/260709-q5x-generate-one-gpt-image-2-course-scene-pn/SUMMARY.md 2>/dev/null || true" in $HOME/Sites/BMH apps/BMH Institute
+exec
+/bin/zsh -lc "sed -n '1,120p' .planning/quick/260709-q5x-generate-one-gpt-image-2-course-scene-pn/PLAN.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+created: 2026-07-09
+branch: claude/course-production
+---
+
+# Generate MLS glossary board scene asset
+
+## Goal
+
+Generate one course scene PNG at `course-assets/scenes/module-glossary/mGLO_LGLOA_b10_mls-board.png`.
+
+## Scope
+
+- Use the attached BMH course doodle references and locked flat sticker-sheet style.
+- Create one 1600 x 900 PNG.
+- Compose a large simple teaching board on a plain stand occupying the left 55 percent of the frame.
+- Leave the right 45 percent as open cornflower blue for a later presenter.
+- Show only the board, stand, and text flow.
+- Put the hand-lettered heading `MULTIPLE LISTING SERVICE` at the top of the board.
+- Put the hand-lettered flow below it: `MLS` arrow `AGENT LISTING` arrow `PUBLIC SITES`.
+- Use only these text strings: `MULTIPLE LISTING SERVICE`, `MLS`, `AGENT LISTING`, `PUBLIC SITES`.
+- Use cornflower blue `#62b3f3`, thick rounded black hand-drawn outlines, slight wobble, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
+- Avoid extra props, decor, ambient doodles, people, faces, hands, clutter, gradients, texture, shadows, lighting, perspective, and any additional text.
+
+## Verification
+
+- Confirm the file exists at the requested path.
+- Confirm the file is a PNG at 1600 x 900.
+- Visually inspect for the left-board and right-open-space composition.
+- Confirm the only visible text is exactly the four required strings.
+- Confirm there are no extra objects or ambient doodles.
+
+ succeeded in 0ms:
+---
+status: complete
+completed: 2026-07-09
+branch: claude/course-production
+---
+
+# Generate MLS glossary board scene asset summary
+
+Generated `course-assets/scenes/module-glossary/mGLO_LGLOA_b10_mls-board.png`.
+
+## Notes
+
+- Attempted to use the explicit local `gpt-image-2` CLI route, but `OPENAI_API_KEY` was not set, the OpenAI Python package was not installed, and the approved 1Password service-account token was not available in Keychain.
+- Used the established built-in image generation fallback with the requested `gpt-image-2` prompt and supplied references.
+- Treated `docs/design/style-ref-1.png` and `docs/design/style-ref-2.png` as strict style references.
+- Treated `docs/design/cast-board.png` and `docs/design/object-board.png` as construction references.
+- Selected source `$HOME/.codex/generated_images/019f4947-cc25-73a0-bcb3-b76d87d3d7d2/ig_0e0974ffc64e9395016a503436c9b48191be9922cd46e086c2.png`.
+- Resized and flattened the workspace PNG to the six-color course palette.
+- Repositioned the flattened artwork so all non-blue pixels remain inside the left 55 percent of the 1600 px canvas.
+- `course-assets/` is ignored by git, so the PNG is saved locally but is not tracked by default.
+
+## Verification
+
+- `file course-assets/scenes/module-glossary/mGLO_LGLOA_b10_mls-board.png` reports PNG image data at 1600 x 900.
+- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-glossary/mGLO_LGLOA_b10_mls-board.png` reports 1600 x 900.
+- Local palette check reports exactly six colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, and `#FFFFFF`.
+- Local artwork bounding box is x=35 to x=870, within the left 55 percent target boundary at x=880.
+- Visual inspection confirms only one board, one plain stand, two arrows, the exact strings `MULTIPLE LISTING SERVICE`, `MLS`, `AGENT LISTING`, and `PUBLIC SITES`, with no extra props or ambient doodles.
+
+hook: PostToolUse
+hook: PostToolUse
+exec
+/bin/zsh -lc 'find .planning/quick -maxdepth 2 -name PLAN.md | tail -8' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+.planning/quick/260703-generate-ten-principles-board-v2/PLAN.md
+.planning/quick/260709-q5q-generate-glossary-call-signal/PLAN.md
+.planning/quick/260703-generate-reps-board-v2/PLAN.md
+.planning/quick/260709-q5m-generate-glossary-seller-financing/PLAN.md
+.planning/quick/260704-generate-higher-offer-v2-scene-asset/PLAN.md
+.planning/quick/260705-imt-generate-m04-l4a-qualify-v2/PLAN.md
+.planning/quick/20260509-record-role-play-production-readiness/PLAN.md
+.planning/quick/260705-imq-generate-ray-scene-asset/PLAN.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'command -v gsd-sdk || true' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+/opt/homebrew/bin/gsd-sdk
+
+hook: PostToolUse
+hook: PostToolUse Completed
+codex
+I’m adding the small quick-task plan now, then I’ll generate the asset. The plan is intentionally narrow because the task is a single PNG with explicit style and composition constraints.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'mkdir -p .planning/quick/260709-generate-m17-l17-b09-finish-line' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+codex
+I’m sending the generation prompt with the Priya references treated as identity locks, not loose inspiration. The highest-risk failure modes are identity drift, extra decorative clutter, and accidental text, so those are repeated in the constraints.
+codex
+The first generated frame is close on composition and avoids the big prohibited failures: one Priya, no desk, no extra people, no text, no clutter. It still needs local cleanup for the flat locked palette because the generated preview has soft color variation in the blue background.
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "find $HOME/.codex/generated_images -type f -name '*.png' -mmin -15 -print | xargs -r ls -lt | head -12" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+-rw-r--r--@ 1 jarradhenry  staff  1079554 Jul  9 19:34 $HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png
+-rw-r--r--@ 1 jarradhenry  staff  1076696 Jul  9 19:27 $HOME/.codex/generated_images/019f4968-6290-7e32-9177-d3026d251dfe/ig_043009b236eec833016a503c2a6b24819785860bb471420c9f.png
+
+hook: PreToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "find $HOME/.codex/generated_images -type f -name '*.png' -mmin -15 -print | tail -5 | while read p; do file \""'$p"; done' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/.codex/generated_images/019f4968-6290-7e32-9177-d3026d251dfe/ig_043009b236eec833016a503c2a6b24819785860bb471420c9f.png: PNG image data, 1672 x 941, 8-bit/color RGB, non-interlaced
+$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png: PNG image data, 1672 x 941, 8-bit/color RGB, non-interlaced
+
+hook: PostToolUse
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+codex
+The generated source is `1672x941`, so I’ll center-crop and resize it to the requested `1600x900`. I’m also going to quantize it into the six locked colors so the final file is flat course-palette art rather than a soft-rendered image.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'command -v magick || command -v convert || true' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+hook: PostToolUse
+exec
+/bin/zsh -lc "python3 - <<'PY'
+try:
+    import PIL
+    print('PIL available')
+except Exception as exc:
+    print('PIL missing', exc)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+PIL available
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from pathlib import Path
+from PIL import Image
+
+src = Path('$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png')
+out = Path('course-assets/scenes/module-17/m17_L17_b09_finish-line.png')
+out.parent.mkdir(parents=True, exist_ok=True)
+
+img = Image.open(src).convert('RGB')
+# Center-crop to exact 16:9 before final resize.
+w, h = img.size
+target_ratio = 16 / 9
+current_ratio = w / h
+if current_ratio > target_ratio:
+    new_w = int(round(h * target_ratio))
+    left = (w - new_w) // 2
+    img = img.crop((left, 0, left + new_w, h))
+elif current_ratio < target_ratio:
+    new_h = int(round(w / target_ratio))
+    top = (h - new_h) // 2
+    img = img.crop((0, top, w, top + new_h))
+img = img.resize((1600, 900), Image.Resampling.LANCZOS)
+
+palette_colors = [
+    (0x00, 0x00, 0x00),  # black
+    (0x62, 0xB3, 0xF3),  # cornflower blue
+    (0xFF, 0x84, 0x00),  # orange
+    (0xFF, 0xD2, 0x14),  # yellow
+    (0xFF, 0xF8, 0xDA),  # cream
+    (0xFF, 0xFF, 0xFF),  # white
+]
+# Use a fixed palette with no dithering so gradients and soft lighting collapse to flat fills.
+pal = Image.new('P', (1, 1))
+flat_palette = []
+for c in palette_colors:
+    flat_palette.extend(c)
+flat_palette.extend([0, 0, 0] * (256 - len(palette_colors)))
+pal.putpalette(flat_palette)
+img = img.quantize(palette=pal, dither=Image.Dither.NONE).convert('RGB')
+img.save(out, format='PNG', optimize=True)
+print(out)
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse
+hook: PostToolUse Completed
+ succeeded in 145ms:
+course-assets/scenes/module-17/m17_L17_b09_finish-line.png
+
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+codex
+The final PNG has been written to the requested module path. I’m checking dimensions, palette, and the actual image now because this kind of asset can pass file checks while still failing the character or clutter constraints.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'file course-assets/scenes/module-17/m17_L17_b09_finish-line.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+course-assets/scenes/module-17/m17_L17_b09_finish-line.png: PNG image data, 1600 x 900, 8-bit/color RGB, non-interlaced
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short -- course-assets/scenes/module-17/m17_L17_b09_finish-line.png .planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+?? .planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+
+hook: PostToolUse
+hook: PostToolUse Completed
+exec
+/bin/zsh -lc 'sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b09_finish-line.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+$HOME/Sites/BMH apps/BMH Institute/course-assets/scenes/module-17/m17_L17_b09_finish-line.png
+  pixelWidth: 1600
+  pixelHeight: 900
+
+exec
+/bin/zsh -lc "python3 - <<'PY'
+from PIL import Image
+from pathlib import Path
+path = Path('course-assets/scenes/module-17/m17_L17_b09_finish-line.png')
+img = Image.open(path).convert('RGB')
+colors = sorted(img.getcolors(maxcolors=10_000_000), key=lambda x: x[1])
+print('color_count', len(colors))
+print('colors', ' '.join(f'#{r:02X}{g:02X}{b:02X}:{count}' for count, (r,g,b) in colors))
+# Bounding box of non-blue pixels to verify bottom-center openness roughly.
+blue = (0x62, 0xB3, 0xF3)
+pixels = img.load()
+w,h = img.size
+xs=[]; ys=[]
+for y in range(h):
+    for x in range(w):
+        if pixels[x,y] "'!= blue:
+            xs.append(x); ys.append(y)
+print('"'non_blue_bbox', (min(xs), min(ys), max(xs), max(ys)) if xs else None)
+# Count non-blue pixels in bottom center safe zone.
+zone=(560,690,1040,899)
+count=0
+for y in range(zone[1], zone[3]+1):
+    for x in range(zone[0], zone[2]+1):
+        if pixels[x,y] "'!= blue:
+            count += 1
+print('"'bottom_center_non_blue', count, 'zone_pixels', (zone[2]-zone[0]+1)*(zone[3]-zone[1]+1))
+PY" in $HOME/Sites/BMH apps/BMH Institute
+hook: PostToolUse Completed
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse
+ succeeded in 287ms:
+color_count 6
+colors #000000:77625 #62B3F3:1210760 #FF8400:11109 #FFD214:64577 #FFF8DA:61831 #FFFFFF:14098
+non_blue_bbox (214, 49, 1367, 638)
+bottom_center_non_blue 0 zone_pixels 101010
+
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc 'git check-ignore -v course-assets/scenes/module-17/m17_L17_b09_finish-line.png || true' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+.gitignore:66:course-assets/	course-assets/scenes/module-17/m17_L17_b09_finish-line.png
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short .planning/quick/260709-generate-m17-l17-b09-finish-line course-assets/scenes/module-17/m17_L17_b09_finish-line.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+?? .planning/quick/260709-generate-m17-l17-b09-finish-line/
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..7b57905e3d484b56a1664df2139cce9fc01444c0
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: in_progress
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+
+codex
+Visual inspection passes the core constraints: single Priya, orange headset, yellow top, cream pants, finish-line posts, snapped cream tape, no text, and clean bottom-center blue space. I’m recording the quick-task summary with the verification evidence and the fact that `course-assets/` is ignored by git.
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+apply patch
+patch: completed
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+$HOME/Sites/BMH apps/BMH Institute/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ddd06f2defd3ce31d860d734a4355b96d202b8e1
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b5f26d00b457606e361cb98a130d229c4f40c426
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+@@ -0,0 +1,28 @@
++---
++status: complete
++completed: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset summary
++
++Generated `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Notes
++
++- Used the built-in image generation path with the requested gpt-image-2 style prompt and supplied references.
++- Treated `docs/design/style-ref-1.png` and `docs/design/style-ref-2.png` as strict style references.
++- Treated `docs/design/cast-board.png` and `docs/design/object-board.png` as construction references.
++- Treated the Priya left-reference screenshot and crop as the positive identity source of truth.
++- Selected source `$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png`.
++- Center-cropped and resized the source to 1600 x 900.
++- Flattened the workspace PNG to the six-color course palette.
++- `course-assets/` is ignored by git, so the PNG is saved locally but is not tracked by default.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports 1600 x 900.
++- Local palette check reports exactly six colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, and `#FFFFFF`.
++- Local bottom-center safe-zone check reports `0` non-blue pixels.
++- Visual inspection confirms one Priya, orange headset, yellow top, cream pants, finish-line posts, snapped cream tape, no other people, no desk setup, no ambient doodles, and no visible text or numbers.
+
+hook: PostToolUse
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ddd06f2defd3ce31d860d734a4355b96d202b8e1
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b5f26d00b457606e361cb98a130d229c4f40c426
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+@@ -0,0 +1,28 @@
++---
++status: complete
++completed: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset summary
++
++Generated `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Notes
++
++- Used the built-in image generation path with the requested gpt-image-2 style prompt and supplied references.
++- Treated `docs/design/style-ref-1.png` and `docs/design/style-ref-2.png` as strict style references.
++- Treated `docs/design/cast-board.png` and `docs/design/object-board.png` as construction references.
++- Treated the Priya left-reference screenshot and crop as the positive identity source of truth.
++- Selected source `$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png`.
++- Center-cropped and resized the source to 1600 x 900.
++- Flattened the workspace PNG to the six-color course palette.
++- `course-assets/` is ignored by git, so the PNG is saved locally but is not tracked by default.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports 1600 x 900.
++- Local palette check reports exactly six colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, and `#FFFFFF`.
++- Local bottom-center safe-zone check reports `0` non-blue pixels.
++- Visual inspection confirms one Priya, orange headset, yellow top, cream pants, finish-line posts, snapped cream tape, no other people, no desk setup, no ambient doodles, and no visible text or numbers.
+
+hook: PreToolUse
+hook: PreToolUse
+hook: PreToolUse Completed
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "nl -ba $HOME/.codex/memories/extensions/ad_hoc/notes/20260707-112327-bmh-course-no-crude-control-frame-animation.md | sed -n '1,12p'" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+     1	# BMH course visual generation guardrail
+     2	
+     3	For BMH course stills/animations, never use a crude hand-built control frame, rough SVG/composite, or visibly unpolished geometry-fix image as a production still or animation source just because it fixes one layout issue. If a control frame is used, it is reference-only. Before spending animation credits, the source still itself must be visually acceptable in the BMH doodle style and must not carry known defects. Do not animate from a failed or merely diagnostic source frame.
+
+hook: PostToolUse
+exec
+/bin/zsh -lc 'git status --short .planning/quick/260709-generate-m17-l17-b09-finish-line course-assets/scenes/module-17/m17_L17_b09_finish-line.png && git status --ignored --short course-assets/scenes/module-17/m17_L17_b09_finish-line.png' in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+?? .planning/quick/260709-generate-m17-l17-b09-finish-line/
+!! course-assets/
+
+hook: PostToolUse
+hook: PostToolUse Completed
+hook: PostToolUse Completed
+hook: PreToolUse
+hook: PreToolUse Completed
+exec
+/bin/zsh -lc "sed -n '1,180p' .planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md" in $HOME/Sites/BMH apps/BMH Institute
+ succeeded in 0ms:
+---
+status: complete
+completed: 2026-07-09
+branch: claude/course-production
+---
+
+# Generate Module 17 Lesson 17 finish line scene asset summary
+
+Generated `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
+
+## Notes
+
+- Used the built-in image generation path with the requested gpt-image-2 style prompt and supplied references.
+- Treated `docs/design/style-ref-1.png` and `docs/design/style-ref-2.png` as strict style references.
+- Treated `docs/design/cast-board.png` and `docs/design/object-board.png` as construction references.
+- Treated the Priya left-reference screenshot and crop as the positive identity source of truth.
+- Selected source `$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png`.
+- Center-cropped and resized the source to 1600 x 900.
+- Flattened the workspace PNG to the six-color course palette.
+- `course-assets/` is ignored by git, so the PNG is saved locally but is not tracked by default.
+
+## Verification
+
+- `file course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports PNG image data at 1600 x 900.
+- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports 1600 x 900.
+- Local palette check reports exactly six colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, and `#FFFFFF`.
+- Local bottom-center safe-zone check reports `0` non-blue pixels.
+- Visual inspection confirms one Priya, orange headset, yellow top, cream pants, finish-line posts, snapped cream tape, no other people, no desk setup, no ambient doodles, and no visible text or numbers.
+
+hook: PostToolUse
+hook: PostToolUse Completed
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ddd06f2defd3ce31d860d734a4355b96d202b8e1
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b5f26d00b457606e361cb98a130d229c4f40c426
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+@@ -0,0 +1,28 @@
++---
++status: complete
++completed: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset summary
++
++Generated `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Notes
++
++- Used the built-in image generation path with the requested gpt-image-2 style prompt and supplied references.
++- Treated `docs/design/style-ref-1.png` and `docs/design/style-ref-2.png` as strict style references.
++- Treated `docs/design/cast-board.png` and `docs/design/object-board.png` as construction references.
++- Treated the Priya left-reference screenshot and crop as the positive identity source of truth.
++- Selected source `$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png`.
++- Center-cropped and resized the source to 1600 x 900.
++- Flattened the workspace PNG to the six-color course palette.
++- `course-assets/` is ignored by git, so the PNG is saved locally but is not tracked by default.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports 1600 x 900.
++- Local palette check reports exactly six colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, and `#FFFFFF`.
++- Local bottom-center safe-zone check reports `0` non-blue pixels.
++- Visual inspection confirms one Priya, orange headset, yellow top, cream pants, finish-line posts, snapped cream tape, no other people, no desk setup, no ambient doodles, and no visible text or numbers.
+
+codex
+Saved the PNG at [m17_L17_b09_finish-line.png]($HOME/Sites/BMH%20apps/BMH%20Institute/course-assets/scenes/module-17/m17_L17_b09_finish-line.png).
+
+Verified: PNG, `1600 x 900`, six-color locked palette, clean bottom-center blue space, one Priya only, no text or numbers, no desk/computer scene, no extra people or ambient doodles. I also recorded the quick-task plan and summary under `.planning/quick/260709-generate-m17-l17-b09-finish-line/`.
+
+Note: `course-assets/` is ignored by git, so the image is saved locally but not tracked by default.
+
+
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..ddd06f2defd3ce31d860d734a4355b96d202b8e1
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/PLAN.md
+@@ -0,0 +1,29 @@
++---
++status: complete
++created: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset
++
++## Goal
++
++Generate one course scene PNG at `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Scope
++
++- Use the attached BMH course doodle references and the locked Priya identity references.
++- Create one 1600 x 900 PNG.
++- Show exactly one person: Priya joyfully breaking a cream ribbon tape at a simple race finish line.
++- Keep Priya identical to the accepted reference: black back ponytail, orange/yellow headband, orange headset with boom mic, yellow top, cream pants, orange shoes if visible, flat white face and hands, tiny dot eyes, small curved nose, simple smile, rounded limbs, and thick wobbly black outlines.
++- Use two simple yellow finish-line posts and a cream tape snapping into two pieces at her chest.
++- Leave clean bottom-center cornflower-blue space for code-rendered sticker text.
++- Use cornflower blue `#62b3f3`, flat fills only, and the locked palette: yellow, orange, cream, white, and black.
++- Avoid computers, desks, monitors, extra people, crowds, podiums, medals, trophies, confetti, bibs, text, letters, numbers, symbols, labels, screens, paperwork, ambient doodles, decorative clutter, gradients, textures, shadows, lighting, and perspective.
++
++## Verification
++
++- Confirm the file exists at the requested path.
++- Confirm the file is a PNG at 1600 x 900.
++- Visually inspect Priya identity, single-person constraint, finish-line composition, and clean bottom-center blue space.
++- Confirm there is no visible text, numbers, symbols, extra characters, desk setup, or ambient doodles.
+diff --git a/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+new file mode 100644
+index 0000000000000000000000000000000000000000..b5f26d00b457606e361cb98a130d229c4f40c426
+--- /dev/null
++++ b/.planning/quick/260709-generate-m17-l17-b09-finish-line/SUMMARY.md
+@@ -0,0 +1,28 @@
++---
++status: complete
++completed: 2026-07-09
++branch: claude/course-production
++---
++
++# Generate Module 17 Lesson 17 finish line scene asset summary
++
++Generated `course-assets/scenes/module-17/m17_L17_b09_finish-line.png`.
++
++## Notes
++
++- Used the built-in image generation path with the requested gpt-image-2 style prompt and supplied references.
++- Treated `docs/design/style-ref-1.png` and `docs/design/style-ref-2.png` as strict style references.
++- Treated `docs/design/cast-board.png` and `docs/design/object-board.png` as construction references.
++- Treated the Priya left-reference screenshot and crop as the positive identity source of truth.
++- Selected source `$HOME/.codex/generated_images/019f496e-ec33-7122-8979-a656eb81bef3/ig_0162ab5b8b1371b4016a503de57aa88193a93e981fdf82aa9a.png`.
++- Center-cropped and resized the source to 1600 x 900.
++- Flattened the workspace PNG to the six-color course palette.
++- `course-assets/` is ignored by git, so the PNG is saved locally but is not tracked by default.
++
++## Verification
++
++- `file course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports PNG image data at 1600 x 900.
++- `sips -g pixelWidth -g pixelHeight course-assets/scenes/module-17/m17_L17_b09_finish-line.png` reports 1600 x 900.
++- Local palette check reports exactly six colors: `#000000`, `#62B3F3`, `#FF8400`, `#FFD214`, `#FFF8DA`, and `#FFFFFF`.
++- Local bottom-center safe-zone check reports `0` non-blue pixels.
++- Visual inspection confirms one Priya, orange headset, yellow top, cream pants, finish-line posts, snapped cream tape, no other people, no desk setup, no ambient doodles, and no visible text or numbers.
+
+hook: Stop
+hook: Stop Completed
+tokens used
+129,984
+Saved the PNG at [m17_L17_b09_finish-line.png]($HOME/Sites/BMH%20apps/BMH%20Institute/course-assets/scenes/module-17/m17_L17_b09_finish-line.png).
+
+Verified: PNG, `1600 x 900`, six-color locked palette, clean bottom-center blue space, one Priya only, no text or numbers, no desk/computer scene, no extra people or ambient doodles. I also recorded the quick-task plan and summary under `.planning/quick/260709-generate-m17-l17-b09-finish-line/`.
+
+Note: `course-assets/` is ignored by git, so the image is saved locally but not tracked by default.
+
+
