@@ -239,6 +239,27 @@ describe("ContentBlockRenderer BMH treatments", () => {
     expect(container).toHaveTextContent("Embed URL not set.");
   });
 
+  it.each([
+    ["external_link", { url: "javascript:alert(1)", label: "Unsafe link" }],
+    ["role_play", { iframe_src: "data:text/html,<script>alert(1)</script>", title: "Unsafe practice" }],
+  ] as const)("does not create a navigable surface for malformed %s URLs", (blockType, content) => {
+    const { container } = renderBlock(blockType, content);
+
+    expect(container.querySelector("a[href^='javascript:'], a[href^='data:'], iframe[src^='javascript:'], iframe[src^='data:']")).toBeNull();
+  });
+
+  it("does not attach forged runtime URLs to media elements", () => {
+    const { container } = renderBlock("video", {
+      source: "upload",
+      signed_url: "javascript:alert(1)",
+      poster_signed_url: "javascript:alert(1)",
+      caption_signed_url: "data:text/vtt,unsafe",
+    });
+
+    expect(container.querySelector("video")).toBeNull();
+    expect(container.querySelector("track[src^='data:'], video[poster^='javascript:']")).toBeNull();
+  });
+
   it("renders clear semantics for every resource block", () => {
     const pdf = renderBlock("pdf", {
       signed_url: "https://example.com/guide.pdf",
