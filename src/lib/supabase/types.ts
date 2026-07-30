@@ -1491,6 +1491,7 @@ export type Database = {
         Row: {
           asset_version: string
           block_id: string
+          checkpoint_client_updated_at: string | null
           duration_seconds: number
           last_observed_at: string | null
           last_observed_position_seconds: number
@@ -1502,6 +1503,7 @@ export type Database = {
         Insert: {
           asset_version: string
           block_id: string
+          checkpoint_client_updated_at?: string | null
           duration_seconds: number
           last_observed_at?: string | null
           last_observed_position_seconds?: number
@@ -1513,6 +1515,7 @@ export type Database = {
         Update: {
           asset_version?: string
           block_id?: string
+          checkpoint_client_updated_at?: string | null
           duration_seconds?: number
           last_observed_at?: string | null
           last_observed_position_seconds?: number
