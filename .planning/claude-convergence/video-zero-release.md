@@ -25,8 +25,8 @@
   production media as rollback evidence.
 - [x] Course-content, project, RTL, typecheck, lint, and production build
   verification pass with no new warnings.
-- [ ] Manual code and release review is clean.
+- [x] Manual code and release review is clean.
 - [ ] Independent Claude review reports high-confidence readiness.
-- [ ] PR checks pass and the PR is conflict-free.
+- [x] PR checks pass and the PR is conflict-free.
 - [ ] Production migration and media replacement complete.
 - [ ] Real Chrome verifies the corrected video and captions on the live lesson.
