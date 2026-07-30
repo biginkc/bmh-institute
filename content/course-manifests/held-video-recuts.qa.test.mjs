@@ -215,7 +215,7 @@ test("the direct overrides plus independently reviewed replacements are exactly 
   const directApprovalRecords = ledger.records.filter((record) =>
     DIRECT_APPROVAL_OVERRIDE_CUTS.has(`${record.source_key}:${record.sha256}`),
   );
-  assert.equal(directApprovalRecords.length, 7);
+  assert.equal(directApprovalRecords.length, 8);
   assert.ok(
     directApprovalRecords.every(
       (record) =>
@@ -407,7 +407,7 @@ test("direct approval overrides are checksum-bound and permit only the authorize
     ledgerPromise,
     currentReviewAssets(),
   ]);
-  assert.equal(DIRECT_APPROVAL_OVERRIDE_CUTS.size, 7);
+  assert.equal(DIRECT_APPROVAL_OVERRIDE_CUTS.size, 8);
 
   const current = structuredClone(ledger);
   current.updated_at = "2026-07-17";

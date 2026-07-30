@@ -43,6 +43,7 @@ export const REPLACEMENT_REQUIRED_CUTS = new Map([
 // authorizing another file, source key, or future replacement cut.
 export const DIRECT_APPROVAL_OVERRIDE_CUTS = new Set([
   "video-slot-01-welcome:493de8a5e0663ad577ba46d6d5befce33e9640f250677095094978714d22ac72",
+  "video-slot-01-welcome:06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
   "video-slot-01-mindset:b0cad612499dbd2d867c906c1ad8a8e3e13fcded333fa973fa6d19339fa930da",
   "video-slot-10-objection-scripts:59c745ccca7387f82d0b13eaf95439f9f6a50a8f727ad3c1db4fb839050b1ebb",
   "video-slot-15-closing:6e3aa1b007117b303a05906ca8443a8b9bc38f7c44bd61475c5437b99e7c90d2",
@@ -59,7 +60,6 @@ export const INDEPENDENTLY_REVIEWED_APPROVED_CUTS = new Set([
   ...DIRECT_APPROVAL_OVERRIDE_CUTS,
   "video-slot-02-terms:6f57600d6ec3a596f96175052eda997503ab9b72aa5b7e9ec02239fe1a125769",
   "video-slot-16-kpis:3d50cc79cfe74277ac1311367d5b0bd6fd62d2d38c2c74fff8732ea62203d61a",
-  "video-slot-01-welcome:06f77dbc78d0d17175108e2dafbfed9888617cdf9196c5dcc7fce3f9c4f7978b",
 ]);
 
 // An approved checksum remains immutable history. When more than one approved
