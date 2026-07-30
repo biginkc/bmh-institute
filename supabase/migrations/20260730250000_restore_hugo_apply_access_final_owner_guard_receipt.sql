@@ -59,11 +59,24 @@
 --      to build the scratch comparison copy -- so the thing compared and
 --      the thing installed cannot drift apart. When the installed
 --      definition already matches the known patched form exactly, it
---      returns without installing anything (a real no-op: no DDL against
---      the live function runs on that path). Anything else -- including
---      Codex's synthetic case, where a stray comment/literal makes the body
---      byte-different from both known forms -- raises and aborts the whole
---      migration transaction.
+--      returns before touching public.hugo_apply_access at all. Anything
+--      else -- including Codex's synthetic case, where a stray comment/
+--      literal makes the body byte-different from both known forms --
+--      raises and aborts the whole migration transaction.
+--
+-- The precise no-op criterion (Codex round 3) is: no modification to the
+-- live public.hugo_apply_access function OR its privileges. Building the
+-- two scratch pg_temp functions is inherent to the comparison -- there is
+-- no way to deparse a known-good form without materialising it -- but they
+-- are collision-resistant-named (see v_suffix below), created with plain
+-- CREATE FUNCTION so a name collision errors instead of silently replacing
+-- someone else's session object, and dropped again before this migration
+-- branches on the comparison result, so pg_temp itself always ends the
+-- transaction exactly as it started. The already-patched branch returns
+-- before the `create or replace function public.hugo_apply_access` and
+-- before the REVOKE/GRANT that follow it, so a repeated run against an
+-- already-patched database issues zero DDL and zero privilege statements
+-- against the live function.
 --
 -- Whole-body equality closes the comment/string-literal hole structurally:
 -- there is no way for extra text anywhere in the function (comment, string
@@ -419,19 +432,36 @@ begin
   return public.fn_hugo_bound_operation_receipt(p_operation_id);
 end;
 $newbody$;
+  -- Collision-resistant scratch-function names. A fixed name could clobber
+  -- (via CREATE OR REPLACE) or, worse, be silently satisfied by some other
+  -- session's identically-named pg_temp object; suffixing with randomness
+  -- keyed on random(), clock_timestamp(), and this backend's pid makes an
+  -- accidental match astronomically unlikely, and CREATE FUNCTION (not
+  -- CREATE OR REPLACE) below turns the residual risk into a loud error
+  -- instead of a silent overwrite. 16 hex chars is kept short deliberately:
+  -- combined with the fixed prefix this stays well under PostgreSQL's
+  -- 63-byte identifier limit.
+  v_suffix constant text := substr(
+    md5(random()::text || clock_timestamp()::text || pg_backend_pid()::text),
+    1, 16
+  );
+  v_old_name constant text := 'hugo_apply_access_expected_old_' || v_suffix;
+  v_new_name constant text := 'hugo_apply_access_expected_new_' || v_suffix;
   v_current text;
   v_expected_old text;
   v_expected_new text;
 begin
+  -- CREATE, not CREATE OR REPLACE: a name collision must error, never
+  -- silently replace an object this migration does not own.
   execute format(
-    'create or replace function pg_temp.hugo_apply_access_expected_old(%s) '
+    'create function pg_temp.%I(%s) '
     'returns jsonb language plpgsql security definer set search_path = %L as %L',
-    v_args, '', v_old_body
+    v_old_name, v_args, '', v_old_body
   );
   execute format(
-    'create or replace function pg_temp.hugo_apply_access_expected_new(%s) '
+    'create function pg_temp.%I(%s) '
     'returns jsonb language plpgsql security definer set search_path = %L as %L',
-    v_args, '', v_new_body
+    v_new_name, v_args, '', v_new_body
   );
 
   -- Strip only the leading "CREATE OR REPLACE FUNCTION <schema>.<name>("
@@ -449,29 +479,38 @@ begin
   );
   v_expected_old := regexp_replace(
     pg_get_functiondef(
-      'pg_temp.hugo_apply_access_expected_old(uuid,text,text,jsonb,text,timestamptz,text)'::regprocedure
+      ('pg_temp.' || v_old_name ||
+       '(uuid,text,text,jsonb,text,timestamptz,text)')::regprocedure
     ),
     '^CREATE OR REPLACE FUNCTION [^(]+\(',
     'CREATE OR REPLACE FUNCTION FN('
   );
   v_expected_new := regexp_replace(
     pg_get_functiondef(
-      'pg_temp.hugo_apply_access_expected_new(uuid,text,text,jsonb,text,timestamptz,text)'::regprocedure
+      ('pg_temp.' || v_new_name ||
+       '(uuid,text,text,jsonb,text,timestamptz,text)')::regprocedure
     ),
     '^CREATE OR REPLACE FUNCTION [^(]+\(',
     'CREATE OR REPLACE FUNCTION FN('
   );
 
-  execute
-    'drop function pg_temp.hugo_apply_access_expected_old'
-    '(uuid,text,text,jsonb,text,timestamptz,text)';
-  execute
-    'drop function pg_temp.hugo_apply_access_expected_new'
-    '(uuid,text,text,jsonb,text,timestamptz,text)';
+  -- Drop the scratch copies unconditionally, before branching on the
+  -- comparison result, so every path below (no-op, install, refuse) leaves
+  -- pg_temp exactly as it found it.
+  execute format(
+    'drop function pg_temp.%I(uuid,text,text,jsonb,text,timestamptz,text)',
+    v_old_name
+  );
+  execute format(
+    'drop function pg_temp.%I(uuid,text,text,jsonb,text,timestamptz,text)',
+    v_new_name
+  );
 
   if v_current = v_expected_new then
     raise notice
       'hugo_apply_access already matches the known patched (final-owner-guard receipt) form exactly; no changes made.';
+    -- No modification to the live function or its privileges on this path:
+    -- return before the install/REVOKE/GRANT below ever run.
     return;
   end if;
 
@@ -488,14 +527,18 @@ begin
     'returns jsonb language plpgsql security definer set search_path = %L as %L',
     v_args, '', v_new_body
   );
+
+  -- Privilege statements live on this branch only, so a no-op run never
+  -- re-issues them against a function it did not touch.
+  execute
+    'revoke all on function public.hugo_apply_access('
+    'uuid, text, text, jsonb, text, timestamptz, text'
+    ') from public, anon, authenticated';
+  execute
+    'grant execute on function public.hugo_apply_access('
+    'uuid, text, text, jsonb, text, timestamptz, text'
+    ') to service_role';
 end;
 $migration$;
-
-revoke all on function public.hugo_apply_access(
-  uuid, text, text, jsonb, text, timestamptz, text
-) from public, anon, authenticated;
-grant execute on function public.hugo_apply_access(
-  uuid, text, text, jsonb, text, timestamptz, text
-) to service_role;
 
 commit;
