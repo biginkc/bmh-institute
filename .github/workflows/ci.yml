@@ -79,11 +79,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
-        with:
-          version: 2.109.1
-
-      - name: Apply branch migrations to the shared TEST project
+      - name: Apply lifecycle migrations to the shared TEST project
         env:
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
@@ -92,10 +88,15 @@ jobs:
             echo "TEST_SUPABASE_DB_PASSWORD secret is required."
             exit 1
           fi
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
           ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
           echo "::add-mask::$ENCODED_PASSWORD"
           DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
-          supabase db push --include-all --db-url "$DB_URL" --yes
+          export PGSSLMODE=require
+          psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260729210000_institute_role_group_lifecycle_lock.sql
+          psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260730200000_hugo_institute_lifecycle_contract.sql
+          psql "$DB_URL" --set ON_ERROR_STOP=1 --file supabase/migrations/20260730210000_hugo_institute_lifecycle_contract_forward.sql
 
       - name: Reconcile the exact Tech Stack canary poster
         env:
