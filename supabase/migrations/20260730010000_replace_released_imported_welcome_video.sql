@@ -26,6 +26,18 @@ from public, anon, authenticated;
 grant select on table public.content_import_welcome_video_replacement_records
 to service_role;
 
+-- This migration lands after the Hugo access-gate refresh migration, so new
+-- public RLS tables must install the restrictive authenticated gate directly.
+-- The tables remain service-role-only because authenticated has no permissive
+-- policy; this gate preserves the global invariant verified by test 057.
+create policy hugo_active_authenticated_gate
+on public.content_import_welcome_video_replacement_records
+as restrictive
+for all
+to authenticated
+using ((select public.fn_hugo_access_is_active(auth.uid())))
+with check ((select public.fn_hugo_access_is_active(auth.uid())));
+
 -- Create the append-only rollback ledger before compiling the replacement
 -- function because the replacement path locks and queries it to make rollback
 -- terminal before any replay can mutate content.
@@ -51,6 +63,14 @@ revoke all on table public.content_import_welcome_video_rollback_records
 from public, anon, authenticated;
 grant select on table public.content_import_welcome_video_rollback_records
 to service_role;
+
+create policy hugo_active_authenticated_gate
+on public.content_import_welcome_video_rollback_records
+as restrictive
+for all
+to authenticated
+using ((select public.fn_hugo_access_is_active(auth.uid())))
+with check ((select public.fn_hugo_access_is_active(auth.uid())));
 
 create or replace function public.fn_guard_import_welcome_video_replacement_record()
 returns trigger

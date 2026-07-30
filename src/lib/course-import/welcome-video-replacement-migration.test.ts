@@ -28,6 +28,13 @@ describe("released imported welcome video replacement migration", () => {
     expect(sql).toMatch(
       /grant execute on function public\.fn_replace_released_imported_welcome_video\(text, jsonb, text, text, text\)[\s\S]*to service_role/i,
     );
+    expect(sql.match(/create policy hugo_active_authenticated_gate/gi)).toHaveLength(2);
+    expect(sql).toMatch(
+      /create policy hugo_active_authenticated_gate[\s\S]*on public\.content_import_welcome_video_replacement_records[\s\S]*as restrictive[\s\S]*to authenticated[\s\S]*fn_hugo_access_is_active\(auth\.uid\(\)\)/i,
+    );
+    expect(sql).toMatch(
+      /create policy hugo_active_authenticated_gate[\s\S]*on public\.content_import_welcome_video_rollback_records[\s\S]*as restrictive[\s\S]*to authenticated[\s\S]*fn_hugo_access_is_active\(auth\.uid\(\)\)/i,
+    );
   });
 
   it("accepts exactly one fixed welcome video and caption replacement", () => {

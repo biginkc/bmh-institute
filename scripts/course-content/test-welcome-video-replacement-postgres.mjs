@@ -211,6 +211,13 @@ function bootstrapSql() {
     create function auth.role() returns text language sql stable as $$
       select nullif(current_setting('request.jwt.claim.role', true), '')
     $$;
+    create function auth.uid() returns uuid language sql stable as $$
+      select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid
+    $$;
+    create function public.fn_hugo_access_is_active(p_user_id uuid)
+    returns boolean language sql stable as $$
+      select p_user_id is not null
+    $$;
     create schema storage;
     create table storage.objects (
       id uuid primary key default gen_random_uuid(),
