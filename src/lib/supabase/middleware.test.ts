@@ -12,5 +12,7 @@ describe("isPublicPath", () => {
   it("preserves existing public routes in production", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/api/webhooks/course")).toBe(true);
+    expect(isPublicPath("/api/role-play-embed-contract")).toBe(true);
+    expect(isPublicPath("/api/role-play-embed-contract/extra")).toBe(false);
   });
 });

@@ -18,6 +18,7 @@ type RolePlayBlockProps = {
   scenarioId: string;
   title: string;
   iframeSrc: string;
+  launchCredential: string;
   initialHeightPx: number;
   initialComplete: boolean;
 };
@@ -27,6 +28,7 @@ export function RolePlayBlock({
   scenarioId,
   title,
   iframeSrc,
+  launchCredential,
   initialHeightPx,
   initialComplete,
 }: RolePlayBlockProps) {
@@ -42,6 +44,7 @@ export function RolePlayBlock({
 
   useEffect(() => {
     if (!trustedOrigin) return;
+    const targetOrigin = trustedOrigin;
 
     function onMessage(event: MessageEvent) {
       const data = parseRolePlayEvent(event.data);
@@ -61,6 +64,14 @@ export function RolePlayBlock({
 
       if (data.type === "rp.ready") {
         setReady(true);
+        iframeRef.current?.contentWindow?.postMessage(
+          {
+            type: "rp.launch",
+            scenario_id: scenarioId,
+            credential: launchCredential,
+          },
+          targetOrigin,
+        );
       } else if (data.type === "rp.height") {
         setHeightPx(clampRolePlayHeight(data.height_px));
       } else if (data.type === "rp.error") {
@@ -89,7 +100,7 @@ export function RolePlayBlock({
 
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, [blockId, router, scenarioId, trustedOrigin]);
+  }, [blockId, launchCredential, router, scenarioId, trustedOrigin]);
 
   if (!iframeSrc || !trustedOrigin) {
     return (

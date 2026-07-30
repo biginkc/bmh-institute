@@ -16,7 +16,8 @@ export function isPublicPath(path: string) {
     path.startsWith("/invite") ||
     path.startsWith("/auth") ||
     path.startsWith("/api/webhooks") ||
-    path.startsWith("/api/cron")
+    path.startsWith("/api/cron") ||
+    path === "/api/role-play-embed-contract"
   );
 }
 

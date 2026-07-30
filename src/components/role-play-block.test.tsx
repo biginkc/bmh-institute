@@ -28,7 +28,8 @@ describe("<RolePlayBlock /> completion messages", () => {
         scenarioId="scenario-1"
         title="Opening practice"
         iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
-      initialHeightPx={720}
+        launchCredential="parent-held-launch-credential"
+        initialHeightPx={720}
         initialComplete={false}
       />,
     );
@@ -76,6 +77,54 @@ describe("<RolePlayBlock /> completion messages", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  it("sends the parent-held launch credential only to the rendered trusted iframe", () => {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="parent-held-launch-credential"
+        initialHeightPx={720}
+        initialComplete={false}
+      />,
+    );
+    const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
+    const postMessage = vi.spyOn(
+      iframe.contentWindow as Window,
+      "postMessage",
+    );
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "rp.ready", scenario_id: "scenario-1" },
+          origin: "https://lab.example.com",
+          source: window,
+        }),
+      );
+    });
+    expect(postMessage).not.toHaveBeenCalled();
+
+    act(() => {
+      window.dispatchEvent(
+        new MessageEvent("message", {
+          data: { type: "rp.ready", scenario_id: "scenario-1" },
+          origin: "https://lab.example.com",
+          source: iframe.contentWindow,
+        }),
+      );
+    });
+    expect(postMessage).toHaveBeenCalledWith(
+      {
+        type: "rp.launch",
+        scenario_id: "scenario-1",
+        credential: "parent-held-launch-credential",
+      },
+      "https://lab.example.com",
+    );
+  });
+
   it("renders persisted completion immediately after reload", () => {
     render(
       <RolePlayBlock
@@ -83,6 +132,7 @@ describe("<RolePlayBlock /> completion messages", () => {
         scenarioId="scenario-1"
         title="Opening practice"
         iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="parent-held-launch-credential"
         initialHeightPx={720}
         initialComplete
       />,

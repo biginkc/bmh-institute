@@ -143,6 +143,10 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
           scenarioId={stringOr(block.content.scenario_id, "")}
           title={stringOr(block.content.title, "Role play")}
           iframeSrc={stringOr(block.content.iframe_src, "")}
+          launchCredential={stringOr(
+            block.content.embed_launch_credential,
+            "",
+          )}
           initialHeightPx={numberOr(block.content.height_px, 720)}
           initialComplete={completed}
         />

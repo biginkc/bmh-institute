@@ -1,7 +1,12 @@
-import { createHmac } from "node:crypto";
+import { createHash, createHmac, randomBytes } from "node:crypto";
 
-const ISSUER = "sandra-university";
-export const ROLE_PLAY_EMBED_AUDIENCE = "closer-lab";
+import { EMBED_PARENT_LAUNCH_CONTRACT } from "./embed-parent-launch-contract";
+
+const ISSUER = EMBED_PARENT_LAUNCH_CONTRACT.issuer;
+export const ROLE_PLAY_EMBED_AUDIENCE =
+  EMBED_PARENT_LAUNCH_CONTRACT.token_audience;
+export const ROLE_PLAY_EMBED_LAUNCH_AUDIENCE =
+  EMBED_PARENT_LAUNCH_CONTRACT.launch_audience;
 const DEFAULT_TTL_SECONDS = 5 * 60;
 const MAX_TTL_SECONDS = 5 * 60;
 const MIN_SECRET_BYTES = 32;
@@ -30,6 +35,30 @@ export type RolePlayEmbedTokenPayload = {
   parent_origin: string;
   iat: number;
   exp: number;
+};
+
+export type RolePlayEmbedLaunchPayload = {
+  iss: typeof ISSUER;
+  aud: typeof ROLE_PLAY_EMBED_LAUNCH_AUDIENCE;
+  sub: string;
+  lesson_id: string;
+  block_id: string;
+  scenario_id: string;
+  parent_origin: string;
+  token_sha256: string;
+  jti: string;
+  purpose: "embed-attempt-launch";
+  iat: number;
+  exp: number;
+};
+
+export type RolePlayEmbedBundle = {
+  token: string;
+  launchCredential: string;
+};
+
+type RolePlayEmbedBundleOptions = {
+  launchJti?: string;
 };
 
 export function mintRolePlayEmbedToken(
@@ -68,6 +97,50 @@ export function mintRolePlayEmbedToken(
     .digest("base64url");
 
   return `${header}.${body}.${signature}`;
+}
+
+export function mintRolePlayEmbedBundle(
+  input: RolePlayEmbedTokenInput,
+  secret?: string,
+  options: RolePlayEmbedBundleOptions = {},
+): RolePlayEmbedBundle {
+  const now = input.now ?? new Date();
+  const stableInput = { ...input, now };
+  const token = mintRolePlayEmbedToken(stableInput, secret);
+  const signingSecret =
+    process.env.NODE_ENV === "production"
+      ? configuredEmbedSecret(process.env)
+      : secret ?? configuredEmbedSecret(process.env);
+  assertSecret(signingSecret);
+
+  const nowSeconds = Math.floor(now.getTime() / 1000);
+  const ttlSeconds = input.ttlSeconds ?? DEFAULT_TTL_SECONDS;
+  const launchPayload: RolePlayEmbedLaunchPayload = {
+    iss: ISSUER,
+    aud: ROLE_PLAY_EMBED_LAUNCH_AUDIENCE,
+    sub: input.userId,
+    lesson_id: input.lessonId,
+    block_id: input.blockId,
+    scenario_id: input.scenarioId,
+    parent_origin: normalizeParentOrigin(input.parentOrigin),
+    token_sha256: createHash("sha256").update(token).digest("hex"),
+    jti: options.launchJti ?? randomBytes(32).toString("base64url"),
+    purpose: EMBED_PARENT_LAUNCH_CONTRACT.launch_purpose,
+    iat: nowSeconds,
+    exp: nowSeconds + ttlSeconds,
+  };
+  if (!/^[A-Za-z0-9_-]{43}$/.test(launchPayload.jti)) {
+    throw new Error("Role play embed launch JTI must encode exactly 32 bytes.");
+  }
+  const header = base64UrlJson({ alg: "HS256", typ: "JWT" });
+  const body = base64UrlJson(launchPayload);
+  const signature = createHmac("sha256", signingSecret)
+    .update(`${header}.${body}`)
+    .digest("base64url");
+  return {
+    token,
+    launchCredential: `${header}.${body}.${signature}`,
+  };
 }
 
 function assertTokenInput(input: RolePlayEmbedTokenInput) {
