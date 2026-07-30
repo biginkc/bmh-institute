@@ -1,5 +1,53 @@
 begin;
 
+-- A changed PostgreSQL argument type creates an overload rather than
+-- replacing the prior function. Keep the cumulative migration assertion here
+-- so the legacy timestamp route cannot remain callable to authenticated users.
+do $$
+declare
+  v_checkpoint_function_count bigint;
+begin
+  if to_regprocedure(
+    'public.fn_checkpoint_video_playback(uuid,uuid,numeric,numeric,timestamptz)'
+  ) is not null then
+    raise exception 'legacy timestamp checkpoint overload still exists';
+  end if;
+  if to_regprocedure(
+    'public.fn_checkpoint_video_playback(uuid,uuid,numeric,numeric,bigint)'
+  ) is null then
+    raise exception 'sequence checkpoint function is missing';
+  end if;
+  select count(*)
+    into v_checkpoint_function_count
+  from pg_catalog.pg_proc procedure_row
+  join pg_catalog.pg_namespace namespace_row
+    on namespace_row.oid = procedure_row.pronamespace
+  where namespace_row.nspname = 'public'
+    and procedure_row.proname = 'fn_checkpoint_video_playback';
+  if v_checkpoint_function_count <> 1 then
+    raise exception 'checkpoint RPC has unexpected overload count: %', v_checkpoint_function_count;
+  end if;
+  if not has_function_privilege(
+    'authenticated',
+    'public.fn_checkpoint_video_playback(uuid,uuid,numeric,numeric,bigint)',
+    'execute'
+  ) then
+    raise exception 'authenticated is missing the sequence checkpoint RPC';
+  end if;
+  if has_function_privilege(
+    'anon',
+    'public.fn_checkpoint_video_playback(uuid,uuid,numeric,numeric,bigint)',
+    'execute'
+  ) or has_function_privilege(
+    'service_role',
+    'public.fn_checkpoint_video_playback(uuid,uuid,numeric,numeric,bigint)',
+    'execute'
+  ) then
+    raise exception 'non-authenticated role can execute the sequence checkpoint RPC';
+  end if;
+end;
+$$;
+
 -- This is an executable migration acceptance test. It uses one learner/video
 -- fixture and runs the same two writes in both arrival orders.
 select set_config('request.jwt.claim.role', 'authenticated', true);
