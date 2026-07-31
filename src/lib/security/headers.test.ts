@@ -51,12 +51,40 @@ describe("Permissions-Policy", () => {
     }
   });
 
-  it("still denies the features we intend to deny", async () => {
+  it("still denies the features we intend to deny outright", async () => {
     const values = await permissionsPolicyValues();
-    for (const feature of ["camera", "geolocation", "payment", "usb"]) {
+    for (const feature of ["geolocation", "payment", "usb"]) {
       expect(values.some((value) => new RegExp(`${feature}=\\(\\)`).test(value))).toBe(
         true,
       );
+    }
+  });
+
+  /**
+   * Regression guard for the "Talk with Andrea" role-play iframe camera.
+   *
+   * `camera=()` is an empty allowlist. Per the permissions-policy spec, that
+   * disables camera for the top-level document AND every nested iframe,
+   * unconditionally overriding the iframe's own `allow="camera"` attribute —
+   * exactly what silently forced learners into audio-only recordings while
+   * a "baseline browser protections" commit looked correct on its face.
+   *
+   * The role-play runtime is served from a different origin (Closer Lab), so
+   * `camera=(self)` alone is NOT sufficient — a cross-origin frame needs its
+   * origin named explicitly: camera=(self "https://lab.bmhgroupkc.com").
+   * This must never regress back to a blanket camera=() deny, and must never
+   * widen to an open allowlist (`*`) that would hand camera to arbitrary
+   * third-party embeds.
+   */
+  it("allows the camera for the Closer Lab role-play origin only", async () => {
+    const values = await permissionsPolicyValues();
+    const cameraDirectives = values
+      .map((value) => value.match(/(^|[;,\s])camera\s*=\s*\(([^)]*)\)/i)?.[2])
+      .filter((v): v is string => v !== undefined);
+    expect(cameraDirectives.length).toBeGreaterThan(0);
+    for (const directive of cameraDirectives) {
+      expect(directive).toContain('"https://lab.bmhgroupkc.com"');
+      expect(directive).not.toMatch(/\*/);
     }
   });
 });

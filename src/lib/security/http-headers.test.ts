@@ -17,7 +17,7 @@ describe("production HTTP security headers", () => {
     expect(headers.get("content-security-policy")).toContain("frame-ancestors 'none'");
     expect(headers.get("content-security-policy")).toContain("object-src 'none'");
     expect(headers.get("permissions-policy")).toBe(
-      "camera=(), geolocation=(), payment=(), usb=()",
+      'camera=(self "https://lab.bmhgroupkc.com"), geolocation=(), payment=(), usb=()',
     );
     expect(headers.get("referrer-policy")).toBe("strict-origin-when-cross-origin");
     expect(headers.get("x-content-type-options")).toBe("nosniff");
