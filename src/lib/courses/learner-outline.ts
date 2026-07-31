@@ -45,6 +45,12 @@ export type LearnerOutlineBuildInput = {
   states: Map<string, { lessonId: string; isComplete: boolean; isUnlocked: boolean }>;
   assignmentSubmissions: Map<string, "submitted" | "approved" | "needs_revision">;
   completedBlockIds: Set<string>;
+  /**
+   * Video blocks whose stored completion no longer matches the block's
+   * current asset (file/duration changed after the learner finished it).
+   * Optional/defaulted to empty so existing callers are unaffected.
+   */
+  invalidatedBlockIds?: Set<string>;
   resume: { lastLessonId: string | null; lastBlockId: string | null } | null;
 };
 
@@ -84,6 +90,7 @@ export type LearnerContentTile = TileBase & {
   quizComplete: boolean;
   quizUnlocked: boolean;
   completedBlockIds: Set<string>;
+  invalidatedBlockIds: Set<string>;
 };
 
 export type LearnerAssignmentTile = TileBase & {
@@ -266,6 +273,11 @@ export function buildLearnerCourseOutline(
           completedBlockIds: new Set(
             lesson.blocks
               .filter((block) => input.completedBlockIds.has(block.id))
+              .map((block) => block.id),
+          ),
+          invalidatedBlockIds: new Set(
+            lesson.blocks
+              .filter((block) => input.invalidatedBlockIds?.has(block.id))
               .map((block) => block.id),
           ),
         });

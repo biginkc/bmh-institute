@@ -246,6 +246,7 @@ async function ContentCompositeLesson({
   const parts = buildLearnerLessonParts({
     blocks: tile.blocks,
     completedBlockIds: tile.completedBlockIds,
+    invalidatedBlockIds: tile.invalidatedBlockIds,
     quizComplete: tile.quizComplete,
     quizUnlocked: tile.quizUnlocked,
     compositeComplete: tile.complete,
@@ -435,6 +436,17 @@ async function PartBody({
   }
   return (
     <div className="flex flex-col gap-5" data-learner-part={part.id}>
+      {part.invalidated ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>This video was updated</CardTitle>
+            <CardDescription>
+              Watch it again to continue — your previous completion was on an
+              older version of this video.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      ) : null}
       {part.blocks.map((block) => (
         <ContentBlockRenderer
           key={block.id}

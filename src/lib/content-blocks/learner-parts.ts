@@ -14,6 +14,13 @@ export type LearnerLessonPart = {
   blocks: ContentBlock[];
   complete: boolean;
   available: boolean;
+  /**
+   * True only for a video part whose prior completion was invalidated by a
+   * content update (the underlying file/duration changed after the learner
+   * finished it) — never for a part that was simply never started. Lets the
+   * UI say *why* progress reset instead of presenting an ordinary lock.
+   */
+  invalidated: boolean;
 };
 
 export type LearnerLessonPartsInput = {
@@ -23,6 +30,14 @@ export type LearnerLessonPartsInput = {
   quizUnlocked: boolean;
   compositeComplete: boolean;
   includeQuiz?: boolean;
+  /**
+   * Video blocks with a `user_block_progress` row whose `asset_version` no
+   * longer matches the block's current file/duration — i.e. the learner
+   * completed an older version of this video before its file was swapped.
+   * Optional/defaulted so existing callers that never invalidate anything
+   * don't need to change.
+   */
+  invalidatedBlockIds?: Set<string>;
 };
 
 const ACTIONABLE_TYPES = new Set<ContentBlock["block_type"]>([
@@ -105,6 +120,13 @@ export function buildLearnerLessonParts(
     // it, which defeats the entire point of asking someone to test one.
     const done = input.completedBlockIds.has(block.id);
     const gateSatisfied = !block.is_required_for_completion || done;
+    // A part the learner has genuinely completed must always stay openable,
+    // even if a later content update invalidated an EARLIER part's
+    // completion and regressed `priorComplete` for everything after it. The
+    // upstream gate still governs parts that were never completed — this
+    // only widens `available` for a part that is itself already done.
+    const invalidated =
+      video && !done && (input.invalidatedBlockIds?.has(block.id) ?? false);
     const blocks = [block];
     if (video && index === 1) blocks.push(...support);
     parts.push({
@@ -113,7 +135,8 @@ export function buildLearnerLessonParts(
       kind: video ? "video" : "role_play",
       blocks,
       complete: done,
-      available: priorComplete,
+      available: priorComplete || done,
+      invalidated,
     });
     priorComplete = priorComplete && gateSatisfied;
   }
@@ -126,6 +149,7 @@ export function buildLearnerLessonParts(
       blocks: support,
       complete: true,
       available: true,
+      invalidated: false,
     });
   }
 
@@ -136,7 +160,10 @@ export function buildLearnerLessonParts(
       kind: "quiz",
       blocks: [],
       complete: input.quizComplete,
-      available: priorComplete && input.quizUnlocked,
+      // Same rule as above: a completed quiz must stay revisitable even if
+      // an earlier part's completion later got invalidated.
+      available: (priorComplete && input.quizUnlocked) || input.quizComplete,
+      invalidated: false,
     });
   }
   if (guides.length > 0) {
@@ -147,6 +174,7 @@ export function buildLearnerLessonParts(
       blocks: guides,
       complete: input.compositeComplete,
       available: input.compositeComplete,
+      invalidated: false,
     });
   }
 
