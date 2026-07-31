@@ -152,17 +152,17 @@ export async function loadLearnerLessonOutline({
   // A `user_block_progress` row for a video block whose `asset_version`
   // doesn't match the block's current file/duration means the learner
   // completed an older version of this video before its underlying file was
-  // swapped. That completion correctly no longer counts (above), but the UI
-  // still needs to know *why* so it can say so instead of showing an
-  // ordinary not-yet-started lock.
+  // swapped — including a legacy row with a null/empty `asset_version`,
+  // which is a real prior-progress record, not the absence of one. That
+  // completion correctly no longer counts (above), but the UI still needs to
+  // know *why* so it can say so instead of showing an ordinary
+  // not-yet-started lock.
   const invalidatedBlockIds = new Set(
     (blockProgressResult.data ?? []).flatMap((row) => {
       const block = blocksById.get(row.block_id);
       if (!block || block.block_type !== "video") return [];
       const version = videoAssetVersion(block.content);
-      return version && row.asset_version && row.asset_version !== version
-        ? [row.block_id]
-        : [];
+      return version && row.asset_version !== version ? [row.block_id] : [];
     }),
   );
 

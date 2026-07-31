@@ -128,6 +128,54 @@ describe("loadLearnerLessonOutline", () => {
     expect(content.invalidatedBlockIds.has("video-never-started")).toBe(false);
   });
 
+  it("treats a legacy progress row with a null or empty asset_version as invalidated, not never-started", async () => {
+    // Codex adversarial-review finding on PR #161: user_block_progress.asset_version
+    // is nullable, and older rows predate the column being populated at all.
+    // A row that exists at all is a real prior-progress record — it must not
+    // silently collapse into the "no row / never started" case just because
+    // asset_version happens to be null or "".
+    const { supabase } = fakeSupabase({
+      content_blocks: [
+        {
+          id: "video-null-legacy",
+          block_type: "video",
+          content: { file_path: "new-file.mp4", duration_seconds: 318 },
+          sort_order: 1,
+          is_required_for_completion: true,
+        },
+        {
+          id: "video-empty-legacy",
+          block_type: "video",
+          content: { file_path: "another-file.mp4", duration_seconds: 200 },
+          sort_order: 2,
+          is_required_for_completion: true,
+        },
+      ],
+      user_block_progress: [
+        { block_id: "video-null-legacy", asset_version: null },
+        { block_id: "video-empty-legacy", asset_version: "" },
+      ],
+    });
+    const result = await loadLearnerLessonOutline({
+      supabase: supabase as never,
+      courseId: "course-1",
+      lessonId: "content-1",
+      userId: "user-1",
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    const content = result.outline.tiles.find(
+      (tile) => tile.id === "content-1",
+    );
+    expect(content?.kind).toBe("content");
+    if (content?.kind !== "content") return;
+    expect(content.completedBlockIds.has("video-null-legacy")).toBe(false);
+    expect(content.completedBlockIds.has("video-empty-legacy")).toBe(false);
+    expect(content.invalidatedBlockIds.has("video-null-legacy")).toBe(true);
+    expect(content.invalidatedBlockIds.has("video-empty-legacy")).toBe(true);
+  });
+
   it("queries assignment status only when the requested lesson is an assignment", async () => {
     const { supabase, calls } = fakeSupabase();
     await loadLearnerLessonOutline({
