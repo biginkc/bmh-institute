@@ -64,6 +64,21 @@ begin
       raise exception 'reharden migration refused: % has an unrecognized body (neither the hardened nor the known pre-fix definition) -- refusing to overwrite unknown drift', v_fn.identity
         using errcode = '55000';
     end if;
+    -- Do not trust "whoever currently owns this function" as an implicitly
+    -- safe grantee: an unexpected or compromised owner is itself a
+    -- trust-boundary bypass for a SECURITY DEFINER function, and this
+    -- migration has no independent way to confirm a role name is the
+    -- intended one. Pin the allowed owner to current_user -- the role
+    -- actually executing this migration -- instead. This is not an
+    -- arbitrary guess: CREATE OR REPLACE FUNCTION below can only succeed
+    -- as the existing owner (or as superuser), so refusing here when the
+    -- owner is anyone else fails closed before attempting DDL that would
+    -- otherwise either error uninformatively or silently take over a
+    -- function owned by an unexpected role.
+    if v_fn.owner_rolname is distinct from current_user then
+      raise exception 'reharden migration refused: % is owned by % (expected the migrating role %) -- refusing to modify a function owned by an unexpected role', v_fn.identity, v_fn.owner_rolname, current_user
+        using errcode = '55000';
+    end if;
     if v_fn.prolang <> (select oid from pg_language where lanname = 'plpgsql')
       or not v_fn.prosecdef
       or not (coalesce(v_fn.proconfig, '{}'::text[]) @> array['search_path=public']::text[])
@@ -76,14 +91,15 @@ begin
           and not x.is_grantable
       )
       or exists (
-        -- Any EXECUTE grantee other than the function's own owner or
-        -- `authenticated`, or any EXECUTE grant at all (including the
-        -- owner's) carrying WITH GRANT OPTION, is unrecognized drift: a
-        -- grantable EXECUTE lets whoever holds it re-grant to anon or
-        -- another role later, after this migration has already decided
-        -- the state looks trustworthy. Reject the whole ACL shape rather
-        -- than merely checking that authenticated is present and anon is
-        -- absent, matching 20260730260000's is_admin baseline check.
+        -- Any EXECUTE grantee other than current_user (the pinned, already
+        -- owner-verified migrating role) or `authenticated`, or any
+        -- EXECUTE grant at all (including the owner's) carrying WITH GRANT
+        -- OPTION, is unrecognized drift: a grantable EXECUTE lets whoever
+        -- holds it re-grant to anon or another role later, after this
+        -- migration has already decided the state looks trustworthy.
+        -- Reject the whole ACL shape rather than merely checking that
+        -- authenticated is present and anon is absent, matching
+        -- 20260730260000's is_admin baseline check.
         select 1
         from aclexplode(v_fn.acl) x
         left join pg_roles r on r.oid = x.grantee
@@ -91,7 +107,7 @@ begin
           and (
             x.is_grantable
             or x.grantee = 0
-            or coalesce(r.rolname, '') not in ('authenticated', v_fn.owner_rolname)
+            or coalesce(r.rolname, '') not in ('authenticated', current_user)
           )
       )
     then
@@ -441,6 +457,10 @@ begin
       to_regprocedure('public.fn_admin_delete_catalog_entity_v1(text, uuid)')
     )
   loop
+    if v_fn.owner_rolname is distinct from current_user then
+      raise exception 'reharden migration refused: % is owned by % (expected the migrating role %) immediately before commit', v_fn.identity, v_fn.owner_rolname, current_user
+        using errcode = '55000';
+    end if;
     if not exists (
       select 1
       from aclexplode(v_fn.acl) x
@@ -457,7 +477,7 @@ begin
         and (
           x.is_grantable
           or x.grantee = 0
-          or coalesce(r.rolname, '') not in ('authenticated', v_fn.owner_rolname)
+          or coalesce(r.rolname, '') not in ('authenticated', current_user)
         )
     )
     then
