@@ -9,6 +9,7 @@ import {
 import { Badge } from "@/components/bmh-ds/badge";
 import { Card } from "@/components/bmh-ds/card";
 import { createClient } from "@/lib/supabase/server";
+import { formatLearnerDate } from "@/lib/format-learner-date";
 
 export default async function CertificatesPage() {
   const supabase = await createClient();
@@ -111,7 +112,7 @@ export default async function CertificatesPage() {
                       {c.title}
                     </h2>
                     <p className="mt-1 font-[family-name:var(--font-body)] text-[13px] font-bold text-[var(--text-muted)]">
-                      Issued {new Date(c.issuedAt).toLocaleDateString()}
+                      Issued {formatLearnerDate(c.issuedAt)}
                     </p>
                     <p className="mt-0.5 truncate font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--ink-400)]">
                       Certificate {c.number}

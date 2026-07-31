@@ -11,6 +11,7 @@ import { Button } from "@/components/bmh-ds/button";
 import { Card } from "@/components/bmh-ds/card";
 import { Coach } from "@/components/bmh-ds/coach";
 import { Input } from "@/components/bmh-ds/input";
+import { formatLearnerDateTime } from "@/lib/format-learner-date";
 
 import { submitAssignment } from "./assignment-actions";
 
@@ -269,7 +270,7 @@ export function AssignmentRunner({
               >
                 <div>
                   <div className="font-[family-name:var(--font-body)] text-xs font-bold text-[var(--text-muted)]">
-                    {new Date(submission.submitted_at).toLocaleString()}
+                    {formatLearnerDateTime(submission.submitted_at)}
                   </div>
                   {submission.reviewer_notes ? (
                     <div className="mt-1 font-[family-name:var(--font-body)] text-xs font-semibold text-[var(--text-body)]">

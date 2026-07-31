@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import { createClient } from "@/lib/supabase/server";
 import { renderCertificateHtml } from "@/lib/certificates/render";
+import { formatLearnerLongDate } from "@/lib/format-learner-date";
 
 import { CertificateLayout } from "../../certificate-layout";
 
@@ -58,10 +59,7 @@ export default async function CourseCertificatePage({
   const html = renderCertificateHtml(bodyHtml, {
     full_name: fullName,
     title,
-    completion_date: new Date(cert.issued_at as string).toLocaleDateString(
-      undefined,
-      { year: "numeric", month: "long", day: "numeric" },
-    ),
+    completion_date: formatLearnerLongDate(cert.issued_at as string),
     certificate_number: cert.certificate_number as string,
   });
 
