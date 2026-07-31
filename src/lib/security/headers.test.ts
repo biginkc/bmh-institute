@@ -186,11 +186,18 @@ describe("Permissions-Policy camera dev-origin gate is NODE_ENV-provable", () =>
     const cameraDirectives = cameraDirectivesOf(values);
     expect(cameraDirectives.length).toBeGreaterThan(0);
     for (const directive of cameraDirectives) {
-      expect(directive).toContain('"http://localhost:3200"');
-      expect(directive).toContain('"http://127.0.0.1:3200"');
-      // Still exactly the Closer Lab set plus the two dev origins — never a
-      // wildcard, and never a stray unrelated origin.
-      expect(directive).not.toMatch(/\*/);
+      // Exact token equality, not containment — `.toContain(...)` alone
+      // would still pass if a future edit appended an arbitrary extra
+      // development origin alongside the two intended ones. Pin the full
+      // set: self, the production Closer Lab origin, and exactly the two
+      // intended localhost origins, in the order next.config.ts builds them.
+      const tokens = directive.trim().split(/\s+/).filter(Boolean);
+      expect(tokens).toEqual([
+        "self",
+        '"https://lab.bmhgroupkc.com"',
+        '"http://localhost:3200"',
+        '"http://127.0.0.1:3200"',
+      ]);
     }
   });
 });
