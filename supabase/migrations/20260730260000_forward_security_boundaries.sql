@@ -12,6 +12,7 @@ declare
   v_table text;
   v_acl text[];
   v_is_admin record;
+  v_is_admin_owner text;
   v_fn record;
 begin
   foreach v_table in array array[
@@ -51,14 +52,36 @@ begin
       using errcode = '55000';
   end if;
 
-    select array_agg(coalesce(r.rolname, 'PUBLIC') order by coalesce(r.rolname, 'PUBLIC'))
+  select r.rolname into v_is_admin_owner
+    from pg_proc p
+    join pg_roles r on r.oid = p.proowner
+    where p.oid = to_regprocedure('public.is_admin(uuid)');
+
+  -- Unfiltered: every EXECUTE aclitem on is_admin, whoever the grantor is
+  -- and whether or not it carries WITH GRANT OPTION. A prior version of
+  -- this check filtered to grantor = owner AND is_grantable = false
+  -- before comparing, which silently dropped (rather than rejected) an
+  -- EXECUTE grant issued by a different grantor or one carrying GRANT
+  -- OPTION — both still confer effective EXECUTE privilege regardless of
+  -- who granted it or whether it's re-grantable. Encode grantor and
+  -- grantable state into the comparison so any such entry changes the
+  -- array and trips the exact-match check below instead of vanishing.
+  select array_agg(
+           coalesce(g.rolname, 'PUBLIC') || '=' || coalesce(r.rolname, 'PUBLIC') ||
+           case when x.is_grantable then '*' else '' end
+           order by coalesce(g.rolname, 'PUBLIC'), coalesce(r.rolname, 'PUBLIC'), x.is_grantable
+         )
     into v_acl
     from aclexplode(v_is_admin.acl) x
     left join pg_roles r on r.oid = x.grantee
-    where x.grantor = (select proowner from pg_proc where oid = to_regprocedure('public.is_admin(uuid)'))
-      and x.privilege_type = 'EXECUTE'
-      and x.is_grantable = false;
-  if v_acl is distinct from array['authenticated', 'postgres', 'service_role']::text[] then
+    left join pg_roles g on g.oid = x.grantor
+    where x.privilege_type = 'EXECUTE';
+  if v_acl is distinct from array[
+       v_is_admin_owner || '=authenticated',
+       v_is_admin_owner || '=postgres',
+       v_is_admin_owner || '=service_role'
+     ]::text[]
+  then
     raise exception 'forward security migration refused: public.is_admin(uuid) ACL baseline mismatch: %', v_acl
       using errcode = '55000';
   end if;
@@ -536,7 +559,7 @@ do $$
 declare
   v_trigger record;
 begin
-  select t.tgfoid, t.tgtype, t.tgenabled, t.tgattr::smallint[] as tgattr
+  select t.tgfoid, t.tgtype, t.tgenabled, t.tgattr::smallint[] as tgattr, t.tgqual
     into v_trigger
     from pg_trigger t
     where t.tgrelid = 'public.content_blocks'::regclass
@@ -552,6 +575,12 @@ begin
         (select attnum::smallint from pg_attribute where attrelid = 'public.content_blocks'::regclass and attname = 'block_type'),
         (select attnum::smallint from pg_attribute where attrelid = 'public.content_blocks'::regclass and attname = 'content')
       ])
+      -- A same-name, same-function, same-tgtype trigger can still be
+      -- neutered with a `WHEN (false)` qualifier — Postgres allows WHEN on
+      -- row-level BEFORE triggers, and every other field the guard checked
+      -- would still match while the trigger silently never fires. tgqual
+      -- is NULL only when the trigger has no WHEN clause at all.
+      or v_trigger.tgqual is not null
     then
       raise exception 'forward security migration refused: content_blocks_validate_authored_content is owned by a foreign trigger definition'
         using errcode = '55000';
