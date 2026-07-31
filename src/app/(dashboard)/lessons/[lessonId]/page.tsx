@@ -20,11 +20,10 @@ import {
 } from "@/components/ui/card";
 import {
   buildLearnerLessonParts,
-  resolveLearnerPart,
   shouldRenderLearnerPartLock,
   type LearnerLessonPart,
 } from "@/lib/content-blocks/learner-parts";
-import { prepareLearnerPart } from "@/lib/content-blocks/prepare-learner-part";
+import { resolveAndPrepareLearnerPart } from "@/lib/content-blocks/prepare-learner-part";
 import { enrichBlocksWithSignedUrls } from "@/lib/content-blocks/sign-urls";
 import type {
   LearnerContentTile,
@@ -252,24 +251,21 @@ async function ContentCompositeLesson({
     compositeComplete: tile.complete,
     includeQuiz: tile.quizId !== null && tile.pairedQuizLessonId !== null,
   });
-  const resolution = resolveLearnerPart(parts, requestedPart);
-  if (!resolution.requestedPartValid && requestedPart !== null && resolution.canonicalPartId) {
-    redirect(`/lessons/${tile.id}?part=${encodeURIComponent(resolution.canonicalPartId)}`);
-  }
-  const selected = resolution.requestedPartLocked && resolution.part?.kind === "quiz"
-    ? resolution.part
-    : await prepareLearnerPart({
-        parts,
-        requestedPart: resolution.part?.id ?? null,
-        signBlocks: (blocks) =>
-          withLessonTiming("selected-part-media-signing", () =>
-            enrichBlocksWithSignedUrls(blocks),
-          ),
-        attachEmbeds: (blocks) =>
-          withLessonTiming("selected-role-play-token", () =>
-            attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
-          ),
-      });
+  // An unknown or locked part id must render the same explicit "unavailable"
+  // outcome — never a silent redirect/fallback to a different, available
+  // part. See resolveAndPrepareLearnerPart for why.
+  const { resolution, selected } = await resolveAndPrepareLearnerPart({
+    parts,
+    requestedPart,
+    signBlocks: (blocks) =>
+      withLessonTiming("selected-part-media-signing", () =>
+        enrichBlocksWithSignedUrls(blocks),
+      ),
+    attachEmbeds: (blocks) =>
+      withLessonTiming("selected-role-play-token", () =>
+        attachRolePlayEmbeds(blocks, tile.id, { userId, learnerName }),
+      ),
+  });
   if (!selected)
     return (
       <LessonError
