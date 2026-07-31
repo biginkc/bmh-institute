@@ -14,8 +14,8 @@ describe("learner date formatting", () => {
   });
 
   it("keeps a Central-time evening completion on the correct calendar day (not tomorrow's UTC date)", () => {
-    // Every learner is US-Central. 2026-07-16T23:30:00-05:00 (8:30 PM CDT,
-    // still July 16 locally) is 2026-07-17T04:30:00.000Z in UTC -- if the
+    // Every learner is US-Central. 2026-07-16T21:30:00-05:00 (9:30 PM CDT,
+    // still July 16 locally) is 2026-07-17T02:30:00.000Z in UTC -- if the
     // formatter were pinned to UTC instead of America/Chicago, a learner
     // finishing a course that evening would see the certificate dated
     // July 17, a day that hasn't happened for them yet.
