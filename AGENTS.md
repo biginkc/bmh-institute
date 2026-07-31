@@ -89,6 +89,21 @@ gh pr create --base claude/the-dependency-branch --head claude/my-dependent-work
 - Migrations: `supabase/migrations/NNN_name.sql` applied in order
 - RLS enabled on every table; learner reads scoped by role groups and program/course access
 - Seeds are dev-only; promote your profile to `system_role = 'owner'` manually after first sign-in
+- **Never run `supabase db push --include-all` (or any equivalent blind re-apply) against a
+  linked project. Push only through `bash scripts/migration-rehearsal/guarded-db-push.sh
+  --target=<label>`**, which runs `scripts/migration-rehearsal/check-migration-safety.mjs`
+  against the same connection and aborts on a non-zero exit. `--include-all` re-applies any
+  migration missing from `supabase_migrations.schema_migrations` in filename order, with no
+  concept of whether a later migration already superseded it. On 2026-07-30 that re-applied an
+  old, already-superseded migration straight to production and reverted 6 hardened Hugo
+  lifecycle functions for hours. A missing history row is not proof a migration's content is
+  missing — read the live schema/function definitions before assuming it is safe to re-run. The
+  "pre-user production boundary" permission above covers writes and canaries; it does not cover
+  bypassing this gate. If the gate refuses, stop and report. Do not repair history, do not edit
+  `scripts/migration-rehearsal/placeholder-baseline.json`, and do not call `supabase db push`
+  directly to make it pass — acknowledging a placeholder row is a human's reviewed commit, and
+  an agent doing it defeats the entire control. The gate reads that baseline out of git HEAD,
+  so editing the working-tree file changes nothing; do not try.
 
 ## Writing style
 

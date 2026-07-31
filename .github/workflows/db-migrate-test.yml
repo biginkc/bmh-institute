@@ -1,9 +1,49 @@
 name: Apply Supabase migrations to test
 
+# The `migrate-test` job below pushes to the shared TEST project only. It is
+# intentionally reachable by unrestricted `workflow_dispatch:` (no inputs, no
+# SHA check) -- see "Why there is no expected_sha check" below.
+#
+# db-migrate-prod.yml, in this same directory, is what actually reaches
+# PRODUCTION. It has NO workflow_dispatch trigger anywhere in its file; it
+# fires only via `on.workflow_run` after THIS workflow completes successfully
+# against `main` (matched by exact name below), which is a property GitHub
+# enforces from the DEFAULT BRANCH's copy of that file, not the ref being
+# dispatched. See db-migrate-prod.yml's header for the full rationale --
+# converged with Sandra's identical split (Sandra PR #345, merged, zero
+# Codex findings on re-review).
+#
+# ---------------------------------------------------------------------------
+# Why there is no expected_sha check (round-4 finding 3)
+# ---------------------------------------------------------------------------
+# An earlier version of this job required a `workflow_dispatch` input
+# `expected_sha` and a step that refused unless `github.sha` (the ref being
+# dispatched) matched it. That check cannot defend itself: `workflow_dispatch`
+# always runs the workflow DEFINITION from the branch selected at dispatch
+# time, not from `main`. A branch that wanted to bypass the check could
+# simply delete that verification step from its OWN copy of this file, then
+# dispatch itself -- GitHub runs the edited version, input and all. The check
+# was reviewing a file it did not control, which is the same
+# self-authentication problem Sandra's round-6 `if:`-guarded production job
+# had, one layer up.
+#
+# The fix is not a better self-check -- there isn't one available to a
+# workflow_dispatch-triggered file, structurally. The fix is: this job only
+# ever writes to the shared TEST project (`institute-test`; see
+# guarded-db-push.sh below), which is recoverable and does not serve real
+# users, so an unrestricted dispatch here carries none of production's risk
+# -- exactly Sandra's reasoning for leaving its own TEST workflow
+# unrestricted. The thing that DOES need defending -- production -- is
+# defended structurally in db-migrate-prod.yml by having no dispatch trigger
+# to attack at all, not by a check living inside the file it is supposed to
+# be checking.
+
 on:
   pull_request:
     paths:
       - ".github/workflows/db-migrate-test.yml"
+      - ".github/workflows/db-migrate-prod.yml"
+      - "scripts/assert-ref-is-main-or-ancestor.sh"
       - "package.json"
       - "package-lock.json"
       - "scripts/cleanup-fixture-catalog.ts"
@@ -24,12 +64,9 @@ on:
       - "docs/course-production/quiz-approvals.json"
       - "docs/course-production/quiz-content-review-request.v1.json"
       - "docs/course-production/released-quiz-revision-rehearsal-2026-07-22.json"
-  workflow_dispatch:
-    inputs:
-      expected_sha:
-        description: Exact 40-character commit SHA authorized for TEST migration
-        required: true
-        type: string
+  # Intentionally unrestricted: see "Why there is no expected_sha check" above.
+  # This dispatches whatever ref is selected against the TEST project only.
+  workflow_dispatch: {}
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -128,21 +165,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify exact authorized revision
-        env:
-          EXPECTED_SHA: ${{ inputs.expected_sha }}
-          DISPATCH_SHA: ${{ github.sha }}
-        run: |
-          if ! printf '%s' "$EXPECTED_SHA" | grep -Eq '^[0-9a-f]{40}$'; then
-            echo "expected_sha must be a lowercase 40-character commit SHA."
-            exit 1
-          fi
-          ACTUAL_SHA="$(git rev-parse HEAD)"
-          if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ] || [ "$DISPATCH_SHA" != "$EXPECTED_SHA" ]; then
-            echo "Refusing TEST migration because the dispatched revision is not the authorized SHA."
-            exit 1
-          fi
-
       - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
         with:
           version: 2.109.1
@@ -154,7 +176,20 @@ jobs:
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
-      - name: Apply pending migrations
+      - name: Apply pending migrations (safety gate chained to the push)
+        # The gate is NOT a separate step here on purpose. A separate step can be
+        # re-ordered, disabled, or skipped with continue-on-error, leaving a bare
+        # `db push --include-all` behind. guarded-db-push.sh runs
+        # scripts/migration-rehearsal/check-migration-safety.mjs first, under
+        # `set -e`, and the push is the last line of that file -- unreachable on a
+        # non-zero gate exit.
+        #
+        # Why it exists: `--include-all` re-applies any migration missing from
+        # remote history in filename order, with no notion of whether a later
+        # migration already superseded it. That is the mechanism behind the
+        # 2026-07-30 production incident (old
+        # 20260728091000_hugo_access_provisioner.sql re-applied out of order,
+        # reverting 6 hardened Hugo functions).
         env:
           TEST_SUPABASE_DB_PASSWORD: ${{ secrets.TEST_SUPABASE_DB_PASSWORD }}
         run: |
@@ -164,10 +199,13 @@ jobs:
             exit 1
           fi
 
-          ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.TEST_SUPABASE_DB_PASSWORD))')"
-          echo "::add-mask::$ENCODED_PASSWORD"
-          DB_URL="postgresql://postgres.${TEST_PROJECT_REF}:${ENCODED_PASSWORD}@aws-1-us-west-1.pooler.supabase.com:5432/postgres"
-          supabase db push --include-all --db-url "$DB_URL" --yes
+          export PGHOST="aws-1-us-west-1.pooler.supabase.com"
+          export PGPORT="5432"
+          export PGDATABASE="postgres"
+          export PGUSER="postgres.${TEST_PROJECT_REF}"
+          export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"
+          export PGSSLMODE="require"
+          bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test
 
       - name: Install dependencies
         run: npm ci
