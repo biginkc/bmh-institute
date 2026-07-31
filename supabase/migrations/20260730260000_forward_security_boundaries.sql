@@ -96,7 +96,7 @@ begin
              when to_regprocedure('public.fn_admin_delete_catalog_entity_v1(text, uuid)')::text
                then 'c939eb40e97681ea8e2d42fde77c8cd0'
              when to_regprocedure('public.bmh_authored_content_is_safe(text, jsonb)')::text
-               then 'cc96238858ad04b847975e6a42d2ff9a'
+               then 'd14dc2f54729916da6369084364dcf9e'
              when to_regprocedure('public.bmh_validate_authored_content_trigger()')::text
                then '5c3658012315dc0169063fd023077513'
            end as expected_body_md5,
@@ -488,7 +488,13 @@ begin
     if v_source = 'youtube' and v_url !~ '^https://(www\.)?(youtube\.com|youtu\.be)([/#?]|$)' then return false; end if;
     if v_source = 'vimeo' and v_url !~ '^https://(www\.)?vimeo\.com([/#?]|$)' then return false; end if;
     if v_source = 'loom' and v_url !~ '^https://(www\.)?loom\.com([/#?]|$)' then return false; end if;
-    if v_source not in ('youtube', 'vimeo', 'loom') and v_url !~ '^https://[^/@?#]+([/?#]|$)' then return false; end if;
+    -- coalesce: a video row with a url but no source has v_source = NULL,
+    -- and `NULL not in (...)` evaluates to NULL (not true) under SQL
+    -- three-valued logic, so this branch silently never fired and an
+    -- unsafe scheme (e.g. javascript:...) passed unchecked. Folding NULL
+    -- to '' makes the comparison deterministic so a missing source still
+    -- falls through to the generic https-only check.
+    if coalesce(v_source, '') not in ('youtube', 'vimeo', 'loom') and v_url !~ '^https://[^/@?#]+([/?#]|$)' then return false; end if;
   end if;
 
   if p_block_type = 'flashcard' then
