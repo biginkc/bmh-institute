@@ -129,25 +129,73 @@ test("guarded-db-push holds an advisory lock across the whole run", () => {
   // Round-3 P1-5: the lock serialises sanctioned wrappers against each other. It
   // is confirmed by backend pid, not merely requested, and it is released by the
   // EXIT trap so a crash cannot leak it.
+  // Round-5 finding 2: the confirm query moved into a shared
+  // lock_still_held_query() helper (defined once, called from the initial
+  // confirm loop, assert_lock_still_held, and run_push_watched) so it can
+  // pair backend pid with backend_start everywhere consistently. The helper
+  // is defined before acquisition for bash function-definition ordering, but
+  // it must still be CALLED only after the lock is actually requested, and
+  // the gate must run only after that call confirms it.
   const wrapper = read("guarded-db-push.sh");
+  assert.match(wrapper, /from pg_locks where locktype='advisory'/, "must confirm via pg_locks, not merely request the lock");
   const acquire = wrapper.indexOf("pg_advisory_lock(");
-  const confirm = wrapper.indexOf("from pg_locks where locktype='advisory'", acquire);
-  const gate = wrapper.indexOf('"${GATE[@]}" "--emit-fingerprint=', confirm);
+  const confirmCall = wrapper.indexOf('HELD="$(lock_still_held_query)"', acquire);
+  const gate = wrapper.indexOf('"${GATE[@]}" "--emit-fingerprint=', confirmCall);
   assert.ok(acquire >= 0, "wrapper must take an advisory lock");
-  assert.ok(confirm > acquire, "wrapper must confirm the lock is actually granted to its own backend");
-  assert.ok(gate > confirm, "the gate must run only after the lock is confirmed");
+  assert.ok(confirmCall > acquire, "wrapper must confirm the lock is actually granted to its own backend, after requesting it");
+  assert.ok(gate > confirmCall, "the gate must run only after the lock is confirmed");
   assert.match(wrapper, /trap cleanup EXIT/);
 });
 
 test("guarded-db-push always reconciles, even when the push fails", () => {
   // Round-3 P1-3: under a naive `set -e` a failed push would abort the script
   // before reconciliation, leaving a partially applied database unexamined.
+  // Round-5 finding 1: the push now runs through run_push_watched (which
+  // backgrounds it and polls the lock so a mid-push loss kills it promptly)
+  // rather than a bare foreground invocation, but the captured-status /
+  // always-reconcile property must still hold.
   const wrapper = read("guarded-db-push.sh");
-  assert.match(wrapper, /PUSH_STATUS=0\n\s*supabase db push[^\n]*\|\| PUSH_STATUS=\$\?/);
+  assert.match(wrapper, /PUSH_STATUS=0\n\s*run_push_watched supabase db push[^\n]*\|\| PUSH_STATUS=\$\?/);
   const pushStatus = wrapper.indexOf("|| PUSH_STATUS=$?");
   const reconcile = wrapper.indexOf('"--verify-applied=$FINGERPRINT"', pushStatus);
   assert.ok(reconcile > pushStatus, "reconciliation must run after a captured push failure");
   assert.match(wrapper, /RECONCILE_STATUS/);
+});
+
+test("guarded-db-push watches the lock WHILE the push runs, not just before it", () => {
+  // Round-5 finding 1: a point-in-time check before the push leaves the
+  // entire push duration unwatched. run_push_watched must background the
+  // push and poll lock_still_held_query, killing the push on loss.
+  const wrapper = read("guarded-db-push.sh");
+  const fn = wrapper.indexOf("run_push_watched() {");
+  assert.ok(fn >= 0, "wrapper must define run_push_watched");
+  const body = wrapper.slice(fn, wrapper.indexOf("\n}", fn));
+  assert.match(body, /"\$@" &/, "must background the supplied command");
+  assert.match(body, /lock_still_held_query/, "must poll the shared lock-held check while running");
+  assert.match(body, /kill -TERM "\$push_pid"/, "must kill the push on lock loss");
+  const dryRunCall = wrapper.indexOf("run_push_watched supabase db push --include-all --db-url \"$DB_URL\" --dry-run");
+  const realCall = wrapper.indexOf("run_push_watched supabase db push --include-all --db-url \"$DB_URL\" --yes");
+  assert.ok(dryRunCall > 0, "the dry-run push must go through run_push_watched");
+  assert.ok(realCall > 0, "the real push must go through run_push_watched");
+});
+
+test("guarded-db-push pairs the lock's backend pid with its backend_start", () => {
+  // Round-5 finding 2: a bare pid check does not rule out PostgreSQL reusing
+  // a pid for an unrelated later backend that happens to hold the same
+  // advisory lock. Every lock-held check must also require the ORIGINAL
+  // backend_start captured at acquisition time.
+  const wrapper = read("guarded-db-push.sh");
+  assert.match(wrapper, /select backend_start::text from pg_stat_activity where pid = pg_backend_pid\(\)/);
+  assert.match(wrapper, /LOCK_BACKEND_START="\$\(sed -n '2p' "\$LOCK_OUT"/);
+  const query = wrapper.indexOf("lock_still_held_query() {");
+  assert.ok(query >= 0, "wrapper must define a shared lock_still_held_query helper");
+  const body = wrapper.slice(query, wrapper.indexOf("\n}", query));
+  assert.match(body, /pid=\$\{LOCK_BACKEND_PID\}/);
+  assert.match(body, /a\.backend_start = '\$\{LOCK_BACKEND_START\}'::timestamptz/);
+  // assert_lock_still_held and the initial confirmation loop must both route
+  // through the shared helper rather than re-querying pid alone.
+  const uses = [...wrapper.matchAll(/HELD="\$\(lock_still_held_query\)"/g)];
+  assert.ok(uses.length >= 2, "both the initial confirm loop and assert_lock_still_held must use the shared query");
 });
 
 test("guarded-db-push verifies history before the push and reconciles after it", () => {
@@ -238,6 +286,38 @@ test("db-migrate-prod.yml's job gates on the test run's success and main, checks
     !/supabase db push[^\n]*--include-all/.test(workflow),
     "CI must not invoke a bare --include-all push outside the guarded wrapper",
   );
+});
+
+test("db-migrate-prod.yml refuses a manual rerun of a stale successful run", () => {
+  // Round-5 finding 3: GitHub allows "Re-run jobs" on ANY completed workflow
+  // run, including this one, regardless of trigger type. A rerun replays the
+  // ORIGINAL head_sha/head_branch even if main has since advanced, and the
+  // ancestor script alone does not catch it (an old main commit is still a
+  // valid ancestor of current main -- that's intentionally allowed, see
+  // assert-ref-is-main-or-ancestor.test.sh case C). github.run_attempt is
+  // '1' only for a run's original, naturally-triggered execution.
+  const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
+  assert.match(
+    workflow,
+    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main' && github\.run_attempt == '1'/,
+    "must refuse any run_attempt other than the original, natural trigger",
+  );
+});
+
+test("db-migrate-prod.yml re-checks ancestry a second time immediately before the push", () => {
+  // Round-5 finding 4: the first ancestry check runs right after checkout,
+  // well before the push -- a force-push to main in that window would go
+  // undetected. A second invocation of the same script, immediately before
+  // the "Apply pending migrations" step, bounds (does not eliminate) that
+  // window instead of leaving it open for the whole job.
+  const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
+  const calls = [...workflow.matchAll(/run: bash scripts\/assert-ref-is-main-or-ancestor\.sh/g)];
+  assert.equal(calls.length, 2, "the ancestor guard must run twice: once after checkout, once immediately before the push");
+  const secondCallIndex = calls[1].index;
+  const applyMigrations = workflow.indexOf("Apply pending migrations (safety gate chained to the push)");
+  assert.ok(applyMigrations > secondCallIndex, "the second ancestor check must come immediately before the push step");
+  const push = workflow.indexOf("guarded-db-push.sh --target=institute-production");
+  assert.ok(push > applyMigrations, "the push must still come after the push step");
 });
 
 test("db-migrate-test.yml's workflow_dispatch trigger no longer carries a self-defeating expected_sha check", () => {

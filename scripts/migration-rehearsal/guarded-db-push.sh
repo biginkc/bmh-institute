@@ -50,6 +50,33 @@ set -euo pipefail
 # push and immediately before reconciliation, and fails closed (exit 75) if it
 # is no longer granted, rather than proceeding unprotected on a stale belief.
 #
+# LOCK LOSS DURING THE PUSH ITSELF (round-5 finding 1). The check above closes
+# the window up to the moment the push STARTS, but the Supabase CLI runs as
+# its own process on its own connection: once it is running, nothing was
+# watching the lock underneath it, so a loss mid-push went undetected until
+# the NEXT assert_lock_still_held call, by which point the push had already
+# run to completion. run_push_watched backgrounds the push and polls the same
+# lock-holder check every ${GUARDED_PUSH_LOCK_WATCH_INTERVAL_SECONDS:-0.3}s
+# while it runs; on loss it kills the push immediately instead of letting it
+# continue unprotected. This bounds the window to one poll interval rather
+# than the push's full (open-ended) duration. It does not reach zero -- a loss
+# in the instant between a poll and the CLI's next statement is still
+# possible, which is exactly why assert_lock_still_held's own doc above only
+# ever claimed to narrow this window, not close it. Closing it fully needs the
+# same upstream Supabase CLI feature noted above.
+#
+# BACKEND PID REUSE (round-5 finding 2). Every lock-held check above and below
+# used to trust a bare `pid=${LOCK_BACKEND_PID}` match against pg_locks. If
+# the original backend exits and PostgreSQL later reuses that same pid for an
+# unrelated session that happens to also hold this advisory lock (extremely
+# unlikely, but a bare pid check does not rule it out), the wrapper could
+# wrongly conclude it still owns the original lock. Every check now pairs the
+# pid with the ORIGINAL backend's `backend_start` timestamp (microsecond
+# precision, captured in the same initial query as the pid, via
+# lock_still_held_query's `pg_stat_activity` sub-check): a collision now
+# requires a reused pid AND an exactly matching start instant, which
+# PostgreSQL's pid-allocation behaviour does not produce.
+#
 # PARTIAL PUSHES. `supabase db push` can apply some migrations and then fail.
 # Under a naive `set -e` this script would abort before reconciling and leave the
 # database altered with nobody looking. The push status is captured, the
@@ -108,6 +135,7 @@ done
 LOCK_CLASS=778533
 LOCK_OBJ=20260730
 LOCK_WAIT_SECONDS="${GUARDED_PUSH_LOCK_WAIT_SECONDS:-120}"
+LOCK_WATCH_INTERVAL_SECONDS="${GUARDED_PUSH_LOCK_WATCH_INTERVAL_SECONDS:-0.3}"
 
 WORKDIR="$(mktemp -d -t bmh-guarded-push)"
 FINGERPRINT="$WORKDIR/fingerprint.json"
@@ -115,6 +143,21 @@ LOCK_FIFO="$WORKDIR/lock.fifo"
 LOCK_OUT="$WORKDIR/lock.out"
 LOCK_PID=""
 LOCK_BACKEND_PID=""
+LOCK_BACKEND_START=""
+
+# Round-5 finding 2: pairs pid with backend_start so a reused pid alone cannot
+# pass. Requires LOCK_BACKEND_PID and LOCK_BACKEND_START to already be set;
+# every call site below sets both together before using this. The EXISTS
+# subquery (rather than a JOIN) keeps `from pg_locks where locktype='advisory'`
+# intact as a literal substring for the existing test coverage that greps for
+# it, while adding the backend_start pairing as an additional predicate.
+lock_still_held_query() {
+  psql --no-psqlrc -X -q -t -A -v ON_ERROR_STOP=1 -c \
+    "select count(*) from pg_locks where locktype='advisory' and classid=${LOCK_CLASS} \
+     and objid=${LOCK_OBJ} and objsubid=2 and granted and pid=${LOCK_BACKEND_PID} \
+     and exists (select 1 from pg_stat_activity a where a.pid = pg_locks.pid \
+       and a.backend_start = '${LOCK_BACKEND_START}'::timestamptz)" 2>/dev/null || echo 0
+}
 
 cleanup() {
   # Closing the write end EOFs the holder's stdin, which ends its session and
@@ -137,6 +180,7 @@ mkfifo "$LOCK_FIFO"
 # counting granted locks alone would also count a lock held by someone else.
 psql --no-psqlrc -X -q -t -A -v ON_ERROR_STOP=1 -o "$LOCK_OUT" \
   -c "select pg_backend_pid()" \
+  -c "select backend_start::text from pg_stat_activity where pid = pg_backend_pid()" \
   -c "set lock_timeout = '${LOCK_WAIT_SECONDS}s'" \
   -c "select pg_advisory_lock(${LOCK_CLASS}, ${LOCK_OBJ})" \
   -f - < "$LOCK_FIFO" >/dev/null 2>"$WORKDIR/lock.err" &
@@ -152,11 +196,12 @@ while [ "$(date +%s)" -lt "$DEADLINE" ]; do
     cat "$WORKDIR/lock.err" >&2 || true
     exit 75
   fi
-  LOCK_BACKEND_PID="$(head -n 1 "$LOCK_OUT" 2>/dev/null || true)"
-  if [ -n "$LOCK_BACKEND_PID" ]; then
-    HELD="$(psql --no-psqlrc -X -q -t -A -v ON_ERROR_STOP=1 -c \
-      "select count(*) from pg_locks where locktype='advisory' and classid=${LOCK_CLASS} \
-       and objid=${LOCK_OBJ} and objsubid=2 and granted and pid=${LOCK_BACKEND_PID}" 2>/dev/null || echo 0)"
+  # Round-5 finding 2: both lines must be present -- pid alone is not enough
+  # to safely query lock_still_held_query, which also needs backend_start.
+  LOCK_BACKEND_PID="$(sed -n '1p' "$LOCK_OUT" 2>/dev/null || true)"
+  LOCK_BACKEND_START="$(sed -n '2p' "$LOCK_OUT" 2>/dev/null || true)"
+  if [ -n "$LOCK_BACKEND_PID" ] && [ -n "$LOCK_BACKEND_START" ]; then
+    HELD="$(lock_still_held_query)"
     if [ "$HELD" = "1" ]; then
       LOCK_HELD="yes"
       break
@@ -171,7 +216,7 @@ if [ "$LOCK_HELD" != "yes" ]; then
   echo "racing it." >&2
   exit 75
 fi
-echo "guarded-db-push: advisory lock held by backend pid ${LOCK_BACKEND_PID}."
+echo "guarded-db-push: advisory lock held by backend pid ${LOCK_BACKEND_PID} (started ${LOCK_BACKEND_START})."
 
 # Round-4 finding 2: re-verify the SAME backend pid still holds the lock,
 # rather than trusting the one-time confirmation above for the rest of the
@@ -182,9 +227,7 @@ assert_lock_still_held() {
   local phase="$1"
   local attempt
   for attempt in 1 2 3 4 5; do
-    HELD="$(psql --no-psqlrc -X -q -t -A -v ON_ERROR_STOP=1 -c \
-      "select count(*) from pg_locks where locktype='advisory' and classid=${LOCK_CLASS} \
-       and objid=${LOCK_OBJ} and objsubid=2 and granted and pid=${LOCK_BACKEND_PID}" 2>/dev/null || echo 0)"
+    HELD="$(lock_still_held_query)"
     if [ "$HELD" = "1" ]; then
       return 0
     fi
@@ -197,6 +240,41 @@ assert_lock_still_held() {
   echo "with other sanctioned wrappers no longer holds. Refusing rather than proceeding" >&2
   echo "unprotected on a stale belief that the lock is still ours." >&2
   exit 75
+}
+
+# Round-5 finding 1: assert_lock_still_held only ever checked at a POINT in
+# time (immediately before the push starts). The Supabase CLI then runs as
+# its own process on its own connection for the push's full duration, during
+# which nothing was watching the lock. run_push_watched backgrounds the given
+# command, polls lock_still_held_query every LOCK_WATCH_INTERVAL_SECONDS while
+# it runs, and kills it immediately on loss instead of letting it continue to
+# completion unprotected. This bounds (does not eliminate -- see the header)
+# the window to one poll interval.
+run_push_watched() {
+  "$@" &
+  local push_pid=$!
+  (
+    while kill -0 "$push_pid" 2>/dev/null; do
+      sleep "$LOCK_WATCH_INTERVAL_SECONDS"
+      kill -0 "$push_pid" 2>/dev/null || break
+      HELD="$(lock_still_held_query)"
+      if [ "$HELD" != "1" ]; then
+        echo "guarded-db-push: the advisory lock was lost WHILE the push was running" >&2
+        echo "(pid $push_pid). Killing it immediately rather than letting it continue" >&2
+        echo "unprotected." >&2
+        kill -TERM "$push_pid" 2>/dev/null || true
+        sleep 2
+        kill -KILL "$push_pid" 2>/dev/null || true
+        break
+      fi
+    done
+  ) &
+  local watcher_pid=$!
+  local status=0
+  wait "$push_pid" || status=$?
+  kill "$watcher_pid" 2>/dev/null || true
+  wait "$watcher_pid" 2>/dev/null || true
+  return "$status"
 }
 
 GATE=(node scripts/migration-rehearsal/check-migration-safety.mjs "--target=$TARGET")
@@ -227,7 +305,7 @@ fi
 if [ "$DRY_RUN" = "yes" ]; then
   assert_lock_still_held "the dry-run push"
   echo "guarded-db-push: gate passed. Running DRY RUN against target '$TARGET'."
-  supabase db push --include-all --db-url "$DB_URL" --dry-run
+  run_push_watched supabase db push --include-all --db-url "$DB_URL" --dry-run
   exit 0
 fi
 
@@ -238,7 +316,7 @@ echo "guarded-db-push: gate passed. Pushing to target '$TARGET'."
 echo "guarded-db-push: verify complete at $(node -e 'process.stdout.write(String(Date.now()))') ms."
 
 PUSH_STATUS=0
-supabase db push --include-all --db-url "$DB_URL" --yes || PUSH_STATUS=$?
+run_push_watched supabase db push --include-all --db-url "$DB_URL" --yes || PUSH_STATUS=$?
 if [ "$PUSH_STATUS" -ne 0 ]; then
   echo "guarded-db-push: the push FAILED with status $PUSH_STATUS." >&2
   echo "Reconciling anyway -- a failed push can still have applied part of the set." >&2

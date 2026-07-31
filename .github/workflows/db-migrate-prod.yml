@@ -67,6 +67,23 @@ name: Apply Supabase migrations to prod
 #     check is what stops that from reaching production. (A dispatched test
 #     run's `head_branch` is the actual dispatched branch name -- not
 #     attacker-controllable independent of what ref was really selected.)
+#   - `github.run_attempt == '1'` (round-5 finding 3) -- GitHub lets anyone
+#     with write access manually re-run ANY completed workflow run, including
+#     this one, via "Re-run jobs" in the Actions UI or API, regardless of its
+#     trigger type. A rerun replays the ORIGINAL stored event payload: the
+#     same `head_sha` and `head_branch` this job saw the first time, even if
+#     `main` has since advanced. Nothing about having no workflow_dispatch
+#     trigger stops that -- a rerun isn't a dispatch, it's a replay of a run
+#     that already happened. A stale-but-successful old run, re-run today,
+#     would still check out that old `head_sha` (still a valid ancestor of
+#     current main, so the ancestor script would not catch it either) and
+#     push it to production again, potentially re-applying an outdated
+#     migration set against a database that has moved on. `run_attempt`
+#     increments on every rerun and is `'1'` only for the run's original,
+#     naturally-triggered execution, so requiring it here refuses every
+#     rerun outright: the only way to deploy is a fresh, natural completion
+#     of db-migrate-test.yml against current main. See
+#     https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs
 # The checkout below pins the EXACT commit that was tested
 # (`github.event.workflow_run.head_sha`) rather than re-reading whatever
 # `main` happens to point at when this job starts, so production always
@@ -130,7 +147,10 @@ permissions:
 jobs:
   migrate-prod:
     name: Apply migrations to Institute production
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    # `github.run_attempt == '1'` (round-5 finding 3): refuses a manual
+    # "Re-run jobs" replay of a stale-but-successful old run -- see the
+    # header comment above for why that isn't caught by anything else here.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.run_attempt == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # GitHub-native control (a repo Environment), not a script -- see the
@@ -200,6 +220,17 @@ jobs:
             ].join("\n");
             fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");
           '
+
+      - name: Re-check ancestry immediately before the push (round-5 finding 4; narrows, does not close, the force-push race -- see the script's own header)
+        # The first ancestry check above ran before `supabase link` and the
+        # pooler resolution steps; a force-push to main in that window would
+        # have gone undetected until now. This repeats the same script
+        # (re-fetching origin/main fresh) right before the actual push, so
+        # the TOCTOU window this defense-in-depth check cannot fully close
+        # is bounded to the time between THIS step and the push, not the
+        # whole job since checkout. HEAD is still the pinned commit from the
+        # checkout step above; only origin/main is re-fetched.
+        run: bash scripts/assert-ref-is-main-or-ancestor.sh
 
       - name: Apply pending migrations (safety gate chained to the push)
         # Same wrapper the manual production runbook uses
