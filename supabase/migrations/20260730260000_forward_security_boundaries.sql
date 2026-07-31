@@ -35,14 +35,17 @@ begin
       using errcode = '55000';
   end if;
 
-  select p.prolang, p.prosecdef, p.proconfig, coalesce(p.proacl, acldefault('f', p.proowner)) as acl
+  select p.prolang, p.prosecdef, p.provolatile, p.proconfig, md5(p.prosrc) as body_md5,
+         coalesce(p.proacl, acldefault('f', p.proowner)) as acl
     into v_is_admin
     from pg_proc p
     where p.oid = to_regprocedure('public.is_admin(uuid)');
   if not found
     or v_is_admin.prolang <> (select oid from pg_language where lanname = 'sql')
     or not v_is_admin.prosecdef
-    or not (coalesce(v_is_admin.proconfig, '{}'::text[]) @> array['search_path=public']::text[])
+    or v_is_admin.provolatile <> 's'
+    or v_is_admin.proconfig is distinct from array['search_path=public']::text[]
+    or v_is_admin.body_md5 <> '8c24fdbe889abae1a40654566ea36041'
   then
     raise exception 'forward security migration refused: public.is_admin(uuid) definition/security baseline mismatch'
       using errcode = '55000';
