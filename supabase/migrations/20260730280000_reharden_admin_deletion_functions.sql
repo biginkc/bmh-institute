@@ -40,6 +40,7 @@ begin
            p.provolatile,
            p.proconfig,
            md5(p.prosrc) as body_md5,
+           (select r.rolname from pg_roles r where r.oid = p.proowner) as owner_rolname,
            case p.oid::regprocedure::text
              when to_regprocedure('public.fn_admin_preview_deletion_v1(text, uuid)')::text
                then '8c66a3213456123f55a86d865a73e909'
@@ -72,13 +73,26 @@ begin
         join pg_roles r on r.oid = x.grantee
         where r.rolname = 'authenticated'
           and x.privilege_type = 'EXECUTE'
+          and not x.is_grantable
       )
       or exists (
+        -- Any EXECUTE grantee other than the function's own owner or
+        -- `authenticated`, or any EXECUTE grant at all (including the
+        -- owner's) carrying WITH GRANT OPTION, is unrecognized drift: a
+        -- grantable EXECUTE lets whoever holds it re-grant to anon or
+        -- another role later, after this migration has already decided
+        -- the state looks trustworthy. Reject the whole ACL shape rather
+        -- than merely checking that authenticated is present and anon is
+        -- absent, matching 20260730260000's is_admin baseline check.
         select 1
         from aclexplode(v_fn.acl) x
         left join pg_roles r on r.oid = x.grantee
-        where (x.grantee = 0 or r.rolname = 'anon')
-          and x.privilege_type = 'EXECUTE'
+        where x.privilege_type = 'EXECUTE'
+          and (
+            x.is_grantable
+            or x.grantee = 0
+            or coalesce(r.rolname, '') not in ('authenticated', v_fn.owner_rolname)
+          )
       )
     then
       raise exception 'reharden migration refused: % security baseline (language/security-definer/search_path/ACL) does not match either recognized generation', v_fn.identity
