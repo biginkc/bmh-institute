@@ -1,0 +1,227 @@
+name: Apply Supabase migrations to prod
+
+# Applies unapplied Supabase migrations to Institute PRODUCTION, triggered
+# ONLY by a successful completion of db-migrate-test.yml's "Apply Supabase
+# migrations to test" workflow (see `on.workflow_run` below) whose SOURCE
+# branch was `main`. There is deliberately no `push:` trigger and no
+# `workflow_dispatch:` anywhere in this file, as a YAML key or otherwise.
+#
+# This is the round-4 finding-3 fix, converged with Sandra's identical split
+# (Sandra PR #345, merged, zero Codex findings on re-review) rather than
+# reinvented -- see that PR and db-migrate-test.yml's own header for the full
+# history of why a workflow_dispatch-triggered file cannot defend itself.
+#
+# ---------------------------------------------------------------------------
+# Why this file has NO workflow_dispatch trigger
+# ---------------------------------------------------------------------------
+# db-migrate-test.yml previously required a workflow_dispatch input
+# (`expected_sha`) and a step that refused unless the checked-out SHA
+# matched it. That check could not defend itself: `workflow_dispatch` always
+# runs the workflow DEFINITION from the ref the user selects when
+# dispatching, not from `main`. A branch could simply delete that
+# verification step from its own copy of the file, then dispatch itself, and
+# GitHub would run the edited version. That is the same
+# "the checker is authored by the thing it's checking" self-authentication
+# problem Sandra hit with an `if:`-guarded production job in the same file
+# as its dispatchable test job (Sandra round 6), and it is structural: no
+# in-file check can close it, because the attacker controls the file being
+# checked.
+#
+# The property that is actually true, and the reason this file is split out:
+# GitHub only offers `workflow_dispatch` as a way to manually run a workflow
+# if that trigger is declared in the copy of the workflow file ON THE
+# DEFAULT BRANCH. A branch cannot make a workflow file dispatchable by
+# adding `workflow_dispatch:` to its own copy -- dispatch eligibility for a
+# given workflow file is read from `main`, not from whatever ref you're
+# trying to dispatch. So: this file (db-migrate-prod.yml) simply never
+# declares `workflow_dispatch:`, on ANY branch that could plausibly become
+# `main`'s copy, and there is therefore no "Run workflow" button or API call
+# that can invoke it manually against any ref, ever -- not because a
+# condition is checked and passes, but because the invocation mechanism does
+# not exist for this file at all.
+#
+# This property lives entirely in `main`'s copy of this file. It is
+# therefore only as strong as branch protection on `main` -- a force-push to
+# `main` that reintroduced a `workflow_dispatch:` trigger into this exact
+# file would recreate the hole this split closes. That is one of the
+# concrete reasons "Do not allow force pushes" on `main`'s branch protection
+# rule matters here, not just for the ancestor-ref script's TOCTOU window
+# (see scripts/assert-ref-is-main-or-ancestor.sh).
+#
+# ---------------------------------------------------------------------------
+# How this replaces "run test, then run prod" ordering across two files
+# ---------------------------------------------------------------------------
+# GitHub Actions' `needs:` only orders jobs WITHIN one workflow file, so a
+# split into two files needs a different mechanism. Replaced here with
+# `on.workflow_run`, which fires when the named upstream workflow (by its
+# top-level `name:`, matched exactly below) completes, plus two checks
+# neither of which the upstream workflow's own file can influence (because,
+# like `workflow_dispatch` eligibility, `workflow_run`-triggered runs ALWAYS
+# use the DEFAULT BRANCH's copy of the triggered file, regardless of what
+# ref the upstream run was against):
+#   - `github.event.workflow_run.conclusion == 'success'` -- a failed or
+#     cancelled test run never reaches production.
+#   - `github.event.workflow_run.head_branch == 'main'` -- without this,
+#     someone dispatching db-migrate-test.yml against an unrelated branch
+#     and having it pass would still fire this workflow_run event; this
+#     check is what stops that from reaching production. (A dispatched test
+#     run's `head_branch` is the actual dispatched branch name -- not
+#     attacker-controllable independent of what ref was really selected.)
+# The checkout below pins the EXACT commit that was tested
+# (`github.event.workflow_run.head_sha`) rather than re-reading whatever
+# `main` happens to point at when this job starts, so production always
+# deploys precisely what test just verified.
+#
+# ---------------------------------------------------------------------------
+# What this file reuses unchanged
+# ---------------------------------------------------------------------------
+# scripts/migration-rehearsal/check-migration-safety.mjs (the fail-closed
+# safety gate: out-of-order re-apply, content fingerprinting, placeholder
+# baseline) and scripts/migration-rehearsal/guarded-db-push.sh (the ONLY
+# sanctioned way to chain gate -> verify -> push -> reconcile under one
+# advisory lock) are exactly the same scripts the manual production runbook
+# (scripts/migration-rehearsal/print-production-repair-commands.sh) uses.
+# This workflow does not reimplement that chain; it calls the same wrapper a
+# human operator would, with `--target=institute-production`, which is
+# already a fully-pinned entry in placeholder-baseline.json.
+#
+# ---------------------------------------------------------------------------
+# The environment approval gate
+# ---------------------------------------------------------------------------
+# `environment: Production` below is a GitHub-native control (a repo
+# Environment with required reviewers configured and admin bypass OFF), not
+# a script -- this workflow cannot verify its own state and does not try to.
+# If someone clears the required reviewers or re-enables admin bypass, this
+# line keeps working while gating nothing; that is a repo-settings concern,
+# not something this file can enforce on its own.
+#
+# Required secrets (set in GitHub -> repo settings -> Secrets -> Actions):
+#   SUPABASE_ACCESS_TOKEN
+#     A personal access token from
+#     https://supabase.com/dashboard/account/tokens. Used only to resolve
+#     the correct pooler host below (`supabase link`); never used to push.
+#   PROD_SUPABASE_DB_PASSWORD
+#     The production database password for project dhvfsyteqsxagokoerrx
+#     (bmh-institute, us-east-1) -- from the Supabase dashboard, Connection
+#     info -> Database password. Never logged; masked below.
+#
+# Why the pooler host is RESOLVED, not hardcoded: this project's own manual
+# runbook (print-production-repair-commands.sh) explicitly instructs an
+# operator to copy the pooler host from the dashboard rather than guess it,
+# because the wrong region/shard is a real, easy-to-get-wrong mistake. This
+# workflow honours that by running `supabase link` (which the CLI resolves
+# by hitting the Supabase API for the real project, not by guessing a
+# hostname pattern) and reading the pooler host it writes to
+# supabase/.temp/pooler-url -- the same approach Sandra's converged
+# db-migrate-prod.yml uses, and the same connection the CLI itself just
+# proved reachable.
+
+on:
+  workflow_run:
+    workflows: ["Apply Supabase migrations to test"]
+    types: [completed]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  migrate-prod:
+    name: Apply migrations to Institute production
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # GitHub-native control (a repo Environment), not a script -- see the
+    # note above.
+    environment: Production
+
+    env:
+      PROD_PROJECT_REF: dhvfsyteqsxagokoerrx
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          # Pin the EXACT commit that db-migrate-test.yml just verified,
+          # rather than re-reading whatever `main` points at when this job
+          # happens to start (main could have advanced in between).
+          ref: ${{ github.event.workflow_run.head_sha }}
+          # Full history (not the default shallow clone) so the ancestor
+          # check below can actually walk from HEAD back to origin/main
+          # instead of hitting the edge of a shallow fetch and guessing.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Refuse unless this ref is main or an ancestor of main (defense-in-depth; the real workflow_dispatch protection is this file declaring no workflow_dispatch trigger at all)
+        # This step is NOT the primary defense against a dispatched or
+        # unmerged ref reaching production -- that's the structural fact
+        # (explained at the top of this file) that db-migrate-prod.yml
+        # cannot be dispatched at all, plus the `head_branch == 'main'`
+        # check on the job above. This script remains a second, independent
+        # check against the pinned commit. See
+        # scripts/assert-ref-is-main-or-ancestor.sh for the full rationale
+        # and scripts/assert-ref-is-main-or-ancestor.test.sh for its test
+        # coverage.
+        run: bash scripts/assert-ref-is-main-or-ancestor.sh
+
+      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1
+        with:
+          version: 2.109.1
+
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: "24"
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Link to production project
+        run: supabase link --project-ref "$PROD_PROJECT_REF"
+
+      - name: Resolve pooler connection info
+        id: pooler
+        # `supabase link` caches the project's resolved Supavisor pooler host
+        # (region/shard) at supabase/.temp/pooler-url. Reading that instead
+        # of hardcoding a pooler hostname avoids guessing wrong shard/region
+        # -- this is the same connection the CLI itself just proved
+        # reachable, and mirrors print-production-repair-commands.sh's own
+        # instruction to copy this from the dashboard rather than guess it.
+        run: |
+          node -e '
+            const fs = require("node:fs");
+            const raw = fs.readFileSync("supabase/.temp/pooler-url", "utf8").trim();
+            const u = new URL(raw);
+            const out = [
+              `host=${u.hostname}`,
+              `port=${u.port || "5432"}`,
+              `user=${decodeURIComponent(u.username)}`,
+            ].join("\n");
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");
+          '
+
+      - name: Apply pending migrations (safety gate chained to the push)
+        # Same wrapper the manual production runbook uses
+        # (scripts/migration-rehearsal/print-production-repair-commands.sh)
+        # and the same one db-migrate-test.yml's migrate-test job uses for
+        # TEST. It runs check-migration-safety.mjs first, under `set -e`,
+        # and the push is the last line of that file -- unreachable on a
+        # non-zero gate exit. See guarded-db-push.sh's own header for the
+        # full "checked == pushed" binding it enforces (directory, content,
+        # database identity, history, and the advisory lock).
+        env:
+          PROD_SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$PROD_SUPABASE_DB_PASSWORD"
+          if [ -z "$PROD_SUPABASE_DB_PASSWORD" ]; then
+            echo "PROD_SUPABASE_DB_PASSWORD secret is required."
+            exit 1
+          fi
+          export PGHOST="${{ steps.pooler.outputs.host }}"
+          export PGPORT="${{ steps.pooler.outputs.port }}"
+          export PGDATABASE="postgres"
+          export PGUSER="${{ steps.pooler.outputs.user }}"
+          export PGPASSWORD="$PROD_SUPABASE_DB_PASSWORD"
+          export PGSSLMODE="require"
+          bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production

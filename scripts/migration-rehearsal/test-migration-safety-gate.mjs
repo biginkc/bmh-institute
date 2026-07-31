@@ -603,6 +603,48 @@ try {
     ]);
   }
 
+  // ==== round-4 finding 1: a symlinked .sql ENTRY is refused, not skipped ==
+
+  {
+    // The target of the symlink lives OUTSIDE the migrations directory
+    // entirely, proving the gate cannot simply "follow the link and
+    // fingerprint the target" as a silent alternative -- there is nothing
+    // canonical to fingerprint, and `supabase db push` would read whatever
+    // this pathname currently resolves to, which the gate does not control.
+    const withSymlinkedEntry = makeScratchRepo({ files: ["001_a.sql", "20260101000000_c.sql"] });
+    const outsideTarget = join(workRoot, `symlink-target-${caseIndex}.sql`);
+    writeFileSync(outsideTarget, "select 1;\n");
+    const linkedEntryPath = join(withSymlinkedEntry.migrationsDir, "20260201000000_evil.sql");
+    symlinkSync(outsideTarget, linkedEntryPath);
+    setHistory([["001", false], ["20260101000000", false]]);
+    check(
+      "a symlinked .sql ENTRY inside an otherwise-canonical directory is refused, not silently omitted (E32)",
+      runGate({ scratch: withSymlinkedEntry }),
+      1,
+      ["REFUSING (E32)", "20260201000000_evil.sql"],
+    );
+  }
+
+  {
+    // The failure mode this closes: entry.isFile() is false for a symlink,
+    // so a version-blind filter would have dropped this file from the
+    // gate's set entirely and printed a clean "Locally pending: 0" -- exit
+    // 0 -- while `supabase db push` would still apply it. Confirm E32 fires
+    // even though the symlink's TARGET content is fully legitimate and its
+    // version would otherwise have been reported safe.
+    const withSymlinkedEntry = makeScratchRepo({ files: ["001_a.sql", "20260101000000_c.sql"] });
+    const outsideTarget = join(workRoot, `symlink-target-benign-${caseIndex}.sql`);
+    writeFileSync(outsideTarget, "select 1;\n");
+    symlinkSync(outsideTarget, join(withSymlinkedEntry.migrationsDir, "20260301000000_benign.sql"));
+    setHistory([["001", false], ["20260101000000", false]]);
+    check(
+      "E32 fires even when the symlink's target content is otherwise unremarkable (no silent 'exit 0, pending 0')",
+      runGate({ scratch: withSymlinkedEntry }),
+      1,
+      ["REFUSING (E32)"],
+    );
+  }
+
   // ==== round-3 P1-2: fingerprints bind CONTENT ===========================
 
   setHistory([["001", false], ["20260101000000", false]]);
@@ -713,6 +755,22 @@ try {
         ? `  echo "drop schema public cascade;" > "$(ls supabase/migrations/*.sql | tail -n 1)"\n`
         : "";
     const partialExit = stubMode === "partial" ? `  exit 3\n` : "";
+    // Round-4 finding 2: after a genuinely successful push, kill the SAME
+    // backend that holds the wrapper's advisory lock (found via pg_locks,
+    // exactly how the wrapper itself identifies its own lock holder) and
+    // exit 0. The push "succeeded"; the question is whether reconciliation
+    // then blindly trusts that this run still has exclusive access, or
+    // notices the lock is gone and refuses.
+    const killLock =
+      stubMode === "kill-lock"
+        ? `  BACKEND_PID="\$("${psqlBin}" -X -q -t -A -c "select pid from pg_locks where locktype='advisory' and classid=778533 and objid=20260730 and objsubid=2 and granted limit 1")"\n` +
+          `  "${psqlBin}" -X -q -v ON_ERROR_STOP=1 -c "select pg_terminate_backend(\${BACKEND_PID})" >/dev/null\n` +
+          `  for _ in 1 2 3 4 5 6 7 8 9 10; do\n` +
+          `    STILL="\$("${psqlBin}" -X -q -t -A -c "select count(*) from pg_locks where locktype='advisory' and classid=778533 and objid=20260730 and objsubid=2 and granted and pid=\${BACKEND_PID}" 2>/dev/null || echo 0)"\n` +
+          `    [ "\$STILL" = "0" ] && break\n` +
+          `    sleep 0.2\n` +
+          `  done\n`
+        : "";
     const applyLoop =
       stubMode === "partial"
         ? `  for f in $(ls supabase/migrations/*.sql | head -n 3); do\n`
@@ -734,7 +792,7 @@ ${applyLoop}    v="\$(basename "\$f" | cut -d_ -f1)"
       "insert into supabase_migrations.schema_migrations (version, statements, name) \\
        values ('\$v', array[]::text[], 'stub') on conflict (version) do nothing;"
   done
-${applyExtra}${swapContent}${partialExit}fi
+${applyExtra}${swapContent}${killLock}${partialExit}fi
 `,
     );
     execFileSync("chmod", ["+x", join(repo, "stub-bin", "supabase")]);
@@ -820,6 +878,50 @@ ${applyExtra}${swapContent}${partialExit}fi
       runWrapper(wrapper.repo, ["--target=institute-e2e"]),
       1,
       ["REFUSING (E30)"],
+    );
+  }
+
+  {
+    // Round-4 finding 2: the lock-holding connection drops DURING the push
+    // (killed backend, network blip, idle timeout -- indistinguishable to
+    // the wrapper from any other cause). The push itself completes and the
+    // stub exits 0. Before this fix, the wrapper would proceed straight to
+    // reconciliation trusting the one-time lock confirmation from minutes
+    // earlier; a competing sanctioned wrapper could already be racing it.
+    // Assert the wrapper instead notices, immediately before reconciliation,
+    // that its own backend pid no longer holds the lock, and fails closed
+    // (exit 75) rather than reconciling on a stale belief.
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = makeWrapperRepo(["001_a.sql", "20260101000000_c.sql", "20260201000000_new.sql"], "kill-lock");
+    const run = runWrapper(wrapper.repo, ["--target=institute-e2e"]);
+    check(
+      "E2E round-4 finding 2: the lock dropping DURING the push is detected before reconciliation and fails closed",
+      run,
+      75,
+      [
+        "advisory lock held by backend pid",
+        "the advisory lock held by backend pid",
+        "is GONE,",
+        "checked immediately before reconciliation",
+        "Refusing rather than proceeding",
+        "unprotected on a stale belief that the lock is still ours.",
+      ],
+    );
+    // The push itself must have actually run (proving this is a genuine
+    // post-push detection, not a pre-push short-circuit that never reached
+    // the stub at all).
+    const stubLog = readFileSync(wrapper.log, "utf8");
+    check("E2E round-4 finding 2: the push genuinely ran before the lock loss was detected", {
+      status: stubLog.includes("20260201000000_new.sql") ? 0 : 1,
+      out: stubLog,
+    }, 0);
+    // And reconciliation's own gate call (--verify-applied) must NEVER have
+    // run: the wrapper must refuse before invoking it, not merely fail
+    // inside it.
+    check(
+      "E2E round-4 finding 2: the gate's own reconciliation step never ran (refused before it, not inside it)",
+      { status: run.out.includes("reconciling post-push history against what the gate authorised") ? 1 : 0, out: run.out },
+      0,
     );
   }
 

@@ -40,6 +40,16 @@ set -euo pipefail
 # option in the Supabase CLI. The harness MEASURES the window and prints it
 # rather than anyone asserting it is small.
 #
+# LOCK LOSS AFTER ACQUISITION (round-4 finding 2). The lock is confirmed granted
+# once, above, then this script runs the gate, the push and reconciliation
+# without watching the holder connection. If that connection drops -- killed,
+# network blip, an idle timeout on the far side -- PostgreSQL releases the
+# session-scoped advisory lock immediately, and a naive wrapper would carry on
+# believing it still held exclusive access. assert_lock_still_held re-queries
+# pg_locks for the SAME backend pid confirmed above, immediately before the
+# push and immediately before reconciliation, and fails closed (exit 75) if it
+# is no longer granted, rather than proceeding unprotected on a stale belief.
+#
 # PARTIAL PUSHES. `supabase db push` can apply some migrations and then fail.
 # Under a naive `set -e` this script would abort before reconciling and leave the
 # database altered with nobody looking. The push status is captured, the
@@ -163,6 +173,32 @@ if [ "$LOCK_HELD" != "yes" ]; then
 fi
 echo "guarded-db-push: advisory lock held by backend pid ${LOCK_BACKEND_PID}."
 
+# Round-4 finding 2: re-verify the SAME backend pid still holds the lock,
+# rather than trusting the one-time confirmation above for the rest of the
+# run. A few short retries absorb the brief window between a backend actually
+# terminating and its advisory lock rows clearing from pg_locks; a real loss
+# stays absent across all of them and is reported, not raced past.
+assert_lock_still_held() {
+  local phase="$1"
+  local attempt
+  for attempt in 1 2 3 4 5; do
+    HELD="$(psql --no-psqlrc -X -q -t -A -v ON_ERROR_STOP=1 -c \
+      "select count(*) from pg_locks where locktype='advisory' and classid=${LOCK_CLASS} \
+       and objid=${LOCK_OBJ} and objsubid=2 and granted and pid=${LOCK_BACKEND_PID}" 2>/dev/null || echo 0)"
+    if [ "$HELD" = "1" ]; then
+      return 0
+    fi
+    sleep 0.3
+  done
+  echo "guarded-db-push: the advisory lock held by backend pid ${LOCK_BACKEND_PID} is GONE," >&2
+  echo "checked immediately before ${phase}. The lock-holding connection must have dropped" >&2
+  echo "(killed, network blip, an idle timeout) -- PostgreSQL releases a session-scoped" >&2
+  echo "advisory lock as soon as its holding connection ends, and this run's exclusivity" >&2
+  echo "with other sanctioned wrappers no longer holds. Refusing rather than proceeding" >&2
+  echo "unprotected on a stale belief that the lock is still ours." >&2
+  exit 75
+}
+
 GATE=(node scripts/migration-rehearsal/check-migration-safety.mjs "--target=$TARGET")
 [ -n "$GATE_TIMEOUT_MS" ] && GATE+=("--timeout-ms=$GATE_TIMEOUT_MS")
 
@@ -189,11 +225,13 @@ if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
 fi
 
 if [ "$DRY_RUN" = "yes" ]; then
+  assert_lock_still_held "the dry-run push"
   echo "guarded-db-push: gate passed. Running DRY RUN against target '$TARGET'."
   supabase db push --include-all --db-url "$DB_URL" --dry-run
   exit 0
 fi
 
+assert_lock_still_held "the push"
 echo "guarded-db-push: gate passed. Pushing to target '$TARGET'."
 # Timestamp emitted so the harness can MEASURE the verify-to-first-statement
 # window rather than anyone asserting it is small.
@@ -207,7 +245,12 @@ if [ "$PUSH_STATUS" -ne 0 ]; then
 fi
 
 # Always reconcile, including after a failed push. A partial application is
-# exactly the silent-damage case this whole design exists to catch.
+# exactly the silent-damage case this whole design exists to catch. Re-check
+# the lock here too (round-4 finding 2): if it dropped during the push itself,
+# a competing sanctioned wrapper could already be mid-flight, and reconciling
+# as though this run still has exclusive access would draw a false conclusion
+# from a database another run may now also be touching.
+assert_lock_still_held "reconciliation"
 echo "guarded-db-push: reconciling post-push history against what the gate authorised."
 RECONCILE_STATUS=0
 "${GATE[@]}" "--verify-applied=$FINGERPRINT" || RECONCILE_STATUS=$?

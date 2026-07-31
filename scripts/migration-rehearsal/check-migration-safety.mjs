@@ -67,7 +67,12 @@
 //   Directory. The migrations directory is the canonical repo path by default.
 //   A symlinked migrations directory -- or a symlinked component of its path --
 //   is refused (E24) in every mode, because lstat/realpath divergence is
-//   precisely how "the gate read A, the push read B" happens.
+//   precisely how "the gate read A, the push read B" happens. A symlinked
+//   .sql ENTRY inside an otherwise-canonical directory is refused too (E32):
+//   `entry.isFile()` is false for a symlink, so silently filtering on it would
+//   drop the entry from the gate's set while `supabase db push` still reads
+//   the pathname and follows the link, which is the exact "gate's set and
+//   pushed set diverge" failure this whole section exists to prevent.
 //
 //   CONTENT. Version identity is not enough: swapping the SQL body of an
 //   already-authorised version leaves remote history untouched, so a
@@ -209,6 +214,8 @@
 //                (added, removed, or byte-modified file).
 //   E31  exit 1  Partial application: some but not all authorised migrations
 //                landed. Production is altered and incomplete.
+//   E32  exit 1  A migration filename in the canonical migrations directory is
+//                a symlink.
 //
 // ---------------------------------------------------------------------------
 // Usage
@@ -592,8 +599,33 @@ function loadLocalMigrations(migrationsDir, repoRoot) {
     ]);
   }
 
-  const files = entries
-    .filter((entry) => entry.isFile() && entry.name.endsWith(".sql"))
+  const sqlNamedEntries = entries.filter((entry) => entry.name.endsWith(".sql"));
+
+  // Round-4 finding 1: a symlinked .sql entry must be REFUSED, not silently
+  // omitted. `entry.isFile()` below is false for a symlink (even one that
+  // resolves to a regular file), so filtering on it alone would drop the
+  // entry from the gate's set entirely -- no error, no mention, just absent.
+  // `supabase db push` does not do that: it reads directory entries by name
+  // and follows the link, so it would still apply that file's content. That
+  // is precisely the "the gate inspected one set, the push applied another"
+  // divergence this whole design exists to prevent (see "Checked == pushed"
+  // above), so it is refused explicitly rather than merely skipped.
+  const symlinkedSqlEntries = sqlNamedEntries.filter((entry) => entry.isSymbolicLink());
+  if (symlinkedSqlEntries.length > 0) {
+    refuse("E32", [
+      "The migrations directory contains symlinked .sql entries:",
+      ...symlinkedSqlEntries.map((entry) => `  - ${entry.name}`),
+      "",
+      "Refusing: `supabase db push` reads this directory by pathname and follows symlinks, so",
+      "a symlinked migration file lets the gate's inspected set and the pushed set diverge --",
+      "the pushed file's real content is whatever the link currently points at, which can",
+      "change independently of anything this gate fingerprinted. A symlink is never a valid",
+      "migration file; replace it with a regular file committed at that path.",
+    ]);
+  }
+
+  const files = sqlNamedEntries
+    .filter((entry) => entry.isFile())
     .map((entry) => entry.name)
     .sort();
 

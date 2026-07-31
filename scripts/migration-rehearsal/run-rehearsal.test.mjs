@@ -174,3 +174,93 @@ test("the TEST migration workflow pushes only through the guarded wrapper", () =
     "CI must not invoke a bare --include-all push outside the guarded wrapper",
   );
 });
+
+// --------------------------------------------------------------------------
+// Round-4 finding 3: workflow_dispatch on the branch-controlled TEST file
+// cannot defend itself with an in-file check, so the fix moved production
+// entirely off workflow_dispatch, structurally. These tests prove the shape
+// rather than trust the comments describing it.
+// --------------------------------------------------------------------------
+
+/** Returns the text of a top-level (column-0) YAML block, e.g. "on:". */
+function topLevelBlock(content, key) {
+  const lines = content.split("\n");
+  const start = lines.findIndex((line) => line === `${key}:`);
+  assert.ok(start !== -1, `expected a top-level "${key}:" block`);
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    if (/^\S/.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start, end).join("\n");
+}
+
+test("db-migrate-prod.yml's on: block declares no push and no workflow_dispatch trigger", () => {
+  const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
+  const onBlock = topLevelBlock(workflow, "on");
+  assert.ok(
+    !/workflow_dispatch\s*:/.test(onBlock),
+    "db-migrate-prod.yml must not declare workflow_dispatch as a trigger key -- that is the entire fix: " +
+      "GitHub reads dispatch eligibility from main's copy of the file, so a file that never declares the " +
+      "trigger has no 'Run workflow' button or API call that can invoke it, on any ref, ever",
+  );
+  assert.ok(!/^\s*push\s*:/m.test(onBlock), "db-migrate-prod.yml must not declare a push trigger");
+  assert.match(onBlock, /workflow_run\s*:/, "db-migrate-prod.yml must be triggered by workflow_run");
+  assert.match(
+    onBlock,
+    /workflows:\s*\["Apply Supabase migrations to test"\]/,
+    "must listen for the TEST workflow by its exact top-level name",
+  );
+});
+
+test("db-migrate-prod.yml's job gates on the test run's success and main, checks out the exact tested SHA, and requires the Production environment", () => {
+  const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
+  assert.match(
+    workflow,
+    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main'/,
+    "must refuse unless the upstream TEST run succeeded AND ran against main",
+  );
+  assert.match(workflow, /environment:\s*Production/, "must gate behind the configured Production environment");
+  assert.match(
+    workflow,
+    /ref:\s*\$\{\{\s*github\.event\.workflow_run\.head_sha\s*\}\}/,
+    "must check out the exact commit the TEST workflow verified, not whatever main currently points at",
+  );
+  assert.match(workflow, /fetch-depth:\s*0/, "must fetch full history for the ancestor-ref defense-in-depth check");
+  assert.match(
+    workflow,
+    /guarded-db-push\.sh --target=institute-production/,
+    "must push through the same sanctioned wrapper the manual runbook uses",
+  );
+  assert.ok(
+    !/supabase db push[^\n]*--include-all/.test(workflow),
+    "CI must not invoke a bare --include-all push outside the guarded wrapper",
+  );
+});
+
+test("db-migrate-test.yml's workflow_dispatch trigger no longer carries a self-defeating expected_sha check", () => {
+  const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-test.yml"), "utf8");
+  const onBlock = topLevelBlock(workflow, "on");
+  assert.match(onBlock, /workflow_dispatch:\s*\{\}/, "TEST dispatch is intentionally unrestricted -- see the file header");
+  // The header and the dispatch comment both explain the history in prose
+  // (which legitimately says the word "expected_sha"), so check for the
+  // LIVE code shapes rather than the bare word: no `inputs:` block under
+  // workflow_dispatch, no `${{ inputs.expected_sha }}` interpolation
+  // anywhere, and no step still named for the check that used to run it.
+  assert.ok(
+    !/workflow_dispatch:\s*\n\s*inputs:/.test(workflow),
+    "workflow_dispatch must have no inputs -- an expected_sha input is exactly the self-defeating check " +
+      "this fix removed",
+  );
+  assert.ok(
+    !/\$\{\{\s*inputs\.expected_sha\s*\}\}/.test(workflow),
+    "no step may still read an expected_sha input -- it ran from the SAME branch being dispatched, so an " +
+      "attacker branch could simply delete the check from its own copy before dispatching",
+  );
+  assert.ok(
+    !/name:\s*Verify exact authorized revision/.test(workflow),
+    "the self-defeating verification step must be removed, not merely disarmed",
+  );
+});
