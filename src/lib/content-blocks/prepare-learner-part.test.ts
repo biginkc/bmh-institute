@@ -97,12 +97,12 @@ function block(id: string, blockType: "video" | "role_play") {
 // directly, it calls this.
 describe("resolveAndPrepareLearnerPart (real page decision path)", () => {
   const partsWithLockedGuide: LearnerLessonPart[] = [
-    { id: "video-1", label: "Video A", kind: "video", blocks: [videoA], complete: false, available: true },
-    { id: "guide", label: "Guide", kind: "guide", blocks: [], complete: false, available: false },
+    { id: "video-1", label: "Video A", kind: "video", blocks: [videoA], complete: false, available: true, invalidated: false },
+    { id: "guide", label: "Guide", kind: "guide", blocks: [], complete: false, available: false, invalidated: false },
   ];
   const partsWithLockedQuiz: LearnerLessonPart[] = [
-    { id: "video-1", label: "Video A", kind: "video", blocks: [videoA], complete: false, available: true },
-    { id: "quiz", label: "Quiz", kind: "quiz", blocks: [], complete: false, available: false },
+    { id: "video-1", label: "Video A", kind: "video", blocks: [videoA], complete: false, available: true, invalidated: false },
+    { id: "quiz", label: "Quiz", kind: "quiz", blocks: [], complete: false, available: false, invalidated: false },
   ];
 
   function harness() {
