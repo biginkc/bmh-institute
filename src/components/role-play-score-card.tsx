@@ -11,6 +11,13 @@ import type { RolePlayLatestResult } from "@/lib/content-security/validate";
  * already completed. Shows the most recent attempt's score instead of
  * re-mounting the Closer Lab iframe, per the "show score by default, try
  * again by choice" decision — see role-play-block.tsx for the mode switch.
+ *
+ * `result` is null in two cases that render identically: a persisted row
+ * whose `score` column is null, and the server's `role_play_results` read
+ * failing outright (see `resultFetchFailed` in role-play-block.tsx). Both
+ * are "we can't show you a score right now" from the learner's point of
+ * view, and both must degrade to this explicit message rather than a blank
+ * card or an infinite spinner.
  */
 export function RolePlayScoreCard({
   title,
@@ -18,17 +25,13 @@ export function RolePlayScoreCard({
   onTryAgain,
 }: {
   title: string;
-  result: RolePlayLatestResult;
+  result: RolePlayLatestResult | null;
   onTryAgain: () => void;
 }) {
-  const hasScore = result.score !== null;
-  const tone = !hasScore
-    ? "neutral"
-    : result.score! >= 80
-      ? "green"
-      : result.score! >= 50
-        ? "yellow"
-        : "red";
+  const score = result?.score ?? null;
+  const hasScore = score !== null;
+  const tone =
+    score === null ? "neutral" : score >= 80 ? "green" : score >= 50 ? "yellow" : "red";
 
   return (
     <section className="overflow-hidden rounded-[var(--bmh-radius-lg)] border border-[var(--border-card)] bg-[var(--surface-card)] shadow-[var(--bmh-shadow-sm)]">
@@ -51,8 +54,8 @@ export function RolePlayScoreCard({
         {hasScore ? (
           <>
             <div className="mb-4 flex flex-wrap items-center gap-3">
-              <Badge tone={tone}>Score: {result.score}%</Badge>
-              {result.goalsTotalCount ? (
+              <Badge tone={tone}>Score: {score}%</Badge>
+              {result && result.goalsTotalCount ? (
                 <span className="text-xs font-bold text-[var(--text-muted)]">
                   {result.goalsMetCount ?? 0} of {result.goalsTotalCount} objectives met
                 </span>
@@ -87,7 +90,7 @@ export function RolePlayScoreCard({
           >
             Try again
           </button>
-          {result.summaryUrl ? (
+          {result && result.summaryUrl ? (
             <a
               href={result.summaryUrl}
               target="_blank"

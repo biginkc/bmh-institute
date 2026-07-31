@@ -9,12 +9,19 @@ export type RolePlayResultRow = {
 };
 
 /**
- * Reduces `role_play_results` rows (ordered most-recent-first by
- * `completed_at`, per the caller's query) down to one `RolePlayLatestResult`
- * per block — the most recent attempt only. A learner can retake the same
+ * Reduces `role_play_results` rows down to one `RolePlayLatestResult` per
+ * block — the most recent attempt only. A learner can retake the same
  * exercise, so multiple rows can share a `block_id`; per the "show most
  * recent, not best" decision, the first row seen for a block wins and every
  * later (older) row for that block is discarded.
+ *
+ * This function trusts the caller's row order completely — it does no
+ * sorting of its own. The caller (`fetchLatestRolePlayResults` in
+ * `lessons/[lessonId]/page.tsx`) MUST order by `completed_at DESC, id DESC`.
+ * `completed_at` alone is not a unique key: two attempts can share a
+ * timestamp at this column's precision, and without the `id` tiebreak,
+ * Postgres does not guarantee which of the tied rows sorts first — "most
+ * recent" would be accidental, not deterministic, on a tie.
  */
 export function reduceLatestRolePlayResults(
   rows: RolePlayResultRow[],

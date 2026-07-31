@@ -33,10 +33,20 @@ type RolePlayBlockProps = {
   initialComplete: boolean;
   /**
    * Most recent `role_play_results` row for this learner+block, or null when
-   * there isn't one (fresh exercise, or a completed block with no matching
-   * row — a legacy/edge gap we fall back safely from, see `mode` below).
+   * there isn't one (fresh exercise, or — per production data, currently
+   * unreachable but defended anyway — a completed block with no matching
+   * row, see `mode` below).
    */
   latestResult?: RolePlayLatestResult | null;
+  /**
+   * True when the server's `role_play_results` read for this lesson failed
+   * (a query error, not zero rows). Distinct from `latestResult === null`:
+   * this means "we don't know the score, and it's not safe to assume there
+   * isn't one" and must render the same explicit "couldn't load a score"
+   * state as a persisted null score — never silently fall back to the
+   * iframe as if this were the legacy gap.
+   */
+  resultFetchFailed?: boolean;
 };
 
 export function RolePlayBlock({
@@ -48,6 +58,7 @@ export function RolePlayBlock({
   initialHeightPx,
   initialComplete,
   latestResult = null,
+  resultFetchFailed = false,
 }: RolePlayBlockProps) {
   const router = useRouter();
   const [loaded, setLoaded] = useState(false);
@@ -65,7 +76,7 @@ export function RolePlayBlock({
   // stale (pre-attempt) data — the score view only applies on the return
   // visit, once the server has the new attempt's result.
   const [mode, setMode] = useState<"score" | "practice">(
-    initialComplete && latestResult ? "score" : "practice",
+    initialComplete && (latestResult || resultFetchFailed) ? "score" : "practice",
   );
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(initialComplete);
@@ -170,7 +181,7 @@ export function RolePlayBlock({
   // The default view for a returning learner on an already-completed
   // exercise: their most recent score, not another live iframe. Doesn't need
   // iframe config to render, so this is checked before the config guard.
-  if (mode === "score" && latestResult) {
+  if (mode === "score" && (latestResult || resultFetchFailed)) {
     return (
       <RolePlayScoreCard
         title={title || "Role play"}

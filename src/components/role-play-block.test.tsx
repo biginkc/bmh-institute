@@ -88,10 +88,11 @@ describe("<RolePlayBlock /> completion messages", () => {
   });
 
   it("falls back to the practice iframe when marked complete but no result row exists", () => {
-    // A completed block with no matching `role_play_results` row is a
-    // legacy/edge gap (see fetchLatestRolePlayResults in page.tsx) — it must
-    // never render a broken/empty score card, so it falls back to the
-    // pre-existing "Complete" badge + iframe view instead.
+    // A completed block with a *successful* query that returned zero rows
+    // is the legacy/edge gap (see fetchLatestRolePlayResults in page.tsx) —
+    // it must never render a broken/empty score card, so it falls back to
+    // the pre-existing "Complete" badge + iframe view instead. This is
+    // distinct from resultFetchFailed below: here the query itself worked.
     render(
       <RolePlayBlock
         blockId="block-1"
@@ -102,6 +103,7 @@ describe("<RolePlayBlock /> completion messages", () => {
         initialHeightPx={720}
         initialComplete
         latestResult={null}
+        resultFetchFailed={false}
       />,
     );
 
@@ -109,6 +111,33 @@ describe("<RolePlayBlock /> completion messages", () => {
     expect(screen.getByRole("status")).toHaveTextContent("Completed");
     expect(screen.getByTitle("Opening practice")).toBeVisible();
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("shows an explicit error state, never the practice iframe, when the results query itself failed", () => {
+    // A failed `role_play_results` read must NOT be indistinguishable from
+    // "no prior attempt" — that would silently hide a live read failure
+    // behind the legacy-gap fallback. resultFetchFailed is a signal
+    // separate from latestResult specifically so this case can't collapse
+    // into the "no row" branch above.
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="launch-credential-1"
+        initialHeightPx={720}
+        initialComplete
+        latestResult={null}
+        resultFetchFailed
+      />,
+    );
+
+    expect(screen.queryByTitle("Opening practice")).toBeNull();
+    expect(
+      screen.getByText(/couldn't load a score for your last attempt/i),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeVisible();
   });
 });
 

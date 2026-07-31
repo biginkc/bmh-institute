@@ -616,10 +616,11 @@ async function attachRolePlayEmbeds(
   // Nested inside the caller's "selected-role-play-token" timing span rather
   // than given its own stage, since LessonTimingStage is a closed contract
   // (see lesson-timing.ts / performance-contract.test.ts).
-  const latestResults = await fetchLatestRolePlayResults(
-    identity.userId,
-    rolePlayBlocks.map((block) => block.id),
-  );
+  const { results: latestResults, failed: latestResultsFailed } =
+    await fetchLatestRolePlayResults(
+      identity.userId,
+      rolePlayBlocks.map((block) => block.id),
+    );
   return blocks.map((block) => {
     if (block.block_type !== "role_play") return block;
     const latestResult = latestResults.get(block.id) ?? null;
@@ -629,6 +630,7 @@ async function attachRolePlayEmbeds(
       delete content.iframe_src;
       delete content.launch_credential;
       content.latest_result = latestResult;
+      content.result_fetch_failed = latestResultsFailed;
       return { ...block, content };
     }
     try {
@@ -666,6 +668,7 @@ async function attachRolePlayEmbeds(
           iframe_src: iframeUrl.toString(),
           launch_credential: launchCredential,
           latest_result: latestResult,
+          result_fetch_failed: latestResultsFailed,
         },
       };
     } catch {
@@ -673,34 +676,67 @@ async function attachRolePlayEmbeds(
       delete content.iframe_src;
       delete content.launch_credential;
       content.latest_result = latestResult;
+      content.result_fetch_failed = latestResultsFailed;
       return { ...block, content };
     }
   });
 }
 
+type LatestRolePlayResultsFetch = {
+  results: Map<string, RolePlayLatestResult>;
+  /**
+   * True when the `role_play_results` query itself failed — a read error,
+   * not "zero rows". Callers MUST treat this as distinct from "no result
+   * row": a query failure has to surface to the learner as an explicit
+   * "couldn't load a score" state, never silently fall back to the practice
+   * iframe as if it were the (separate, and per production data below,
+   * currently unreachable) legacy gap.
+   */
+  failed: boolean;
+};
+
 /**
  * One row per (user, role-play block) — the most recent attempt only, per
- * the "show most recent, not best" decision. `role_play_results` is written
- * atomically alongside `user_block_progress` by `fn_complete_role_play_block`
- * (see `completeRolePlayBlock` in `./actions.ts`), so a `null` here for a
- * block that IS marked complete means a legacy/edge gap, not "still
- * scoring" — the caller falls back to the practice view for that case
- * rather than rendering a broken score card.
+ * the "show most recent, not best" decision. `completed_at` alone is not a
+ * unique key (two attempts can share a timestamp at this column's
+ * precision), so `id DESC` is a required secondary sort key, not
+ * decoration — without it, which row `reduceLatestRolePlayResults`'s
+ * first-row-wins picks on a tie is undefined by Postgres and can vary
+ * between calls.
+ *
+ * `role_play_results` is written atomically alongside `user_block_progress`
+ * by `fn_complete_role_play_block` (see `completeRolePlayBlock` in
+ * `./actions.ts`), and every deletion path for `role_play_results` (fixture
+ * cleanup, the per-user data-reset RPC) deletes the matching
+ * `user_block_progress` row in the same transaction. Verified against
+ * production on 2026-07-31: 0 of 47 completed role-play blocks have a
+ * missing result row. So a `null` result for a block that IS marked
+ * complete, on a query that itself succeeded, is not a live scenario today
+ * — the iframe fallback below is defense-in-depth against a future write
+ * path breaking that invariant, not a case actually seen in production.
+ * A query that FAILS is a different, real case — see `failed` above.
  */
 async function fetchLatestRolePlayResults(
   userId: string,
   blockIds: string[],
-): Promise<Map<string, RolePlayLatestResult>> {
-  if (blockIds.length === 0) return new Map();
+): Promise<LatestRolePlayResultsFetch> {
+  if (blockIds.length === 0) return { results: new Map(), failed: false };
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("role_play_results")
     .select("block_id, score, goals_met, summary, completed_at")
     .eq("user_id", userId)
     .in("block_id", blockIds)
-    .order("completed_at", { ascending: false });
-  if (error || !data) return new Map();
-  return reduceLatestRolePlayResults(data);
+    .order("completed_at", { ascending: false })
+    .order("id", { ascending: false });
+  if (error) {
+    console.error("role_play_results fetch failed closed.", {
+      code: error.code,
+      message: error.message,
+    });
+    return { results: new Map(), failed: true };
+  }
+  return { results: reduceLatestRolePlayResults(data ?? []), failed: false };
 }
 
 function LockedLesson({ courseId }: { courseId: string }) {
