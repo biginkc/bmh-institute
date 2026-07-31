@@ -352,13 +352,42 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
     const allow = iframe.getAttribute("allow") ?? "";
     expect(allow).toContain("microphone");
-    expect(allow).not.toContain("camera");
     // Without autoplay the agent joins and then dies with
     // browser_persona_audio_unavailable: a cross-origin child cannot resume an
     // AudioContext or play the persona track. Observed in production.
     expect(allow).toContain("autoplay");
     // getUserMedia is refused in a sandboxed frame without allow-same-origin.
     expect(iframe.getAttribute("sandbox")).toContain("allow-same-origin");
+  });
+
+  /**
+   * Regression guard for the "Talk with Andrea" camera fix.
+   *
+   * The Permissions-Policy response header (next.config.ts) is only HALF of
+   * the delegation model: it grants camera=(self "https://lab.bmhgroupkc.com")
+   * at the top-level document, but a cross-origin child iframe only receives
+   * that grant if the iframe's own `allow` attribute also names the feature.
+   * A header-only test (headers.test.ts) cannot catch a missing `allow`
+   * attribute — it never renders a component. This test would have failed
+   * on the original PR #159, which fixed the header but left the iframe's
+   * `allow="microphone; autoplay; clipboard-write"` unchanged.
+   */
+  it("delegates camera to the Closer Lab iframe origin", () => {
+    renderBlock();
+    const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
+    const allow = iframe.getAttribute("allow") ?? "";
+
+    // Capture the `camera` token AND anything else up to the next `;` or end
+    // of string. `allow="camera https://evil.example; microphone; autoplay"`
+    // would satisfy a bare `.toContain("camera")` check while delegating to
+    // the wrong origin — so require the directive to carry NO explicit
+    // origin list. Bare `camera` resolves to the default 'src' allowlist,
+    // which is exactly the iframe's own src origin, asserted below.
+    const cameraDirective = allow.match(/(^|;\s*)camera([^;]*)(?=;|$)/);
+    expect(cameraDirective).not.toBeNull();
+    expect(cameraDirective?.[2].trim()).toBe("");
+
+    expect(new URL(iframe.src).origin).toBe(CL_ORIGIN);
   });
 });
 
