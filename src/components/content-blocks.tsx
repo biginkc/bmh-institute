@@ -15,6 +15,7 @@ import { sanitizeTextBlockHtml } from "@/lib/sanitize/text-block";
 import {
   safeAuthoredUrl,
   safeFlashcards,
+  safeRolePlayLatestResult,
   safeRolePlayRuntimeUrl,
   safeRuntimeCredential,
   safeRuntimeUrl,
@@ -157,6 +158,7 @@ function renderContentBlock(block: ContentBlock, completed: boolean) {
           launchCredential={safeRuntimeCredential(block.content.launch_credential) ?? ""}
           initialHeightPx={numberOr(block.content.height_px, 720)}
           initialComplete={completed}
+          latestResult={safeRolePlayLatestResult(block.content.latest_result)}
         />
       );
     case "flashcard":

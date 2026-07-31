@@ -4,6 +4,7 @@ import {
   MAX_CONTENT_BLOCK_BYTES,
   parseFlashcardText,
   safeFlashcards,
+  safeRolePlayLatestResult,
   safeRuntimeUrl,
   validateAuthoredContent,
 } from "./validate";
@@ -84,5 +85,42 @@ describe("authored content validation", () => {
     const result = validateAuthoredContent("text", { html: "x".repeat(MAX_CONTENT_BLOCK_BYTES) });
     expect(result.ok).toBe(false);
     expect(result.errors).toContain("Content block payload must be at most 100KB.");
+  });
+});
+
+describe("safeRolePlayLatestResult", () => {
+  const VALID = {
+    score: 85,
+    goalsMetCount: 3,
+    goalsTotalCount: 4,
+    summaryUrl: "https://lab.bmhgroupkc.com/embed/review/token-abc",
+    completedAt: "2026-07-30T12:00:00.000Z",
+  };
+
+  it("passes through a well-formed server-computed result", () => {
+    expect(safeRolePlayLatestResult(VALID)).toEqual(VALID);
+  });
+
+  it("rejects a missing/non-string completedAt outright", () => {
+    expect(safeRolePlayLatestResult(null)).toBeNull();
+    expect(safeRolePlayLatestResult({ ...VALID, completedAt: undefined })).toBeNull();
+    expect(safeRolePlayLatestResult("not an object")).toBeNull();
+  });
+
+  it("coerces a non-numeric score to null instead of throwing", () => {
+    expect(safeRolePlayLatestResult({ ...VALID, score: "85" })?.score).toBeNull();
+    expect(safeRolePlayLatestResult({ ...VALID, score: null })?.score).toBeNull();
+  });
+
+  it("only accepts a summary URL on the configured role-play runtime origin and review path", () => {
+    expect(
+      safeRolePlayLatestResult({ ...VALID, summaryUrl: "https://evil.example/embed/review/token" })
+        ?.summaryUrl,
+    ).toBeNull();
+    expect(
+      safeRolePlayLatestResult({ ...VALID, summaryUrl: "https://lab.bmhgroupkc.com/embed/role-play/x" })
+        ?.summaryUrl,
+    ).toBeNull();
+    expect(safeRolePlayLatestResult({ ...VALID, summaryUrl: null })?.summaryUrl).toBeNull();
   });
 });

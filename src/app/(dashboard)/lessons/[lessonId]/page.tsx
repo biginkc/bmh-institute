@@ -39,6 +39,8 @@ import { mintRolePlayLaunchCredential } from "@/lib/role-plays/launch-credential
 import { getRolePlayBaseUrl } from "@/lib/role-plays/base-url";
 import { isConfiguredRolePlayScenarioId } from "@/lib/role-plays/scenario-id";
 import { createClient } from "@/lib/supabase/server";
+import type { RolePlayLatestResult } from "@/lib/content-security/validate";
+import { reduceLatestRolePlayResults } from "@/lib/content-blocks/latest-role-play-results";
 import { getRequestAuthContext } from "@/lib/auth/request-context";
 import { withLessonTiming } from "@/lib/performance/lesson-timing";
 
@@ -608,15 +610,25 @@ async function attachRolePlayEmbeds(
   lessonId: string,
   identity: { userId: string; learnerName: string },
 ): Promise<ContentBlock[]> {
-  if (!blocks.some((block) => block.block_type === "role_play")) return blocks;
+  const rolePlayBlocks = blocks.filter((block) => block.block_type === "role_play");
+  if (rolePlayBlocks.length === 0) return blocks;
   const baseUrl = getRolePlayBaseUrl();
+  // Nested inside the caller's "selected-role-play-token" timing span rather
+  // than given its own stage, since LessonTimingStage is a closed contract
+  // (see lesson-timing.ts / performance-contract.test.ts).
+  const latestResults = await fetchLatestRolePlayResults(
+    identity.userId,
+    rolePlayBlocks.map((block) => block.id),
+  );
   return blocks.map((block) => {
     if (block.block_type !== "role_play") return block;
+    const latestResult = latestResults.get(block.id) ?? null;
     const scenarioId = stringOr(block.content.scenario_id, "");
     if (!isConfiguredRolePlayScenarioId(scenarioId) || !baseUrl) {
       const content = { ...block.content };
       delete content.iframe_src;
       delete content.launch_credential;
+      content.latest_result = latestResult;
       return { ...block, content };
     }
     try {
@@ -653,15 +665,42 @@ async function attachRolePlayEmbeds(
           ...block.content,
           iframe_src: iframeUrl.toString(),
           launch_credential: launchCredential,
+          latest_result: latestResult,
         },
       };
     } catch {
       const content = { ...block.content };
       delete content.iframe_src;
       delete content.launch_credential;
+      content.latest_result = latestResult;
       return { ...block, content };
     }
   });
+}
+
+/**
+ * One row per (user, role-play block) — the most recent attempt only, per
+ * the "show most recent, not best" decision. `role_play_results` is written
+ * atomically alongside `user_block_progress` by `fn_complete_role_play_block`
+ * (see `completeRolePlayBlock` in `./actions.ts`), so a `null` here for a
+ * block that IS marked complete means a legacy/edge gap, not "still
+ * scoring" — the caller falls back to the practice view for that case
+ * rather than rendering a broken score card.
+ */
+async function fetchLatestRolePlayResults(
+  userId: string,
+  blockIds: string[],
+): Promise<Map<string, RolePlayLatestResult>> {
+  if (blockIds.length === 0) return new Map();
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("role_play_results")
+    .select("block_id, score, goals_met, summary, completed_at")
+    .eq("user_id", userId)
+    .in("block_id", blockIds)
+    .order("completed_at", { ascending: false });
+  if (error || !data) return new Map();
+  return reduceLatestRolePlayResults(data);
 }
 
 function LockedLesson({ courseId }: { courseId: string }) {

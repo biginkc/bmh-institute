@@ -97,6 +97,64 @@ export function safeRolePlayRuntimeUrl(value: unknown, scenarioId: unknown): str
   }
 }
 
+export type RolePlayLatestResult = {
+  score: number | null;
+  goalsMetCount: number | null;
+  goalsTotalCount: number | null;
+  summaryUrl: string | null;
+  completedAt: string;
+};
+
+/**
+ * `latest_result` is server-computed (from `role_play_results`, not authored
+ * content), but it still crosses the block-content boundary into a client
+ * component the same way `iframe_src`/`launch_credential` do, so it gets the
+ * same defensive-parse treatment as everything else in this file rather than
+ * being trusted implicitly.
+ */
+export function safeRolePlayLatestResult(value: unknown): RolePlayLatestResult | null {
+  if (!value || typeof value !== "object") return null;
+  const record = value as Record<string, unknown>;
+  const completedAt = record.completedAt;
+  if (typeof completedAt !== "string" || !completedAt) return null;
+  const score =
+    typeof record.score === "number" && Number.isFinite(record.score)
+      ? record.score
+      : null;
+  const goalsMetCount =
+    typeof record.goalsMetCount === "number" && Number.isFinite(record.goalsMetCount)
+      ? record.goalsMetCount
+      : null;
+  const goalsTotalCount =
+    typeof record.goalsTotalCount === "number" && Number.isFinite(record.goalsTotalCount)
+      ? record.goalsTotalCount
+      : null;
+  return {
+    score,
+    goalsMetCount,
+    goalsTotalCount,
+    summaryUrl: safeRolePlaySummaryUrl(record.summaryUrl),
+    completedAt,
+  };
+}
+
+function safeRolePlaySummaryUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    if (
+      !ROLE_PLAY_RUNTIME_ORIGINS.has(url.origin) ||
+      url.username ||
+      url.password ||
+      !/^\/embed\/review\/[A-Za-z0-9_-]+$/u.test(url.pathname) ||
+      url.searchParams.size !== 0
+    ) return null;
+    return value;
+  } catch {
+    return null;
+  }
+}
+
 export function safeStoragePath(value: unknown): string | null {
   return isSafeStoragePath(value) ? value.trim() : null;
 }

@@ -1,6 +1,8 @@
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import type { RolePlayLatestResult } from "@/lib/content-security/validate";
+
 const completeRolePlayBlock = vi.fn();
 const refresh = vi.fn();
 
@@ -13,6 +15,14 @@ vi.mock("@/app/(dashboard)/lessons/[lessonId]/actions", () => ({
 }));
 
 import { RolePlayBlock } from "./role-play-block";
+
+const READY_RESULT: RolePlayLatestResult = {
+  score: 85,
+  goalsMetCount: 3,
+  goalsTotalCount: 4,
+  summaryUrl: "https://lab.bmhgroupkc.com/embed/review/token-abc",
+  completedAt: "2026-07-30T12:00:00.000Z",
+};
 
 describe("<RolePlayBlock /> completion messages", () => {
   beforeEach(() => {
@@ -77,7 +87,11 @@ describe("<RolePlayBlock /> completion messages", () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
-  it("renders persisted completion immediately after reload", () => {
+  it("falls back to the practice iframe when marked complete but no result row exists", () => {
+    // A completed block with no matching `role_play_results` row is a
+    // legacy/edge gap (see fetchLatestRolePlayResults in page.tsx) — it must
+    // never render a broken/empty score card, so it falls back to the
+    // pre-existing "Complete" badge + iframe view instead.
     render(
       <RolePlayBlock
         blockId="block-1"
@@ -87,12 +101,109 @@ describe("<RolePlayBlock /> completion messages", () => {
         launchCredential="launch-credential-1"
         initialHeightPx={720}
         initialComplete
+        latestResult={null}
       />,
     );
 
     expect(screen.getByText("Complete")).toBeVisible();
     expect(screen.getByRole("status")).toHaveTextContent("Completed");
+    expect(screen.getByTitle("Opening practice")).toBeVisible();
     expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe("<RolePlayBlock /> return-visit score view", () => {
+  it("shows the most recent score by default instead of the iframe", () => {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="launch-credential-1"
+        initialHeightPx={720}
+        initialComplete
+        latestResult={READY_RESULT}
+      />,
+    );
+
+    expect(screen.getByText("Score: 85%")).toBeVisible();
+    expect(screen.getByText("3 of 4 objectives met")).toBeVisible();
+    expect(screen.queryByTitle("Opening practice")).toBeNull();
+    expect(screen.getByRole("link", { name: /view full review/i })).toHaveAttribute(
+      "href",
+      READY_RESULT.summaryUrl,
+    );
+  });
+
+  it("shows a fresh, unattempted exercise as the interactive iframe, not a score view", () => {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="launch-credential-1"
+        initialHeightPx={720}
+        initialComplete={false}
+        latestResult={null}
+      />,
+    );
+
+    expect(screen.getByTitle("Opening practice")).toBeVisible();
+    expect(screen.queryByText(/score:/i)).toBeNull();
+  });
+
+  it("shows an explicit unavailable message instead of a blank/stuck card when the score is missing", () => {
+    // score_status pending/failed on Closer Lab's side never produces a
+    // role_play_results row (see recon), but the DB column itself is
+    // nullable, so this defends the one shape that COULD reach the client:
+    // a persisted row whose score somehow came back null.
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="launch-credential-1"
+        initialHeightPx={720}
+        initialComplete
+        latestResult={{ ...READY_RESULT, score: null }}
+      />,
+    );
+
+    expect(screen.queryByTitle("Opening practice")).toBeNull();
+    expect(screen.queryByText(/score:/i)).toBeNull();
+    expect(
+      screen.getByText(/couldn't load a score for your last attempt/i),
+    ).toBeVisible();
+    expect(screen.getByRole("button", { name: /try again/i })).toBeVisible();
+  });
+
+  it("try again switches to the practice iframe without touching the prior attempt", async () => {
+    render(
+      <RolePlayBlock
+        blockId="block-1"
+        scenarioId="scenario-1"
+        title="Opening practice"
+        iframeSrc="https://lab.example.com/embed/role-play/scenario-1?token=secret"
+        launchCredential="launch-credential-1"
+        initialHeightPx={720}
+        initialComplete
+        latestResult={READY_RESULT}
+      />,
+    );
+
+    expect(screen.getByText("Score: 85%")).toBeVisible();
+    await act(async () => {
+      screen.getByRole("button", { name: /try again/i }).click();
+    });
+
+    expect(screen.queryByText("Score: 85%")).toBeNull();
+    expect(screen.getByTitle("Opening practice")).toBeVisible();
+    // "Try again" is purely a client-side view switch — it never calls the
+    // completion action, so the previous attempt's row is never touched.
+    expect(completeRolePlayBlock).not.toHaveBeenCalled();
   });
 });
 
