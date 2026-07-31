@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import nextConfig from "../../../next.config";
 
@@ -117,6 +117,80 @@ describe("Permissions-Policy", () => {
         expect(token).not.toBe("src");
         expect(token).not.toMatch(/\*/);
       }
+    }
+  });
+});
+
+/**
+ * Regression guard for the dev-only Closer Lab camera origins.
+ *
+ * next.config.ts additionally allows http://localhost:3200 and
+ * http://127.0.0.1:3200 for camera, but ONLY when
+ * `process.env.NODE_ENV === "development"` — so a learner never sees them,
+ * since Next.js production builds run with NODE_ENV=production. That is a
+ * runtime fact about how Next.js is built and started, not a property this
+ * file can enforce by itself: a config that merely "happens" to read the
+ * right env var today gives no guarantee against drift later (e.g. someone
+ * loosening the check to `!== "production"`, which fails open instead of
+ * closed).
+ *
+ * These tests pin the guarantee by forcing NODE_ENV explicitly and
+ * re-importing next.config fresh for each value, so the assertion holds
+ * regardless of whatever NODE_ENV happens to be ambient when the suite
+ * runs, and regardless of build path.
+ */
+describe("Permissions-Policy camera dev-origin gate is NODE_ENV-provable", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.resetModules();
+  });
+
+  async function permissionsPolicyValuesForEnv(nodeEnv: string): Promise<string[]> {
+    vi.resetModules();
+    vi.stubEnv("NODE_ENV", nodeEnv);
+    const mod = await import("../../../next.config");
+    const headerGroups = await mod.default.headers!();
+    return headerGroups
+      .flatMap((group) => group.headers)
+      .filter((header) => /^permissions-policy$/i.test(header.key))
+      .map((header) => String(header.value));
+  }
+
+  function cameraDirectivesOf(values: string[]): string[] {
+    return values
+      .map((value) => value.match(/(^|[;,\s])camera\s*=\s*\(([^)]*)\)/i)?.[2])
+      .filter((v): v is string => v !== undefined);
+  }
+
+  it("grants camera to exactly the single Closer Lab origin under NODE_ENV=production", async () => {
+    const values = await permissionsPolicyValuesForEnv("production");
+    const cameraDirectives = cameraDirectivesOf(values);
+    expect(cameraDirectives.length).toBeGreaterThan(0);
+    for (const directive of cameraDirectives) {
+      const tokens = directive.trim().split(/\s+/).filter(Boolean);
+      expect(tokens).toEqual(["self", '"https://lab.bmhgroupkc.com"']);
+    }
+  });
+
+  it("never leaks the localhost dev origins outside NODE_ENV=development", async () => {
+    for (const nodeEnv of ["production", "test", "staging"]) {
+      const values = await permissionsPolicyValuesForEnv(nodeEnv);
+      for (const value of values) {
+        expect(value).not.toMatch(/localhost:3200|127\.0\.0\.1:3200/);
+      }
+    }
+  });
+
+  it("adds the local Closer Lab dev origins only under NODE_ENV=development", async () => {
+    const values = await permissionsPolicyValuesForEnv("development");
+    const cameraDirectives = cameraDirectivesOf(values);
+    expect(cameraDirectives.length).toBeGreaterThan(0);
+    for (const directive of cameraDirectives) {
+      expect(directive).toContain('"http://localhost:3200"');
+      expect(directive).toContain('"http://127.0.0.1:3200"');
+      // Still exactly the Closer Lab set plus the two dev origins — never a
+      // wildcard, and never a stray unrelated origin.
+      expect(directive).not.toMatch(/\*/);
     }
   });
 });
