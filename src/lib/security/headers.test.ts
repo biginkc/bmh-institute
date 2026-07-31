@@ -54,9 +54,18 @@ describe("Permissions-Policy", () => {
   it("still denies the features we intend to deny outright", async () => {
     const values = await permissionsPolicyValues();
     for (const feature of ["geolocation", "payment", "usb"]) {
-      expect(values.some((value) => new RegExp(`${feature}=\\(\\)`).test(value))).toBe(
-        true,
+      // `.some()` alone would pass if ONE Permissions-Policy entry denies the
+      // feature while another entry (e.g. a later, more specific route match)
+      // widens it — Next.js applies every matching same-key header, not just
+      // the first. Require every entry that mentions the feature to deny it
+      // exactly, and require at least one entry to mention it at all.
+      const matchingValues = values.filter((value) =>
+        new RegExp(`(^|[;,\\s])${feature}\\s*=`, "i").test(value),
       );
+      expect(matchingValues.length).toBeGreaterThan(0);
+      for (const value of matchingValues) {
+        expect(value).toMatch(new RegExp(`(^|[;,\\s])${feature}\\s*=\\s*\\(\\s*\\)`, "i"));
+      }
     }
   });
 

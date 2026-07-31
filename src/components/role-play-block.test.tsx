@@ -236,11 +236,17 @@ describe("<RolePlayBlock /> rp.launch handshake", () => {
     renderBlock();
     const iframe = screen.getByTitle("Opening practice") as HTMLIFrameElement;
     const allow = iframe.getAttribute("allow") ?? "";
-    expect(allow).toMatch(/(^|;\s*)camera(\s|;|$)/);
-    // No explicit origin token means the default 'src' allowlist applies,
-    // which resolves to the iframe's own src origin — assert that origin is
-    // the intended Closer Lab origin, not an open allowlist.
-    expect(allow).not.toMatch(/\*/);
+
+    // Capture the `camera` token AND anything else up to the next `;` or end
+    // of string. `allow="camera https://evil.example; microphone; autoplay"`
+    // would satisfy a bare `.toContain("camera")` check while delegating to
+    // the wrong origin — so require the directive to carry NO explicit
+    // origin list. Bare `camera` resolves to the default 'src' allowlist,
+    // which is exactly the iframe's own src origin, asserted below.
+    const cameraDirective = allow.match(/(^|;\s*)camera([^;]*)(?=;|$)/);
+    expect(cameraDirective).not.toBeNull();
+    expect(cameraDirective?.[2].trim()).toBe("");
+
     expect(new URL(iframe.src).origin).toBe(CL_ORIGIN);
   });
 });
