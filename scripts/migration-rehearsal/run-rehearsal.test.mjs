@@ -299,8 +299,28 @@ test("db-migrate-prod.yml refuses a manual rerun of a stale successful run", () 
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
   assert.match(
     workflow,
-    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main' && github\.run_attempt == '1'/,
-    "must refuse any run_attempt other than the original, natural trigger",
+    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main' && github\.event\.workflow_run\.run_attempt == '1' && github\.run_attempt == '1'/,
+    "must refuse any run_attempt other than the original, natural trigger -- both the production run's OWN attempt and the upstream test run's attempt",
+  );
+});
+
+test("db-migrate-prod.yml also refuses a production run triggered by a RERUN of the upstream test workflow", () => {
+  // Codex round-6 finding (on top of round-5 finding 3): `github.run_attempt
+  // == '1'` alone only guards a rerun of THIS (production) workflow run. It
+  // does nothing about someone rerunning the UPSTREAM db-migrate-test.yml
+  // run instead: GitHub's rerun replays that run's original stale head_sha,
+  // and completing it fires a genuinely NEW `workflow_run` event for
+  // db-migrate-prod.yml (only the `requested` activity type is suppressed on
+  // rerun, not `completed`) -- so the resulting production run's OWN
+  // run_attempt is '1' and passes the first check, while still carrying the
+  // stale upstream SHA. `github.event.workflow_run.run_attempt` is the
+  // UPSTREAM run's own attempt number (from the event payload), so requiring
+  // it to be '1' closes this specific gap.
+  const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
+  assert.match(
+    workflow,
+    /if:[^\n]*github\.event\.workflow_run\.run_attempt == '1'/,
+    "must also check the UPSTREAM (workflow_run event) run_attempt, not just this run's own github.run_attempt",
   );
 });
 

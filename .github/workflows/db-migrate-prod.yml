@@ -80,10 +80,27 @@ name: Apply Supabase migrations to prod
 #     push it to production again, potentially re-applying an outdated
 #     migration set against a database that has moved on. `run_attempt`
 #     increments on every rerun and is `'1'` only for the run's original,
-#     naturally-triggered execution, so requiring it here refuses every
-#     rerun outright: the only way to deploy is a fresh, natural completion
-#     of db-migrate-test.yml against current main. See
+#     naturally-triggered execution, so requiring it here refuses a DIRECT
+#     rerun of this production run.
+#   - `github.event.workflow_run.run_attempt == '1'` (round-5 finding 3,
+#     Codex round-6 correction) -- `github.run_attempt` above only guards a
+#     rerun of THIS (production) run. It does nothing about a rerun of the
+#     UPSTREAM db-migrate-test.yml run: GitHub reruns replay that run's
+#     original head_sha/head_branch, and on completion still emit a brand
+#     new `workflow_run` "completed" event for db-migrate-prod.yml -- only
+#     the `requested` activity type is suppressed on rerun, not `completed`.
+#     That new event starts a genuinely fresh production run (its OWN
+#     `github.run_attempt` is `'1'`, so the check above does not catch it),
+#     but the event payload still carries the stale upstream `head_sha`.
+#     `github.event.workflow_run.run_attempt` is the UPSTREAM test run's own
+#     attempt number, carried in that payload; requiring it to be `'1'`
+#     refuses a production run triggered by a reran (rather than freshly
+#     completed) test run. Both checks are required together: one closes a
+#     rerun of this workflow, the other closes a rerun of the workflow that
+#     triggers it. See
 #     https://docs.github.com/en/actions/how-tos/manage-workflow-runs/re-run-workflows-and-jobs
+#     and
+#     https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows
 # The checkout below pins the EXACT commit that was tested
 # (`github.event.workflow_run.head_sha`) rather than re-reading whatever
 # `main` happens to point at when this job starts, so production always
@@ -148,9 +165,11 @@ jobs:
   migrate-prod:
     name: Apply migrations to Institute production
     # `github.run_attempt == '1'` (round-5 finding 3): refuses a manual
-    # "Re-run jobs" replay of a stale-but-successful old run -- see the
-    # header comment above for why that isn't caught by anything else here.
-    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.run_attempt == '1'
+    # "Re-run jobs" replay of THIS run. `github.event.workflow_run.run_attempt
+    # == '1'` (round-5 finding 3, Codex round-6 correction): refuses a
+    # production run triggered by a reran (not freshly completed) upstream
+    # test run -- see the header comment above for why both are required.
+    if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # GitHub-native control (a repo Environment), not a script -- see the
