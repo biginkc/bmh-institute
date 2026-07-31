@@ -37,24 +37,39 @@ const MIGRATION_PATH = resolve(
 );
 const migrationSql = readFileSync(MIGRATION_PATH, "utf8");
 
-function extractBetween(startMarker: string, endMarker: string, label: string): string {
-  const start = migrationSql.indexOf(startMarker);
+// The historical migration whose pre-image bodies BASELINE_GATES_SQL's
+// v_fn loop must tolerate (see 20260730260000's alt_body_md5 comment) —
+// never applied to production, but a full-history replay runs it first.
+const HISTORICAL_DELETIONS_PATH = resolve(
+  process.cwd(),
+  "supabase/migrations/20260730100000_transactional_admin_deletions.sql",
+);
+const historicalDeletionsSql = readFileSync(HISTORICAL_DELETIONS_PATH, "utf8");
+
+function extractBetween(
+  source: string,
+  startMarker: string,
+  endMarker: string,
+  label: string,
+): string {
+  const start = source.indexOf(startMarker);
   if (start < 0) throw new Error(`${label}: start marker not found in migration file`);
-  const end = migrationSql.indexOf(endMarker, start);
+  const end = source.indexOf(endMarker, start);
   if (end < 0) throw new Error(`${label}: end marker not found in migration file`);
-  return migrationSql.slice(start, end).trimEnd();
+  return source.slice(start, end).trimEnd();
 }
 
-function extractBlock(startMarker: string, label: string): string {
-  const start = migrationSql.indexOf(startMarker);
+function extractBlock(source: string, startMarker: string, label: string): string {
+  const start = source.indexOf(startMarker);
   if (start < 0) throw new Error(`${label}: start marker not found in migration file`);
-  const end = migrationSql.indexOf("\n$$;\n", start);
+  const end = source.indexOf("\n$$;\n", start);
   if (end < 0) throw new Error(`${label}: end marker not found in migration file`);
-  return migrationSql.slice(start, end + 4).trimEnd();
+  return source.slice(start, end + 4).trimEnd();
 }
 
 // The baseline-relations/RLS/is_admin/ACL/four-function-fingerprint DO block.
 const BASELINE_GATES_SQL = extractBetween(
+  migrationSql,
   "do $$\ndeclare\n  v_table text;",
   "\ncreate or replace function public.fn_admin_preview_deletion_v1",
   "BASELINE_GATES_SQL",
@@ -63,6 +78,7 @@ const BASELINE_GATES_SQL = extractBetween(
 // The content_blocks trigger-ownership DO block (creates the trigger if
 // absent, refuses if a same-name trigger exists with a foreign definition).
 const TRIGGER_GATE_SQL = extractBlock(
+  migrationSql,
   "do $$\ndeclare\n  v_trigger record;",
   "TRIGGER_GATE_SQL",
 );
@@ -70,6 +86,7 @@ const TRIGGER_GATE_SQL = extractBlock(
 // The self-contained bmh_authored_content_is_safe(text, jsonb) function —
 // no table dependencies, so it can be loaded and called directly.
 const AUTHORED_CONTENT_SAFE_FN_SQL = extractBlock(
+  migrationSql,
   "create or replace function public.bmh_authored_content_is_safe",
   "AUTHORED_CONTENT_SAFE_FN_SQL",
 );
@@ -81,8 +98,44 @@ const AUTHORED_CONTENT_SAFE_FN_SQL = extractBlock(
 // which would make every baseline-gate test below fail for the wrong
 // reason (a fixture mismatch, not real drift).
 const VALIDATE_TRIGGER_FN_SQL = extractBlock(
+  migrationSql,
   "create or replace function public.bmh_validate_authored_content_trigger",
   "VALIDATE_TRIGGER_FN_SQL",
+);
+
+// The two admin-deletion RPCs — current (NULL-entity_type-guard-fixed)
+// bodies from this migration, plus their historical (unfixed) pre-images
+// from 20260730100000, so the v_fn loop's dual-hash tolerance for them
+// (round 6's coverage gap) can actually be exercised, not just the
+// authored-content function's.
+const PREVIEW_FN_SQL = extractBlock(
+  migrationSql,
+  "create or replace function public.fn_admin_preview_deletion_v1",
+  "PREVIEW_FN_SQL",
+);
+const DELETE_FN_SQL = extractBlock(
+  migrationSql,
+  "create or replace function public.fn_admin_delete_catalog_entity_v1",
+  "DELETE_FN_SQL",
+);
+const PREVIEW_FN_HISTORICAL_SQL = extractBlock(
+  historicalDeletionsSql,
+  "create or replace function public.fn_admin_preview_deletion_v1",
+  "PREVIEW_FN_HISTORICAL_SQL",
+);
+const DELETE_FN_HISTORICAL_SQL = extractBlock(
+  historicalDeletionsSql,
+  "create or replace function public.fn_admin_delete_catalog_entity_v1",
+  "DELETE_FN_HISTORICAL_SQL",
+);
+
+// The revoke/grant pair the v_fn loop's ACL check requires for both RPCs:
+// EXECUTE to authenticated (non-grantable) and explicitly not to public/anon.
+const ADMIN_FN_GRANTS_SQL = extractBetween(
+  migrationSql,
+  "revoke all on function public.fn_admin_preview_deletion_v1(text, uuid) from public, anon;",
+  "\n\n",
+  "ADMIN_FN_GRANTS_SQL",
 );
 
 let pgBindir: string | null = null;
@@ -132,6 +185,16 @@ function captureRefusal(sql: string, role = "postgres"): string | null {
   }
 }
 
+/** Runs a query returning a single jsonb value and parses it. */
+function psqlJson(sql: string, role = "postgres"): unknown {
+  const out = execFileSync(
+    binary("psql"),
+    ["-h", SOCKET_DIR, "-p", PORT, "-U", role, "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-t", "-A", "-c", sql],
+    { env: PG_ENV, encoding: "utf8" },
+  );
+  return JSON.parse(out.trim());
+}
+
 const BASE_SCHEMA_SQL = `
 create role authenticated;
 create role service_role;
@@ -163,7 +226,17 @@ create table public.user_course_resume (id uuid primary key);
 
 alter table public.content_blocks enable row level security;
 
+-- Real Supabase stamps auth.uid() from the request JWT; a fixed constant
+-- is enough here since these tests exercise the entity_type guard (which
+-- runs after the is_admin(auth.uid()) check), not multi-user authorization.
+create schema auth;
+create function auth.uid() returns uuid language sql stable as $$
+  select 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid
+$$;
+
 create table public.profiles (id uuid primary key, system_role text);
+insert into public.profiles (id, system_role)
+  values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'admin');
 create function public.fn_hugo_access_is_active(p_user_id uuid) returns boolean
 language sql stable as $$ select true $$;
 
@@ -247,6 +320,9 @@ describe.skipIf(pgBindir === null)(
       psql(BASE_SCHEMA_SQL);
       psql(AUTHORED_CONTENT_SAFE_FN_SQL);
       psql(VALIDATE_TRIGGER_FN_SQL);
+      psql(PREVIEW_FN_SQL);
+      psql(DELETE_FN_SQL);
+      psql(ADMIN_FN_GRANTS_SQL);
     }, 30000);
 
     afterAll(() => {
@@ -368,6 +444,78 @@ describe.skipIf(pgBindir === null)(
 
       it("accepts content with no url at all", () => {
         expect(isSafe("video", {})).toBe(true);
+      });
+    });
+
+    describe("admin deletion RPCs — NULL entity_type guard", () => {
+      const SOME_ID = "00000000-0000-0000-0000-000000000001";
+
+      function callPreview(entityType: string | null): unknown {
+        const arg = entityType === null ? "NULL" : `'${entityType}'`;
+        return psqlJson(`select public.fn_admin_preview_deletion_v1(${arg}, '${SOME_ID}'::uuid);`);
+      }
+      function callDelete(entityType: string | null): unknown {
+        const arg = entityType === null ? "NULL" : `'${entityType}'`;
+        return psqlJson(`select public.fn_admin_delete_catalog_entity_v1(${arg}, '${SOME_ID}'::uuid);`);
+      }
+
+      // Round-5/6 bug: `p_entity_type not in (...)` evaluates to NULL (not
+      // TRUE) for a NULL input, so the guard never fired and execution fell
+      // through every `elsif p_entity_type = '<type>'` branch (also NULL)
+      // into the final `else` — the 'option' case — unvalidated. These
+      // calls actually invoke the RPCs (not just inspect their stored
+      // body), so a regression back to the bare `not in` would make them
+      // fail here rather than pass by never being exercised.
+
+      it("rejects a NULL entity_type in the preview RPC as invalid_target", () => {
+        expect(callPreview(null)).toEqual({ code: "invalid_target" });
+      });
+
+      it("rejects a NULL entity_type in the delete RPC as invalid_target", () => {
+        expect(callDelete(null)).toEqual({ code: "invalid_target" });
+      });
+
+      it("rejects an unrecognized entity_type the same way (not NULL-specific)", () => {
+        expect(callPreview("bogus")).toEqual({ code: "invalid_target" });
+        expect(callDelete("bogus")).toEqual({ code: "invalid_target" });
+      });
+    });
+
+    describe("four-function fingerprint loop — dual-hash tolerance", () => {
+      // Round 7's finding: coverage existed for bmh_authored_content_is_safe's
+      // alt-hash tolerance but not for the two admin-deletion RPCs, so a
+      // regression removing their alt_body_md5 entries (or their historical
+      // pre-image hash going stale) would pass every other test in this file
+      // while still breaking a legitimate first-apply-after-CI-rehearsal run.
+
+      it("accepts both RPCs' current (already-fixed) bodies", () => {
+        psql(PREVIEW_FN_SQL);
+        psql(DELETE_FN_SQL);
+        expect(() => psql(BASELINE_GATES_SQL)).not.toThrow();
+      });
+
+      it("accepts both RPCs' historical (pre-fix) pre-image bodies", () => {
+        psql(PREVIEW_FN_HISTORICAL_SQL);
+        psql(DELETE_FN_HISTORICAL_SQL);
+        expect(() => psql(BASELINE_GATES_SQL)).not.toThrow();
+        // Restore the fixed bodies — later tests in this file call these
+        // RPCs and need the NULL-guard fix present.
+        psql(PREVIEW_FN_SQL);
+        psql(DELETE_FN_SQL);
+      });
+
+      it("refuses a genuinely drifted body matching neither hash", () => {
+        psql(`
+          create or replace function public.fn_admin_preview_deletion_v1(p_entity_type text, p_entity_id uuid)
+          returns jsonb language plpgsql security definer set search_path = public
+          as $$ begin return jsonb_build_object('code', 'database_rejected'); end; $$;
+        `);
+        const stderr = captureRefusal(BASELINE_GATES_SQL);
+        expect(stderr).toMatch(
+          /existing fn_admin_preview_deletion_v1\(text,uuid\) function definition\/security baseline mismatch/,
+        );
+        // Restore for any tests that run after this one.
+        psql(PREVIEW_FN_SQL);
       });
     });
   },
