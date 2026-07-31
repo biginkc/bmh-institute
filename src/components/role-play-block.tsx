@@ -194,13 +194,21 @@ export function RolePlayBlock({
         — even after the learner clicks Start inside the frame. Without it the
         agent joins, listens, then dies with browser_persona_audio_unavailable.
         Observed in production 2026-07-27.
+
+        `camera` is the other required half of the permissions-policy model.
+        The response header (next.config.ts) grants camera=(self "https://
+        lab.bmhgroupkc.com"), but a header alone does nothing — the browser
+        also requires the embedding iframe's own `allow` attribute to
+        delegate the feature down to the child, or getUserMedia() is refused
+        inside the frame regardless of what the header says. Neither half
+        substitutes for the other.
       */}
       <iframe
         ref={iframeRef}
         src={iframeSrc}
         onLoad={() => setLoaded(true)}
         title={title || "Role play"}
-        allow="microphone; autoplay; clipboard-write"
+        allow="camera; microphone; autoplay; clipboard-write"
         sandbox="allow-scripts allow-same-origin allow-forms"
         className={cn("w-full", pending && "opacity-80")}
         style={{ height: `${heightPx}px` }}

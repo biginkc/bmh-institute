@@ -78,13 +78,36 @@ describe("Permissions-Policy", () => {
    */
   it("allows the camera for the Closer Lab role-play origin only", async () => {
     const values = await permissionsPolicyValues();
+
+    // Every Permissions-Policy value must carry exactly one camera directive.
+    for (const value of values) {
+      const matches = value.match(/(^|[;,\s])camera\s*=/gi) ?? [];
+      expect(matches.length).toBe(1);
+    }
+
     const cameraDirectives = values
       .map((value) => value.match(/(^|[;,\s])camera\s*=\s*\(([^)]*)\)/i)?.[2])
       .filter((v): v is string => v !== undefined);
     expect(cameraDirectives.length).toBeGreaterThan(0);
+
     for (const directive of cameraDirectives) {
-      expect(directive).toContain('"https://lab.bmhgroupkc.com"');
-      expect(directive).not.toMatch(/\*/);
+      // Tokenize on whitespace and assert EXACT membership, not substring
+      // containment. `.toContain('"https://lab.bmhgroupkc.com"')` would also
+      // pass for `camera=(self "https://lab.bmhgroupkc.com" "https://evil.
+      // example")` — a widened allowlist that still contains the substring.
+      const tokens = directive.trim().split(/\s+/).filter(Boolean);
+
+      // Exactly `self` plus exactly one quoted origin. No wildcard, no `src`,
+      // no malformed/unquoted token, and no additional origins.
+      expect(tokens.length).toBe(2);
+      expect(tokens[0]).toBe("self");
+      expect(tokens[1]).toBe('"https://lab.bmhgroupkc.com"');
+
+      for (const token of tokens) {
+        expect(token).not.toBe("*");
+        expect(token).not.toBe("src");
+        expect(token).not.toMatch(/\*/);
+      }
     }
   });
 });
