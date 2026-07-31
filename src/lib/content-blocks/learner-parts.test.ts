@@ -308,7 +308,18 @@ describe("optional (not-required) parts", () => {
     })).toBe(true);
   });
 
-  it("canonicalizes an invalid part to the first safe available part", () => {
+  it("reports the fallback part for an invalid id, but the caller must not silently render it", () => {
+    // `resolveLearnerPart` is a pure computation: it always reports what the
+    // fallback/canonical part *would* be, even for a bogus id. That's still
+    // correct here — this is only the low-level resolver's contract.
+    //
+    // It is NOT license to redirect or render that fallback for an unknown
+    // `?part=` value. The real page (`resolveAndPrepareLearnerPart` in
+    // prepare-learner-part.ts) deliberately ignores `part`/`canonicalPartId`
+    // for an invalid request and renders the same "unavailable" outcome as a
+    // locked part instead — see prepare-learner-part.test.ts. A prior version
+    // of this test's name implied the app canonicalizes/redirects bad part
+    // ids; it no longer does, and never should again.
     const parts = buildLearnerLessonParts({
       blocks: [block("1", "video")],
       completedBlockIds: new Set<string>(),

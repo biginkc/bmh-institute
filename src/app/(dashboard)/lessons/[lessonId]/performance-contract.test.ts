@@ -27,9 +27,21 @@ describe("lesson page performance contract", () => {
   });
 
   it("renders a requested locked part before preparation can fall back", () => {
-    expect(source).toMatch(
-      /const selected = resolution\.requestedPartLocked\s*&&\s*resolution\.part\?\.kind === "quiz"\s*\?\s*resolution\.part\s*:\s*await prepareLearnerPart\(/,
+    // This decision now lives in resolveAndPrepareLearnerPart (the single
+    // point the page delegates to for every ?part= request), not inlined in
+    // page.tsx — see prepare-learner-part.ts and its tests.
+    expect(source).toContain("resolveAndPrepareLearnerPart(");
+    expect(preparationSource).toMatch(
+      /const selected =\s*\n?\s*resolution\.requestedPartLocked\s*&&\s*resolution\.part\?\.kind === "quiz"\s*\?\s*resolution\.part\s*:\s*await prepareLearnerPart\(/,
     );
+  });
+
+  it("never redirects an unknown or locked part id to a different, available part", () => {
+    // Regression guard for the bug where a bad ?part= value (unknown or
+    // still-locked) silently redirected to the canonical fallback part
+    // instead of rendering the "unavailable" outcome.
+    expect(source).not.toContain("resolution.canonicalPartId");
+    expect(source).not.toMatch(/redirect\(`\/lessons\/\$\{tile\.id\}\?part=/);
   });
 
   it("does not perform a second identity lookup for role-play blocks", () => {
