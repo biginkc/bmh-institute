@@ -1,5 +1,6 @@
 "use server";
 
+import { formatLearnerDateTime } from "@/lib/format-learner-date";
 import { emitSandraCourseCompletedForLesson } from "@/lib/integrations/sandra/course-completed";
 import {
   buildAttemptSelection,
@@ -685,9 +686,11 @@ async function quizEligibilityContext(access: Extract<
   if (eligibility.state === "cooldown") {
     return {
       ok: false as const,
-      error: `Retake cooldown is in effect. Try again after ${new Date(
+      // Same fixed en-US/America-Chicago formatting as every other
+      // learner-facing date, instead of the server's ambient locale/zone.
+      error: `Retake cooldown is in effect. Try again after ${formatLearnerDateTime(
         eligibility.nextAvailableAt,
-      ).toLocaleString()}.`,
+      )}.`,
     };
   }
   if (eligibility.state === "passed") {
