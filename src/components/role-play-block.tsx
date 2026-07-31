@@ -11,7 +11,9 @@ import {
   isTrustedRolePlayMessage,
   parseRolePlayEvent,
 } from "@/lib/role-plays/embed-events";
+import type { RolePlayLatestResult } from "@/lib/content-security/validate";
 import { cn } from "@/lib/utils";
+import { RolePlayScoreCard } from "./role-play-score-card";
 
 /**
  * If the iframe has not announced itself this long after LOADING, something
@@ -29,6 +31,22 @@ type RolePlayBlockProps = {
   launchCredential: string;
   initialHeightPx: number;
   initialComplete: boolean;
+  /**
+   * Most recent `role_play_results` row for this learner+block, or null when
+   * there isn't one (fresh exercise, or — per production data, currently
+   * unreachable but defended anyway — a completed block with no matching
+   * row, see `mode` below).
+   */
+  latestResult?: RolePlayLatestResult | null;
+  /**
+   * True when the server's `role_play_results` read for this lesson failed
+   * (a query error, not zero rows). Distinct from `latestResult === null`:
+   * this means "we don't know the score, and it's not safe to assume there
+   * isn't one" and must render the same explicit "couldn't load a score"
+   * state as a persisted null score — never silently fall back to the
+   * iframe as if this were the legacy gap.
+   */
+  resultFetchFailed?: boolean;
 };
 
 export function RolePlayBlock({
@@ -39,6 +57,8 @@ export function RolePlayBlock({
   launchCredential,
   initialHeightPx,
   initialComplete,
+  latestResult = null,
+  resultFetchFailed = false,
 }: RolePlayBlockProps) {
   const router = useRouter();
   const [loaded, setLoaded] = useState(false);
@@ -48,6 +68,16 @@ export function RolePlayBlock({
   const [error, setError] = useState<string | null>(null);
   const [heightPx, setHeightPx] = useState(clampRolePlayHeight(initialHeightPx));
   const [pending, startTransition] = useTransition();
+  // Computed once from the props this instance mounted with. A returning
+  // learner (fresh page load) gets the score view by default; "Try again"
+  // flips this to "practice" for the rest of this component's lifetime. A
+  // completion that happens live in THIS session keeps showing the iframe's
+  // own in-progress/complete state rather than snapping to a score view with
+  // stale (pre-attempt) data — the score view only applies on the return
+  // visit, once the server has the new attempt's result.
+  const [mode, setMode] = useState<"score" | "practice">(
+    initialComplete && (latestResult || resultFetchFailed) ? "score" : "practice",
+  );
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(initialComplete);
   const readyRef = useRef(false);
@@ -147,6 +177,19 @@ export function RolePlayBlock({
     }, READY_TIMEOUT_MS);
     return () => clearTimeout(timer);
   }, [complete, loaded, ready, scenarioId]);
+
+  // The default view for a returning learner on an already-completed
+  // exercise: their most recent score, not another live iframe. Doesn't need
+  // iframe config to render, so this is checked before the config guard.
+  if (mode === "score" && (latestResult || resultFetchFailed)) {
+    return (
+      <RolePlayScoreCard
+        title={title || "Role play"}
+        result={latestResult}
+        onTryAgain={() => setMode("practice")}
+      />
+    );
+  }
 
   // Without a credential the child would spin on "Waiting for BMH Institute…"
   // forever, so a mint failure must surface as unconfigured instead.
