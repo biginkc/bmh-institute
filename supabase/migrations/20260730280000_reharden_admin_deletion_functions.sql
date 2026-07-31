@@ -418,4 +418,54 @@ revoke all on function public.fn_admin_delete_catalog_entity_v1(text, uuid) from
 grant execute on function public.fn_admin_preview_deletion_v1(text, uuid) to authenticated;
 grant execute on function public.fn_admin_delete_catalog_entity_v1(text, uuid) to authenticated;
 
+-- Re-validate immediately before commit. The baseline check above reads a
+-- snapshot before any DDL in this migration runs; a concurrent privileged
+-- session could in principle slip an extra GRANT in on either function
+-- between that read and the REVOKE/GRANT above, and that grantee is not
+-- necessarily one this migration's own REVOKE ALL ... FROM PUBLIC, ANON
+-- would remove. Re-reading and asserting the exact expected ACL shape
+-- here, inside the same transaction, means any such drift still causes
+-- the whole migration to roll back rather than commit with an ACL the
+-- baseline check would have refused.
+do $$
+declare
+  v_fn record;
+begin
+  for v_fn in
+    select p.oid::regprocedure as identity,
+           (select r.rolname from pg_roles r where r.oid = p.proowner) as owner_rolname,
+           coalesce(p.proacl, acldefault('f', p.proowner)) as acl
+    from pg_proc p
+    where p.oid in (
+      to_regprocedure('public.fn_admin_preview_deletion_v1(text, uuid)'),
+      to_regprocedure('public.fn_admin_delete_catalog_entity_v1(text, uuid)')
+    )
+  loop
+    if not exists (
+      select 1
+      from aclexplode(v_fn.acl) x
+      join pg_roles r on r.oid = x.grantee
+      where r.rolname = 'authenticated'
+        and x.privilege_type = 'EXECUTE'
+        and not x.is_grantable
+    )
+    or exists (
+      select 1
+      from aclexplode(v_fn.acl) x
+      left join pg_roles r on r.oid = x.grantee
+      where x.privilege_type = 'EXECUTE'
+        and (
+          x.is_grantable
+          or x.grantee = 0
+          or coalesce(r.rolname, '') not in ('authenticated', v_fn.owner_rolname)
+        )
+    )
+    then
+      raise exception 'reharden migration refused: % final ACL no longer matches the expected shape immediately before commit -- a concurrent grant landed mid-migration', v_fn.identity
+        using errcode = '55000';
+    end if;
+  end loop;
+end;
+$$;
+
 commit;
