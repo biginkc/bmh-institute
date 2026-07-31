@@ -121,3 +121,33 @@ describe("lesson learner-state query scope", () => {
     expect(progressRailSource).toContain("href={entry.href}");
   });
 });
+
+describe("rail revisitability and video-invalidation copy", () => {
+  it("derives every rail entry's href from part.available, the same flag prepareLearnerPart honors", () => {
+    // The rail and the page's own part-selection must read the identical
+    // `available` field from `buildLearnerLessonParts` — otherwise a
+    // completed-but-gate-regressed part can be clickable in one place and
+    // rejected in the other (2026-07-30 production finding: green-check
+    // parts that refused to open).
+    const composite = source.slice(
+      source.indexOf("async function ContentCompositeLesson"),
+      source.indexOf("async function PartBody"),
+    );
+    expect(composite).toContain("invalidatedBlockIds: tile.invalidatedBlockIds");
+    expect(composite).toMatch(
+      /href:\s*part\.available\s*\n?\s*\?\s*`\/lessons\/\$\{tile\.id\}\?part=\$\{encodeURIComponent\(part\.id\)\}`\s*\n?\s*:\s*null/,
+    );
+  });
+
+  it("shows an update-specific notice for a video invalidated by an asset swap, distinct from an ordinary lock", () => {
+    const partBody = source.slice(
+      source.indexOf("async function PartBody"),
+      source.indexOf("function LessonShell"),
+    );
+    expect(partBody).toContain("part.invalidated");
+    expect(partBody).toContain("This video was updated");
+    // Must not reuse or collide with the quiz's ordinary "locked" copy —
+    // these are deliberately different messages for different situations.
+    expect(partBody).toContain("Quiz locked");
+  });
+});

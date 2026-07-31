@@ -133,6 +133,20 @@ export async function loadLearnerCourseOutline({
       return version && row.asset_version === version ? [row.block_id] : [];
     }),
   );
+  // See load-learner-lesson-outline.ts: a stale asset_version row means the
+  // learner completed an older version of this video before its file was
+  // swapped. Surfaced separately so the UI can explain the reset instead of
+  // showing an ordinary not-yet-started lock.
+  const invalidatedBlockIds = new Set(
+    (blockProgressResult.data ?? []).flatMap((row) => {
+      const block = blocksById.get(row.block_id);
+      if (!block || block.block_type !== "video") return [];
+      const version = videoAssetVersion(block.content);
+      return version && row.asset_version && row.asset_version !== version
+        ? [row.block_id]
+        : [];
+    }),
+  );
   const assignmentSubmissions = new Map<
     string,
     "submitted" | "approved" | "needs_revision"
@@ -152,6 +166,7 @@ export async function loadLearnerCourseOutline({
     states: stateResult.states,
     assignmentSubmissions,
     completedBlockIds,
+    invalidatedBlockIds,
     resume: resumeResult.data
       ? {
           lastLessonId: resumeResult.data.last_lesson_id,

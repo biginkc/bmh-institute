@@ -349,3 +349,94 @@ describe("optional (not-required) parts", () => {
     expect(selectLearnerPart(parts, "quiz")?.id).toBe("quiz");
   });
 });
+
+describe("revisiting a completed part after an upstream gate regresses", () => {
+  // Reproduces the 2026-07-30 production finding (lesson
+  // 90ceaa26-0992-5991-a1c6-07070e3f7200): Video A's completion was
+  // invalidated by a content-update migration, which regressed the
+  // `priorComplete` chain for every later part. Video B and "Talk with
+  // Andrea" were still genuinely complete (green checks in the rail) but
+  // rendered as an unclickable, disabled span because their `available` flag
+  // rode along with the regressed chain instead of their own completion.
+  it("keeps a completed part clickable even though an earlier part's gate regressed", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "video"), // Video A — invalidated, no longer "done"
+        block("2", "video"), // Video B — still genuinely complete
+        block("3", "role_play", { mode: "oral_check" }), // Talk with Andrea — still complete
+      ],
+      // Video A dropped out of completedBlockIds (its asset changed); Video B
+      // and the oral check were never re-invalidated and stay complete.
+      completedBlockIds: new Set(["2", "3"]),
+      invalidatedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+
+    const videoA = parts.find((part) => part.id === "video-1");
+    const videoB = parts.find((part) => part.id === "video-2");
+    const oralCheck = parts.find((part) => part.id === "role-play-1");
+
+    expect(videoA).toMatchObject({ complete: false, available: true, invalidated: true });
+    // The real bug: these two must stay `available` (clickable) even though
+    // Video A — the upstream gate — is no longer done.
+    expect(videoB).toMatchObject({ complete: true, available: true, invalidated: false });
+    expect(oralCheck).toMatchObject({ complete: true, available: true, invalidated: false });
+  });
+
+  it("still locks a genuinely un-started part behind an incomplete upstream gate", () => {
+    // The progression rule itself must not be weakened: a part the learner
+    // has never actually completed stays locked behind an incomplete,
+    // required prior part — regressed or not.
+    const parts = buildLearnerLessonParts({
+      blocks: [
+        block("1", "video"), // Video A — invalidated
+        block("2", "video"), // Video B — never started
+      ],
+      completedBlockIds: new Set<string>(),
+      invalidatedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+
+    const videoB = parts.find((part) => part.id === "video-2");
+    expect(videoB).toMatchObject({
+      complete: false,
+      available: false,
+      invalidated: false,
+    });
+  });
+
+  it("marks only a video invalidated by an asset swap, not a video that was simply never started", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "video"), block("2", "video")],
+      completedBlockIds: new Set<string>(),
+      // Only block "1" has a stale user_block_progress row; block "2" has no
+      // progress row at all — an ordinary not-yet-started video.
+      invalidatedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+
+    expect(parts.find((part) => part.id === "video-1")?.invalidated).toBe(true);
+    expect(parts.find((part) => part.id === "video-2")?.invalidated).toBe(false);
+  });
+
+  it("never marks a role-play or oral-check part invalidated (asset invalidation is video-only)", () => {
+    const parts = buildLearnerLessonParts({
+      blocks: [block("1", "role_play", { mode: "oral_check" })],
+      completedBlockIds: new Set<string>(),
+      // A caller that (incorrectly) included a non-video block id here must
+      // still never mark it invalidated — only videos carry asset_version.
+      invalidatedBlockIds: new Set(["1"]),
+      quizComplete: false,
+      quizUnlocked: false,
+      compositeComplete: false,
+    });
+
+    expect(parts.find((part) => part.id === "role-play-1")?.invalidated).toBe(false);
+  });
+});

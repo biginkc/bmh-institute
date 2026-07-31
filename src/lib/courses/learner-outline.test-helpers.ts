@@ -37,6 +37,7 @@ export function learnerOutlineFixture(count = 25): LearnerCourseOutline {
           quizComplete: index < 2,
           quizUnlocked: index < 3,
           completedBlockIds: new Set<string>(),
+          invalidatedBlockIds: new Set<string>(),
         };
   });
   const moduleIds = Array.from(new Set(tiles.map((tile) => tile.moduleId)));

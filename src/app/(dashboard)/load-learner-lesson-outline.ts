@@ -149,6 +149,22 @@ export async function loadLearnerLessonOutline({
       return version && row.asset_version === version ? [row.block_id] : [];
     }),
   );
+  // A `user_block_progress` row for a video block whose `asset_version`
+  // doesn't match the block's current file/duration means the learner
+  // completed an older version of this video before its underlying file was
+  // swapped. That completion correctly no longer counts (above), but the UI
+  // still needs to know *why* so it can say so instead of showing an
+  // ordinary not-yet-started lock.
+  const invalidatedBlockIds = new Set(
+    (blockProgressResult.data ?? []).flatMap((row) => {
+      const block = blocksById.get(row.block_id);
+      if (!block || block.block_type !== "video") return [];
+      const version = videoAssetVersion(block.content);
+      return version && row.asset_version && row.asset_version !== version
+        ? [row.block_id]
+        : [];
+    }),
+  );
 
   const assignmentSubmissions = new Map<
     string,
@@ -168,6 +184,7 @@ export async function loadLearnerLessonOutline({
     states: stateResult.states,
     assignmentSubmissions,
     completedBlockIds,
+    invalidatedBlockIds,
     resume: null,
   });
 }

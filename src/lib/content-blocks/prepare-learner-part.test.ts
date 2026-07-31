@@ -8,10 +8,10 @@ const videoB = block("video-b", "video");
 const rolePlay = block("role-play-hidden", "role_play");
 
 const parts: LearnerLessonPart[] = [
-  { id: "video-1", label: "Video A", kind: "video", blocks: [videoA], complete: true, available: true },
-  { id: "video-2", label: "Video B", kind: "video", blocks: [videoB], complete: false, available: true },
-  { id: "role-play-1", label: "Role play", kind: "role_play", blocks: [rolePlay], complete: false, available: false },
-  { id: "quiz", label: "Quiz", kind: "quiz", blocks: [], complete: false, available: true },
+  { id: "video-1", label: "Video A", kind: "video", blocks: [videoA], complete: true, available: true, invalidated: false },
+  { id: "video-2", label: "Video B", kind: "video", blocks: [videoB], complete: false, available: true, invalidated: false },
+  { id: "role-play-1", label: "Role play", kind: "role_play", blocks: [rolePlay], complete: false, available: false, invalidated: false },
+  { id: "quiz", label: "Quiz", kind: "quiz", blocks: [], complete: false, available: true, invalidated: false },
 ];
 
 describe("prepareLearnerPart", () => {
