@@ -92,14 +92,33 @@ begin
            md5(p.prosrc) as body_md5,
            case p.oid::regprocedure::text
              when to_regprocedure('public.fn_admin_preview_deletion_v1(text, uuid)')::text
-               then '11666f54928b682a6ef05d4a2407f3eb'
+               then '8c66a3213456123f55a86d865a73e909'
              when to_regprocedure('public.fn_admin_delete_catalog_entity_v1(text, uuid)')::text
-               then 'c939eb40e97681ea8e2d42fde77c8cd0'
+               then '8e25647f33bb2cce249d77d2f5a9595c'
              when to_regprocedure('public.bmh_authored_content_is_safe(text, jsonb)')::text
                then 'd14dc2f54729916da6369084364dcf9e'
              when to_regprocedure('public.bmh_validate_authored_content_trigger()')::text
                then '5c3658012315dc0169063fd023077513'
            end as expected_body_md5,
+           -- These three functions can legitimately already exist with
+           -- their historical (unpatched) bodies from migrations
+           -- 20260730100000 (fn_admin_preview_deletion_v1,
+           -- fn_admin_delete_catalog_entity_v1) and 20260730100100
+           -- (bmh_authored_content_is_safe) — neither historical migration
+           -- was ever applied to production, but a full-history replay
+           -- (CI rehearsals, fresh clusters) still runs them before this
+           -- one. Accept each historical pre-image, in addition to this
+           -- migration's own already-patched body on an idempotent rerun,
+           -- as a legitimate baseline about to be upgraded by the
+           -- CREATE OR REPLACE below.
+           case p.oid::regprocedure::text
+             when to_regprocedure('public.fn_admin_preview_deletion_v1(text, uuid)')::text
+               then '11666f54928b682a6ef05d4a2407f3eb'
+             when to_regprocedure('public.fn_admin_delete_catalog_entity_v1(text, uuid)')::text
+               then 'c939eb40e97681ea8e2d42fde77c8cd0'
+             when to_regprocedure('public.bmh_authored_content_is_safe(text, jsonb)')::text
+               then 'cc96238858ad04b847975e6a42d2ff9a'
+           end as alt_body_md5,
            coalesce(p.proacl, acldefault('f', p.proowner)) as acl
     from pg_proc p
     where p.oid in (
@@ -109,7 +128,7 @@ begin
       to_regprocedure('public.bmh_validate_authored_content_trigger()')
     )
   loop
-    if v_fn.body_md5 <> v_fn.expected_body_md5
+    if (v_fn.body_md5 <> v_fn.expected_body_md5 and v_fn.body_md5 <> coalesce(v_fn.alt_body_md5, ''))
       or v_fn.prolang <> (select oid from pg_language where lanname = 'plpgsql')
       or (v_fn.identity::text like '%bmh_authored_content_is_safe%' and v_fn.provolatile <> 'i')
       or (v_fn.identity::text like '%fn_admin_%' and (
@@ -159,7 +178,12 @@ begin
   if not public.is_admin(auth.uid()) then
     return jsonb_build_object('code', 'database_rejected');
   end if;
-  if p_entity_type not in ('module', 'lesson', 'role_group', 'block', 'question', 'option') then
+  -- `p_entity_type is null or` is required: Postgres `NULL NOT IN (...)`
+  -- evaluates to NULL (not TRUE), so a bare `NOT IN` guard silently lets a
+  -- NULL entity_type through. Every branch below is `elsif p_entity_type =
+  -- '<type>'`, which is also NULL for a NULL input, so it falls all the
+  -- way to the final `else` (the 'option' case) unvalidated.
+  if p_entity_type is null or p_entity_type not in ('module', 'lesson', 'role_group', 'block', 'question', 'option') then
     return jsonb_build_object('code', 'invalid_target');
   end if;
 
@@ -322,7 +346,10 @@ declare
   v_assignment_id uuid;
 begin
   if not public.is_admin(auth.uid()) then return jsonb_build_object('code', 'database_rejected'); end if;
-  if p_entity_type not in ('module', 'lesson', 'role_group', 'block', 'question', 'option') then
+  -- `p_entity_type is null or` is required: see fn_admin_preview_deletion_v1
+  -- above for why a bare NOT IN guard lets NULL fall through to the
+  -- final `else` (the 'option'/answer_options delete path) unvalidated.
+  if p_entity_type is null or p_entity_type not in ('module', 'lesson', 'role_group', 'block', 'question', 'option') then
     return jsonb_build_object('code', 'invalid_target');
   end if;
   -- Take the shared catalog lock before the target lock. Import and editor
