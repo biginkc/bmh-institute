@@ -42,7 +42,7 @@ begin
   if not found
     or v_is_admin.prolang <> (select oid from pg_language where lanname = 'sql')
     or not v_is_admin.prosecdef
-    or not (coalesce(v_is_admin.proconfig, '{}'::text[]) @> array['search_path=']::text[])
+    or not (coalesce(v_is_admin.proconfig, '{}'::text[]) @> array['search_path=public']::text[])
   then
     raise exception 'forward security migration refused: public.is_admin(uuid) definition/security baseline mismatch'
       using errcode = '55000';
@@ -55,7 +55,7 @@ begin
     where x.grantor = (select proowner from pg_proc where oid = to_regprocedure('public.is_admin(uuid)'))
       and x.privilege_type = 'EXECUTE'
       and x.is_grantable = false;
-  if v_acl is distinct from array['authenticated', 'service_role']::text[] then
+  if v_acl is distinct from array['authenticated', 'postgres', 'service_role']::text[] then
     raise exception 'forward security migration refused: public.is_admin(uuid) ACL baseline mismatch: %', v_acl
       using errcode = '55000';
   end if;
@@ -542,7 +542,7 @@ begin
 
   if found then
     if v_trigger.tgfoid <> 'public.bmh_validate_authored_content_trigger()'::regprocedure
-      or v_trigger.tgtype <> 21
+      or v_trigger.tgtype <> 23
       or v_trigger.tgenabled <> 'O'
       or cardinality(v_trigger.tgattr) <> 2
       or not (v_trigger.tgattr @> array[
