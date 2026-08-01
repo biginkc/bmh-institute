@@ -27,3 +27,5 @@ App runs at http://localhost:3100.
 ## Environment
 
 Copy `.env.example` → `.env.local` and fill in the `replace_me` values.
+
+<!-- codex reachability probe — delete after -->
