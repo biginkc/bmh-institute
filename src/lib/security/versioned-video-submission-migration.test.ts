@@ -31,19 +31,21 @@ describe("versioned video completion and submission evidence migration", () => {
     const providerStep = remoteJob.slice(
       remoteJob.indexOf("- name: Run fail-closed provider acceptance"),
     );
-    for (const [step, command] of [
-      [applyStep, "supabase db push"],
-      [providerStep, "npm run test:course-import-provider"],
-    ]) {
-      expect(step).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
-      expect(step).toContain('echo "::add-mask::$ENCODED_PASSWORD"');
-      expect(step.indexOf('::add-mask::$TEST_SUPABASE_DB_PASSWORD')).toBeLessThan(
-        step.indexOf("ENCODED_PASSWORD="),
-      );
-      expect(step.indexOf('::add-mask::$ENCODED_PASSWORD')).toBeLessThan(
-        step.indexOf(command),
-      );
-    }
+    expect(applyStep).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
+    expect(applyStep).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
+    expect(applyStep).not.toContain("ENCODED_PASSWORD=");
+    expect(applyStep).not.toContain("DB_URL=");
+    expect(applyStep.indexOf('::add-mask::$TEST_SUPABASE_DB_PASSWORD')).toBeLessThan(
+      applyStep.lastIndexOf("bash scripts/migration-rehearsal/guarded-db-push.sh"),
+    );
+    expect(providerStep).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
+    expect(providerStep).toContain('echo "::add-mask::$ENCODED_PASSWORD"');
+    expect(providerStep.indexOf('::add-mask::$TEST_SUPABASE_DB_PASSWORD')).toBeLessThan(
+      providerStep.indexOf("ENCODED_PASSWORD="),
+    );
+    expect(providerStep.indexOf('::add-mask::$ENCODED_PASSWORD')).toBeLessThan(
+      providerStep.indexOf("npm run test:course-import-provider"),
+    );
     expect(acceptanceStep).toContain('echo "::add-mask::$TEST_SUPABASE_DB_PASSWORD"');
     expect(acceptanceStep).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
     expect(acceptanceStep).not.toContain("ENCODED_PASSWORD=");
