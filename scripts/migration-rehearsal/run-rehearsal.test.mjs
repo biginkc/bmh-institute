@@ -314,6 +314,17 @@ test("a required PostgreSQL check executes the migration safety wrapper harness"
     /cancel-in-progress:\s*\$\{\{ github\.event_name == 'pull_request' \}\}/,
     "obsolete PR validation runs should cancel without cancelling test-project dispatches",
   );
+  const migrateTestBlock = yamlBlockAtIndent(workflow, 2, "migrate-test");
+  assert.match(
+    migrateTestBlock,
+    /^    concurrency:\s*$[\s\S]*?^      group:\s*bmh-institute-seeded-e2e-shared-test-project\s*$/m,
+    "manual TEST-project dispatches must retain the shared seeded-E2E serialization lock",
+  );
+  assert.match(
+    migrateTestBlock,
+    /^      cancel-in-progress:\s*false\s*$/m,
+    "a newer dispatch must not cancel an in-flight TEST-project mutation",
+  );
 });
 
 // --------------------------------------------------------------------------
@@ -331,6 +342,22 @@ function topLevelBlock(content, key) {
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i += 1) {
     if (/^\S/.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start, end).join("\n");
+}
+
+/** Returns a YAML mapping block beginning at an exact indentation level. */
+function yamlBlockAtIndent(content, indent, key) {
+  const lines = content.split("\n");
+  const prefix = " ".repeat(indent);
+  const start = lines.findIndex((line) => line === `${prefix}${key}:`);
+  assert.ok(start !== -1, `expected an indent-${indent} "${key}:" block`);
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i += 1) {
+    if (lines[i].startsWith(prefix) && !lines[i].startsWith(`${prefix} `)) {
       end = i;
       break;
     }
