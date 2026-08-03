@@ -50,13 +50,15 @@ function expectProductionAdmission(
 ) {
   const productionAdmission = productionJob.match(/^    if: (.+)$/m)?.[1] ?? "";
   expect(productionAdmission).toBe(
-    "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
+    "github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
   );
   expect(productionYaml).toMatch(
     /^concurrency:\n  group: bmh-institute-production-migrations\n  cancel-in-progress: false$/m,
   );
   expect(productionJob).toMatch(/^    environment: Production$/m);
   expect(productionJob).not.toMatch(/^    permissions:/m);
+  const jobEnv = productionJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
+  expect(jobEnv).not.toContain("SUPABASE_ACCESS_TOKEN");
 }
 
 function expectProductionCheckoutAndLink(productionJob: string) {
@@ -74,6 +76,9 @@ function expectProductionCheckoutAndLink(productionJob: string) {
     productionJob.match(
       /- name: Link to production project[\s\S]*?(?=\n\s{6}- name: Resolve pooler connection info)/,
     )?.[0] ?? "";
+  expect(productionLink).toContain(
+    "SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}",
+  );
   expect(productionLink).toContain(
     "SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
   );
@@ -98,6 +103,12 @@ function expectProductionPushAndFreshMainGate(productionJob: string) {
   );
   expect(productionPush).toContain(
     'export PGPASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    'export SUPABASE_DB_PASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    "GUARDED_PUSH_EXPECTED_GIT_SHA: ${{ github.event.workflow_run.head_sha }}",
   );
   expect(productionPush).toContain(
     "guarded-db-push.sh --target=institute-production",
@@ -142,6 +153,9 @@ function expectTestJobContract(testYaml: string) {
   expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
   expect(remoteJob).toContain("TEST_PROJECT_REF: jvaabkchkihkjllehmft");
   expect(remoteJob).toContain("guarded-db-push.sh --target=institute-test");
+  expect(remoteJob).toContain(
+    'export SUPABASE_DB_PASSWORD="$TEST_SUPABASE_DB_PASSWORD"',
+  );
   expect(remoteJob).not.toMatch(/^    permissions:/m);
   const checkoutStep =
     remoteJob.match(
@@ -179,6 +193,20 @@ describe("credential-bearing Playwright artifact policy", () => {
     );
     expect(source).not.toMatch(/psql\s+["']?\$DB_URL/);
     expect(source).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
+    const wrapper = fs.readFileSync(
+      path.resolve(
+        process.cwd(),
+        "scripts/migration-rehearsal/guarded-db-push.sh",
+      ),
+      "utf8",
+    );
+    expect(wrapper).toContain(
+      'DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}"',
+    );
+    expect(wrapper).not.toContain("ENCODED_PASSWORD");
+    expect(wrapper).not.toMatch(/DB_URL=.*PGPASSWORD/);
+    expect(wrapper).toContain("assert_expected_sha_is_current_main");
+    expect(wrapper.indexOf("assert_expected_sha_is_current_main\necho \"guarded-db-push: gate passed. Pushing")).toBeGreaterThan(-1);
   });
 
   it("keeps dispatch writes test-only, production structurally non-dispatchable, and pins every action", () => {

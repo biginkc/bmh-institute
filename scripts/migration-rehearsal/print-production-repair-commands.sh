@@ -50,6 +50,7 @@ node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-p
 # 4. Read-only repaired-history and push checks. The dry run goes through the
 #    same wrapper so it uses the same target definition as the real push.
 supabase migration list --linked
+export GUARDED_PUSH_EXPECTED_GIT_SHA="$(git rev-parse HEAD)"
 bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production --dry-run
 
 # 5. STOP. The list must show exactly 001-014 on both sides. The dry run must list

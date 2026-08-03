@@ -204,6 +204,7 @@ jobs:
           export PGDATABASE="postgres"
           export PGUSER="postgres.${TEST_PROJECT_REF}"
           export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"
+          export SUPABASE_DB_PASSWORD="$TEST_SUPABASE_DB_PASSWORD"
           export PGSSLMODE="require"
           bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test
 

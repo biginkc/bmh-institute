@@ -267,8 +267,8 @@ test("db-migrate-prod.yml's job gates on the test run's success and main, checks
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
   assert.match(
     workflow,
-    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main'/,
-    "must refuse unless the upstream TEST run succeeded AND ran against main",
+    /if:\s*github\.event\.workflow_run\.event == 'workflow_dispatch' && github\.event\.workflow_run\.head_repository\.full_name == github\.repository && github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main'/,
+    "must refuse unless the upstream TEST run was a same-repository dispatch that succeeded against main",
   );
   assert.match(workflow, /environment:\s*Production/, "must gate behind the configured Production environment");
   assert.match(
@@ -299,7 +299,7 @@ test("db-migrate-prod.yml refuses a manual rerun of a stale successful run", () 
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
   assert.match(
     workflow,
-    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main' && github\.event\.workflow_run\.run_attempt == '1' && github\.run_attempt == '1'/,
+    /if:[^\n]*github\.event\.workflow_run\.event == 'workflow_dispatch'[^\n]*github\.event\.workflow_run\.head_repository\.full_name == github\.repository[^\n]*github\.event\.workflow_run\.conclusion == 'success'[^\n]*github\.event\.workflow_run\.head_branch == 'main'[^\n]*github\.event\.workflow_run\.run_attempt == '1'[^\n]*github\.run_attempt == '1'/,
     "must refuse any run_attempt other than the original, natural trigger -- both the production run's OWN attempt and the upstream test run's attempt",
   );
 });
@@ -324,20 +324,24 @@ test("db-migrate-prod.yml also refuses a production run triggered by a RERUN of 
   );
 });
 
-test("db-migrate-prod.yml re-checks ancestry a second time immediately before the push", () => {
-  // Round-5 finding 4: the first ancestry check runs right after checkout,
-  // well before the push -- a force-push to main in that window would go
-  // undetected. A second invocation of the same script, immediately before
-  // the "Apply pending migrations" step, bounds (does not eliminate) that
-  // window instead of leaving it open for the whole job.
+test("the production wrapper re-checks exact current main after the safety gate and immediately before the push", () => {
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
-  const calls = [...workflow.matchAll(/run: bash scripts\/assert-ref-is-main-or-ancestor\.sh/g)];
-  assert.equal(calls.length, 2, "the ancestor guard must run twice: once after checkout, once immediately before the push");
-  const secondCallIndex = calls[1].index;
-  const applyMigrations = workflow.indexOf("Apply pending migrations (safety gate chained to the push)");
-  assert.ok(applyMigrations > secondCallIndex, "the second ancestor check must come immediately before the push step");
-  const push = workflow.indexOf("guarded-db-push.sh --target=institute-production");
-  assert.ok(push > applyMigrations, "the push must still come after the push step");
+  const wrapper = readFileSync(resolve(root, "guarded-db-push.sh"), "utf8");
+  assert.match(
+    workflow,
+    /GUARDED_PUSH_EXPECTED_GIT_SHA:\s*\$\{\{\s*github\.event\.workflow_run\.head_sha\s*\}\}/,
+    "the workflow must bind the wrapper to the immutable upstream SHA",
+  );
+  assert.match(
+    wrapper,
+    /git ls-remote --exit-code origin refs\/heads\/main/,
+    "the wrapper must query current origin/main rather than trusting a stale local ref",
+  );
+  const verify = wrapper.indexOf('"${GATE[@]}" "--verify-fingerprint=$FINGERPRINT"');
+  const exactMain = wrapper.lastIndexOf("assert_expected_sha_is_current_main", wrapper.indexOf('echo "guarded-db-push: gate passed. Pushing'));
+  const push = wrapper.indexOf('run_push_watched supabase db push --include-all --db-url "$DB_URL" --yes');
+  assert.ok(verify >= 0 && exactMain > verify, "the exact-main check must run after the final safety verification");
+  assert.ok(push > exactMain, "the database push must start only after the exact-main check");
 });
 
 test("db-migrate-test.yml's workflow_dispatch trigger no longer carries a self-defeating expected_sha check", () => {

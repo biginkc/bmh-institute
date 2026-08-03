@@ -84,6 +84,7 @@ locked out a real user for hours.
 
 ```sh
 export PGHOST=... PGPORT=... PGDATABASE=... PGUSER=... PGPASSWORD=... PGSSLMODE=require
+export GUARDED_PUSH_EXPECTED_GIT_SHA="$(git rev-parse HEAD)"
 bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production --dry-run
 bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production
 ```
