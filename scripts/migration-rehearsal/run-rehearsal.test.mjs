@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { chmodSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import test from "node:test";
 
 const root = import.meta.dirname;
@@ -56,37 +58,71 @@ test("the host harness uses C locale, proves both history states, and dumps sche
   assert.match(harness, /dumpSchema\("schema-app\.sql"/);
 });
 
-test("the printed production sequence gates push behind repair and dry run", () => {
-  const commands = read("print-production-repair-commands.sh");
-  const applyNumbered = commands.indexOf("--status applied --linked --yes");
-  const removeLegacy = commands.indexOf("--status reverted --linked --yes");
-  const gate = commands.indexOf("check-migration-safety.mjs --target=institute-production");
-  const dryRun = commands.indexOf("guarded-db-push.sh --target=institute-production --dry-run");
-  const push = commands.indexOf(
-    "guarded-db-push.sh --target=institute-production\n",
-    dryRun,
-  );
-  assert.ok(applyNumbered >= 0);
-  assert.ok(removeLegacy > applyNumbered);
-  assert.ok(gate > removeLegacy);
-  assert.ok(dryRun > gate);
-  assert.ok(push > dryRun);
+test("the retired production repair entry point emits no mutation commands and fails closed", () => {
+  const tombstone = read("print-production-repair-commands.sh");
+  assert.match(tombstone, /set -euo pipefail/);
+  assert.doesNotMatch(tombstone, /^\s*(?:supabase|psql|node)\s/m);
+  assert.doesNotMatch(tombstone, /migration repair/);
+  const result = spawnSync("bash", [resolve(root, "print-production-repair-commands.sh")], {
+    encoding: "utf8",
+  });
+  assert.equal(result.status, 64);
+  assert.equal(result.stdout, "");
+  assert.match(result.stderr, /repair is retired; no commands were emitted/);
 });
 
-test("the printed production sequence never prints an ungated db push", () => {
-  // The 2026-07-30 incident's enabling command. It must not appear anywhere in
-  // the printed block: the only push line is guarded-db-push.sh, which runs the
-  // safety gate itself and aborts on a non-zero exit. A gate printed *next to* a
-  // bare push is not a gate -- it is a suggestion.
-  const commands = read("print-production-repair-commands.sh");
-  for (const line of commands.split("\n")) {
-    const code = line.split("#")[0];
-    if (!code.includes("supabase db push")) continue;
-    assert.ok(
-      !code.includes("--include-all"),
-      `print-production-repair-commands.sh must not emit a direct --include-all push: ${line}`,
+test("canonical identity-only admission binds the committed production target", (t) => {
+  const bin = mkdtempSync(join(tmpdir(), "bmhi-identity-only-"));
+  t.after(() => rmSync(bin, { recursive: true, force: true }));
+  const psql = join(bin, "psql");
+  const baseline = JSON.parse(read("placeholder-baseline.json")).targets["institute-production"];
+  const run = (systemIdentifier) => {
+    writeFileSync(
+      psql,
+      `#!/usr/bin/env bash\nprintf '%s\\n' '${JSON.stringify({ database: "postgres", system_identifier: systemIdentifier })}'\n`,
     );
-  }
+    chmodSync(psql, 0o755);
+    return spawnSync(
+      process.execPath,
+      [resolve(root, "check-migration-safety.mjs"), "--target=institute-production", "--identity-only"],
+      {
+        cwd: resolve(root, "../.."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          PGHOST: `db.${baseline.project_ref}.supabase.co`,
+          PGPORT: "5432",
+          PGDATABASE: baseline.database,
+          PGUSER: `postgres.${baseline.project_ref}`,
+          PGPASSWORD: "synthetic-not-printed",
+          PGSSLMODE: "require",
+        },
+      },
+    );
+  };
+  const matching = run(baseline.db_system_identifier);
+  assert.equal(matching.status, 0, `${matching.stdout}${matching.stderr}`);
+  assert.match(matching.stdout, /live cluster identity all match/);
+  const mismatch = run("1234567890123456789");
+  assert.equal(mismatch.status, 1, `${mismatch.stdout}${mismatch.stderr}`);
+  assert.match(mismatch.stderr, /REFUSING \(E28\)/);
+});
+
+test("the production checklist agrees that the host rehearsal proves through 047", () => {
+  const readme = read("README.md");
+  assert.match(readme, /historical migration stack through 047/);
+  assert.match(readme, /history-final\.txt`, exactly 001 through 047/);
+  assert.doesNotMatch(readme, /does not prove migrations 040 and later/);
+});
+
+test("all executable migration instructions are target-bound and every include-all push is guarded", () => {
+  const readme = read("README.md");
+  assert.doesNotMatch(readme, /^\s*supabase migration (?:list|fetch|repair).*--linked/m);
+  assert.doesNotMatch(readme, /^\s*supabase db push .*--include-all/m);
+  assert.match(readme, /fresh `migration fetch` cannot recreate the historical input/);
+  assert.match(readme, /guarded-db-push\.sh --target=institute-test --dry-run/);
+  assert.match(readme, /guarded-db-push\.sh --target=institute-test\n/);
 });
 
 test("guarded-db-push runs the safety gate before the push, with no escape hatch", () => {
@@ -123,6 +159,25 @@ test("guarded-db-push exposes no path, baseline or test-mode option", () => {
   for (const forbidden of ["--test-mode", "--migrations-dir=", "--baseline=", "--repo-root="]) {
     assert.ok(!code.includes(forbidden), `wrapper must never pass ${forbidden}`);
   }
+});
+
+test("the gate directs operators only to the guarded push wrapper", () => {
+  const gate = read("check-migration-safety.mjs");
+  assert.doesNotMatch(gate, /Run `supabase db push --include-all/);
+  assert.match(gate, /Run the repository's guarded-db-push\.sh wrapper/);
+});
+
+test("production guarded push requires a clean reviewed worktree", () => {
+  const wrapper = read("guarded-db-push.sh");
+  const start = wrapper.indexOf("assert_expected_sha_is_current_main()");
+  const productionGuard = wrapper.slice(
+    start,
+    wrapper.indexOf("# ---------------------------------------------------------------------------", start),
+  );
+  assert.match(productionGuard, /git status --porcelain=v1 --untracked-files=all/);
+  assert.match(productionGuard, /worktree differs from the reviewed SHA\. Refusing production/);
+  assert.match(wrapper, /export SUPABASE_DB_PASSWORD="\$PGPASSWORD"/);
+  assert.match(read("check-migration-safety.mjs"), /assertLocalMigrationsMatchHead/);
 });
 
 test("guarded-db-push holds an advisory lock across the whole run", () => {
@@ -223,6 +278,28 @@ test("the TEST migration workflow pushes only through the guarded wrapper", () =
   );
 });
 
+test("a required PostgreSQL check executes the migration safety wrapper harness", () => {
+  const workflow = readFileSync(
+    resolve(root, "../../.github/workflows/db-migrate-test.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name:\s*Exercise the production migration safety wrapper[\s\S]*?if:\s*matrix\.postgres == '17'[\s\S]*?run:\s*(?:\|\s*)?npm run test:migration-gate:postgres/,
+    "the executable production-wrapper proof must remain inside a required PostgreSQL matrix context",
+  );
+  assert.match(
+    workflow,
+    /node --test scripts\/migration-rehearsal\/run-rehearsal\.test\.mjs/,
+    "the workflow and trigger contract must execute in that required context",
+  );
+  assert.match(
+    topLevelBlock(workflow, "on"),
+    /^\s*-\s+"scripts\/migration-rehearsal\/\*\*"\s*$/m,
+    "changes to the migration wrapper, gate, baseline, or harness must trigger the required PostgreSQL checks",
+  );
+});
+
 // --------------------------------------------------------------------------
 // Round-4 finding 3: workflow_dispatch on the branch-controlled TEST file
 // cannot defend itself with an in-file check, so the fix moved production
@@ -267,8 +344,8 @@ test("db-migrate-prod.yml's job gates on the test run's success and main, checks
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
   assert.match(
     workflow,
-    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main'/,
-    "must refuse unless the upstream TEST run succeeded AND ran against main",
+    /if:\s*github\.event\.workflow_run\.event == 'workflow_dispatch' && github\.event\.workflow_run\.head_repository\.full_name == github\.repository && github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main'/,
+    "must refuse unless the upstream TEST run was a same-repository dispatch that succeeded against main",
   );
   assert.match(workflow, /environment:\s*Production/, "must gate behind the configured Production environment");
   assert.match(
@@ -280,7 +357,7 @@ test("db-migrate-prod.yml's job gates on the test run's success and main, checks
   assert.match(
     workflow,
     /guarded-db-push\.sh --target=institute-production/,
-    "must push through the same sanctioned wrapper the manual runbook uses",
+    "must push through the repository's sanctioned wrapper",
   );
   assert.ok(
     !/supabase db push[^\n]*--include-all/.test(workflow),
@@ -299,7 +376,7 @@ test("db-migrate-prod.yml refuses a manual rerun of a stale successful run", () 
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
   assert.match(
     workflow,
-    /if:\s*github\.event\.workflow_run\.conclusion == 'success' && github\.event\.workflow_run\.head_branch == 'main' && github\.event\.workflow_run\.run_attempt == '1' && github\.run_attempt == '1'/,
+    /if:[^\n]*github\.event\.workflow_run\.event == 'workflow_dispatch'[^\n]*github\.event\.workflow_run\.head_repository\.full_name == github\.repository[^\n]*github\.event\.workflow_run\.conclusion == 'success'[^\n]*github\.event\.workflow_run\.head_branch == 'main'[^\n]*github\.event\.workflow_run\.run_attempt == '1'[^\n]*github\.run_attempt == '1'/,
     "must refuse any run_attempt other than the original, natural trigger -- both the production run's OWN attempt and the upstream test run's attempt",
   );
 });
@@ -324,20 +401,24 @@ test("db-migrate-prod.yml also refuses a production run triggered by a RERUN of 
   );
 });
 
-test("db-migrate-prod.yml re-checks ancestry a second time immediately before the push", () => {
-  // Round-5 finding 4: the first ancestry check runs right after checkout,
-  // well before the push -- a force-push to main in that window would go
-  // undetected. A second invocation of the same script, immediately before
-  // the "Apply pending migrations" step, bounds (does not eliminate) that
-  // window instead of leaving it open for the whole job.
+test("the production wrapper re-checks exact current main after the safety gate and immediately before the push", () => {
   const workflow = readFileSync(resolve(root, "../../.github/workflows/db-migrate-prod.yml"), "utf8");
-  const calls = [...workflow.matchAll(/run: bash scripts\/assert-ref-is-main-or-ancestor\.sh/g)];
-  assert.equal(calls.length, 2, "the ancestor guard must run twice: once after checkout, once immediately before the push");
-  const secondCallIndex = calls[1].index;
-  const applyMigrations = workflow.indexOf("Apply pending migrations (safety gate chained to the push)");
-  assert.ok(applyMigrations > secondCallIndex, "the second ancestor check must come immediately before the push step");
-  const push = workflow.indexOf("guarded-db-push.sh --target=institute-production");
-  assert.ok(push > applyMigrations, "the push must still come after the push step");
+  const wrapper = readFileSync(resolve(root, "guarded-db-push.sh"), "utf8");
+  assert.match(
+    workflow,
+    /GUARDED_PUSH_EXPECTED_GIT_SHA:\s*\$\{\{\s*github\.event\.workflow_run\.head_sha\s*\}\}/,
+    "the workflow must bind the wrapper to the immutable upstream SHA",
+  );
+  assert.match(
+    wrapper,
+    /git ls-remote --exit-code origin refs\/heads\/main/,
+    "the wrapper must query current origin/main rather than trusting a stale local ref",
+  );
+  const verify = wrapper.indexOf('"${GATE[@]}" "--verify-fingerprint=$FINGERPRINT"');
+  const exactMain = wrapper.lastIndexOf("assert_expected_sha_is_current_main", wrapper.indexOf('echo "guarded-db-push: gate passed. Pushing'));
+  const push = wrapper.indexOf('run_push_watched supabase db push --include-all --db-url "$DB_URL" --yes');
+  assert.ok(verify >= 0 && exactMain > verify, "the exact-main check must run after the final safety verification");
+  assert.ok(push > exactMain, "the database push must start only after the exact-main check");
 });
 
 test("db-migrate-test.yml's workflow_dispatch trigger no longer carries a self-defeating expected_sha check", () => {

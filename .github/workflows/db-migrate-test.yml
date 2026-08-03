@@ -44,6 +44,7 @@ on:
       - ".github/workflows/db-migrate-test.yml"
       - ".github/workflows/db-migrate-prod.yml"
       - "scripts/assert-ref-is-main-or-ancestor.sh"
+      - "scripts/migration-rehearsal/**"
       - "package.json"
       - "package-lock.json"
       - "scripts/cleanup-fixture-catalog.ts"
@@ -115,11 +116,17 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Install dependencies and PostgreSQL client
+      - name: Install dependencies and PostgreSQL tools
         run: |
           npm ci
           sudo apt-get update
-          sudo apt-get install --yes postgresql-client
+          sudo apt-get install --yes postgresql postgresql-client
+
+      - name: Exercise the production migration safety wrapper
+        if: matrix.postgres == '17'
+        run: |
+          npm run test:migration-gate:postgres
+          node --test scripts/migration-rehearsal/run-rehearsal.test.mjs
 
       - name: Apply and adversarially verify every migration
         run: node scripts/fixture-boundary/run-controller-gate-pr-harness.mjs
@@ -180,9 +187,9 @@ jobs:
         # The gate is NOT a separate step here on purpose. A separate step can be
         # re-ordered, disabled, or skipped with continue-on-error, leaving a bare
         # `db push --include-all` behind. guarded-db-push.sh runs
-        # scripts/migration-rehearsal/check-migration-safety.mjs first, under
-        # `set -e`, and the push is the last line of that file -- unreachable on a
-        # non-zero gate exit.
+        # scripts/migration-rehearsal/check-migration-safety.mjs first under
+        # `set -e`; the write is unreachable on a non-zero gate exit, and
+        # reconciliation follows every attempted write.
         #
         # Why it exists: `--include-all` re-applies any migration missing from
         # remote history in filename order, with no notion of whether a later
@@ -204,6 +211,7 @@ jobs:
           export PGDATABASE="postgres"
           export PGUSER="postgres.${TEST_PROJECT_REF}"
           export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"
+          export SUPABASE_DB_PASSWORD="$TEST_SUPABASE_DB_PASSWORD"
           export PGSSLMODE="require"
           bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test
 

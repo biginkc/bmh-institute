@@ -11,6 +11,173 @@ const PRODUCTION_CONFIGS = [
   "playwright.prod-dryrun.config.ts",
 ] as const;
 
+function executableYaml(source: string) {
+  return source
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith("#"))
+    .join("\n");
+}
+
+function topLevelPermissions(source: string) {
+  return (
+    executableYaml(source)
+      .match(/^permissions:\n((?: {2}\S[^\n]*(?:\n|$))*)/m)?.[1]
+      .trim() ?? ""
+  );
+}
+
+function expectWorkflowTriggers(testYaml: string, productionYaml: string) {
+  const triggerBlock = testYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+  expect(triggerBlock).toContain("workflow_dispatch");
+  expect(triggerBlock).toContain("workflow_dispatch: {}");
+  expect(triggerBlock).not.toContain("expected_sha:");
+  expect(triggerBlock).toContain("pull_request");
+
+  const productionTriggerBlock =
+    productionYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+  expect(productionTriggerBlock).toContain("workflow_run:");
+  expect(productionTriggerBlock).toContain(
+    'workflows: ["Apply Supabase migrations to test"]',
+  );
+  expect(productionTriggerBlock).toContain("types: [completed]");
+  expect(productionTriggerBlock).not.toContain("workflow_dispatch:");
+  expect(productionTriggerBlock).not.toContain("push:");
+}
+
+function expectProductionAdmission(
+  productionYaml: string,
+  productionJob: string,
+) {
+  const productionAdmission = productionJob.match(/^    if: (.+)$/m)?.[1] ?? "";
+  expect(productionAdmission).toBe(
+    "github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.head_repository.full_name == github.repository && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
+  );
+  expect(productionYaml).toMatch(
+    /^concurrency:\n  group: bmh-institute-production-migrations\n  cancel-in-progress: false$/m,
+  );
+  expect(productionJob).toMatch(/^    environment: Production$/m);
+  expect(productionJob).not.toMatch(/^    permissions:/m);
+  const jobEnv = productionJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
+  expect(jobEnv).not.toContain("SUPABASE_ACCESS_TOKEN");
+}
+
+function expectProductionCheckoutAndLink(productionJob: string) {
+  const productionCheckout =
+    productionJob.match(
+      /- uses: actions\/checkout@[a-f0-9]{40}[^\n]*[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+  expect(productionCheckout).toContain(
+    "ref: ${{ github.event.workflow_run.head_sha }}",
+  );
+  expect(productionCheckout).toContain("fetch-depth: 0");
+  expect(productionCheckout).toContain("persist-credentials: false");
+
+  const productionLink =
+    productionJob.match(
+      /- name: Link to production project[\s\S]*?(?=\n\s{6}- name: Resolve pooler connection info)/,
+    )?.[0] ?? "";
+  expect(productionLink).toContain(
+    "SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}",
+  );
+  expect(productionLink).toContain(
+    "SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
+  );
+  expect(productionLink).toContain('echo "::add-mask::$SUPABASE_DB_PASSWORD"');
+  expect(productionLink).toContain('if [ -z "$SUPABASE_DB_PASSWORD" ]; then');
+  expect(productionLink).toContain(
+    'supabase link --project-ref "$PROD_PROJECT_REF"',
+  );
+  expect(productionLink).not.toContain("--password");
+}
+
+function expectProductionPushAndFreshMainGate(productionJob: string) {
+  const productionPush =
+    productionJob.match(
+      /- name: Apply pending migrations \(safety gate chained to the push\)[\s\S]*$/,
+    )?.[0] ?? "";
+  expect(productionPush).toContain(
+    "PROD_SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
+  );
+  expect(productionPush).toContain(
+    'echo "::add-mask::$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    'export PGPASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    'export SUPABASE_DB_PASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    "GUARDED_PUSH_EXPECTED_GIT_SHA: ${{ github.event.workflow_run.head_sha }}",
+  );
+  expect(productionPush).toContain(
+    "guarded-db-push.sh --target=institute-production",
+  );
+
+  const exactMainGate =
+    productionJob.match(
+      /- name: Refuse a stale tested SHA immediately before the push[\s\S]*?(?=\n\s{6}- name: Apply pending migrations)/,
+    )?.[0] ?? "";
+  expect(exactMainGate).toContain(
+    "git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main",
+  );
+  expect(exactMainGate).toContain(
+    'if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then',
+  );
+  expect(productionJob.indexOf(exactMainGate)).toBeLessThan(
+    productionJob.indexOf(productionPush),
+  );
+  expect(productionPush.indexOf("::add-mask::")).toBeLessThan(
+    productionPush.indexOf("guarded-db-push.sh --target=institute-production"),
+  );
+}
+
+function expectProductionJobContract(productionYaml: string) {
+  const productionJob = productionYaml.slice(
+    productionYaml.indexOf("  migrate-prod:"),
+  );
+  expectProductionAdmission(productionYaml, productionJob);
+  expectProductionCheckoutAndLink(productionJob);
+  expectProductionPushAndFreshMainGate(productionJob);
+}
+
+function expectTestJobContract(testYaml: string) {
+  const prJob = testYaml.slice(
+    testYaml.indexOf("  validate-pr-migrations:"),
+    testYaml.indexOf("  migrate-test:"),
+  );
+  expect(prJob).not.toContain("secrets.");
+  expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
+  expect(prJob).toMatch(
+    /- name: Exercise the production migration safety wrapper[\s\S]*?if: matrix\.postgres == '17'[\s\S]*?npm run test:migration-gate:postgres[\s\S]*?node --test scripts\/migration-rehearsal\/run-rehearsal\.test\.mjs/,
+  );
+
+  const remoteJob = testYaml.slice(testYaml.indexOf("  migrate-test:"));
+  expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
+  expect(remoteJob).toContain("TEST_PROJECT_REF: jvaabkchkihkjllehmft");
+  expect(remoteJob).toContain("guarded-db-push.sh --target=institute-test");
+  expect(remoteJob).toContain(
+    'export SUPABASE_DB_PASSWORD="$TEST_SUPABASE_DB_PASSWORD"',
+  );
+  expect(remoteJob).not.toMatch(/^    permissions:/m);
+  const checkoutStep =
+    remoteJob.match(
+      /- uses: actions\/checkout@[a-f0-9]{40}[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+  expect(checkoutStep).toContain("ref: ${{ github.sha }}");
+  expect(checkoutStep).toContain("persist-credentials: false");
+  expect(checkoutStep).not.toContain("github.ref");
+  expect(checkoutStep).not.toContain("github.event.inputs");
+  const jobEnv =
+    remoteJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
+  expect(jobEnv).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+  const providerStep =
+    remoteJob.match(
+      /- name: Run fail-closed provider acceptance[\s\S]*?(?=\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+  expect(providerStep).toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+}
+
 describe("credential-bearing Playwright artifact policy", () => {
   it("captures provider-test output before emitting a redacted summary", () => {
     const source = fs.readFileSync(
@@ -29,50 +196,51 @@ describe("credential-bearing Playwright artifact policy", () => {
     );
     expect(source).not.toMatch(/psql\s+["']?\$DB_URL/);
     expect(source).toContain('export PGPASSWORD="$TEST_SUPABASE_DB_PASSWORD"');
+    const wrapper = fs.readFileSync(
+      path.resolve(
+        process.cwd(),
+        "scripts/migration-rehearsal/guarded-db-push.sh",
+      ),
+      "utf8",
+    );
+    expect(wrapper).toContain(
+      'DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}"',
+    );
+    expect(wrapper).not.toContain("ENCODED_PASSWORD");
+    expect(wrapper).not.toMatch(/DB_URL=.*PGPASSWORD/);
+    expect(wrapper).toContain("assert_expected_sha_is_current_main");
+    expect(wrapper.indexOf("assert_expected_sha_is_current_main\necho \"guarded-db-push: gate passed. Pushing")).toBeGreaterThan(-1);
   });
 
-  it("keeps secret-bearing migration acceptance manual and pins every action", () => {
-    const source = fs.readFileSync(
+  it("keeps dispatch writes test-only, production structurally non-dispatchable, and pins every action", () => {
+    const testSource = fs.readFileSync(
       path.resolve(process.cwd(), ".github/workflows/db-migrate-test.yml"),
       "utf8",
     );
-    expect(source).toContain("permissions:\n  contents: read");
-    const triggerBlock = source.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
-    expect(triggerBlock).toContain("workflow_dispatch");
-    expect(triggerBlock).toContain("expected_sha:");
-    expect(triggerBlock).toContain("required: true");
-    expect(triggerBlock).toContain("pull_request");
-    const prJob = source.slice(
-      source.indexOf("  validate-pr-migrations:"),
-      source.indexOf("  migrate-test:"),
+    const productionSource = fs.readFileSync(
+      path.resolve(process.cwd(), ".github/workflows/db-migrate-prod.yml"),
+      "utf8",
     );
-    expect(prJob).not.toContain("secrets.");
-    expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
-    const remoteJob = source.slice(source.indexOf("  migrate-test:"));
-    expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
-    expect(source).not.toMatch(/uses:\s+[^\n]+@(?![a-f0-9]{40}(?:\s|#|$))[^\n]+/);
-    const checkoutStep = remoteJob.match(
-      /- uses: actions\/checkout@[a-f0-9]{40}[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
-    )?.[0] ?? "";
-    expect(checkoutStep).toContain("ref: ${{ github.sha }}");
-    expect(checkoutStep).toContain("persist-credentials: false");
-    expect(checkoutStep).not.toContain("github.ref");
-    expect(checkoutStep).not.toContain("github.event.inputs");
-    const revisionGuard = remoteJob.match(
-      /- name: Verify exact authorized revision[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
-    )?.[0] ?? "";
-    expect(revisionGuard).toContain("EXPECTED_SHA: ${{ inputs.expected_sha }}");
-    expect(revisionGuard).toContain("DISPATCH_SHA: ${{ github.sha }}");
-    expect(revisionGuard).toContain("'^[0-9a-f]{40}$'");
-    expect(revisionGuard).toContain('ACTUAL_SHA="$(git rev-parse HEAD)"');
-    expect(revisionGuard).toContain('[ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]');
-    expect(revisionGuard).toContain('[ "$DISPATCH_SHA" != "$EXPECTED_SHA" ]');
-    const jobEnv = remoteJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
-    expect(jobEnv).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
-    const providerStep = remoteJob.match(
-      /- name: Run fail-closed provider acceptance[\s\S]*?(?=\n\s{6}- name:|$)/,
-    )?.[0] ?? "";
-    expect(providerStep).toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+    const testYaml = executableYaml(testSource);
+    const productionYaml = executableYaml(productionSource);
+    expect(topLevelPermissions(testSource)).toBe("contents: read");
+    expect(topLevelPermissions(productionSource)).toBe("contents: read");
+    expect(
+      topLevelPermissions(
+        productionSource.replace(
+          "permissions:\n  contents: read",
+          "permissions:\n  contents: read\n  actions: write",
+        ),
+      ),
+    ).not.toBe("contents: read");
+    expectWorkflowTriggers(testYaml, productionYaml);
+    expectProductionJobContract(productionYaml);
+    expectTestJobContract(testYaml);
+    for (const source of [testSource, productionSource]) {
+      expect(source).not.toMatch(
+        /uses:\s+[^\n]+@(?![a-f0-9]{40}(?:\s|#|$))[^\n]+/,
+      );
+    }
   });
 
   it("disables every browser recording surface", () => {
@@ -87,9 +255,15 @@ describe("credential-bearing Playwright artifact policy", () => {
     for (const filename of PRODUCTION_CONFIGS) {
       const source = fs.readFileSync(path.resolve(process.cwd(), filename), "utf8");
       expect(source, filename).toContain("CREDENTIAL_SAFE_PLAYWRIGHT_USE");
-      expect(source, filename).not.toMatch(/trace:\s*["'](?:on|retain-on-failure|on-first-retry)["']/);
-      expect(source, filename).not.toMatch(/screenshot:\s*["'](?:on|only-on-failure)["']/);
-      expect(source, filename).not.toMatch(/video:\s*["'](?:on|retain-on-failure|on-first-retry)["']/);
+      expect(source, filename).not.toMatch(
+        /trace:\s*["'](?:on|retain-on-failure|on-first-retry)["']/,
+      );
+      expect(source, filename).not.toMatch(
+        /screenshot:\s*["'](?:on|only-on-failure)["']/,
+      );
+      expect(source, filename).not.toMatch(
+        /video:\s*["'](?:on|retain-on-failure|on-first-retry)["']/,
+      );
     }
   });
 

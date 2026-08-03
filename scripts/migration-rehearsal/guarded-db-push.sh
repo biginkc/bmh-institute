@@ -84,6 +84,7 @@ set -euo pipefail
 #
 # Usage:
 #   export PGHOST=... PGPORT=... PGDATABASE=... PGUSER=... PGPASSWORD=... PGSSLMODE=require
+#   export GUARDED_PUSH_EXPECTED_GIT_SHA="$(git rev-parse HEAD)" # production only
 #   bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production [--dry-run]
 #
 # --target must match an entry in scripts/migration-rehearsal/placeholder-baseline.json.
@@ -127,6 +128,38 @@ for var in PGHOST PGPORT PGDATABASE PGUSER PGPASSWORD; do
   fi
 done
 
+# The safety gate authenticates with PGPASSWORD. Force the Supabase CLI to use
+# that exact same credential instead of inheriting an unrelated ambient value.
+export SUPABASE_DB_PASSWORD="$PGPASSWORD"
+
+if [ "$TARGET" = "institute-production" ] && [ -z "${GUARDED_PUSH_EXPECTED_GIT_SHA:-}" ]; then
+  echo "guarded-db-push: GUARDED_PUSH_EXPECTED_GIT_SHA is required for production." >&2
+  exit 78
+fi
+
+assert_expected_sha_is_current_main() {
+  [ "$TARGET" = "institute-production" ] || return 0
+
+  local local_sha remote_main_sha worktree_status
+  local_sha="$(git rev-parse HEAD)"
+  remote_main_sha="$(git ls-remote --exit-code origin refs/heads/main | awk 'NR == 1 { print $1 }')"
+  if [ -z "$remote_main_sha" ]; then
+    echo "guarded-db-push: could not resolve the current origin/main SHA. Refusing production." >&2
+    return 75
+  fi
+  if [ "$local_sha" != "$GUARDED_PUSH_EXPECTED_GIT_SHA" ] || [ "$remote_main_sha" != "$GUARDED_PUSH_EXPECTED_GIT_SHA" ]; then
+    echo "guarded-db-push: tested SHA is no longer the exact current origin/main. Refusing production." >&2
+    return 75
+  fi
+  worktree_status="$(git status --porcelain=v1 --untracked-files=all)"
+  if [ -n "$worktree_status" ]; then
+    echo "guarded-db-push: worktree differs from the reviewed SHA. Refusing production." >&2
+    return 75
+  fi
+  echo "guarded-db-push: tested SHA is still the exact current origin/main."
+  echo "guarded-db-push: worktree exactly matches that reviewed SHA."
+}
+
 # ---------------------------------------------------------------------------
 # Advisory lock, held for the whole run.
 # ---------------------------------------------------------------------------
@@ -137,7 +170,7 @@ LOCK_OBJ=20260730
 LOCK_WAIT_SECONDS="${GUARDED_PUSH_LOCK_WAIT_SECONDS:-120}"
 LOCK_WATCH_INTERVAL_SECONDS="${GUARDED_PUSH_LOCK_WATCH_INTERVAL_SECONDS:-0.3}"
 
-WORKDIR="$(mktemp -d -t bmh-guarded-push)"
+WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/bmh-guarded-push.XXXXXX")"
 FINGERPRINT="$WORKDIR/fingerprint.json"
 LOCK_FIFO="$WORKDIR/lock.fifo"
 LOCK_OUT="$WORKDIR/lock.out"
@@ -290,26 +323,29 @@ if [ "$DRY_RUN" != "yes" ]; then
   "${GATE[@]}" "--verify-fingerprint=$FINGERPRINT"
 fi
 
-# Build the push connection from the SAME variables the gate just used.
+# Build the push connection from the SAME variables the gate just used. The
+# password remains in PGPASSWORD/SUPABASE_DB_PASSWORD and is deliberately not
+# embedded in the --db-url argument, where another process on the runner could
+# observe it in argv.
 # PGSSLMODE governs the gate's psql connection; the Supabase CLI negotiates TLS
 # itself for a hosted --db-url, so the URL is left in the exact form the TEST
 # workflow has been using successfully rather than gaining an unverified
 # sslmode parameter.
-ENCODED_PASSWORD="$(node -e 'process.stdout.write(encodeURIComponent(process.env.PGPASSWORD))')"
-DB_URL="postgresql://${PGUSER}:${ENCODED_PASSWORD}@${PGHOST}:${PGPORT}/${PGDATABASE}"
+DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}"
 if [ "${GITHUB_ACTIONS:-}" = "true" ]; then
-  echo "::add-mask::$ENCODED_PASSWORD"
-  echo "::add-mask::$DB_URL"
+  echo "::add-mask::$PGPASSWORD"
 fi
 
 if [ "$DRY_RUN" = "yes" ]; then
   assert_lock_still_held "the dry-run push"
+  assert_expected_sha_is_current_main
   echo "guarded-db-push: gate passed. Running DRY RUN against target '$TARGET'."
   run_push_watched supabase db push --include-all --db-url "$DB_URL" --dry-run
   exit 0
 fi
 
 assert_lock_still_held "the push"
+assert_expected_sha_is_current_main
 echo "guarded-db-push: gate passed. Pushing to target '$TARGET'."
 # Timestamp emitted so the harness can MEASURE the verify-to-first-statement
 # window rather than anyone asserting it is small.

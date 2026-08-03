@@ -79,7 +79,9 @@
 //   version-level check passes while completely different SQL runs. The
 //   fingerprint therefore records a sha256 of every local migration file's
 //   BYTES, and that set is re-verified immediately before the push and again
-//   during post-push reconciliation (E30).
+//   during post-push reconciliation (E30). Canonical runs also compare every
+//   on-disk filename and byte hash directly with the HEAD tree (E33), bypassing
+//   index hints such as assume-unchanged and skip-worktree.
 //
 //   Database. Project identity is parsed EXACTLY, never substring-matched: the
 //   ref is extracted from PGUSER (`postgres.<ref>`) or PGHOST
@@ -116,21 +118,20 @@
 // This script has exactly ONE success fallthrough per mode (default check,
 // --verify-fingerprint, --verify-applied); every other path, including the
 // top-level catch, exits non-zero. Sibling scripts are not covered by that
-// statement: guarded-db-push.sh has two success paths (dry run, real push) and
-// print-production-repair-commands.sh exits 0 after printing.
+// statement: guarded-db-push.sh has two success paths (dry run, real push).
+// print-production-repair-commands.sh is a retired fail-closed tombstone.
 //
 // ---------------------------------------------------------------------------
 // Placeholder baseline (design note -- read this before changing it)
 // ---------------------------------------------------------------------------
-// `supabase migration repair` writes rows with `statements IS NULL`. Such a row
-// records "version X is considered applied" without recording what content was
-// applied, so history stops being proof of what is live.
+// A row with `statements IS NULL` records "version X is considered applied"
+// without recording what content was applied, so history stops being proof of
+// what is live. Historical tooling or direct history edits can create this
+// shape; current pinned CLI behavior is not assumed here.
 //
 // The first version of this gate refused whenever ANY such row existed. That
-// self-deadlocks: print-production-repair-commands.sh runs
-// `migration repair --status applied` immediately before the gate, and BMH
-// Institute production ALREADY carries 8 pre-existing placeholder rows (Sandra
-// carries 36 of 127). A blanket refusal permanently blocks every migration --
+// self-deadlocks because BMH Institute production ALREADY carries 8 historical
+// placeholder rows (Sandra carries 36 of 127). A blanket refusal permanently blocks every migration --
 // which in practice means the gate gets bypassed, which is worse than no gate.
 //
 // Chosen design: an explicit, human-committed acknowledged baseline, keyed by
@@ -216,6 +217,11 @@
 //                landed. Production is altered and incomplete.
 //   E32  exit 1  A migration filename in the canonical migrations directory is
 //                a symlink.
+//   E33  exit 1  On-disk migration filenames or bytes differ from the exact
+//                migration tree stored at the reviewed HEAD commit.
+//   E34  exit 1  Git replacement refs are active. Security-sensitive object
+//                reads disable replacement objects regardless, and the gate
+//                refuses the ambiguous repository state before any push.
 //
 // ---------------------------------------------------------------------------
 // Usage
@@ -250,12 +256,13 @@ const KNOWN_ARGS = new Set([
   "target",
   "timeout-ms",
   "test-mode",
+  "identity-only",
   "emit-fingerprint",
   "verify-fingerprint",
   "verify-applied",
   ...PATH_OVERRIDE_ARGS,
 ]);
-const FLAG_ARGS = new Set(["test-mode"]);
+const FLAG_ARGS = new Set(["test-mode", "identity-only"]);
 const REQUIRED_PG_ENV = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"];
 const SCHEME_RANK = { legacy: 0, timestamp: 1 };
 // Supabase project refs are exactly 20 lowercase letters.
@@ -273,6 +280,60 @@ class Refusal extends Error {
 
 function refuse(code, lines) {
   throw new Refusal(code, lines);
+}
+
+/**
+ * Read reviewed Git objects without honoring refs/replace, even if a caller's
+ * environment or repository configuration enables replacement objects. A
+ * replacement commit can preserve `rev-parse HEAD` while substituting an
+ * entirely different tree for `git show HEAD:path`; every security-sensitive
+ * object read must therefore opt out explicitly.
+ */
+function readReviewedGit(repoRoot, args, options = {}) {
+  return execFileSync("git", ["--no-replace-objects", "-C", repoRoot, ...args], {
+    ...options,
+    env: { ...process.env, ...(options.env ?? {}), GIT_NO_REPLACE_OBJECTS: "1" },
+  });
+}
+
+function assertNoGitReplacementRefs(repoRoot) {
+  const refBases = new Set(["refs/replace"]);
+  const configuredBase = process.env.GIT_REPLACE_REF_BASE?.trim();
+  if (configuredBase) refBases.add(configuredBase);
+
+  const active = [];
+  try {
+    for (const refBase of refBases) {
+      const refs = readReviewedGit(repoRoot, ["for-each-ref", "--format=%(refname)", refBase], {
+        encoding: "utf8",
+        timeout: GIT_TIMEOUT_MS,
+        killSignal: "SIGKILL",
+        maxBuffer: 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
+      })
+        .split("\n")
+        .filter(Boolean);
+      active.push(...refs);
+    }
+  } catch (error) {
+    const timedOut =
+      error.code === "ETIMEDOUT" || error.signal === "SIGKILL" || error.signal === "SIGTERM";
+    refuse("E34", [
+      "Cannot prove that Git replacement objects are absent.",
+      timedOut
+        ? `Git did not return replacement refs within ${GIT_TIMEOUT_MS} ms and was killed.`
+        : `Refusing: ${error.code ?? error.message}`,
+    ]);
+  }
+
+  if (active.length > 0) {
+    refuse("E34", [
+      "Git replacement refs are active in this repository.",
+      "Replacement objects can preserve the displayed HEAD SHA while substituting a different tree.",
+      "Security-sensitive reads already disable replacements, but this ambiguous local state is refused.",
+      ...[...new Set(active)].sort().map((ref) => `  - ${ref}`),
+    ]);
+  }
 }
 
 // --- arguments -------------------------------------------------------------
@@ -383,7 +444,7 @@ function readGitTrackedBaseline(baselinePath, repoRoot) {
   const relativePath = gitRelativePath(baselinePath, repoRoot);
   let output;
   try {
-    output = execFileSync("git", ["-C", repoRoot, "show", `HEAD:${relativePath}`], {
+    output = readReviewedGit(repoRoot, ["show", `HEAD:${relativePath}`], {
       encoding: "utf8",
       timeout: GIT_TIMEOUT_MS,
       killSignal: "SIGKILL",
@@ -674,6 +735,54 @@ function loadLocalMigrations(migrationsDir, repoRoot) {
   return migrations;
 }
 
+function readReviewedMigrationPaths(repoRoot) {
+  try {
+    return readReviewedGit(
+      repoRoot,
+      ["ls-tree", "-r", "--name-only", "HEAD", "--", "supabase/migrations"],
+      { encoding: "utf8", timeout: GIT_TIMEOUT_MS },
+    )
+      .split("\n")
+      .filter((path) => /^supabase\/migrations\/[^/]+\.sql$/.test(path))
+      .sort();
+  } catch (error) {
+    refuse("E33", [`Cannot read the reviewed migration tree from git HEAD: ${error.code ?? error.message}`]);
+  }
+}
+
+function hashReviewedMigration(repoRoot, path) {
+  try {
+    return createHash("sha256")
+      .update(readReviewedGit(repoRoot, ["show", `HEAD:${path}`], { timeout: GIT_TIMEOUT_MS }))
+      .digest("hex");
+  } catch (error) {
+    refuse("E33", [`Cannot hash a reviewed migration blob from git HEAD: ${error.code ?? error.message}`]);
+  }
+}
+
+function assertLocalMigrationsMatchHead(local, repoRoot) {
+  const reviewed = readReviewedMigrationPaths(repoRoot).map((path) => ({
+    file: path.slice("supabase/migrations/".length),
+    sha256: hashReviewedMigration(repoRoot, path),
+  }));
+
+  const disk = local.map(({ file, sha256 }) => ({ file, sha256 }));
+  if (JSON.stringify(disk) !== JSON.stringify(reviewed)) {
+    refuse("E33", [
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree.",
+      "Refusing: Git index hints and ignore rules must not hide unreviewed SQL from admission.",
+      `  reviewed files: ${reviewed.map((entry) => entry.file).join(", ")}`,
+      `  on-disk files:  ${disk.map((entry) => entry.file).join(", ")}`,
+    ]);
+  }
+}
+
+function loadAdmittedLocalMigrations(migrationsDir, repoRoot, testMode) {
+  const local = loadLocalMigrations(migrationsDir, repoRoot);
+  if (!testMode) assertLocalMigrationsMatchHead(local, repoRoot);
+  return local;
+}
+
 // --- remote reads ----------------------------------------------------------
 
 const HISTORY_SQL =
@@ -887,6 +996,22 @@ function assertLocalContentUnchanged(fingerprint, local) {
 function main() {
   const args = parseArguments(process.argv.slice(2));
 
+  if (
+    args["identity-only"] &&
+    (args["emit-fingerprint"] || args["verify-fingerprint"] || args["verify-applied"])
+  ) {
+    refuse("E01", [
+      "--identity-only cannot be combined with fingerprint emission or verification modes.",
+      "Identity-only is a read-only preflight for the history-repair sequence, not a push approval.",
+    ]);
+  }
+  if (args["identity-only"] && args["test-mode"]) {
+    refuse("E01", [
+      "--identity-only cannot be combined with --test-mode.",
+      "History repair requires the canonical committed target identity and baseline.",
+    ]);
+  }
+
   const target = args.target;
   if (!target) {
     refuse("E02", [
@@ -911,6 +1036,7 @@ function main() {
   }
 
   const repoRoot = args["repo-root"] ? resolve(args["repo-root"]) : REPO_ROOT;
+  assertNoGitReplacementRefs(repoRoot);
   const timeoutMs = Number.parseInt(args["timeout-ms"] ?? "20000", 10);
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     refuse("E01", [`--timeout-ms must be a positive integer, got "${args["timeout-ms"]}".`]);
@@ -940,7 +1066,9 @@ function main() {
     }
   }
 
-  const mode = args["verify-applied"]
+  const mode = args["identity-only"]
+    ? "identity-only"
+    : args["verify-applied"]
     ? "verify-applied"
     : args["verify-fingerprint"]
       ? "verify-fingerprint"
@@ -961,13 +1089,26 @@ function main() {
   console.log(`Declared identity:    ${assertDeclaredIdentity(baseline, target)}`);
   console.log(`Live identity:        ${assertLiveIdentity(baseline, target, timeoutMs)}`);
 
+  // History repair has to establish the same three-part target binding as a
+  // push before it changes schema_migrations. It cannot run the full safety
+  // gate yet because the repair deliberately creates placeholder rows that
+  // are acknowledged only in the next reviewed commit. This mode performs
+  // only read-only identity checks and returns before reading migration
+  // history, giving the repair sequence a fail-closed pre-write admission
+  // check without weakening the full push gate.
+  if (mode === "identity-only") {
+    console.log("");
+    console.log("OK: declared project, database, and live cluster identity all match.");
+    return;
+  }
+
   // --- post-push reconciliation mode ---------------------------------------
   if (mode === "verify-applied") {
     const fingerprint = readFingerprint(args["verify-applied"]);
     if (fingerprint.target !== target) {
       refuse("E29", [`Fingerprint was taken for target "${fingerprint.target}" but this run is "${target}".`]);
     }
-    const local = loadLocalMigrations(migrationsDir, repoRoot);
+    const local = loadAdmittedLocalMigrations(migrationsDir, repoRoot, testMode);
     assertLocalContentUnchanged(fingerprint, local);
 
     const history = loadRemoteHistory(timeoutMs);
@@ -1025,7 +1166,7 @@ function main() {
     return;
   }
 
-  const local = loadLocalMigrations(migrationsDir, repoRoot);
+  const local = loadAdmittedLocalMigrations(migrationsDir, repoRoot, testMode);
   const history = loadRemoteHistory(timeoutMs);
   const digest = historyDigest(history);
   const contentDigest = localDigest(local);
@@ -1077,9 +1218,9 @@ function main() {
       `acknowledged baseline for target "${target}":`,
       ...unacknowledged.map((row) => `  - ${row.version.raw}`),
       "",
-      "These rows come from `supabase migration repair`. They record that a version is",
-      "considered applied without recording what content was applied, so history is not proof",
-      "of what is live at that version.",
+      "These rows record that a version is considered applied without recording what content",
+      "was applied, so history is not proof of what is live at that version. Historical repair",
+      "tooling or direct history edits can create this shape.",
       "",
       "If these repairs were intentional, confirm the live schema directly (e.g.",
       "pg_get_functiondef on the objects they touch), then add them to",
@@ -1158,8 +1299,8 @@ function main() {
     }
   }
   console.log("");
-  console.log("This gate does not replace review. Run `supabase db push --include-all --dry-run` next and");
-  console.log("confirm the printed list matches exactly what you expect before running it for real.");
+  console.log("This gate does not replace review. Run the repository's guarded-db-push.sh wrapper");
+  console.log("with --dry-run next; never invoke `supabase db push --include-all` directly.");
 }
 
 try {

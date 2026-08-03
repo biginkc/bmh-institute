@@ -1,6 +1,6 @@
 # Migration history repair rehearsal
 
-This harness is host-only. It does not use Docker and it does not connect to a hosted project. It creates a disposable PostgreSQL 17 cluster with `LC_ALL=C`, applies the historical migration stack through 039, rehearses the exact history repair as SQL, and writes evidence under `artifacts/` or a caller-selected output directory. It does not prove migrations 040 and later. Those forward migrations require separate canonical TEST evidence.
+This harness is host-only. It does not use Docker and it does not connect to a hosted project. It creates a disposable PostgreSQL 17 cluster with `LC_ALL=C`, applies the historical migration stack through 047, rehearses the exact history repair as SQL, and writes evidence under `artifacts/` or a caller-selected output directory. Canonical TEST evidence remains a separate deployment gate; it is not a substitute for this host rehearsal.
 
 ## Prerequisites
 
@@ -39,36 +39,36 @@ The command must finish with a JSON object whose status is `PASS`. Review these 
 - `legacy-equivalence-report.json`
 - `history-before-repair.txt`, exactly the production 14-version shape
 - `history-after-repair.txt`, exactly 001 through 014
-- `history-final.txt`, exactly 001 through 039
+- `history-final.txt`, exactly 001 through 047
 - `schema-app.sql`, the public, private, and migration-history schemas for the later production diff
 - `schema-full.sql`, the full rehearsal cluster schema including local Supabase stubs
 - `rehearsal-summary.json`
 
 Do not use `--keep-cluster` except for local debugging. The normal run removes the disposable cluster even after failure.
 
-## Re-fetch legacy SQL evidence if the July 17 worktree is gone
+## Historical legacy SQL evidence
 
-Use a disposable detached worktree at `origin/main` so fetched files cannot overwrite this branch. The remote operations below are reads. `migration fetch` writes only the returned evidence into the disposable worktree.
+The live production history is now canonical and no longer contains the ten legacy
+versions. Consequently, a fresh `migration fetch` cannot recreate the historical input
+for this host-only rehearsal. Use the preserved July 17 evidence directory named above,
+or another immutable archive whose exact remote version names and response hashes were
+recorded before the repair. Do not infer or regenerate the historical statements from
+the current production ledger.
 
-```sh
-FETCH_DIR="$(mktemp -d /private/tmp/bmh-migration-history-fetch-XXXXXXXXXX)"
-git worktree add --detach "$FETCH_DIR" 96e3ed3452e50132f89aa0c6775bdd8f5571289c
-supabase migration list --linked --workdir "$FETCH_DIR"
-supabase migration fetch --linked --workdir "$FETCH_DIR"
-find "$FETCH_DIR/supabase/migrations" -maxdepth 1 -type f -name '*.sql' -print | sort
-```
+## Production history repair is retired
 
-Verify the remote list still contains the ten stated legacy versions plus 011 through 014. Preserve the fetched directory unchanged as evidence. A management API alternative must use GET reads only, save each returned SQL statement under its exact remote version and name, and record the response hashes. Do not run `db push`, `migration repair`, or SQL against production during evidence collection.
-
-## Print the real production command sequence
-
-This script only prints commands. It does not run them.
+The one-time legacy-to-numbered production history repair has already completed.
+Live read-only verification now shows no legacy repair versions. The historical
+command generator is deliberately a fail-closed tombstone: it emits no commands
+and exits non-zero so an old link cannot revive the mutation path.
 
 ```sh
 bash scripts/migration-rehearsal/print-production-repair-commands.sh
 ```
 
-Run the printed commands only after the equivalence report and full rehearsal pass. The history repair updates only `supabase_migrations.schema_migrations`. It does not apply or revert schema SQL. The printed order intentionally marks 001 through 010 applied first, removes the ten legacy rows second, then requires `migration list` and a dry run before the actual push. The printed sequence contains no bare `supabase db push --include-all`; the only push line is `guarded-db-push.sh`.
+Expected result: exit 64 with a retirement message and no mutation commands.
+Do not recreate an automated production history-repair path. Any future history
+incident requires fresh live evidence and a separately reviewed recovery plan.
 
 ## Mandatory safety gate before any `--include-all` push against a linked project
 
@@ -84,12 +84,15 @@ locked out a real user for hours.
 
 ```sh
 export PGHOST=... PGPORT=... PGDATABASE=... PGUSER=... PGPASSWORD=... PGSSLMODE=require
+export GUARDED_PUSH_EXPECTED_GIT_SHA="$(git rev-parse HEAD)"
 bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production --dry-run
 bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production
 ```
 
 `guarded-db-push.sh` runs the gate and then the push, under `set -euo pipefail`, from one
 connection definition. A non-zero gate exit ends the script and the push is never reached.
+The wrapper forces the Supabase CLI to use the same `PGPASSWORD` already verified by the
+gate; it does not trust an ambient `SUPABASE_DB_PASSWORD` value.
 Do not run `supabase db push --include-all` directly against a linked project — a gate that
 merely sits next to the dangerous command in a runbook is a suggestion, not a gate, and that
 is precisely how the incident happened. CI (`.github/workflows/db-migrate-test.yml`) pushes
@@ -99,6 +102,10 @@ The wrapper takes **no path, baseline or test-mode option**. The gate enforces t
 repository paths by default, so it is provably reading the same `supabase/migrations` the CLI
 reads. The wrapper also:
 
+- requires production to run from a completely clean worktree whose `HEAD` is the exact
+  reviewed current `origin/main`; the gate compares every on-disk migration filename and raw
+  byte hash directly with the `HEAD` tree, so ignore rules, `assume-unchanged`, and
+  `skip-worktree` cannot conceal unreviewed SQL;
 - holds a session-scoped PostgreSQL **advisory lock** across gate, verify, push and
   reconcile, confirmed by backend pid in `pg_locks` and released by an `EXIT` trap, so two
   sanctioned runs cannot interleave;
@@ -116,7 +123,7 @@ node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-p
 ### What it refuses on
 
 Everything indeterminate fails closed. The script header carries the complete exit-path
-enumeration (`E00`–`E23`); each refusal prints its code. In summary it refuses when:
+enumeration (`E00`–`E34`); each refusal prints its code. In summary it refuses when:
 
 - the database is unreachable, credentials are missing or wrong, the query errors, the
   connection times out, or `supabase_migrations.schema_migrations` is absent or empty;
@@ -127,7 +134,9 @@ enumeration (`E00`–`E23`); each refusal prints its code. In summary it refuses
 - `schema_migrations` contains a placeholder row (`statements IS NULL`) that is **not** in
   the acknowledged baseline for `--target`;
 - any locally pending migration is **older** than the newest version already recorded in
-  history — the exact out-of-order re-apply shape that caused the incident.
+  history — the exact out-of-order re-apply shape that caused the incident;
+- on-disk migration names or bytes differ from the exact reviewed `HEAD` tree (`E33`), or
+  Git replacement refs could make the displayed commit resolve a substituted tree (`E34`).
 
 Version identity is normalised, so remote `1` and local `001_x.sql` are recognised as the
 same migration. Legacy short-numeric versions and 14-digit timestamps are treated as two
@@ -135,10 +144,12 @@ ordered namespaces (all legacy sorts before all timestamps), not one number line
 
 ### The placeholder baseline
 
-`supabase migration repair` creates rows with `statements IS NULL`. They assert a version is
-applied without recording what was applied, so history stops being proof of what is live.
-Refusing on *any* such row self-deadlocks: the production repair sequence creates them, and
-Institute production already carries 8 (Sandra carries 36 of 127).
+Rows with `statements IS NULL` assert that a version is applied without recording what was
+applied, so history stops being proof of what is live. They can come from historical repair
+tooling or direct history edits; the pinned current Supabase CLI may instead populate the
+local migration's name and statements. No active runbook creates placeholder rows. Institute
+production already carries 8 historical placeholders (Sandra carries 36 of 127), so refusing
+on every placeholder would permanently deadlock reviewed migrations.
 
 `placeholder-baseline.json` records, per target, the placeholder **versions** a human has
 already reconciled against the live schema. A placeholder in that list is accepted; one that
@@ -178,7 +189,8 @@ npm run test:migration-gate:postgres
 
 Spins one disposable local PostgreSQL cluster (`LC_ALL=C` plus a short socket path, to avoid
 the "postmaster became multithreaded" startup flake) and runs the real gate and the real
-wrapper against 66 scenarios. It never touches a hosted project.
+wrapper. The harness reports its exact scenario count and fails unless every scenario
+passes. It never touches a hosted project.
 
 Coverage includes: the pass case, the 2026-07-30 incident replay, empty and missing
 migrations directories, `001`/`1` and `0001`/`001` formatting collisions, mixed
@@ -232,10 +244,17 @@ BMHI_TEST_DB_PASSWORD="$(op read 'op://BMH Secrets/Supabase - BMH Institute Test
 export BMHI_TEST_DB_PASSWORD
 TEST_SUPABASE_DB_URL="$(node -e 'const p=encodeURIComponent(process.env.BMHI_TEST_DB_PASSWORD); process.stdout.write(`postgresql://postgres.jvaabkchkihkjllehmft:${p}@aws-1-us-west-1.pooler.supabase.com:5432/postgres`)')"
 export TEST_SUPABASE_DB_URL
+export PGPASSWORD="$BMHI_TEST_DB_PASSWORD"
 unset BMHI_TEST_DB_PASSWORD
 node -e 'const u=new URL(process.env.TEST_SUPABASE_DB_URL); const ok=u.protocol==="postgresql:"&&u.username==="postgres.jvaabkchkihkjllehmft"&&u.password&&u.hostname==="aws-1-us-west-1.pooler.supabase.com"&&u.port==="5432"&&u.pathname==="/postgres"&&!u.search&&!u.hash; if(!ok) process.exit(1)'
-supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --dry-run
-supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --yes
+export PGHOST="aws-1-us-west-1.pooler.supabase.com"
+export PGPORT="5432"
+export PGDATABASE="postgres"
+export PGUSER="postgres.jvaabkchkihkjllehmft"
+export PGSSLMODE="require"
+export SUPABASE_DB_PASSWORD="$PGPASSWORD"
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test --dry-run
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test
 npm run test:integration -- src/lib/security/import-release-control.integration.test.ts
 ```
 

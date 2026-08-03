@@ -321,7 +321,8 @@ bmh-institute/
 
 **New migration:**
 - Location: `supabase/migrations/NNN_name.sql` where NNN is the next sequential number
-- Apply to production with `supabase db push`
+- Apply only through `scripts/migration-rehearsal/guarded-db-push.sh`; never invoke
+  `supabase db push --include-all` directly.
 
 **New shadcn/ui component:**
 - Run `npx shadcn@latest add <component>` — output goes to `src/components/ui/`

@@ -26,7 +26,7 @@
 // Run: npm run test:migration-gate:postgres
 
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -468,17 +468,17 @@ try {
   );
 
   {
-    // Round-3 P1-6: a hung `git` must refuse, not hang.
+    // Round-3 P1-6: any hung security-sensitive `git` read must refuse, not hang.
     const hungGitBin = join(workRoot, "hung-git-bin");
     mkdirSync(hungGitBin, { recursive: true });
     writeFileSync(join(hungGitBin, "git"), "#!/usr/bin/env bash\nsleep 60\n");
     execFileSync("chmod", ["+x", join(hungGitBin, "git")]);
     const hungStart = Date.now();
     check(
-      "P1-6: a hung `git show` refuses within the bounded timeout (E04)",
+      "P1-6: a hung security-sensitive Git read refuses within the bounded timeout (E34)",
       runGate({ files: ["001_a.sql"], env: { PATH: `${hungGitBin}:${process.env.PATH}` } }),
       1,
-      ["REFUSING (E04)", "was killed"],
+      ["REFUSING (E34)", "was killed"],
     );
     notes.push(`hung git refused in ${Date.now() - hungStart} ms (bound is 10000 ms)`);
   }
@@ -542,6 +542,24 @@ try {
     }),
     1,
     ["REFUSING (E28)", "not the cluster this target was reviewed against"],
+  );
+  check(
+    "identity-only cannot inherit test-mode path and identity bypasses",
+    runGate({
+      files: ["001_a.sql"],
+      extraArgs: ["--identity-only"],
+    }),
+    1,
+    ["REFUSING (E01)", "cannot be combined with --test-mode"],
+  );
+  check(
+    "identity-only cannot masquerade as a fingerprint-producing push approval",
+    runGate({
+      files: ["001_a.sql"],
+      extraArgs: ["--identity-only", `--emit-fingerprint=${join(workRoot, "must-not-exist.json")}`],
+    }),
+    1,
+    ["REFUSING (E01)", "cannot be combined"],
   );
 
   // ==== round-3 P1-1 and P1-4: safe by default ============================
@@ -728,7 +746,7 @@ try {
 
   const wrapperEnv = { ...pgEnv, PGUSER: `postgres.${PINNED_REF}` };
 
-  function makeWrapperRepo(files, stubMode) {
+  function makeWrapperRepo(files, stubMode, { target = "institute-e2e", configureOrigin = false } = {}) {
     caseIndex += 1;
     const repo = join(workRoot, `wrapper-${caseIndex}`);
     mkdirSync(join(repo, "scripts", "migration-rehearsal"), { recursive: true });
@@ -739,7 +757,7 @@ try {
     copyFileSync(WRAPPER, join(repo, "scripts", "migration-rehearsal", "guarded-db-push.sh"));
     writeFileSync(
       join(repo, "scripts", "migration-rehearsal", "placeholder-baseline.json"),
-      JSON.stringify({ targets: { "institute-e2e": pinnedTarget() } }, null, 2),
+      JSON.stringify({ targets: { [target]: pinnedTarget() } }, null, 2),
     );
     const log = join(repo, "supabase-stub.log");
     const psqlBin = binary("psql");
@@ -782,6 +800,14 @@ set -uo pipefail
 {
   echo "argv=$*"
   echo "cwd=$PWD"
+  echo "pgpassword-present=$([ -n "\${PGPASSWORD:-}" ] && echo yes || echo no)"
+  echo "supabase-db-password-present=$([ -n "\${SUPABASE_DB_PASSWORD:-}" ] && echo yes || echo no)"
+  echo "passwords-match=$([ "\${PGPASSWORD:-}" = "\${SUPABASE_DB_PASSWORD:-}" ] && echo yes || echo no)"
+  if [ -n "\${PGPASSWORD:-}" ] && [[ "$*" == *"$PGPASSWORD"* ]]; then
+    echo "password-in-argv=yes"
+  else
+    echo "password-in-argv=no"
+  fi
   echo "stub-start-ms=$(node -e 'process.stdout.write(String(Date.now()))')"
   echo "lock-held=$("${psqlBin}" -X -q -t -A -c "select count(*) from pg_locks where locktype='advisory' and classid=778533 and objid=20260730 and objsubid=2 and granted" 2>/dev/null || echo ERR)"
   ls supabase/migrations
@@ -800,7 +826,15 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     git("init", "-q");
     git("add", "-A");
     git("commit", "-q", "-m", "wrapper scratch");
-    return { repo, log };
+    const headSha = execFileSync("git", ["-C", repo, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    let remote = null;
+    if (configureOrigin) {
+      remote = join(workRoot, `wrapper-origin-${caseIndex}.git`);
+      execFileSync("git", ["init", "--bare", "-q", remote]);
+      git("remote", "add", "origin", remote);
+      git("push", "-q", "origin", "HEAD:refs/heads/main");
+    }
+    return { repo, log, git, headSha, remote };
   }
 
   function runWrapper(repo, args, extraEnv = {}) {
@@ -809,6 +843,229 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
       encoding: "utf8",
     });
     return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}` };
+  }
+
+  function productionWrapper(files = ["001_a.sql", "20260101000000_c.sql", "20260201000000_new.sql"]) {
+    return makeWrapperRepo(files, "normal", {
+      target: "institute-production",
+      configureOrigin: true,
+    });
+  }
+
+  function productionEnv(expectedSha) {
+    return {
+      GUARDED_PUSH_EXPECTED_GIT_SHA: expectedSha,
+      PGPASSWORD: "synthetic-password-sentinel",
+      SUPABASE_DB_PASSWORD: "synthetic-password-sentinel",
+    };
+  }
+
+  function stubLogOrEmpty(wrapper) {
+    return existsSync(wrapper.log) ? readFileSync(wrapper.log, "utf8") : "";
+  }
+
+  function assertProductionRefusal(
+    label,
+    wrapper,
+    messages,
+    { expectedSha = wrapper.headSha, extraEnv = {}, expectedStatus = 75 } = {},
+  ) {
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      { ...productionEnv(expectedSha), ...extraEnv },
+    );
+    check(`production E2E: ${label} refuses before invoking Supabase`, run, expectedStatus, messages);
+    const stubLog = stubLogOrEmpty(wrapper);
+    check(`production E2E: ${label} never invokes Supabase`, {
+      status: stubLog === "" ? 0 : 1,
+      out: stubLog,
+    }, 0);
+  }
+
+  function assertHiddenTrackedMigrationRefuses(indexFlag, label) {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const path = "supabase/migrations/20260201000000_new.sql";
+    wrapper.git("update-index", indexFlag, path);
+    writeFileSync(join(wrapper.repo, path), "select 999;\n");
+    assertProductionRefusal(label, wrapper, [
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
+  }
+
+  function installReplacementAttack(wrapper, label, refBase = null) {
+    const migration = join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql");
+    writeFileSync(migration, "drop schema public cascade;\n");
+    wrapper.git("add", "supabase/migrations/20260201000000_new.sql");
+    wrapper.git("commit", "-q", "-m", "attacker replacement tree");
+    const replacementSha = execFileSync("git", ["-C", wrapper.repo, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
+
+    const replacementRefBase = refBase ? `${refBase.replace(/\/+$/, "")}/` : null;
+    const replacementEnv = replacementRefBase
+      ? { GIT_REPLACE_REF_BASE: replacementRefBase }
+      : {};
+    if (refBase) {
+      wrapper.git("update-ref", `${replacementRefBase}${wrapper.headSha}`, replacementSha);
+    } else {
+      wrapper.git("replace", wrapper.headSha, replacementSha);
+    }
+    const replacementAwareMigration = execFileSync(
+      "git",
+      ["-C", wrapper.repo, "show", "HEAD:supabase/migrations/20260201000000_new.sql"],
+      { encoding: "utf8", env: { ...process.env, ...replacementEnv } },
+    );
+    check(`production E2E: ${label} substitutes attacker SQL for HEAD`, {
+      status: replacementAwareMigration === "drop schema public cascade;\n" ? 0 : 1,
+      out: replacementAwareMigration,
+    }, 0);
+
+    const reviewedMigration = execFileSync(
+      "git",
+      ["--no-replace-objects", "-C", wrapper.repo, "show", "HEAD:supabase/migrations/20260201000000_new.sql"],
+      { encoding: "utf8", env: { ...process.env, ...replacementEnv } },
+    );
+    check(`production E2E: ${label} cannot alter replacement-disabled HEAD`, {
+      status: reviewedMigration === "select 1;\n" ? 0 : 1,
+      out: reviewedMigration,
+    }, 0);
+
+    return replacementEnv;
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      { ...productionEnv(wrapper.headSha), SUPABASE_DB_PASSWORD: "conflicting-ambient-password" },
+    );
+    check("production E2E: matching local, expected, and remote SHAs reach the guarded push", run, 0, [
+      "tested SHA is still the exact current origin/main",
+      "post-push history matches exactly",
+    ]);
+    const stubLog = stubLogOrEmpty(wrapper);
+    check(
+      "production E2E: push argv is password-free and the CLI password is rebound to the gate password",
+      {
+        status:
+          stubLog.includes("password-in-argv=no") &&
+          stubLog.includes("pgpassword-present=yes") &&
+          stubLog.includes("supabase-db-password-present=yes") &&
+          stubLog.includes("passwords-match=yes") &&
+          !stubLog.includes("synthetic-password-sentinel") &&
+          /argv=db push --include-all --db-url postgresql:\/\/postgres\.[a-z]+@[^\s]+\/postgres --yes/.test(stubLog)
+            ? 0
+            : 1,
+        out: stubLog,
+      },
+      0,
+    );
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql"), "select 999;\n");
+    assertProductionRefusal("dirty tracked migration", wrapper, [
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
+  }
+
+  assertHiddenTrackedMigrationRefuses("--assume-unchanged", "assume-unchanged tracked migration");
+  assertHiddenTrackedMigrationRefuses("--skip-worktree", "skip-worktree tracked migration");
+
+  for (const replacementCase of [
+    { label: "default Git replacement object", refBase: null },
+    { label: "custom Git replacement namespace", refBase: "refs/bmh-replacements" },
+  ]) {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const replacementEnv = installReplacementAttack(
+      wrapper,
+      replacementCase.label,
+      replacementCase.refBase,
+    );
+
+    assertProductionRefusal(replacementCase.label, wrapper, [
+      "REFUSING (E34)",
+      "Git replacement refs are active in this repository",
+    ], { extraEnv: replacementEnv, expectedStatus: 1 });
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260301000000_untracked.sql"), "select 999;\n");
+    assertProductionRefusal("ordinary untracked migration", wrapper, [
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const ignoredName = "20260301000000_ignored.sql";
+    writeFileSync(join(wrapper.repo, ".git", "info", "exclude"), `supabase/migrations/${ignoredName}\n`);
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", ignoredName), "select 999;\n");
+    assertProductionRefusal(".git/info/exclude migration", wrapper, [
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const ignoredName = "20260401000000_global_ignored.sql";
+    const globalExcludes = join(workRoot, `global-excludes-${caseIndex}`);
+    const globalConfig = join(workRoot, `global-config-${caseIndex}`);
+    writeFileSync(globalExcludes, `supabase/migrations/${ignoredName}\n`);
+    writeFileSync(globalConfig, `[core]\n\texcludesfile = ${globalExcludes}\n`);
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", ignoredName), "select 999;\n");
+    assertProductionRefusal("global-ignore migration", wrapper, [
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { extraEnv: { GIT_CONFIG_GLOBAL: globalConfig }, expectedStatus: 1 });
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "remote-advance.txt"), "new main\n");
+    wrapper.git("add", "remote-advance.txt");
+    wrapper.git("commit", "-q", "-m", "advance remote main");
+    wrapper.git("push", "-q", "origin", "HEAD:refs/heads/main");
+    wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
+    assertProductionRefusal("stale remote main", wrapper, [
+      "tested SHA is no longer the exact current origin/main",
+    ]);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "local-only.txt"), "wrong local\n");
+    wrapper.git("add", "local-only.txt");
+    wrapper.git("commit", "-q", "-m", "advance local only");
+    assertProductionRefusal("wrong local HEAD", wrapper, [
+      "tested SHA is no longer the exact current origin/main",
+    ]);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    assertProductionRefusal("wrong expected SHA", wrapper, [
+      "tested SHA is no longer the exact current origin/main",
+    ], { expectedSha: "0000000000000000000000000000000000000000" });
   }
 
   {
@@ -874,10 +1131,10 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = makeWrapperRepo(["001_a.sql", "20260101000000_c.sql", "20260201000000_new.sql"], "swap");
     check(
-      "E2E P1-2: migration bytes rewritten DURING the push are caught by reconciliation (E30)",
+      "E2E P1-2: migration bytes rewritten DURING the push are caught by reconciliation (E33)",
       runWrapper(wrapper.repo, ["--target=institute-e2e"]),
       1,
-      ["REFUSING (E30)"],
+      ["REFUSING (E33)"],
     );
   }
 
