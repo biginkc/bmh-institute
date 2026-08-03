@@ -415,14 +415,8 @@ describe("atomic fixture cleanup migration", () => {
       resolve(root, ".github/workflows/db-migrate-test.yml"),
       "utf8",
     );
-    expect(manualWorkflow).toContain("pull_request:");
-    expect(manualWorkflow).toContain('- "package.json"');
-    expect(manualWorkflow).toContain('- "package-lock.json"');
-    expect(manualWorkflow).toContain('- "scripts/cleanup-fixture-catalog.ts"');
-    expect(manualWorkflow).toContain(
-      '- "scripts/sign-fixture-cleanup-evidence.ts"',
-    );
-    expect(manualWorkflow).toContain('- "src/lib/fixture-cleanup/**"');
+    expect(manualWorkflow).toContain("pull_request: {}");
+    expect(manualWorkflow).not.toMatch(/pull_request:\s*\n\s+paths:/);
     expect(manualWorkflow).toContain("run-controller-gate-pr-harness.mjs");
     expect(manualWorkflow).toContain('postgres: ["15", "16", "17"]');
     expect(manualWorkflow).toContain("image: postgres:${{ matrix.postgres }}");
