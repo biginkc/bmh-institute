@@ -124,7 +124,9 @@ jobs:
 
       - name: Exercise the production migration safety wrapper
         if: matrix.postgres == '17'
-        run: npm run test:migration-gate:postgres
+        run: |
+          npm run test:migration-gate:postgres
+          node --test scripts/migration-rehearsal/run-rehearsal.test.mjs
 
       - name: Apply and adversarially verify every migration
         run: node scripts/fixture-boundary/run-controller-gate-pr-harness.mjs
