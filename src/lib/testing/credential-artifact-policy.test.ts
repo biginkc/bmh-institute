@@ -11,6 +11,13 @@ const PRODUCTION_CONFIGS = [
   "playwright.prod-dryrun.config.ts",
 ] as const;
 
+function executableYaml(source: string) {
+  return source
+    .split("\n")
+    .filter((line) => !line.trimStart().startsWith("#"))
+    .join("\n");
+}
+
 describe("credential-bearing Playwright artifact policy", () => {
   it("captures provider-test output before emitting a redacted summary", () => {
     const source = fs.readFileSync(
@@ -40,39 +47,74 @@ describe("credential-bearing Playwright artifact policy", () => {
       path.resolve(process.cwd(), ".github/workflows/db-migrate-prod.yml"),
       "utf8",
     );
-    expect(testSource).toContain("permissions:\n  contents: read");
-    expect(productionSource).toContain("permissions:\n  contents: read");
-    const triggerBlock = testSource.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+    const testYaml = executableYaml(testSource);
+    const productionYaml = executableYaml(productionSource);
+    expect(testYaml).toContain("permissions:\n  contents: read");
+    expect(productionYaml).toContain("permissions:\n  contents: read");
+    const triggerBlock = testYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
     expect(triggerBlock).toContain("workflow_dispatch");
     expect(triggerBlock).toContain("workflow_dispatch: {}");
     expect(triggerBlock).not.toContain("expected_sha:");
     expect(triggerBlock).toContain("pull_request");
     const productionTriggerBlock =
-      productionSource.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+      productionYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
     expect(productionTriggerBlock).toContain("workflow_run:");
+    expect(productionTriggerBlock).toContain(
+      'workflows: ["Apply Supabase migrations to test"]',
+    );
+    expect(productionTriggerBlock).toContain("types: [completed]");
     expect(productionTriggerBlock).not.toContain("workflow_dispatch:");
     expect(productionTriggerBlock).not.toContain("push:");
-    const productionJob = productionSource.slice(
-      productionSource.indexOf("  migrate-prod:"),
+    const productionJob = productionYaml.slice(
+      productionYaml.indexOf("  migrate-prod:"),
     );
-    expect(productionJob).toContain(
-      "github.event.workflow_run.head_branch == 'main'",
+    const productionAdmission =
+      productionJob.match(/^    if: (.+)$/m)?.[1] ?? "";
+    expect(productionAdmission).toBe(
+      "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
     );
-    expect(productionJob).toContain(
-      "github.event.workflow_run.run_attempt == '1'",
-    );
-    expect(productionJob).toContain("github.run_attempt == '1'");
+    expect(productionJob).toMatch(/^    environment: Production$/m);
+    expect(productionJob).not.toMatch(/^    permissions:/m);
     expect(productionJob).toContain(
       "ref: ${{ github.event.workflow_run.head_sha }}",
     );
-    const prJob = testSource.slice(
-      testSource.indexOf("  validate-pr-migrations:"),
-      testSource.indexOf("  migrate-test:"),
+    const productionCheckout = productionJob.match(
+      /- uses: actions\/checkout@[a-f0-9]{40}[^\n]*[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+    expect(productionCheckout).toContain(
+      "ref: ${{ github.event.workflow_run.head_sha }}",
+    );
+    expect(productionCheckout).toContain("fetch-depth: 0");
+    expect(productionCheckout).toContain("persist-credentials: false");
+    const productionPush = productionJob.match(
+      /- name: Apply pending migrations \(safety gate chained to the push\)[\s\S]*$/,
+    )?.[0] ?? "";
+    expect(productionPush).toContain(
+      "PROD_SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
+    );
+    expect(productionPush).toContain(
+      'echo "::add-mask::$PROD_SUPABASE_DB_PASSWORD"',
+    );
+    expect(productionPush).toContain(
+      'export PGPASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
+    );
+    expect(productionPush).toContain(
+      "guarded-db-push.sh --target=institute-production",
+    );
+    expect(productionPush.indexOf("::add-mask::")).toBeLessThan(
+      productionPush.indexOf("guarded-db-push.sh --target=institute-production"),
+    );
+    const prJob = testYaml.slice(
+      testYaml.indexOf("  validate-pr-migrations:"),
+      testYaml.indexOf("  migrate-test:"),
     );
     expect(prJob).not.toContain("secrets.");
     expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
-    const remoteJob = testSource.slice(testSource.indexOf("  migrate-test:"));
+    const remoteJob = testYaml.slice(testYaml.indexOf("  migrate-test:"));
     expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
+    expect(remoteJob).toContain("TEST_PROJECT_REF: jvaabkchkihkjllehmft");
+    expect(remoteJob).toContain("guarded-db-push.sh --target=institute-test");
+    expect(remoteJob).not.toMatch(/^    permissions:/m);
     for (const source of [testSource, productionSource]) {
       expect(source).not.toMatch(
         /uses:\s+[^\n]+@(?![a-f0-9]{40}(?:\s|#|$))[^\n]+/,

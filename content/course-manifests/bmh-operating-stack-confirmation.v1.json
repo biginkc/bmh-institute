@@ -1,14 +1,14 @@
 {
   "schema_version": "bmh-operating-stack-confirmation/v1",
-  "confirmation_id": "bmh-employee-workflow-2026-07-25",
+  "confirmation_id": "bmh-employee-workflow-2026-08-02",
   "status": "confirmed",
-  "confirmed_at": "2026-07-25T12:00:00-05:00",
-  "expires_at": "2026-08-01T12:00:00-05:00",
+  "confirmed_at": "2026-08-02T23:56:00-05:00",
+  "expires_at": "2026-08-09T23:56:00-05:00",
   "decision": "retain-dialpad-for-employee-manual-workflow",
   "reverification": {
-    "reverified_at": "2026-07-25T13:35:00-05:00",
-    "actor": "Claude (automated, this session)",
-    "method": "Recomputed SHA-256 of all three source_evidence vault files directly from their current on-disk content and compared byte-for-byte against the values recorded below; all three matched exactly, so the underlying DialPad/Sendillo/Telnyx facts are unchanged since the 2026-07-16 confirmation. Did not re-author or re-date the vault files themselves -- observed_updated below still reflects each file's real last edit.",
+    "reverified_at": "2026-08-02T23:56:00-05:00",
+    "actor": "Codex (automated, report-to-fix release)",
+    "method": "Recomputed SHA-256 for all three canonical BMH-OS source files from their current on-disk bytes. The training-course decision and locked transcript remain byte-identical. _Active.md changed as the four-app program advanced, so its recorded hash and observed date were refreshed only after directly confirming it still identifies Sendillo for Sandra, Telnyx for Jitter, and Jarrad-only Jitter operation until the Phase 2 exit. The current sources therefore still support the scoped DialPad employee workflow decision.",
     "source_hashes_matched": true
   },
   "scope": {
@@ -32,8 +32,8 @@
     },
     {
       "vault_path": "_Active.md",
-      "observed_updated": "2026-07-16",
-      "sha256": "99a09c4d896b132db9fc59aa60fc03ca90b4fca8715ab16f2ca4313327f29baf",
+      "observed_updated": "2026-07-30",
+      "sha256": "a8043d8dcf2384ba0d422ea3d490efe0d6238550f4ee70307ab61c10f33ec70f",
       "evidence": "Sandra's current internal messaging path is Sendillo. Jitter's active carrier is Telnyx, but Jarrad remains the only operator until the Phase 2 exit and VA authorization decision."
     },
     {
@@ -43,7 +43,7 @@
       "evidence": "The locked employee transcript assigns homeowner calls to DialPad, approved texts to DialPad, approved emails to Gmail, and CRM records to Sandra."
     }
   ],
-  "source_evidence_sha256": "3533077756a1a398769bc1d876117adc873fdff78cbf9a9d3c3dad855c076679",
+  "source_evidence_sha256": "026dd4111045adad892c4c82232b9c131d3c40180402e63d3a78e5b8053cc2c7",
   "manifest_snapshots": [
     {
       "import_id": "bmh-employee-training-v1",

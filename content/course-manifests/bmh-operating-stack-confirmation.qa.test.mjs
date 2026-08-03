@@ -15,7 +15,7 @@ import {
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(import.meta.dirname, "../..");
-const CURRENT_TIME = new Date("2026-07-25T18:00:00-05:00");
+const CURRENT_TIME = new Date("2026-08-03T00:00:00-05:00");
 
 async function loadJson(name) {
   return JSON.parse(await readFile(new URL(name, import.meta.url), "utf8"));
@@ -67,7 +67,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     validateStackConfirmation(
       manifest,
       confirmation,
-      new Date("2026-08-02T12:00:00-05:00"),
+      new Date("2026-08-10T00:00:00-05:00"),
     ).join(" "),
     /expired/,
   );
@@ -131,7 +131,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   );
 
   const futureReverification = clone();
-  futureReverification.reverification.reverified_at = "2026-08-05T00:00:00-05:00";
+  futureReverification.reverification.reverified_at = "2026-08-12T00:00:00-05:00";
   assert.match(
     validateStackConfirmation(manifest, futureReverification, CURRENT_TIME).join(" "),
     /genuine reverification record/,

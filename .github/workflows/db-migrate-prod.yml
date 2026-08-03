@@ -120,14 +120,14 @@ name: Apply Supabase migrations to prod
 # already a fully-pinned entry in placeholder-baseline.json.
 #
 # ---------------------------------------------------------------------------
-# The environment approval gate
+# Production environment tracking
 # ---------------------------------------------------------------------------
-# `environment: Production` below is a GitHub-native control (a repo
-# Environment with required reviewers configured and admin bypass OFF), not
-# a script -- this workflow cannot verify its own state and does not try to.
-# If someone clears the required reviewers or re-enables admin bypass, this
-# line keeps working while gating nothing; that is a repo-settings concern,
-# not something this file can enforce on its own.
+# `environment: Production` records deployments and scopes production
+# environment settings. It intentionally has no required-reviewer rule: this
+# repository's reviewed release path is autonomous once its code and exact-SHA
+# gates pass. The executable admission controls are the workflow_run predicates,
+# exact tested-SHA checkout, replay guards, branch protection, and guarded push
+# below; this comment does not claim a human approval gate that is not configured.
 #
 # Required secrets (set in GitHub -> repo settings -> Secrets -> Actions):
 #   SUPABASE_ACCESS_TOKEN
@@ -172,8 +172,8 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # GitHub-native control (a repo Environment), not a script -- see the
-    # note above.
+    # Deployment tracking/configuration boundary; admission is enforced by the
+    # executable predicates and guarded push above, not a human reviewer.
     environment: Production
 
     env:
