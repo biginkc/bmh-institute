@@ -864,18 +864,35 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     return existsSync(wrapper.log) ? readFileSync(wrapper.log, "utf8") : "";
   }
 
-  function assertProductionRefusal(label, wrapper, messages, expectedSha = wrapper.headSha, extraEnv = {}) {
+  function assertProductionRefusal(
+    label,
+    wrapper,
+    messages,
+    { expectedSha = wrapper.headSha, extraEnv = {}, expectedStatus = 75 } = {},
+  ) {
     const run = runWrapper(
       wrapper.repo,
       ["--target=institute-production"],
       { ...productionEnv(expectedSha), ...extraEnv },
     );
-    check(`production E2E: ${label} refuses before invoking Supabase`, run, 75, messages);
+    check(`production E2E: ${label} refuses before invoking Supabase`, run, expectedStatus, messages);
     const stubLog = stubLogOrEmpty(wrapper);
     check(`production E2E: ${label} never invokes Supabase`, {
       status: stubLog === "" ? 0 : 1,
       out: stubLog,
     }, 0);
+  }
+
+  function assertHiddenTrackedMigrationRefuses(indexFlag, label) {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const path = "supabase/migrations/20260201000000_new.sql";
+    wrapper.git("update-index", indexFlag, path);
+    writeFileSync(join(wrapper.repo, path), "select 999;\n");
+    assertProductionRefusal(label, wrapper, [
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
   }
 
   {
@@ -914,17 +931,22 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     const wrapper = productionWrapper();
     writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql"), "select 999;\n");
     assertProductionRefusal("dirty tracked migration", wrapper, [
-      "worktree differs from the reviewed SHA. Refusing production",
-    ]);
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
   }
+
+  assertHiddenTrackedMigrationRefuses("--assume-unchanged", "assume-unchanged tracked migration");
+  assertHiddenTrackedMigrationRefuses("--skip-worktree", "skip-worktree tracked migration");
 
   {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
     writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260301000000_untracked.sql"), "select 999;\n");
     assertProductionRefusal("ordinary untracked migration", wrapper, [
-      "worktree differs from the reviewed SHA. Refusing production",
-    ]);
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
   }
 
   {
@@ -934,8 +956,9 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     writeFileSync(join(wrapper.repo, ".git", "info", "exclude"), `supabase/migrations/${ignoredName}\n`);
     writeFileSync(join(wrapper.repo, "supabase", "migrations", ignoredName), "select 999;\n");
     assertProductionRefusal(".git/info/exclude migration", wrapper, [
-      "ignored migration SQL differs from the reviewed SHA. Refusing production",
-    ]);
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { expectedStatus: 1 });
   }
 
   {
@@ -948,8 +971,9 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     writeFileSync(globalConfig, `[core]\n\texcludesfile = ${globalExcludes}\n`);
     writeFileSync(join(wrapper.repo, "supabase", "migrations", ignoredName), "select 999;\n");
     assertProductionRefusal("global-ignore migration", wrapper, [
-      "ignored migration SQL differs from the reviewed SHA. Refusing production",
-    ], wrapper.headSha, { GIT_CONFIG_GLOBAL: globalConfig });
+      "REFUSING (E33)",
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree",
+    ], { extraEnv: { GIT_CONFIG_GLOBAL: globalConfig }, expectedStatus: 1 });
   }
 
   {
@@ -981,7 +1005,7 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     const wrapper = productionWrapper();
     assertProductionRefusal("wrong expected SHA", wrapper, [
       "tested SHA is no longer the exact current origin/main",
-    ], "0000000000000000000000000000000000000000");
+    ], { expectedSha: "0000000000000000000000000000000000000000" });
   }
 
   {

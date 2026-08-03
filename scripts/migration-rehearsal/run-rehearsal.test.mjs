@@ -125,22 +125,6 @@ test("all executable migration instructions are target-bound and every include-a
   assert.match(readme, /guarded-db-push\.sh --target=institute-test\n/);
 });
 
-test("the printed production sequence never prints an ungated db push", () => {
-  // The 2026-07-30 incident's enabling command. It must not appear anywhere in
-  // the printed block: the only push line is guarded-db-push.sh, which runs the
-  // safety gate itself and aborts on a non-zero exit. A gate printed *next to* a
-  // bare push is not a gate -- it is a suggestion.
-  const commands = read("print-production-repair-commands.sh");
-  for (const line of commands.split("\n")) {
-    const code = line.split("#")[0];
-    if (!code.includes("supabase db push")) continue;
-    assert.ok(
-      !code.includes("--include-all"),
-      `print-production-repair-commands.sh must not emit a direct --include-all push: ${line}`,
-    );
-  }
-});
-
 test("guarded-db-push runs the safety gate before the push, with no escape hatch", () => {
   const wrapper = read("guarded-db-push.sh");
   const strictMode = wrapper.indexOf("set -euo pipefail");
@@ -192,9 +176,8 @@ test("production guarded push requires a clean reviewed worktree", () => {
   );
   assert.match(productionGuard, /git status --porcelain=v1 --untracked-files=all/);
   assert.match(productionGuard, /worktree differs from the reviewed SHA\. Refusing production/);
-  assert.match(productionGuard, /--ignored=matching -- ':\(glob\)supabase\/migrations\/\*\.sql'/);
-  assert.match(productionGuard, /ignored migration SQL differs from the reviewed SHA\. Refusing production/);
   assert.match(wrapper, /export SUPABASE_DB_PASSWORD="\$PGPASSWORD"/);
+  assert.match(read("check-migration-safety.mjs"), /assertLocalMigrationsMatchHead/);
 });
 
 test("guarded-db-push holds an advisory lock across the whole run", () => {

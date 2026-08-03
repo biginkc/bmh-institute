@@ -79,7 +79,9 @@
 //   version-level check passes while completely different SQL runs. The
 //   fingerprint therefore records a sha256 of every local migration file's
 //   BYTES, and that set is re-verified immediately before the push and again
-//   during post-push reconciliation (E30).
+//   during post-push reconciliation (E30). Canonical runs also compare every
+//   on-disk filename and byte hash directly with the HEAD tree (E33), bypassing
+//   index hints such as assume-unchanged and skip-worktree.
 //
 //   Database. Project identity is parsed EXACTLY, never substring-matched: the
 //   ref is extracted from PGUSER (`postgres.<ref>`) or PGHOST
@@ -674,6 +676,54 @@ function loadLocalMigrations(migrationsDir, repoRoot) {
   return migrations;
 }
 
+function readReviewedMigrationPaths(repoRoot) {
+  try {
+    return execFileSync(
+      "git",
+      ["-C", repoRoot, "ls-tree", "-r", "--name-only", "HEAD", "--", "supabase/migrations"],
+      { encoding: "utf8", timeout: GIT_TIMEOUT_MS },
+    )
+      .split("\n")
+      .filter((path) => /^supabase\/migrations\/[^/]+\.sql$/.test(path))
+      .sort();
+  } catch (error) {
+    refuse("E33", [`Cannot read the reviewed migration tree from git HEAD: ${error.code ?? error.message}`]);
+  }
+}
+
+function hashReviewedMigration(repoRoot, path) {
+  try {
+    return createHash("sha256")
+      .update(execFileSync("git", ["-C", repoRoot, "show", `HEAD:${path}`], { timeout: GIT_TIMEOUT_MS }))
+      .digest("hex");
+  } catch (error) {
+    refuse("E33", [`Cannot hash a reviewed migration blob from git HEAD: ${error.code ?? error.message}`]);
+  }
+}
+
+function assertLocalMigrationsMatchHead(local, repoRoot) {
+  const reviewed = readReviewedMigrationPaths(repoRoot).map((path) => ({
+    file: path.slice("supabase/migrations/".length),
+    sha256: hashReviewedMigration(repoRoot, path),
+  }));
+
+  const disk = local.map(({ file, sha256 }) => ({ file, sha256 }));
+  if (JSON.stringify(disk) !== JSON.stringify(reviewed)) {
+    refuse("E33", [
+      "On-disk migration filenames or bytes differ from the reviewed git HEAD tree.",
+      "Refusing: Git index hints and ignore rules must not hide unreviewed SQL from admission.",
+      `  reviewed files: ${reviewed.map((entry) => entry.file).join(", ")}`,
+      `  on-disk files:  ${disk.map((entry) => entry.file).join(", ")}`,
+    ]);
+  }
+}
+
+function loadAdmittedLocalMigrations(migrationsDir, repoRoot, testMode) {
+  const local = loadLocalMigrations(migrationsDir, repoRoot);
+  if (!testMode) assertLocalMigrationsMatchHead(local, repoRoot);
+  return local;
+}
+
 // --- remote reads ----------------------------------------------------------
 
 const HISTORY_SQL =
@@ -998,7 +1048,7 @@ function main() {
     if (fingerprint.target !== target) {
       refuse("E29", [`Fingerprint was taken for target "${fingerprint.target}" but this run is "${target}".`]);
     }
-    const local = loadLocalMigrations(migrationsDir, repoRoot);
+    const local = loadAdmittedLocalMigrations(migrationsDir, repoRoot, testMode);
     assertLocalContentUnchanged(fingerprint, local);
 
     const history = loadRemoteHistory(timeoutMs);
@@ -1056,7 +1106,7 @@ function main() {
     return;
   }
 
-  const local = loadLocalMigrations(migrationsDir, repoRoot);
+  const local = loadAdmittedLocalMigrations(migrationsDir, repoRoot, testMode);
   const history = loadRemoteHistory(timeoutMs);
   const digest = historyDigest(history);
   const contentDigest = localDigest(local);

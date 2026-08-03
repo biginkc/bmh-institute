@@ -103,8 +103,9 @@ repository paths by default, so it is provably reading the same `supabase/migrat
 reads. The wrapper also:
 
 - requires production to run from a completely clean worktree whose `HEAD` is the exact
-  reviewed current `origin/main`, and separately detects ignored `.sql` files under
-  `supabase/migrations`, so uncommitted, untracked, or ignored migration bytes cannot be pushed;
+  reviewed current `origin/main`; the gate compares every on-disk migration filename and raw
+  byte hash directly with the `HEAD` tree, so ignore rules, `assume-unchanged`, and
+  `skip-worktree` cannot conceal unreviewed SQL;
 - holds a session-scoped PostgreSQL **advisory lock** across gate, verify, push and
   reconcile, confirmed by backend pid in `pg_locks` and released by an `EXIT` trap, so two
   sanctioned runs cannot interleave;

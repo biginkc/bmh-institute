@@ -262,9 +262,9 @@ jobs:
 
       - name: Apply pending migrations (safety gate chained to the push)
         # Same guarded wrapper db-migrate-test.yml's migrate-test job uses for
-        # TEST. It runs check-migration-safety.mjs first, under `set -e`,
-        # and the push is the last line of that file -- unreachable on a
-        # non-zero gate exit. See guarded-db-push.sh's own header for the
+        # TEST. It runs check-migration-safety.mjs first under `set -e`; the
+        # write is unreachable on a non-zero gate exit, and reconciliation
+        # follows every attempted write. See guarded-db-push.sh's own header for the
         # full "checked == pushed" binding it enforces (directory, content,
         # database identity, history, and the advisory lock).
         env:

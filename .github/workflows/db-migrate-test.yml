@@ -187,9 +187,9 @@ jobs:
         # The gate is NOT a separate step here on purpose. A separate step can be
         # re-ordered, disabled, or skipped with continue-on-error, leaving a bare
         # `db push --include-all` behind. guarded-db-push.sh runs
-        # scripts/migration-rehearsal/check-migration-safety.mjs first, under
-        # `set -e`, and the push is the last line of that file -- unreachable on a
-        # non-zero gate exit.
+        # scripts/migration-rehearsal/check-migration-safety.mjs first under
+        # `set -e`; the write is unreachable on a non-zero gate exit, and
+        # reconciliation follows every attempted write.
         #
         # Why it exists: `--include-all` re-applies any migration missing from
         # remote history in filename order, with no notion of whether a later
