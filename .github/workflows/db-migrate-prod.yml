@@ -161,6 +161,10 @@ env:
 permissions:
   contents: read
 
+concurrency:
+  group: bmh-institute-production-migrations
+  cancel-in-progress: false
+
 jobs:
   migrate-prod:
     name: Apply migrations to Institute production
@@ -240,16 +244,17 @@ jobs:
             fs.appendFileSync(process.env.GITHUB_OUTPUT, out + "\n");
           '
 
-      - name: Re-check ancestry immediately before the push (round-5 finding 4; narrows, does not close, the force-push race -- see the script's own header)
-        # The first ancestry check above ran before `supabase link` and the
-        # pooler resolution steps; a force-push to main in that window would
-        # have gone undetected until now. This repeats the same script
-        # (re-fetching origin/main fresh) right before the actual push, so
-        # the TOCTOU window this defense-in-depth check cannot fully close
-        # is bounded to the time between THIS step and the push, not the
-        # whole job since checkout. HEAD is still the pinned commit from the
-        # checkout step above; only origin/main is re-fetched.
-        run: bash scripts/assert-ref-is-main-or-ancestor.sh
+      - name: Refuse a stale tested SHA immediately before the push
+        # Production jobs are serialized above. This final fresh fetch also
+        # requires the exact SHA verified by the upstream test workflow to
+        # remain current main; an older successful run cannot deploy after a
+        # newer commit has reached main.
+        run: |
+          git fetch --no-tags origin main
+          if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+            echo "Refusing production migration: tested SHA is no longer current main."
+            exit 1
+          fi
 
       - name: Apply pending migrations (safety gate chained to the push)
         # Same wrapper the manual production runbook uses

@@ -52,6 +52,24 @@ test("current confirmation covers the full and canary DialPad references", async
   );
 });
 
+test("checked-in confirmation is current at the actual verification time", async () => {
+  const [full, canary, confirmation] = await Promise.all([
+    loadJson("./bmh-employee-training.v1.json"),
+    loadJson("./bmh-employee-training-canary.v1.json"),
+    loadJson("./bmh-operating-stack-confirmation.v1.json"),
+  ]);
+  const actualVerificationTime = new Date();
+
+  assert.deepEqual(
+    validateStackConfirmation(full, confirmation, actualVerificationTime),
+    [],
+  );
+  assert.deepEqual(
+    validateStackConfirmation(canary, confirmation, actualVerificationTime),
+    [],
+  );
+});
+
 test("confirmation fails closed when missing, stale, scoped incorrectly, or mismatched", async () => {
   const [manifest, confirmation] = await Promise.all([
     loadJson("./bmh-employee-training.v1.json"),

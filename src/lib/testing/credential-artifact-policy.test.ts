@@ -18,6 +18,14 @@ function executableYaml(source: string) {
     .join("\n");
 }
 
+function topLevelPermissions(source: string) {
+  return (
+    executableYaml(source).match(
+      /^permissions:\n((?: {2}\S[^\n]*(?:\n|$))*)/m,
+    )?.[1].trim() ?? ""
+  );
+}
+
 describe("credential-bearing Playwright artifact policy", () => {
   it("captures provider-test output before emitting a redacted summary", () => {
     const source = fs.readFileSync(
@@ -49,8 +57,16 @@ describe("credential-bearing Playwright artifact policy", () => {
     );
     const testYaml = executableYaml(testSource);
     const productionYaml = executableYaml(productionSource);
-    expect(testYaml).toContain("permissions:\n  contents: read");
-    expect(productionYaml).toContain("permissions:\n  contents: read");
+    expect(topLevelPermissions(testSource)).toBe("contents: read");
+    expect(topLevelPermissions(productionSource)).toBe("contents: read");
+    expect(
+      topLevelPermissions(
+        productionSource.replace(
+          "permissions:\n  contents: read",
+          "permissions:\n  contents: read\n  actions: write",
+        ),
+      ),
+    ).not.toBe("contents: read");
     const triggerBlock = testYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
     expect(triggerBlock).toContain("workflow_dispatch");
     expect(triggerBlock).toContain("workflow_dispatch: {}");
@@ -72,6 +88,9 @@ describe("credential-bearing Playwright artifact policy", () => {
       productionJob.match(/^    if: (.+)$/m)?.[1] ?? "";
     expect(productionAdmission).toBe(
       "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
+    );
+    expect(productionYaml).toMatch(
+      /^concurrency:\n  group: bmh-institute-production-migrations\n  cancel-in-progress: false$/m,
     );
     expect(productionJob).toMatch(/^    environment: Production$/m);
     expect(productionJob).not.toMatch(/^    permissions:/m);
@@ -100,6 +119,16 @@ describe("credential-bearing Playwright artifact policy", () => {
     );
     expect(productionPush).toContain(
       "guarded-db-push.sh --target=institute-production",
+    );
+    const exactMainGate = productionJob.match(
+      /- name: Refuse a stale tested SHA immediately before the push[\s\S]*?(?=\n\s{6}- name: Apply pending migrations)/,
+    )?.[0] ?? "";
+    expect(exactMainGate).toContain("git fetch --no-tags origin main");
+    expect(exactMainGate).toContain(
+      'if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then',
+    );
+    expect(productionJob.indexOf(exactMainGate)).toBeLessThan(
+      productionJob.indexOf(productionPush),
     );
     expect(productionPush.indexOf("::add-mask::")).toBeLessThan(
       productionPush.indexOf("guarded-db-push.sh --target=institute-production"),
