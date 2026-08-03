@@ -1071,10 +1071,10 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = makeWrapperRepo(["001_a.sql", "20260101000000_c.sql", "20260201000000_new.sql"], "swap");
     check(
-      "E2E P1-2: migration bytes rewritten DURING the push are caught by reconciliation (E30)",
+      "E2E P1-2: migration bytes rewritten DURING the push are caught by reconciliation (E33)",
       runWrapper(wrapper.repo, ["--target=institute-e2e"]),
       1,
-      ["REFUSING (E30)"],
+      ["REFUSING (E33)"],
     );
   }
 
