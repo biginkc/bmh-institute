@@ -128,6 +128,10 @@ for var in PGHOST PGPORT PGDATABASE PGUSER PGPASSWORD; do
   fi
 done
 
+# The safety gate authenticates with PGPASSWORD. Force the Supabase CLI to use
+# that exact same credential instead of inheriting an unrelated ambient value.
+export SUPABASE_DB_PASSWORD="$PGPASSWORD"
+
 if [ "$TARGET" = "institute-production" ] && [ -z "${GUARDED_PUSH_EXPECTED_GIT_SHA:-}" ]; then
   echo "guarded-db-push: GUARDED_PUSH_EXPECTED_GIT_SHA is required for production." >&2
   exit 78
@@ -136,7 +140,7 @@ fi
 assert_expected_sha_is_current_main() {
   [ "$TARGET" = "institute-production" ] || return 0
 
-  local local_sha remote_main_sha worktree_status
+  local local_sha remote_main_sha worktree_status ignored_migration_status
   local_sha="$(git rev-parse HEAD)"
   remote_main_sha="$(git ls-remote --exit-code origin refs/heads/main | awk 'NR == 1 { print $1 }')"
   if [ -z "$remote_main_sha" ]; then
@@ -150,6 +154,11 @@ assert_expected_sha_is_current_main() {
   worktree_status="$(git status --porcelain=v1 --untracked-files=all)"
   if [ -n "$worktree_status" ]; then
     echo "guarded-db-push: worktree differs from the reviewed SHA. Refusing production." >&2
+    return 75
+  fi
+  ignored_migration_status="$(git status --porcelain=v1 --untracked-files=all --ignored=matching -- ':(glob)supabase/migrations/*.sql')"
+  if [ -n "$ignored_migration_status" ]; then
+    echo "guarded-db-push: ignored migration SQL differs from the reviewed SHA. Refusing production." >&2
     return 75
   fi
   echo "guarded-db-push: tested SHA is still the exact current origin/main."

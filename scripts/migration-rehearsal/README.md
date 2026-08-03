@@ -91,6 +91,8 @@ bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-productio
 
 `guarded-db-push.sh` runs the gate and then the push, under `set -euo pipefail`, from one
 connection definition. A non-zero gate exit ends the script and the push is never reached.
+The wrapper forces the Supabase CLI to use the same `PGPASSWORD` already verified by the
+gate; it does not trust an ambient `SUPABASE_DB_PASSWORD` value.
 Do not run `supabase db push --include-all` directly against a linked project — a gate that
 merely sits next to the dangerous command in a runbook is a suggestion, not a gate, and that
 is precisely how the incident happened. CI (`.github/workflows/db-migrate-test.yml`) pushes
@@ -101,7 +103,8 @@ repository paths by default, so it is provably reading the same `supabase/migrat
 reads. The wrapper also:
 
 - requires production to run from a completely clean worktree whose `HEAD` is the exact
-  reviewed current `origin/main`, so uncommitted or untracked migration bytes cannot be pushed;
+  reviewed current `origin/main`, and separately detects ignored `.sql` files under
+  `supabase/migrations`, so uncommitted, untracked, or ignored migration bytes cannot be pushed;
 - holds a session-scoped PostgreSQL **advisory lock** across gate, verify, push and
   reconcile, confirmed by backend pid in `pg_locks` and released by an `EXIT` trap, so two
   sanctioned runs cannot interleave;

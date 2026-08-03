@@ -192,6 +192,9 @@ test("production guarded push requires a clean reviewed worktree", () => {
   );
   assert.match(productionGuard, /git status --porcelain=v1 --untracked-files=all/);
   assert.match(productionGuard, /worktree differs from the reviewed SHA\. Refusing production/);
+  assert.match(productionGuard, /--ignored=matching -- ':\(glob\)supabase\/migrations\/\*\.sql'/);
+  assert.match(productionGuard, /ignored migration SQL differs from the reviewed SHA\. Refusing production/);
+  assert.match(wrapper, /export SUPABASE_DB_PASSWORD="\$PGPASSWORD"/);
 });
 
 test("guarded-db-push holds an advisory lock across the whole run", () => {

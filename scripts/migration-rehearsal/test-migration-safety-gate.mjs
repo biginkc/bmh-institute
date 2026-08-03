@@ -802,6 +802,7 @@ set -uo pipefail
   echo "cwd=$PWD"
   echo "pgpassword-present=$([ -n "\${PGPASSWORD:-}" ] && echo yes || echo no)"
   echo "supabase-db-password-present=$([ -n "\${SUPABASE_DB_PASSWORD:-}" ] && echo yes || echo no)"
+  echo "passwords-match=$([ "\${PGPASSWORD:-}" = "\${SUPABASE_DB_PASSWORD:-}" ] && echo yes || echo no)"
   if [ -n "\${PGPASSWORD:-}" ] && [[ "$*" == *"$PGPASSWORD"* ]]; then
     echo "password-in-argv=yes"
   else
@@ -863,13 +864,27 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     return existsSync(wrapper.log) ? readFileSync(wrapper.log, "utf8") : "";
   }
 
+  function assertProductionRefusal(label, wrapper, messages, expectedSha = wrapper.headSha, extraEnv = {}) {
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      { ...productionEnv(expectedSha), ...extraEnv },
+    );
+    check(`production E2E: ${label} refuses before invoking Supabase`, run, 75, messages);
+    const stubLog = stubLogOrEmpty(wrapper);
+    check(`production E2E: ${label} never invokes Supabase`, {
+      status: stubLog === "" ? 0 : 1,
+      out: stubLog,
+    }, 0);
+  }
+
   {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
     const run = runWrapper(
       wrapper.repo,
       ["--target=institute-production"],
-      productionEnv(wrapper.headSha),
+      { ...productionEnv(wrapper.headSha), SUPABASE_DB_PASSWORD: "conflicting-ambient-password" },
     );
     check("production E2E: matching local, expected, and remote SHAs reach the guarded push", run, 0, [
       "tested SHA is still the exact current origin/main",
@@ -877,12 +892,13 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     ]);
     const stubLog = stubLogOrEmpty(wrapper);
     check(
-      "production E2E: push argv is password-free while credential environment remains inherited",
+      "production E2E: push argv is password-free and the CLI password is rebound to the gate password",
       {
         status:
           stubLog.includes("password-in-argv=no") &&
           stubLog.includes("pgpassword-present=yes") &&
           stubLog.includes("supabase-db-password-present=yes") &&
+          stubLog.includes("passwords-match=yes") &&
           !stubLog.includes("synthetic-password-sentinel") &&
           /argv=db push --include-all --db-url postgresql:\/\/postgres\.[a-z]+@[^\s]+\/postgres --yes/.test(stubLog)
             ? 0
@@ -897,18 +913,43 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
     writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql"), "select 999;\n");
-    const run = runWrapper(
-      wrapper.repo,
-      ["--target=institute-production"],
-      productionEnv(wrapper.headSha),
-    );
-    check("production E2E: dirty reviewed worktree refuses before invoking Supabase", run, 75, [
+    assertProductionRefusal("dirty tracked migration", wrapper, [
       "worktree differs from the reviewed SHA. Refusing production",
     ]);
-    check("production E2E: dirty reviewed worktree never invokes Supabase", {
-      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
-      out: stubLogOrEmpty(wrapper),
-    }, 0);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260301000000_untracked.sql"), "select 999;\n");
+    assertProductionRefusal("ordinary untracked migration", wrapper, [
+      "worktree differs from the reviewed SHA. Refusing production",
+    ]);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const ignoredName = "20260301000000_ignored.sql";
+    writeFileSync(join(wrapper.repo, ".git", "info", "exclude"), `supabase/migrations/${ignoredName}\n`);
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", ignoredName), "select 999;\n");
+    assertProductionRefusal(".git/info/exclude migration", wrapper, [
+      "ignored migration SQL differs from the reviewed SHA. Refusing production",
+    ]);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const ignoredName = "20260401000000_global_ignored.sql";
+    const globalExcludes = join(workRoot, `global-excludes-${caseIndex}`);
+    const globalConfig = join(workRoot, `global-config-${caseIndex}`);
+    writeFileSync(globalExcludes, `supabase/migrations/${ignoredName}\n`);
+    writeFileSync(globalConfig, `[core]\n\texcludesfile = ${globalExcludes}\n`);
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", ignoredName), "select 999;\n");
+    assertProductionRefusal("global-ignore migration", wrapper, [
+      "ignored migration SQL differs from the reviewed SHA. Refusing production",
+    ], wrapper.headSha, { GIT_CONFIG_GLOBAL: globalConfig });
   }
 
   {
@@ -919,18 +960,9 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     wrapper.git("commit", "-q", "-m", "advance remote main");
     wrapper.git("push", "-q", "origin", "HEAD:refs/heads/main");
     wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
-    const run = runWrapper(
-      wrapper.repo,
-      ["--target=institute-production"],
-      productionEnv(wrapper.headSha),
-    );
-    check("production E2E: stale remote main refuses before invoking Supabase", run, 75, [
+    assertProductionRefusal("stale remote main", wrapper, [
       "tested SHA is no longer the exact current origin/main",
     ]);
-    check("production E2E: stale remote main never invokes Supabase", {
-      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
-      out: stubLogOrEmpty(wrapper),
-    }, 0);
   }
 
   {
@@ -939,35 +971,17 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     writeFileSync(join(wrapper.repo, "local-only.txt"), "wrong local\n");
     wrapper.git("add", "local-only.txt");
     wrapper.git("commit", "-q", "-m", "advance local only");
-    const run = runWrapper(
-      wrapper.repo,
-      ["--target=institute-production"],
-      productionEnv(wrapper.headSha),
-    );
-    check("production E2E: wrong local HEAD refuses before invoking Supabase", run, 75, [
+    assertProductionRefusal("wrong local HEAD", wrapper, [
       "tested SHA is no longer the exact current origin/main",
     ]);
-    check("production E2E: wrong local HEAD never invokes Supabase", {
-      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
-      out: stubLogOrEmpty(wrapper),
-    }, 0);
   }
 
   {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
-    const run = runWrapper(
-      wrapper.repo,
-      ["--target=institute-production"],
-      productionEnv("0000000000000000000000000000000000000000"),
-    );
-    check("production E2E: wrong expected SHA refuses before invoking Supabase", run, 75, [
+    assertProductionRefusal("wrong expected SHA", wrapper, [
       "tested SHA is no longer the exact current origin/main",
-    ]);
-    check("production E2E: wrong expected SHA never invokes Supabase", {
-      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
-      out: stubLogOrEmpty(wrapper),
-    }, 0);
+    ], "0000000000000000000000000000000000000000");
   }
 
   {
