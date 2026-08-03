@@ -33,14 +33,14 @@ function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
   if (tail === "left" || tail === "right") {
     return {
       style: {
-        width: 22,
+        width: 28,
         height: 32,
         top: "50%",
         transform: "translateY(-50%)",
         ...(tail === "left" ? { left: -18 } : { right: -18 }),
       },
-      viewBox: "0 0 22 32",
-      path: tail === "left" ? "M 21 1 L 1 16 L 21 31" : "M 1 1 L 21 16 L 1 31",
+      viewBox: "0 0 28 32",
+      path: tail === "left" ? "M 27 1 L 1 16 L 27 31" : "M 1 1 L 27 16 L 1 31",
     };
   }
   return {
