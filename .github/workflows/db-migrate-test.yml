@@ -44,6 +44,7 @@ on:
       - ".github/workflows/db-migrate-test.yml"
       - ".github/workflows/db-migrate-prod.yml"
       - "scripts/assert-ref-is-main-or-ancestor.sh"
+      - "scripts/migration-rehearsal/**"
       - "package.json"
       - "package-lock.json"
       - "scripts/cleanup-fixture-catalog.ts"

@@ -233,6 +233,11 @@ test("a required PostgreSQL check executes the migration safety wrapper harness"
     /name:\s*Exercise the production migration safety wrapper[\s\S]*?if:\s*matrix\.postgres == '17'[\s\S]*?run:\s*npm run test:migration-gate:postgres/,
     "the executable production-wrapper proof must remain inside a required PostgreSQL matrix context",
   );
+  assert.match(
+    topLevelBlock(workflow, "on"),
+    /-\s+"scripts\/migration-rehearsal\/\*\*"/,
+    "changes to the migration wrapper, gate, baseline, or harness must trigger the required PostgreSQL checks",
+  );
 });
 
 // --------------------------------------------------------------------------
