@@ -129,7 +129,7 @@ name: Apply Supabase migrations to prod
 # exact tested-SHA checkout, replay guards, branch protection, and guarded push
 # below; this comment does not claim a human approval gate that is not configured.
 #
-# Required secrets (set in GitHub -> repo settings -> Secrets -> Actions):
+# Required secrets (set in GitHub -> Environments -> Production -> Secrets):
 #   SUPABASE_ACCESS_TOKEN
 #     A personal access token from
 #     https://supabase.com/dashboard/account/tokens. Used only to resolve
@@ -221,7 +221,15 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
 
       - name: Link to production project
-        run: supabase link --project-ref "$PROD_PROJECT_REF"
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}
+        run: |
+          echo "::add-mask::$SUPABASE_DB_PASSWORD"
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo "PROD_SUPABASE_DB_PASSWORD secret is required."
+            exit 1
+          fi
+          supabase link --project-ref "$PROD_PROJECT_REF"
 
       - name: Resolve pooler connection info
         id: pooler
@@ -250,7 +258,7 @@ jobs:
         # remain current main; an older successful run cannot deploy after a
         # newer commit has reached main.
         run: |
-          git fetch --no-tags origin main
+          git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main
           if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
             echo "Refusing production migration: tested SHA is no longer current main."
             exit 1

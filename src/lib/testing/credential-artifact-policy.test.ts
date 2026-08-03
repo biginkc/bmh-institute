@@ -20,10 +20,145 @@ function executableYaml(source: string) {
 
 function topLevelPermissions(source: string) {
   return (
-    executableYaml(source).match(
-      /^permissions:\n((?: {2}\S[^\n]*(?:\n|$))*)/m,
-    )?.[1].trim() ?? ""
+    executableYaml(source)
+      .match(/^permissions:\n((?: {2}\S[^\n]*(?:\n|$))*)/m)?.[1]
+      .trim() ?? ""
   );
+}
+
+function expectWorkflowTriggers(testYaml: string, productionYaml: string) {
+  const triggerBlock = testYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+  expect(triggerBlock).toContain("workflow_dispatch");
+  expect(triggerBlock).toContain("workflow_dispatch: {}");
+  expect(triggerBlock).not.toContain("expected_sha:");
+  expect(triggerBlock).toContain("pull_request");
+
+  const productionTriggerBlock =
+    productionYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
+  expect(productionTriggerBlock).toContain("workflow_run:");
+  expect(productionTriggerBlock).toContain(
+    'workflows: ["Apply Supabase migrations to test"]',
+  );
+  expect(productionTriggerBlock).toContain("types: [completed]");
+  expect(productionTriggerBlock).not.toContain("workflow_dispatch:");
+  expect(productionTriggerBlock).not.toContain("push:");
+}
+
+function expectProductionAdmission(
+  productionYaml: string,
+  productionJob: string,
+) {
+  const productionAdmission = productionJob.match(/^    if: (.+)$/m)?.[1] ?? "";
+  expect(productionAdmission).toBe(
+    "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
+  );
+  expect(productionYaml).toMatch(
+    /^concurrency:\n  group: bmh-institute-production-migrations\n  cancel-in-progress: false$/m,
+  );
+  expect(productionJob).toMatch(/^    environment: Production$/m);
+  expect(productionJob).not.toMatch(/^    permissions:/m);
+}
+
+function expectProductionCheckoutAndLink(productionJob: string) {
+  const productionCheckout =
+    productionJob.match(
+      /- uses: actions\/checkout@[a-f0-9]{40}[^\n]*[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+  expect(productionCheckout).toContain(
+    "ref: ${{ github.event.workflow_run.head_sha }}",
+  );
+  expect(productionCheckout).toContain("fetch-depth: 0");
+  expect(productionCheckout).toContain("persist-credentials: false");
+
+  const productionLink =
+    productionJob.match(
+      /- name: Link to production project[\s\S]*?(?=\n\s{6}- name: Resolve pooler connection info)/,
+    )?.[0] ?? "";
+  expect(productionLink).toContain(
+    "SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
+  );
+  expect(productionLink).toContain('echo "::add-mask::$SUPABASE_DB_PASSWORD"');
+  expect(productionLink).toContain('if [ -z "$SUPABASE_DB_PASSWORD" ]; then');
+  expect(productionLink).toContain(
+    'supabase link --project-ref "$PROD_PROJECT_REF"',
+  );
+  expect(productionLink).not.toContain("--password");
+}
+
+function expectProductionPushAndFreshMainGate(productionJob: string) {
+  const productionPush =
+    productionJob.match(
+      /- name: Apply pending migrations \(safety gate chained to the push\)[\s\S]*$/,
+    )?.[0] ?? "";
+  expect(productionPush).toContain(
+    "PROD_SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
+  );
+  expect(productionPush).toContain(
+    'echo "::add-mask::$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    'export PGPASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
+  );
+  expect(productionPush).toContain(
+    "guarded-db-push.sh --target=institute-production",
+  );
+
+  const exactMainGate =
+    productionJob.match(
+      /- name: Refuse a stale tested SHA immediately before the push[\s\S]*?(?=\n\s{6}- name: Apply pending migrations)/,
+    )?.[0] ?? "";
+  expect(exactMainGate).toContain(
+    "git fetch --no-tags origin +refs/heads/main:refs/remotes/origin/main",
+  );
+  expect(exactMainGate).toContain(
+    'if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then',
+  );
+  expect(productionJob.indexOf(exactMainGate)).toBeLessThan(
+    productionJob.indexOf(productionPush),
+  );
+  expect(productionPush.indexOf("::add-mask::")).toBeLessThan(
+    productionPush.indexOf("guarded-db-push.sh --target=institute-production"),
+  );
+}
+
+function expectProductionJobContract(productionYaml: string) {
+  const productionJob = productionYaml.slice(
+    productionYaml.indexOf("  migrate-prod:"),
+  );
+  expectProductionAdmission(productionYaml, productionJob);
+  expectProductionCheckoutAndLink(productionJob);
+  expectProductionPushAndFreshMainGate(productionJob);
+}
+
+function expectTestJobContract(testYaml: string) {
+  const prJob = testYaml.slice(
+    testYaml.indexOf("  validate-pr-migrations:"),
+    testYaml.indexOf("  migrate-test:"),
+  );
+  expect(prJob).not.toContain("secrets.");
+  expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
+
+  const remoteJob = testYaml.slice(testYaml.indexOf("  migrate-test:"));
+  expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
+  expect(remoteJob).toContain("TEST_PROJECT_REF: jvaabkchkihkjllehmft");
+  expect(remoteJob).toContain("guarded-db-push.sh --target=institute-test");
+  expect(remoteJob).not.toMatch(/^    permissions:/m);
+  const checkoutStep =
+    remoteJob.match(
+      /- uses: actions\/checkout@[a-f0-9]{40}[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+  expect(checkoutStep).toContain("ref: ${{ github.sha }}");
+  expect(checkoutStep).toContain("persist-credentials: false");
+  expect(checkoutStep).not.toContain("github.ref");
+  expect(checkoutStep).not.toContain("github.event.inputs");
+  const jobEnv =
+    remoteJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
+  expect(jobEnv).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
+  const providerStep =
+    remoteJob.match(
+      /- name: Run fail-closed provider acceptance[\s\S]*?(?=\n\s{6}- name:|$)/,
+    )?.[0] ?? "";
+  expect(providerStep).toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
 }
 
 describe("credential-bearing Playwright artifact policy", () => {
@@ -67,101 +202,14 @@ describe("credential-bearing Playwright artifact policy", () => {
         ),
       ),
     ).not.toBe("contents: read");
-    const triggerBlock = testYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
-    expect(triggerBlock).toContain("workflow_dispatch");
-    expect(triggerBlock).toContain("workflow_dispatch: {}");
-    expect(triggerBlock).not.toContain("expected_sha:");
-    expect(triggerBlock).toContain("pull_request");
-    const productionTriggerBlock =
-      productionYaml.match(/^on:\n([\s\S]*?)\nenv:/m)?.[1] ?? "";
-    expect(productionTriggerBlock).toContain("workflow_run:");
-    expect(productionTriggerBlock).toContain(
-      'workflows: ["Apply Supabase migrations to test"]',
-    );
-    expect(productionTriggerBlock).toContain("types: [completed]");
-    expect(productionTriggerBlock).not.toContain("workflow_dispatch:");
-    expect(productionTriggerBlock).not.toContain("push:");
-    const productionJob = productionYaml.slice(
-      productionYaml.indexOf("  migrate-prod:"),
-    );
-    const productionAdmission =
-      productionJob.match(/^    if: (.+)$/m)?.[1] ?? "";
-    expect(productionAdmission).toBe(
-      "github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.run_attempt == '1' && github.run_attempt == '1'",
-    );
-    expect(productionYaml).toMatch(
-      /^concurrency:\n  group: bmh-institute-production-migrations\n  cancel-in-progress: false$/m,
-    );
-    expect(productionJob).toMatch(/^    environment: Production$/m);
-    expect(productionJob).not.toMatch(/^    permissions:/m);
-    expect(productionJob).toContain(
-      "ref: ${{ github.event.workflow_run.head_sha }}",
-    );
-    const productionCheckout = productionJob.match(
-      /- uses: actions\/checkout@[a-f0-9]{40}[^\n]*[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
-    )?.[0] ?? "";
-    expect(productionCheckout).toContain(
-      "ref: ${{ github.event.workflow_run.head_sha }}",
-    );
-    expect(productionCheckout).toContain("fetch-depth: 0");
-    expect(productionCheckout).toContain("persist-credentials: false");
-    const productionPush = productionJob.match(
-      /- name: Apply pending migrations \(safety gate chained to the push\)[\s\S]*$/,
-    )?.[0] ?? "";
-    expect(productionPush).toContain(
-      "PROD_SUPABASE_DB_PASSWORD: ${{ secrets.PROD_SUPABASE_DB_PASSWORD }}",
-    );
-    expect(productionPush).toContain(
-      'echo "::add-mask::$PROD_SUPABASE_DB_PASSWORD"',
-    );
-    expect(productionPush).toContain(
-      'export PGPASSWORD="$PROD_SUPABASE_DB_PASSWORD"',
-    );
-    expect(productionPush).toContain(
-      "guarded-db-push.sh --target=institute-production",
-    );
-    const exactMainGate = productionJob.match(
-      /- name: Refuse a stale tested SHA immediately before the push[\s\S]*?(?=\n\s{6}- name: Apply pending migrations)/,
-    )?.[0] ?? "";
-    expect(exactMainGate).toContain("git fetch --no-tags origin main");
-    expect(exactMainGate).toContain(
-      'if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then',
-    );
-    expect(productionJob.indexOf(exactMainGate)).toBeLessThan(
-      productionJob.indexOf(productionPush),
-    );
-    expect(productionPush.indexOf("::add-mask::")).toBeLessThan(
-      productionPush.indexOf("guarded-db-push.sh --target=institute-production"),
-    );
-    const prJob = testYaml.slice(
-      testYaml.indexOf("  validate-pr-migrations:"),
-      testYaml.indexOf("  migrate-test:"),
-    );
-    expect(prJob).not.toContain("secrets.");
-    expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
-    const remoteJob = testYaml.slice(testYaml.indexOf("  migrate-test:"));
-    expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
-    expect(remoteJob).toContain("TEST_PROJECT_REF: jvaabkchkihkjllehmft");
-    expect(remoteJob).toContain("guarded-db-push.sh --target=institute-test");
-    expect(remoteJob).not.toMatch(/^    permissions:/m);
+    expectWorkflowTriggers(testYaml, productionYaml);
+    expectProductionJobContract(productionYaml);
+    expectTestJobContract(testYaml);
     for (const source of [testSource, productionSource]) {
       expect(source).not.toMatch(
         /uses:\s+[^\n]+@(?![a-f0-9]{40}(?:\s|#|$))[^\n]+/,
       );
     }
-    const checkoutStep = remoteJob.match(
-      /- uses: actions\/checkout@[a-f0-9]{40}[\s\S]*?(?=\n\s{6}- uses:|\n\s{6}- name:|$)/,
-    )?.[0] ?? "";
-    expect(checkoutStep).toContain("ref: ${{ github.sha }}");
-    expect(checkoutStep).toContain("persist-credentials: false");
-    expect(checkoutStep).not.toContain("github.ref");
-    expect(checkoutStep).not.toContain("github.event.inputs");
-    const jobEnv = remoteJob.match(/\n    env:\n([\s\S]*?)\n    steps:/)?.[1] ?? "";
-    expect(jobEnv).not.toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
-    const providerStep = remoteJob.match(
-      /- name: Run fail-closed provider acceptance[\s\S]*?(?=\n\s{6}- name:|$)/,
-    )?.[0] ?? "";
-    expect(providerStep).toContain("TEST_SUPABASE_SERVICE_ROLE_KEY");
   });
 
   it("disables every browser recording surface", () => {
@@ -176,9 +224,15 @@ describe("credential-bearing Playwright artifact policy", () => {
     for (const filename of PRODUCTION_CONFIGS) {
       const source = fs.readFileSync(path.resolve(process.cwd(), filename), "utf8");
       expect(source, filename).toContain("CREDENTIAL_SAFE_PLAYWRIGHT_USE");
-      expect(source, filename).not.toMatch(/trace:\s*["'](?:on|retain-on-failure|on-first-retry)["']/);
-      expect(source, filename).not.toMatch(/screenshot:\s*["'](?:on|only-on-failure)["']/);
-      expect(source, filename).not.toMatch(/video:\s*["'](?:on|retain-on-failure|on-first-retry)["']/);
+      expect(source, filename).not.toMatch(
+        /trace:\s*["'](?:on|retain-on-failure|on-first-retry)["']/,
+      );
+      expect(source, filename).not.toMatch(
+        /screenshot:\s*["'](?:on|only-on-failure)["']/,
+      );
+      expect(source, filename).not.toMatch(
+        /video:\s*["'](?:on|retain-on-failure|on-first-retry)["']/,
+      );
     }
   });
 
