@@ -905,9 +905,12 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     }).trim();
     wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
 
-    const replacementEnv = refBase ? { GIT_REPLACE_REF_BASE: refBase } : {};
+    const replacementRefBase = refBase ? `${refBase.replace(/\/+$/, "")}/` : null;
+    const replacementEnv = replacementRefBase
+      ? { GIT_REPLACE_REF_BASE: replacementRefBase }
+      : {};
     if (refBase) {
-      wrapper.git("update-ref", `${refBase}/${wrapper.headSha}`, replacementSha);
+      wrapper.git("update-ref", `${replacementRefBase}${wrapper.headSha}`, replacementSha);
     } else {
       wrapper.git("replace", wrapper.headSha, replacementSha);
     }
