@@ -116,21 +116,20 @@
 // This script has exactly ONE success fallthrough per mode (default check,
 // --verify-fingerprint, --verify-applied); every other path, including the
 // top-level catch, exits non-zero. Sibling scripts are not covered by that
-// statement: guarded-db-push.sh has two success paths (dry run, real push) and
-// print-production-repair-commands.sh exits 0 after printing.
+// statement: guarded-db-push.sh has two success paths (dry run, real push).
+// print-production-repair-commands.sh is a retired fail-closed tombstone.
 //
 // ---------------------------------------------------------------------------
 // Placeholder baseline (design note -- read this before changing it)
 // ---------------------------------------------------------------------------
-// `supabase migration repair` writes rows with `statements IS NULL`. Such a row
-// records "version X is considered applied" without recording what content was
-// applied, so history stops being proof of what is live.
+// A row with `statements IS NULL` records "version X is considered applied"
+// without recording what content was applied, so history stops being proof of
+// what is live. Historical tooling or direct history edits can create this
+// shape; current pinned CLI behavior is not assumed here.
 //
 // The first version of this gate refused whenever ANY such row existed. That
-// self-deadlocks: print-production-repair-commands.sh runs
-// `migration repair --status applied` immediately before the gate, and BMH
-// Institute production ALREADY carries 8 pre-existing placeholder rows (Sandra
-// carries 36 of 127). A blanket refusal permanently blocks every migration --
+// self-deadlocks because BMH Institute production ALREADY carries 8 historical
+// placeholder rows (Sandra carries 36 of 127). A blanket refusal permanently blocks every migration --
 // which in practice means the gate gets bypassed, which is worse than no gate.
 //
 // Chosen design: an explicit, human-committed acknowledged baseline, keyed by
@@ -1109,9 +1108,9 @@ function main() {
       `acknowledged baseline for target "${target}":`,
       ...unacknowledged.map((row) => `  - ${row.version.raw}`),
       "",
-      "These rows come from `supabase migration repair`. They record that a version is",
-      "considered applied without recording what content was applied, so history is not proof",
-      "of what is live at that version.",
+      "These rows record that a version is considered applied without recording what content",
+      "was applied, so history is not proof of what is live at that version. Historical repair",
+      "tooling or direct history edits can create this shape.",
       "",
       "If these repairs were intentional, confirm the live schema directly (e.g.",
       "pg_get_functiondef on the objects they touch), then add them to",

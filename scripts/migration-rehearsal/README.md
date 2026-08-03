@@ -70,15 +70,20 @@ find "$FETCH_DIR/supabase/migrations" -maxdepth 1 -type f -name '*.sql' -print |
 
 Verify the remote list still contains the ten stated legacy versions plus 011 through 014. Preserve the fetched directory unchanged as evidence. A management API alternative must use GET reads only, save each returned SQL statement under its exact remote version and name, and record the response hashes. Do not run `db push`, `migration repair`, or SQL against production during evidence collection.
 
-## Print the real production command sequence
+## Production history repair is retired
 
-This script only prints commands. It does not run them.
+The one-time legacy-to-numbered production history repair has already completed.
+Live read-only verification now shows no legacy repair versions. The historical
+command generator is deliberately a fail-closed tombstone: it emits no commands
+and exits non-zero so an old link cannot revive the mutation path.
 
 ```sh
 bash scripts/migration-rehearsal/print-production-repair-commands.sh
 ```
 
-Run the printed commands only after the equivalence report and full rehearsal pass. The history repair updates only `supabase_migrations.schema_migrations`. It does not apply or revert schema SQL. The printed order intentionally marks 001 through 010 applied first, removes the ten legacy rows second, then requires `migration list` and a dry run before the actual push. The printed sequence contains no bare `supabase db push --include-all`; the only push line is `guarded-db-push.sh`.
+Expected result: exit 64 with a retirement message and no mutation commands.
+Do not recreate an automated production history-repair path. Any future history
+incident requires fresh live evidence and a separately reviewed recovery plan.
 
 ## Mandatory safety gate before any `--include-all` push against a linked project
 
@@ -146,10 +151,12 @@ ordered namespaces (all legacy sorts before all timestamps), not one number line
 
 ### The placeholder baseline
 
-`supabase migration repair` creates rows with `statements IS NULL`. They assert a version is
-applied without recording what was applied, so history stops being proof of what is live.
-Refusing on *any* such row self-deadlocks: the production repair sequence creates them, and
-Institute production already carries 8 (Sandra carries 36 of 127).
+Rows with `statements IS NULL` assert that a version is applied without recording what was
+applied, so history stops being proof of what is live. They can come from historical repair
+tooling or direct history edits; the pinned current Supabase CLI may instead populate the
+local migration's name and statements. No active runbook creates placeholder rows. Institute
+production already carries 8 historical placeholders (Sandra carries 36 of 127), so refusing
+on every placeholder would permanently deadlock reviewed migrations.
 
 `placeholder-baseline.json` records, per target, the placeholder **versions** a human has
 already reconciled against the live schema. A placeholder in that list is accepted; one that
