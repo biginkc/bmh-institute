@@ -5,9 +5,9 @@ import { SpeechBubble } from "./speech-bubble";
 
 describe("<SpeechBubble />", () => {
   it.each([
-    ["left", "left", "21,1 1,16 21,31"],
-    ["right", "right", "1,1 21,16 1,31"],
-  ] as const)("uses one seamless tail centered on a %s bubble", (tail, edge, points) => {
+    ["left", "left", "M 21 1 L 1 16 L 21 31"],
+    ["right", "right", "M 1 1 L 21 16 L 1 31"],
+  ] as const)("uses one seamless tail centered on a %s bubble", (tail, edge, path) => {
     render(<SpeechBubble tail={tail}>Short message</SpeechBubble>);
 
     expect(screen.getByText("Short message")).toBeVisible();
@@ -19,11 +19,13 @@ describe("<SpeechBubble />", () => {
       [edge]: "-18px",
       top: "50%",
       transform: "translateY(-50%)",
+      zIndex: "2",
     });
-    expect(tails?.[0].querySelector("polygon")).toHaveAttribute(
-      "points",
-      points,
-    );
+    expect(tails?.[0].querySelector("polygon")).not.toBeInTheDocument();
+    expect(tails?.[0].querySelector("path")).toHaveAttribute("d", path);
+    expect(document.querySelector("[data-speech-bubble-body]")).toHaveStyle({
+      zIndex: "1",
+    });
   });
 
   it.each([

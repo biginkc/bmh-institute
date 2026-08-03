@@ -40,7 +40,7 @@ function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
         ...(tail === "left" ? { left: -18 } : { right: -18 }),
       },
       viewBox: "0 0 22 32",
-      points: tail === "left" ? "21,1 1,16 21,31" : "1,1 21,16 1,31",
+      path: tail === "left" ? "M 21 1 L 1 16 L 21 31" : "M 1 1 L 21 16 L 1 31",
     };
   }
   return {
@@ -51,7 +51,7 @@ function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
       ...(tail === "bottom-right" ? { right: 24 } : { left: 24 }),
     },
     viewBox: "0 0 32 22",
-    points: "1,1 16,21 31,1",
+    path: "M 1 1 L 16 21 L 31 1",
   };
 }
 
@@ -97,13 +97,13 @@ export function SpeechBubble(props: SpeechBubbleProps) {
         viewBox={geometry.viewBox}
         style={{
           position: "absolute",
-          zIndex: 0,
+          zIndex: 2,
           overflow: "visible",
           ...geometry.style,
         }}
       >
-        <polygon
-          points={geometry.points}
+        <path
+          d={geometry.path}
           fill={colors.background}
           stroke={colors.border}
           strokeWidth="2.5"
