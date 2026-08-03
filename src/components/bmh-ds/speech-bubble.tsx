@@ -51,7 +51,7 @@ function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
       width: 32,
       height: 22,
       top: "calc(100% - 4px)",
-      ...(tail === "bottom-right" ? { right: 24 } : { left: 24 }),
+      ...(tail === "bottom-right" ? { right: 27 } : { left: 27 }),
     },
     viewBox: "0 0 32 22",
     fillPath: "M 1 1 L 16 21 L 31 1 Z",
@@ -81,6 +81,7 @@ export function SpeechBubble(props: SpeechBubbleProps) {
       : size === "lg"
         ? "var(--fs-title)"
         : "var(--fs-body)";
+  const hasSideTail = tail === "left" || tail === "right";
   const geometry = tailGeometry(tail);
 
   return (
@@ -128,7 +129,10 @@ export function SpeechBubble(props: SpeechBubbleProps) {
           zIndex: 1,
           boxSizing: "border-box",
           maxWidth: 340,
-          minWidth: 0,
+          minWidth: hasSideTail ? 0 : 86,
+          minHeight: hasSideTail ? 86 : undefined,
+          display: hasSideTail ? "flex" : undefined,
+          alignItems: hasSideTail ? "center" : undefined,
           background: colors.background,
           color: colors.color,
           border: `2.5px solid ${colors.border}`,

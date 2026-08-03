@@ -39,13 +39,16 @@ describe("<SpeechBubble />", () => {
       ).toHaveAttribute("fill", "none");
       expect(document.querySelector("[data-speech-bubble-body]")).toHaveStyle({
         zIndex: "1",
+        minHeight: "86px",
+        display: "flex",
+        alignItems: "center",
       });
     },
   );
 
   it.each([
-    ["bottom-left", "left", "24px"],
-    ["bottom-right", "right", "24px"],
+    ["bottom-left", "left", "27px"],
+    ["bottom-right", "right", "27px"],
   ] as const)("keeps the %s tail attached to the matching edge", (tail, edge, offset) => {
     render(<SpeechBubble tail={tail}>Bottom message</SpeechBubble>);
 
@@ -64,5 +67,8 @@ describe("<SpeechBubble />", () => {
       "d",
       "M 1 4 L 16 21 L 31 4",
     );
+    expect(document.querySelector("[data-speech-bubble-body]")).toHaveStyle({
+      minWidth: "86px",
+    });
   });
 });
