@@ -115,11 +115,15 @@ jobs:
         with:
           node-version: "24"
 
-      - name: Install dependencies and PostgreSQL client
+      - name: Install dependencies and PostgreSQL tools
         run: |
           npm ci
           sudo apt-get update
-          sudo apt-get install --yes postgresql-client
+          sudo apt-get install --yes postgresql postgresql-client
+
+      - name: Exercise the production migration safety wrapper
+        if: matrix.postgres == '17'
+        run: npm run test:migration-gate:postgres
 
       - name: Apply and adversarially verify every migration
         run: node scripts/fixture-boundary/run-controller-gate-pr-harness.mjs

@@ -223,6 +223,18 @@ test("the TEST migration workflow pushes only through the guarded wrapper", () =
   );
 });
 
+test("a required PostgreSQL check executes the migration safety wrapper harness", () => {
+  const workflow = readFileSync(
+    resolve(root, "../../.github/workflows/db-migrate-test.yml"),
+    "utf8",
+  );
+  assert.match(
+    workflow,
+    /name:\s*Exercise the production migration safety wrapper[\s\S]*?if:\s*matrix\.postgres == '17'[\s\S]*?run:\s*npm run test:migration-gate:postgres/,
+    "the executable production-wrapper proof must remain inside a required PostgreSQL matrix context",
+  );
+});
+
 // --------------------------------------------------------------------------
 // Round-4 finding 3: workflow_dispatch on the branch-controlled TEST file
 // cannot defend itself with an in-file check, so the fix moved production

@@ -26,7 +26,7 @@
 // Run: npm run test:migration-gate:postgres
 
 import { execFileSync, spawn, spawnSync } from "node:child_process";
-import { copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -728,7 +728,7 @@ try {
 
   const wrapperEnv = { ...pgEnv, PGUSER: `postgres.${PINNED_REF}` };
 
-  function makeWrapperRepo(files, stubMode) {
+  function makeWrapperRepo(files, stubMode, { target = "institute-e2e", configureOrigin = false } = {}) {
     caseIndex += 1;
     const repo = join(workRoot, `wrapper-${caseIndex}`);
     mkdirSync(join(repo, "scripts", "migration-rehearsal"), { recursive: true });
@@ -739,7 +739,7 @@ try {
     copyFileSync(WRAPPER, join(repo, "scripts", "migration-rehearsal", "guarded-db-push.sh"));
     writeFileSync(
       join(repo, "scripts", "migration-rehearsal", "placeholder-baseline.json"),
-      JSON.stringify({ targets: { "institute-e2e": pinnedTarget() } }, null, 2),
+      JSON.stringify({ targets: { [target]: pinnedTarget() } }, null, 2),
     );
     const log = join(repo, "supabase-stub.log");
     const psqlBin = binary("psql");
@@ -782,6 +782,13 @@ set -uo pipefail
 {
   echo "argv=$*"
   echo "cwd=$PWD"
+  echo "pgpassword-present=$([ -n "\${PGPASSWORD:-}" ] && echo yes || echo no)"
+  echo "supabase-db-password-present=$([ -n "\${SUPABASE_DB_PASSWORD:-}" ] && echo yes || echo no)"
+  if [ -n "\${PGPASSWORD:-}" ] && [[ "$*" == *"$PGPASSWORD"* ]]; then
+    echo "password-in-argv=yes"
+  else
+    echo "password-in-argv=no"
+  fi
   echo "stub-start-ms=$(node -e 'process.stdout.write(String(Date.now()))')"
   echo "lock-held=$("${psqlBin}" -X -q -t -A -c "select count(*) from pg_locks where locktype='advisory' and classid=778533 and objid=20260730 and objsubid=2 and granted" 2>/dev/null || echo ERR)"
   ls supabase/migrations
@@ -800,7 +807,15 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     git("init", "-q");
     git("add", "-A");
     git("commit", "-q", "-m", "wrapper scratch");
-    return { repo, log };
+    const headSha = execFileSync("git", ["-C", repo, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
+    let remote = null;
+    if (configureOrigin) {
+      remote = join(workRoot, `wrapper-origin-${caseIndex}.git`);
+      execFileSync("git", ["init", "--bare", "-q", remote]);
+      git("remote", "add", "origin", remote);
+      git("push", "-q", "origin", "HEAD:refs/heads/main");
+    }
+    return { repo, log, git, headSha, remote };
   }
 
   function runWrapper(repo, args, extraEnv = {}) {
@@ -809,6 +824,114 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
       encoding: "utf8",
     });
     return { status: result.status, out: `${result.stdout ?? ""}${result.stderr ?? ""}` };
+  }
+
+  function productionWrapper(files = ["001_a.sql", "20260101000000_c.sql", "20260201000000_new.sql"]) {
+    return makeWrapperRepo(files, "normal", {
+      target: "institute-production",
+      configureOrigin: true,
+    });
+  }
+
+  function productionEnv(expectedSha) {
+    return {
+      GUARDED_PUSH_EXPECTED_GIT_SHA: expectedSha,
+      PGPASSWORD: "synthetic-password-sentinel",
+      SUPABASE_DB_PASSWORD: "synthetic-password-sentinel",
+    };
+  }
+
+  function stubLogOrEmpty(wrapper) {
+    return existsSync(wrapper.log) ? readFileSync(wrapper.log, "utf8") : "";
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      productionEnv(wrapper.headSha),
+    );
+    check("production E2E: matching local, expected, and remote SHAs reach the guarded push", run, 0, [
+      "tested SHA is still the exact current origin/main",
+      "post-push history matches exactly",
+    ]);
+    const stubLog = stubLogOrEmpty(wrapper);
+    check(
+      "production E2E: push argv is password-free while credential environment remains inherited",
+      {
+        status:
+          stubLog.includes("password-in-argv=no") &&
+          stubLog.includes("pgpassword-present=yes") &&
+          stubLog.includes("supabase-db-password-present=yes") &&
+          !stubLog.includes("synthetic-password-sentinel") &&
+          /argv=db push --include-all --db-url postgresql:\/\/postgres\.[a-z]+@[^\s]+\/postgres --yes/.test(stubLog)
+            ? 0
+            : 1,
+        out: stubLog,
+      },
+      0,
+    );
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "remote-advance.txt"), "new main\n");
+    wrapper.git("add", "remote-advance.txt");
+    wrapper.git("commit", "-q", "-m", "advance remote main");
+    wrapper.git("push", "-q", "origin", "HEAD:refs/heads/main");
+    wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      productionEnv(wrapper.headSha),
+    );
+    check("production E2E: stale remote main refuses before invoking Supabase", run, 75, [
+      "tested SHA is no longer the exact current origin/main",
+    ]);
+    check("production E2E: stale remote main never invokes Supabase", {
+      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
+      out: stubLogOrEmpty(wrapper),
+    }, 0);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "local-only.txt"), "wrong local\n");
+    wrapper.git("add", "local-only.txt");
+    wrapper.git("commit", "-q", "-m", "advance local only");
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      productionEnv(wrapper.headSha),
+    );
+    check("production E2E: wrong local HEAD refuses before invoking Supabase", run, 75, [
+      "tested SHA is no longer the exact current origin/main",
+    ]);
+    check("production E2E: wrong local HEAD never invokes Supabase", {
+      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
+      out: stubLogOrEmpty(wrapper),
+    }, 0);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      productionEnv("0000000000000000000000000000000000000000"),
+    );
+    check("production E2E: wrong expected SHA refuses before invoking Supabase", run, 75, [
+      "tested SHA is no longer the exact current origin/main",
+    ]);
+    check("production E2E: wrong expected SHA never invokes Supabase", {
+      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
+      out: stubLogOrEmpty(wrapper),
+    }, 0);
   }
 
   {

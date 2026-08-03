@@ -147,6 +147,7 @@ assert_expected_sha_is_current_main() {
     echo "guarded-db-push: tested SHA is no longer the exact current origin/main. Refusing production." >&2
     return 75
   fi
+  echo "guarded-db-push: tested SHA is still the exact current origin/main."
 }
 
 # ---------------------------------------------------------------------------
