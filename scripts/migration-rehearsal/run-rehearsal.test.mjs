@@ -120,7 +120,7 @@ test("all executable migration instructions are target-bound and every include-a
   const readme = read("README.md");
   assert.doesNotMatch(readme, /^\s*supabase migration (?:list|fetch|repair).*--linked/m);
   assert.doesNotMatch(readme, /^\s*supabase db push .*--include-all/m);
-  assert.match(readme, /migration fetch --db-url "\$DB_URL"/);
+  assert.match(readme, /fresh `migration fetch` cannot recreate the historical input/);
   assert.match(readme, /guarded-db-push\.sh --target=institute-test --dry-run/);
   assert.match(readme, /guarded-db-push\.sh --target=institute-test\n/);
 });
@@ -175,6 +175,23 @@ test("guarded-db-push exposes no path, baseline or test-mode option", () => {
   for (const forbidden of ["--test-mode", "--migrations-dir=", "--baseline=", "--repo-root="]) {
     assert.ok(!code.includes(forbidden), `wrapper must never pass ${forbidden}`);
   }
+});
+
+test("the gate directs operators only to the guarded push wrapper", () => {
+  const gate = read("check-migration-safety.mjs");
+  assert.doesNotMatch(gate, /Run `supabase db push --include-all/);
+  assert.match(gate, /Run the repository's guarded-db-push\.sh wrapper/);
+});
+
+test("production guarded push requires a clean reviewed worktree", () => {
+  const wrapper = read("guarded-db-push.sh");
+  const start = wrapper.indexOf("assert_expected_sha_is_current_main()");
+  const productionGuard = wrapper.slice(
+    start,
+    wrapper.indexOf("# ---------------------------------------------------------------------------", start),
+  );
+  assert.match(productionGuard, /git status --porcelain=v1 --untracked-files=all/);
+  assert.match(productionGuard, /worktree differs from the reviewed SHA\. Refusing production/);
 });
 
 test("guarded-db-push holds an advisory lock across the whole run", () => {
@@ -354,7 +371,7 @@ test("db-migrate-prod.yml's job gates on the test run's success and main, checks
   assert.match(
     workflow,
     /guarded-db-push\.sh --target=institute-production/,
-    "must push through the same sanctioned wrapper the manual runbook uses",
+    "must push through the repository's sanctioned wrapper",
   );
   assert.ok(
     !/supabase db push[^\n]*--include-all/.test(workflow),

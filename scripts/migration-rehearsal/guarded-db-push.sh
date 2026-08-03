@@ -136,7 +136,7 @@ fi
 assert_expected_sha_is_current_main() {
   [ "$TARGET" = "institute-production" ] || return 0
 
-  local local_sha remote_main_sha
+  local local_sha remote_main_sha worktree_status
   local_sha="$(git rev-parse HEAD)"
   remote_main_sha="$(git ls-remote --exit-code origin refs/heads/main | awk 'NR == 1 { print $1 }')"
   if [ -z "$remote_main_sha" ]; then
@@ -147,7 +147,13 @@ assert_expected_sha_is_current_main() {
     echo "guarded-db-push: tested SHA is no longer the exact current origin/main. Refusing production." >&2
     return 75
   fi
+  worktree_status="$(git status --porcelain=v1 --untracked-files=all)"
+  if [ -n "$worktree_status" ]; then
+    echo "guarded-db-push: worktree differs from the reviewed SHA. Refusing production." >&2
+    return 75
+  fi
   echo "guarded-db-push: tested SHA is still the exact current origin/main."
+  echo "guarded-db-push: worktree exactly matches that reviewed SHA."
 }
 
 # ---------------------------------------------------------------------------

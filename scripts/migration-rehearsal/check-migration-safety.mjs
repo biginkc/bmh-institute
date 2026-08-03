@@ -1189,8 +1189,8 @@ function main() {
     }
   }
   console.log("");
-  console.log("This gate does not replace review. Run `supabase db push --include-all --dry-run` next and");
-  console.log("confirm the printed list matches exactly what you expect before running it for real.");
+  console.log("This gate does not replace review. Run the repository's guarded-db-push.sh wrapper");
+  console.log("with --dry-run next; never invoke `supabase db push --include-all` directly.");
 }
 
 try {

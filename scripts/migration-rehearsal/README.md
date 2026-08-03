@@ -46,29 +46,14 @@ The command must finish with a JSON object whose status is `PASS`. Review these 
 
 Do not use `--keep-cluster` except for local debugging. The normal run removes the disposable cluster even after failure.
 
-## Re-fetch legacy SQL evidence if the July 17 worktree is gone
+## Historical legacy SQL evidence
 
-Use a disposable detached worktree at `origin/main` so fetched files cannot overwrite this branch. The remote operations below are reads. `migration fetch` writes only the returned evidence into the disposable worktree.
-
-```sh
-export PGHOST="<production pooler host>"
-export PGPORT="5432"
-export PGDATABASE="postgres"
-export PGUSER="postgres.dhvfsyteqsxagokoerrx"
-export PGPASSWORD="<production db password>"
-export PGSSLMODE="require"
-export SUPABASE_DB_PASSWORD="$PGPASSWORD"
-DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}"
-node scripts/migration-rehearsal/check-migration-safety.mjs \
-  --target=institute-production --identity-only
-FETCH_DIR="$(mktemp -d /private/tmp/bmh-migration-history-fetch-XXXXXXXXXX)"
-git worktree add --detach "$FETCH_DIR" 96e3ed3452e50132f89aa0c6775bdd8f5571289c
-supabase migration list --db-url "$DB_URL" --workdir "$FETCH_DIR"
-supabase migration fetch --db-url "$DB_URL" --workdir "$FETCH_DIR"
-find "$FETCH_DIR/supabase/migrations" -maxdepth 1 -type f -name '*.sql' -print | sort
-```
-
-Verify the remote list still contains the ten stated legacy versions plus 011 through 014. Preserve the fetched directory unchanged as evidence. A management API alternative must use GET reads only, save each returned SQL statement under its exact remote version and name, and record the response hashes. Do not run `db push`, `migration repair`, or SQL against production during evidence collection.
+The live production history is now canonical and no longer contains the ten legacy
+versions. Consequently, a fresh `migration fetch` cannot recreate the historical input
+for this host-only rehearsal. Use the preserved July 17 evidence directory named above,
+or another immutable archive whose exact remote version names and response hashes were
+recorded before the repair. Do not infer or regenerate the historical statements from
+the current production ledger.
 
 ## Production history repair is retired
 
@@ -115,6 +100,8 @@ The wrapper takes **no path, baseline or test-mode option**. The gate enforces t
 repository paths by default, so it is provably reading the same `supabase/migrations` the CLI
 reads. The wrapper also:
 
+- requires production to run from a completely clean worktree whose `HEAD` is the exact
+  reviewed current `origin/main`, so uncommitted or untracked migration bytes cannot be pushed;
 - holds a session-scoped PostgreSQL **advisory lock** across gate, verify, push and
   reconcile, confirmed by backend pid in `pg_locks` and released by an `EXIT` trap, so two
   sanctioned runs cannot interleave;

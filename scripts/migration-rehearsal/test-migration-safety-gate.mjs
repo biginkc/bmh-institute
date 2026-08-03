@@ -896,6 +896,24 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
   {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
+    writeFileSync(join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql"), "select 999;\n");
+    const run = runWrapper(
+      wrapper.repo,
+      ["--target=institute-production"],
+      productionEnv(wrapper.headSha),
+    );
+    check("production E2E: dirty reviewed worktree refuses before invoking Supabase", run, 75, [
+      "worktree differs from the reviewed SHA. Refusing production",
+    ]);
+    check("production E2E: dirty reviewed worktree never invokes Supabase", {
+      status: stubLogOrEmpty(wrapper) === "" ? 0 : 1,
+      out: stubLogOrEmpty(wrapper),
+    }, 0);
+  }
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
     writeFileSync(join(wrapper.repo, "remote-advance.txt"), "new main\n");
     wrapper.git("add", "remote-advance.txt");
     wrapper.git("commit", "-q", "-m", "advance remote main");

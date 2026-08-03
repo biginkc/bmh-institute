@@ -113,10 +113,9 @@ name: Apply Supabase migrations to prod
 # safety gate: out-of-order re-apply, content fingerprinting, placeholder
 # baseline) and scripts/migration-rehearsal/guarded-db-push.sh (the ONLY
 # sanctioned way to chain gate -> verify -> push -> reconcile under one
-# advisory lock) are exactly the same scripts the manual production runbook
-# (scripts/migration-rehearsal/print-production-repair-commands.sh) uses.
-# This workflow does not reimplement that chain; it calls the same wrapper a
-# human operator would, with `--target=institute-production`, which is
+# advisory lock) are the repository's production admission path. The retired
+# print-production-repair-commands.sh tombstone is deliberately not a runbook.
+# This workflow calls the guarded wrapper with `--target=institute-production`, which is
 # already a fully-pinned entry in placeholder-baseline.json.
 #
 # ---------------------------------------------------------------------------
@@ -139,10 +138,8 @@ name: Apply Supabase migrations to prod
 #     (bmh-institute, us-east-1) -- from the Supabase dashboard, Connection
 #     info -> Database password. Never logged; masked below.
 #
-# Why the pooler host is RESOLVED, not hardcoded: this project's own manual
-# runbook (print-production-repair-commands.sh) explicitly instructs an
-# operator to copy the pooler host from the dashboard rather than guess it,
-# because the wrong region/shard is a real, easy-to-get-wrong mistake. This
+# Why the pooler host is RESOLVED, not hardcoded: the wrong region/shard is a
+# real, easy-to-get-wrong mistake. This
 # workflow honours that by running `supabase link` (which the CLI resolves
 # by hitting the Supabase API for the real project, not by guessing a
 # hostname pattern) and reading the pooler host it writes to
@@ -237,8 +234,7 @@ jobs:
         # (region/shard) at supabase/.temp/pooler-url. Reading that instead
         # of hardcoding a pooler hostname avoids guessing wrong shard/region
         # -- this is the same connection the CLI itself just proved
-        # reachable, and mirrors print-production-repair-commands.sh's own
-        # instruction to copy this from the dashboard rather than guess it.
+        # reachable, rather than trusting a guessed hostname.
         run: |
           node -e '
             const fs = require("node:fs");
@@ -265,9 +261,7 @@ jobs:
           fi
 
       - name: Apply pending migrations (safety gate chained to the push)
-        # Same wrapper the manual production runbook uses
-        # (scripts/migration-rehearsal/print-production-repair-commands.sh)
-        # and the same one db-migrate-test.yml's migrate-test job uses for
+        # Same guarded wrapper db-migrate-test.yml's migrate-test job uses for
         # TEST. It runs check-migration-safety.mjs first, under `set -e`,
         # and the push is the last line of that file -- unreachable on a
         # non-zero gate exit. See guarded-db-push.sh's own header for the
