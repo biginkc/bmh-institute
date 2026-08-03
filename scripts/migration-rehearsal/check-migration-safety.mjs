@@ -217,6 +217,11 @@
 //                landed. Production is altered and incomplete.
 //   E32  exit 1  A migration filename in the canonical migrations directory is
 //                a symlink.
+//   E33  exit 1  On-disk migration filenames or bytes differ from the exact
+//                migration tree stored at the reviewed HEAD commit.
+//   E34  exit 1  Git replacement refs are active. Security-sensitive object
+//                reads disable replacement objects regardless, and the gate
+//                refuses the ambiguous repository state before any push.
 //
 // ---------------------------------------------------------------------------
 // Usage
@@ -275,6 +280,60 @@ class Refusal extends Error {
 
 function refuse(code, lines) {
   throw new Refusal(code, lines);
+}
+
+/**
+ * Read reviewed Git objects without honoring refs/replace, even if a caller's
+ * environment or repository configuration enables replacement objects. A
+ * replacement commit can preserve `rev-parse HEAD` while substituting an
+ * entirely different tree for `git show HEAD:path`; every security-sensitive
+ * object read must therefore opt out explicitly.
+ */
+function readReviewedGit(repoRoot, args, options = {}) {
+  return execFileSync("git", ["--no-replace-objects", "-C", repoRoot, ...args], {
+    ...options,
+    env: { ...process.env, ...(options.env ?? {}), GIT_NO_REPLACE_OBJECTS: "1" },
+  });
+}
+
+function assertNoGitReplacementRefs(repoRoot) {
+  const refBases = new Set(["refs/replace"]);
+  const configuredBase = process.env.GIT_REPLACE_REF_BASE?.trim();
+  if (configuredBase) refBases.add(configuredBase);
+
+  const active = [];
+  try {
+    for (const refBase of refBases) {
+      const refs = readReviewedGit(repoRoot, ["for-each-ref", "--format=%(refname)", refBase], {
+        encoding: "utf8",
+        timeout: GIT_TIMEOUT_MS,
+        killSignal: "SIGKILL",
+        maxBuffer: 1024 * 1024,
+        stdio: ["ignore", "pipe", "pipe"],
+      })
+        .split("\n")
+        .filter(Boolean);
+      active.push(...refs);
+    }
+  } catch (error) {
+    const timedOut =
+      error.code === "ETIMEDOUT" || error.signal === "SIGKILL" || error.signal === "SIGTERM";
+    refuse("E34", [
+      "Cannot prove that Git replacement objects are absent.",
+      timedOut
+        ? `Git did not return replacement refs within ${GIT_TIMEOUT_MS} ms and was killed.`
+        : `Refusing: ${error.code ?? error.message}`,
+    ]);
+  }
+
+  if (active.length > 0) {
+    refuse("E34", [
+      "Git replacement refs are active in this repository.",
+      "Replacement objects can preserve the displayed HEAD SHA while substituting a different tree.",
+      "Security-sensitive reads already disable replacements, but this ambiguous local state is refused.",
+      ...[...new Set(active)].sort().map((ref) => `  - ${ref}`),
+    ]);
+  }
 }
 
 // --- arguments -------------------------------------------------------------
@@ -385,7 +444,7 @@ function readGitTrackedBaseline(baselinePath, repoRoot) {
   const relativePath = gitRelativePath(baselinePath, repoRoot);
   let output;
   try {
-    output = execFileSync("git", ["-C", repoRoot, "show", `HEAD:${relativePath}`], {
+    output = readReviewedGit(repoRoot, ["show", `HEAD:${relativePath}`], {
       encoding: "utf8",
       timeout: GIT_TIMEOUT_MS,
       killSignal: "SIGKILL",
@@ -678,9 +737,9 @@ function loadLocalMigrations(migrationsDir, repoRoot) {
 
 function readReviewedMigrationPaths(repoRoot) {
   try {
-    return execFileSync(
-      "git",
-      ["-C", repoRoot, "ls-tree", "-r", "--name-only", "HEAD", "--", "supabase/migrations"],
+    return readReviewedGit(
+      repoRoot,
+      ["ls-tree", "-r", "--name-only", "HEAD", "--", "supabase/migrations"],
       { encoding: "utf8", timeout: GIT_TIMEOUT_MS },
     )
       .split("\n")
@@ -694,7 +753,7 @@ function readReviewedMigrationPaths(repoRoot) {
 function hashReviewedMigration(repoRoot, path) {
   try {
     return createHash("sha256")
-      .update(execFileSync("git", ["-C", repoRoot, "show", `HEAD:${path}`], { timeout: GIT_TIMEOUT_MS }))
+      .update(readReviewedGit(repoRoot, ["show", `HEAD:${path}`], { timeout: GIT_TIMEOUT_MS }))
       .digest("hex");
   } catch (error) {
     refuse("E33", [`Cannot hash a reviewed migration blob from git HEAD: ${error.code ?? error.message}`]);
@@ -977,6 +1036,7 @@ function main() {
   }
 
   const repoRoot = args["repo-root"] ? resolve(args["repo-root"]) : REPO_ROOT;
+  assertNoGitReplacementRefs(repoRoot);
   const timeoutMs = Number.parseInt(args["timeout-ms"] ?? "20000", 10);
   if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) {
     refuse("E01", [`--timeout-ms must be a positive integer, got "${args["timeout-ms"]}".`]);

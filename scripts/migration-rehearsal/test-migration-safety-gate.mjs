@@ -468,17 +468,17 @@ try {
   );
 
   {
-    // Round-3 P1-6: a hung `git` must refuse, not hang.
+    // Round-3 P1-6: any hung security-sensitive `git` read must refuse, not hang.
     const hungGitBin = join(workRoot, "hung-git-bin");
     mkdirSync(hungGitBin, { recursive: true });
     writeFileSync(join(hungGitBin, "git"), "#!/usr/bin/env bash\nsleep 60\n");
     execFileSync("chmod", ["+x", join(hungGitBin, "git")]);
     const hungStart = Date.now();
     check(
-      "P1-6: a hung `git show` refuses within the bounded timeout (E04)",
+      "P1-6: a hung security-sensitive Git read refuses within the bounded timeout (E34)",
       runGate({ files: ["001_a.sql"], env: { PATH: `${hungGitBin}:${process.env.PATH}` } }),
       1,
-      ["REFUSING (E04)", "was killed"],
+      ["REFUSING (E34)", "was killed"],
     );
     notes.push(`hung git refused in ${Date.now() - hungStart} ms (bound is 10000 ms)`);
   }
@@ -938,6 +938,28 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
 
   assertHiddenTrackedMigrationRefuses("--assume-unchanged", "assume-unchanged tracked migration");
   assertHiddenTrackedMigrationRefuses("--skip-worktree", "skip-worktree tracked migration");
+
+  {
+    setHistory([["001", false], ["20260101000000", false]]);
+    const wrapper = productionWrapper();
+    const migration = join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql");
+    writeFileSync(migration, "drop schema public cascade;\n");
+    wrapper.git("add", "supabase/migrations/20260201000000_new.sql");
+    wrapper.git("commit", "-q", "-m", "attacker replacement tree");
+    const replacementSha = execFileSync("git", ["-C", wrapper.repo, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
+    wrapper.git("replace", wrapper.headSha, replacementSha);
+    // Materialize the replacement tree while leaving HEAD's displayed SHA at
+    // the reviewed commit. Replacement-aware status now reports a clean tree.
+    wrapper.git("reset", "--hard", "-q", "HEAD");
+
+    assertProductionRefusal("active Git replacement object", wrapper, [
+      "REFUSING (E34)",
+      "Git replacement refs are active in this repository",
+    ], { expectedStatus: 1 });
+  }
 
   {
     setHistory([["001", false], ["20260101000000", false]]);
