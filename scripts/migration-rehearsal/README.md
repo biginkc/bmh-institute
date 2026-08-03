@@ -51,10 +51,20 @@ Do not use `--keep-cluster` except for local debugging. The normal run removes t
 Use a disposable detached worktree at `origin/main` so fetched files cannot overwrite this branch. The remote operations below are reads. `migration fetch` writes only the returned evidence into the disposable worktree.
 
 ```sh
+export PGHOST="<production pooler host>"
+export PGPORT="5432"
+export PGDATABASE="postgres"
+export PGUSER="postgres.dhvfsyteqsxagokoerrx"
+export PGPASSWORD="<production db password>"
+export PGSSLMODE="require"
+export SUPABASE_DB_PASSWORD="$PGPASSWORD"
+DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}"
+node scripts/migration-rehearsal/check-migration-safety.mjs \
+  --target=institute-production --identity-only
 FETCH_DIR="$(mktemp -d /private/tmp/bmh-migration-history-fetch-XXXXXXXXXX)"
 git worktree add --detach "$FETCH_DIR" 96e3ed3452e50132f89aa0c6775bdd8f5571289c
-supabase migration list --linked --workdir "$FETCH_DIR"
-supabase migration fetch --linked --workdir "$FETCH_DIR"
+supabase migration list --db-url "$DB_URL" --workdir "$FETCH_DIR"
+supabase migration fetch --db-url "$DB_URL" --workdir "$FETCH_DIR"
 find "$FETCH_DIR/supabase/migrations" -maxdepth 1 -type f -name '*.sql' -print | sort
 ```
 
@@ -234,10 +244,17 @@ BMHI_TEST_DB_PASSWORD="$(op read 'op://BMH Secrets/Supabase - BMH Institute Test
 export BMHI_TEST_DB_PASSWORD
 TEST_SUPABASE_DB_URL="$(node -e 'const p=encodeURIComponent(process.env.BMHI_TEST_DB_PASSWORD); process.stdout.write(`postgresql://postgres.jvaabkchkihkjllehmft:${p}@aws-1-us-west-1.pooler.supabase.com:5432/postgres`)')"
 export TEST_SUPABASE_DB_URL
+export PGPASSWORD="$BMHI_TEST_DB_PASSWORD"
 unset BMHI_TEST_DB_PASSWORD
 node -e 'const u=new URL(process.env.TEST_SUPABASE_DB_URL); const ok=u.protocol==="postgresql:"&&u.username==="postgres.jvaabkchkihkjllehmft"&&u.password&&u.hostname==="aws-1-us-west-1.pooler.supabase.com"&&u.port==="5432"&&u.pathname==="/postgres"&&!u.search&&!u.hash; if(!ok) process.exit(1)'
-supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --dry-run
-supabase db push --db-url "$TEST_SUPABASE_DB_URL" --include-all --yes
+export PGHOST="aws-1-us-west-1.pooler.supabase.com"
+export PGPORT="5432"
+export PGDATABASE="postgres"
+export PGUSER="postgres.jvaabkchkihkjllehmft"
+export PGSSLMODE="require"
+export SUPABASE_DB_PASSWORD="$PGPASSWORD"
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test --dry-run
+bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-test
 npm run test:integration -- src/lib/security/import-release-control.integration.test.ts
 ```
 

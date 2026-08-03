@@ -1,10 +1,21 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { spawnSync } from "node:child_process";
+import { chmodSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve } from "node:path";
 import test from "node:test";
 
 const root = import.meta.dirname;
 const read = (name) => readFileSync(resolve(root, name), "utf8");
+const productionRepairEnv = (bin) => ({
+  ...process.env,
+  PATH: `${bin}:${process.env.PATH}`,
+  PGHOST: "db.dhvfsyteqsxagokoerrx.supabase.co",
+  PGPORT: "5432",
+  PGDATABASE: "postgres",
+  PGUSER: "postgres.dhvfsyteqsxagokoerrx",
+  PGPASSWORD: "synthetic-not-printed",
+});
 
 test("the equivalence map binds the exact ten legacy and numbered versions", () => {
   const mappings = JSON.parse(read("legacy-map.json"));
@@ -58,39 +69,120 @@ test("the host harness uses C locale, proves both history states, and dumps sche
 
 test("the printed production sequence gates push behind repair and dry run", () => {
   const commands = read("print-production-repair-commands.sh");
-  const identity = commands.indexOf("check-migration-safety.mjs --target=institute-production --identity-only");
-  const applyNumbered = commands.indexOf('--status applied --db-url "$DB_URL" --yes');
-  const removeLegacy = commands.indexOf('--status reverted --db-url "$DB_URL" --yes');
+  const repair = commands.indexOf("guarded-history-repair.sh --target=institute-production");
   const gate = commands.indexOf(
     "check-migration-safety.mjs --target=institute-production\n",
-    removeLegacy,
+    repair,
   );
   const dryRun = commands.indexOf("guarded-db-push.sh --target=institute-production --dry-run");
   const push = commands.indexOf(
     "guarded-db-push.sh --target=institute-production\n",
     dryRun,
   );
-  assert.ok(identity >= 0);
-  assert.ok(applyNumbered > identity);
-  assert.ok(removeLegacy > applyNumbered);
-  assert.ok(gate > removeLegacy);
+  assert.ok(repair >= 0);
+  assert.ok(gate > repair);
   assert.ok(dryRun > gate);
   assert.ok(push > dryRun);
 });
 
 test("the production repair sequence binds every history operation to the verified PG target", () => {
-  const commands = read("print-production-repair-commands.sh");
-  const executable = commands
-    .split("\n")
-    .map((line) => line.split("#")[0].trim())
-    .filter(Boolean)
-    .join("\n");
-  assert.match(executable, /DB_URL="postgresql:\/\/\$\{PGUSER\}@\$\{PGHOST\}:\$\{PGPORT\}\/\$\{PGDATABASE\}"/);
-  assert.match(executable, /export SUPABASE_DB_PASSWORD="\$PGPASSWORD"/);
-  assert.doesNotMatch(executable, /--linked/);
-  for (const line of executable.split("\n").filter((line) => /^supabase migration (?:list|repair)/.test(line))) {
-    assert.match(line, /--db-url "\$DB_URL"/, `unbound history operation: ${line}`);
-  }
+  const wrapper = read("guarded-history-repair.sh");
+  const strict = wrapper.indexOf("set -euo pipefail");
+  const identity = wrapper.indexOf("--target=institute-production --identity-only");
+  const historyShape = wrapper.indexOf('if [ "$ACTUAL_HISTORY" != "$EXPECTED_HISTORY" ]');
+  const firstList = wrapper.indexOf('supabase migration list --db-url "$DB_URL"');
+  const applyNumbered = wrapper.indexOf("--status applied --db-url \"$DB_URL\" --yes");
+  const removeLegacy = wrapper.indexOf("--status reverted --db-url \"$DB_URL\" --yes");
+  const finalList = wrapper.indexOf('supabase migration list --db-url "$DB_URL"', firstList + 1);
+  assert.ok(strict >= 0);
+  assert.ok(identity > strict);
+  assert.ok(historyShape > identity);
+  assert.ok(firstList > historyShape);
+  assert.ok(applyNumbered > firstList);
+  assert.ok(removeLegacy > applyNumbered);
+  assert.ok(finalList > removeLegacy);
+  assert.match(wrapper, /DB_URL="postgresql:\/\/\$\{PGUSER\}@\$\{PGHOST\}:\$\{PGPORT\}\/\$\{PGDATABASE\}"/);
+  assert.match(wrapper, /export SUPABASE_DB_PASSWORD="\$PGPASSWORD"/);
+  assert.doesNotMatch(wrapper, /--linked/);
+});
+
+test("canonical identity-only admission binds the committed production target", (t) => {
+  const bin = mkdtempSync(join(tmpdir(), "bmhi-identity-only-"));
+  t.after(() => rmSync(bin, { recursive: true, force: true }));
+  const psql = join(bin, "psql");
+  const baseline = JSON.parse(read("placeholder-baseline.json")).targets["institute-production"];
+  const run = (systemIdentifier) => {
+    writeFileSync(
+      psql,
+      `#!/usr/bin/env bash\nprintf '%s\\n' '${JSON.stringify({ database: "postgres", system_identifier: systemIdentifier })}'\n`,
+    );
+    chmodSync(psql, 0o755);
+    return spawnSync(
+      process.execPath,
+      [resolve(root, "check-migration-safety.mjs"), "--target=institute-production", "--identity-only"],
+      {
+        cwd: resolve(root, "../.."),
+        encoding: "utf8",
+        env: {
+          ...process.env,
+          PATH: `${bin}:${process.env.PATH}`,
+          PGHOST: `db.${baseline.project_ref}.supabase.co`,
+          PGPORT: "5432",
+          PGDATABASE: baseline.database,
+          PGUSER: `postgres.${baseline.project_ref}`,
+          PGPASSWORD: "synthetic-not-printed",
+          PGSSLMODE: "require",
+        },
+      },
+    );
+  };
+  const matching = run(baseline.db_system_identifier);
+  assert.equal(matching.status, 0, `${matching.stdout}${matching.stderr}`);
+  assert.match(matching.stdout, /live cluster identity all match/);
+  const mismatch = run("1234567890123456789");
+  assert.equal(mismatch.status, 1, `${mismatch.stdout}${mismatch.stderr}`);
+  assert.match(mismatch.stderr, /REFUSING \(E28\)/);
+});
+
+test("a failed identity admission prevents every history-repair CLI invocation", (t) => {
+  const bin = mkdtempSync(join(tmpdir(), "bmhi-history-repair-"));
+  t.after(() => rmSync(bin, { recursive: true, force: true }));
+  const log = join(bin, "supabase-invoked");
+  writeFileSync(join(bin, "node"), "#!/usr/bin/env bash\necho 'synthetic identity mismatch' >&2\nexit 1\n");
+  writeFileSync(join(bin, "supabase"), `#!/usr/bin/env bash\ntouch '${log}'\nexit 0\n`);
+  chmodSync(join(bin, "node"), 0o755);
+  chmodSync(join(bin, "supabase"), 0o755);
+  const result = spawnSync(
+    "bash",
+    [resolve(root, "guarded-history-repair.sh"), "--target=institute-production"],
+    {
+      encoding: "utf8",
+      env: productionRepairEnv(bin),
+    },
+  );
+  assert.notEqual(result.status, 0);
+  assert.equal(existsSync(log), false, "Supabase must not run after identity refusal");
+});
+
+test("a divergent pre-repair history prevents every history-repair CLI invocation", (t) => {
+  const bin = mkdtempSync(join(tmpdir(), "bmhi-history-shape-"));
+  t.after(() => rmSync(bin, { recursive: true, force: true }));
+  const log = join(bin, "supabase-invoked");
+  writeFileSync(join(bin, "node"), "#!/usr/bin/env bash\nexit 0\n");
+  writeFileSync(join(bin, "psql"), "#!/usr/bin/env bash\necho 'unexpected-version'\n");
+  writeFileSync(join(bin, "supabase"), `#!/usr/bin/env bash\ntouch '${log}'\nexit 0\n`);
+  for (const command of ["node", "psql", "supabase"]) chmodSync(join(bin, command), 0o755);
+  const result = spawnSync(
+    "bash",
+    [resolve(root, "guarded-history-repair.sh"), "--target=institute-production"],
+    {
+      encoding: "utf8",
+      env: productionRepairEnv(bin),
+    },
+  );
+  assert.equal(result.status, 75, `${result.stdout}${result.stderr}`);
+  assert.match(result.stderr, /not the exact reviewed pre-repair shape/);
+  assert.equal(existsSync(log), false, "Supabase must not run after history-shape refusal");
 });
 
 test("the production checklist agrees that the host rehearsal proves through 047", () => {
@@ -100,6 +192,15 @@ test("the production checklist agrees that the host rehearsal proves through 047
   assert.match(readme, /historical migration stack through 047/);
   assert.match(readme, /history-final\.txt`, exactly 001 through 047/);
   assert.doesNotMatch(readme, /does not prove migrations 040 and later/);
+});
+
+test("all executable migration instructions are target-bound and every include-all push is guarded", () => {
+  const readme = read("README.md");
+  assert.doesNotMatch(readme, /^\s*supabase migration (?:list|fetch|repair).*--linked/m);
+  assert.doesNotMatch(readme, /^\s*supabase db push .*--include-all/m);
+  assert.match(readme, /migration fetch --db-url "\$DB_URL"/);
+  assert.match(readme, /guarded-db-push\.sh --target=institute-test --dry-run/);
+  assert.match(readme, /guarded-db-push\.sh --target=institute-test\n/);
 });
 
 test("the printed production sequence never prints an ungated db push", () => {

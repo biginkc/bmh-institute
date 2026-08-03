@@ -897,6 +897,12 @@ function main() {
       "Identity-only is a read-only preflight for the history-repair sequence, not a push approval.",
     ]);
   }
+  if (args["identity-only"] && args["test-mode"]) {
+    refuse("E01", [
+      "--identity-only cannot be combined with --test-mode.",
+      "History repair requires the canonical committed target identity and baseline.",
+    ]);
+  }
 
   const target = args.target;
   if (!target) {
