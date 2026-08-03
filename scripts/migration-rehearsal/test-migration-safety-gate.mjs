@@ -895,6 +895,31 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     ], { expectedStatus: 1 });
   }
 
+  function installReplacementAttack(wrapper, refBase = null) {
+    const migration = join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql");
+    writeFileSync(migration, "drop schema public cascade;\n");
+    wrapper.git("add", "supabase/migrations/20260201000000_new.sql");
+    wrapper.git("commit", "-q", "-m", "attacker replacement tree");
+    const replacementSha = execFileSync("git", ["-C", wrapper.repo, "rev-parse", "HEAD"], {
+      encoding: "utf8",
+    }).trim();
+    wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
+
+    const replacementEnv = refBase ? { GIT_REPLACE_REF_BASE: refBase } : {};
+    if (refBase) {
+      wrapper.git("update-ref", `${refBase}/${wrapper.headSha}`, replacementSha);
+    } else {
+      wrapper.git("replace", wrapper.headSha, replacementSha);
+    }
+    // Materialize the replacement tree while leaving HEAD's displayed SHA at
+    // the reviewed commit. Replacement-aware status now reports a clean tree.
+    execFileSync("git", ["-C", wrapper.repo, "reset", "--hard", "-q", "HEAD"], {
+      env: { ...process.env, ...replacementEnv },
+      stdio: "ignore",
+    });
+    return replacementEnv;
+  }
+
   {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
@@ -939,26 +964,18 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
   assertHiddenTrackedMigrationRefuses("--assume-unchanged", "assume-unchanged tracked migration");
   assertHiddenTrackedMigrationRefuses("--skip-worktree", "skip-worktree tracked migration");
 
-  {
+  for (const replacementCase of [
+    { label: "default Git replacement object", refBase: null },
+    { label: "custom Git replacement namespace", refBase: "refs/bmh-replacements" },
+  ]) {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
-    const migration = join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql");
-    writeFileSync(migration, "drop schema public cascade;\n");
-    wrapper.git("add", "supabase/migrations/20260201000000_new.sql");
-    wrapper.git("commit", "-q", "-m", "attacker replacement tree");
-    const replacementSha = execFileSync("git", ["-C", wrapper.repo, "rev-parse", "HEAD"], {
-      encoding: "utf8",
-    }).trim();
-    wrapper.git("checkout", "-q", "--detach", wrapper.headSha);
-    wrapper.git("replace", wrapper.headSha, replacementSha);
-    // Materialize the replacement tree while leaving HEAD's displayed SHA at
-    // the reviewed commit. Replacement-aware status now reports a clean tree.
-    wrapper.git("reset", "--hard", "-q", "HEAD");
+    const replacementEnv = installReplacementAttack(wrapper, replacementCase.refBase);
 
-    assertProductionRefusal("active Git replacement object", wrapper, [
+    assertProductionRefusal(replacementCase.label, wrapper, [
       "REFUSING (E34)",
       "Git replacement refs are active in this repository",
-    ], { expectedStatus: 1 });
+    ], { extraEnv: replacementEnv, expectedStatus: 1 });
   }
 
   {

@@ -123,7 +123,7 @@ node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-p
 ### What it refuses on
 
 Everything indeterminate fails closed. The script header carries the complete exit-path
-enumeration (`E00`–`E23`); each refusal prints its code. In summary it refuses when:
+enumeration (`E00`–`E34`); each refusal prints its code. In summary it refuses when:
 
 - the database is unreachable, credentials are missing or wrong, the query errors, the
   connection times out, or `supabase_migrations.schema_migrations` is absent or empty;
@@ -134,7 +134,9 @@ enumeration (`E00`–`E23`); each refusal prints its code. In summary it refuses
 - `schema_migrations` contains a placeholder row (`statements IS NULL`) that is **not** in
   the acknowledged baseline for `--target`;
 - any locally pending migration is **older** than the newest version already recorded in
-  history — the exact out-of-order re-apply shape that caused the incident.
+  history — the exact out-of-order re-apply shape that caused the incident;
+- on-disk migration names or bytes differ from the exact reviewed `HEAD` tree (`E33`), or
+  Git replacement refs could make the displayed commit resolve a substituted tree (`E34`).
 
 Version identity is normalised, so remote `1` and local `001_x.sql` are recognised as the
 same migration. Legacy short-numeric versions and 14-digit timestamps are treated as two
