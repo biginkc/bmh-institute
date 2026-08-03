@@ -33,14 +33,17 @@ function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
   if (tail === "left" || tail === "right") {
     return {
       style: {
-        width: 28,
+        width: 22,
         height: 32,
         top: "50%",
         transform: "translateY(-50%)",
         ...(tail === "left" ? { left: -18 } : { right: -18 }),
       },
-      viewBox: "0 0 28 32",
-      path: tail === "left" ? "M 27 1 L 1 16 L 27 31" : "M 1 1 L 27 16 L 1 31",
+      viewBox: "0 0 22 32",
+      fillPath:
+        tail === "left" ? "M 21 1 L 1 16 L 21 31 Z" : "M 1 1 L 21 16 L 1 31 Z",
+      strokePath:
+        tail === "left" ? "M 18 1 L 1 16 L 18 31" : "M 4 1 L 21 16 L 4 31",
     };
   }
   return {
@@ -51,7 +54,8 @@ function tailGeometry(tail: NonNullable<SpeechBubbleProps["tail"]>) {
       ...(tail === "bottom-right" ? { right: 24 } : { left: 24 }),
     },
     viewBox: "0 0 32 22",
-    path: "M 1 1 L 16 21 L 31 1",
+    fillPath: "M 1 1 L 16 21 L 31 1 Z",
+    strokePath: "M 1 4 L 16 21 L 31 4",
   };
 }
 
@@ -103,8 +107,15 @@ export function SpeechBubble(props: SpeechBubbleProps) {
         }}
       >
         <path
-          d={geometry.path}
+          data-speech-bubble-tail-fill
+          d={geometry.fillPath}
           fill={colors.background}
+          stroke="none"
+        />
+        <path
+          data-speech-bubble-tail-stroke
+          d={geometry.strokePath}
+          fill="none"
           stroke={colors.border}
           strokeWidth="2.5"
           strokeLinejoin="round"
