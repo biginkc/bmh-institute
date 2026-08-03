@@ -895,7 +895,7 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     ], { expectedStatus: 1 });
   }
 
-  function installReplacementAttack(wrapper, refBase = null) {
+  function installReplacementAttack(wrapper, label, refBase = null) {
     const migration = join(wrapper.repo, "supabase", "migrations", "20260201000000_new.sql");
     writeFileSync(migration, "drop schema public cascade;\n");
     wrapper.git("add", "supabase/migrations/20260201000000_new.sql");
@@ -911,12 +911,26 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
     } else {
       wrapper.git("replace", wrapper.headSha, replacementSha);
     }
-    // Materialize the replacement tree while leaving HEAD's displayed SHA at
-    // the reviewed commit. Replacement-aware status now reports a clean tree.
-    execFileSync("git", ["-C", wrapper.repo, "reset", "--hard", "-q", "HEAD"], {
-      env: { ...process.env, ...replacementEnv },
-      stdio: "ignore",
-    });
+    const replacementAwareMigration = execFileSync(
+      "git",
+      ["-C", wrapper.repo, "show", "HEAD:supabase/migrations/20260201000000_new.sql"],
+      { encoding: "utf8", env: { ...process.env, ...replacementEnv } },
+    );
+    check(`production E2E: ${label} substitutes attacker SQL for HEAD`, {
+      status: replacementAwareMigration === "drop schema public cascade;\n" ? 0 : 1,
+      out: replacementAwareMigration,
+    }, 0);
+
+    const reviewedMigration = execFileSync(
+      "git",
+      ["--no-replace-objects", "-C", wrapper.repo, "show", "HEAD:supabase/migrations/20260201000000_new.sql"],
+      { encoding: "utf8", env: { ...process.env, ...replacementEnv } },
+    );
+    check(`production E2E: ${label} cannot alter replacement-disabled HEAD`, {
+      status: reviewedMigration === "select 1;\n" ? 0 : 1,
+      out: reviewedMigration,
+    }, 0);
+
     return replacementEnv;
   }
 
@@ -970,7 +984,11 @@ ${applyExtra}${swapContent}${killLock}${partialExit}fi
   ]) {
     setHistory([["001", false], ["20260101000000", false]]);
     const wrapper = productionWrapper();
-    const replacementEnv = installReplacementAttack(wrapper, replacementCase.refBase);
+    const replacementEnv = installReplacementAttack(
+      wrapper,
+      replacementCase.label,
+      replacementCase.refBase,
+    );
 
     assertProductionRefusal(replacementCase.label, wrapper, [
       "REFUSING (E34)",
