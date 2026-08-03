@@ -179,7 +179,8 @@ npm run test:migration-gate:postgres
 
 Spins one disposable local PostgreSQL cluster (`LC_ALL=C` plus a short socket path, to avoid
 the "postmaster became multithreaded" startup flake) and runs the real gate and the real
-wrapper against 66 scenarios. It never touches a hosted project.
+wrapper. The harness reports its exact scenario count and fails unless every scenario
+passes. It never touches a hosted project.
 
 Coverage includes: the pass case, the 2026-07-30 incident replay, empty and missing
 migrations directories, `001`/`1` and `0001`/`001` formatting collisions, mixed

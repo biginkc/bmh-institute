@@ -148,6 +148,9 @@ function expectTestJobContract(testYaml: string) {
   );
   expect(prJob).not.toContain("secrets.");
   expect(prJob).toContain("run-controller-gate-pr-harness.mjs");
+  expect(prJob).toMatch(
+    /- name: Exercise the production migration safety wrapper[\s\S]*?if: matrix\.postgres == '17'[\s\S]*?npm run test:migration-gate:postgres[\s\S]*?node --test scripts\/migration-rehearsal\/run-rehearsal\.test\.mjs/,
+  );
 
   const remoteJob = testYaml.slice(testYaml.indexOf("  migrate-test:"));
   expect(remoteJob).toContain("if: github.event_name == 'workflow_dispatch'");
