@@ -304,6 +304,16 @@ test("a required PostgreSQL check executes the migration safety wrapper harness"
     /^\s+paths:\s*$/m,
     "a top-level path filter would leave required checks pending forever",
   );
+  assert.match(
+    workflow,
+    /group:\s*bmh-institute-migration-checks-\$\{\{ github\.event\.pull_request\.number \|\| github\.run_id \}\}/,
+    "superseded PR validation runs must share a PR-scoped concurrency group",
+  );
+  assert.match(
+    workflow,
+    /cancel-in-progress:\s*\$\{\{ github\.event_name == 'pull_request' \}\}/,
+    "obsolete PR validation runs should cancel without cancelling test-project dispatches",
+  );
 });
 
 // --------------------------------------------------------------------------

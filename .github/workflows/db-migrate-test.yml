@@ -54,6 +54,10 @@ env:
 permissions:
   contents: read
 
+concurrency:
+  group: bmh-institute-migration-checks-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   validate-pr-migrations:
     name: Validate migrations on PostgreSQL ${{ matrix.postgres }}
