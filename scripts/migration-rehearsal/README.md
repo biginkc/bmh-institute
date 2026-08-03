@@ -1,6 +1,6 @@
 # Migration history repair rehearsal
 
-This harness is host-only. It does not use Docker and it does not connect to a hosted project. It creates a disposable PostgreSQL 17 cluster with `LC_ALL=C`, applies the historical migration stack through 039, rehearses the exact history repair as SQL, and writes evidence under `artifacts/` or a caller-selected output directory. It does not prove migrations 040 and later. Those forward migrations require separate canonical TEST evidence.
+This harness is host-only. It does not use Docker and it does not connect to a hosted project. It creates a disposable PostgreSQL 17 cluster with `LC_ALL=C`, applies the historical migration stack through 047, rehearses the exact history repair as SQL, and writes evidence under `artifacts/` or a caller-selected output directory. Canonical TEST evidence remains a separate deployment gate; it is not a substitute for this host rehearsal.
 
 ## Prerequisites
 
@@ -39,7 +39,7 @@ The command must finish with a JSON object whose status is `PASS`. Review these 
 - `legacy-equivalence-report.json`
 - `history-before-repair.txt`, exactly the production 14-version shape
 - `history-after-repair.txt`, exactly 001 through 014
-- `history-final.txt`, exactly 001 through 039
+- `history-final.txt`, exactly 001 through 047
 - `schema-app.sql`, the public, private, and migration-history schemas for the later production diff
 - `schema-full.sql`, the full rehearsal cluster schema including local Supabase stubs
 - `rehearsal-summary.json`

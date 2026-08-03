@@ -23,17 +23,23 @@ export PGDATABASE="postgres"
 export PGUSER="postgres.dhvfsyteqsxagokoerrx"
 export PGPASSWORD="<production db password>"
 export PGSSLMODE="require"
+export SUPABASE_DB_PASSWORD="$PGPASSWORD"
+DB_URL="postgresql://${PGUSER}@${PGHOST}:${PGPORT}/${PGDATABASE}"
 
-# 1. Read-only preflight. Confirm remote has legacy 10 plus numbered 011-014.
-supabase migration list --linked
+# 1. Read-only preflight. First prove these exact PG* variables identify the
+#    pinned production cluster. Then confirm that same target has the legacy
+#    10 plus numbered 011-014. A stale Supabase CLI project link is irrelevant:
+#    every history read/write below uses this password-free DB_URL.
+node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-production --identity-only
+supabase migration list --db-url "$DB_URL"
 
 # 2. Repair history only. Mark numbered equivalents applied before removing legacy rows.
 #    WARNING: this step CREATES NULL-statements placeholder rows in
 #    supabase_migrations.schema_migrations. The safety gate refuses on any
 #    placeholder row that is not in the acknowledged baseline, so this step and
 #    step 3 belong together -- see step 3.
-supabase migration repair 001 002 003 004 005 006 007 008 009 010 --status applied --linked --yes
-supabase migration repair 20260423204031 20260423204130 20260423204205 20260423204222 20260423204234 20260423224651 20260423231622 20260501012728 20260501020518 20260501020537 --status reverted --linked --yes
+supabase migration repair 001 002 003 004 005 006 007 008 009 010 --status applied --db-url "$DB_URL" --yes
+supabase migration repair 20260423204031 20260423204130 20260423204205 20260423204222 20260423204234 20260423224651 20260423231622 20260501012728 20260501020518 20260501020537 --status reverted --db-url "$DB_URL" --yes
 
 # 3. Acknowledge the placeholder rows you just created. Run the gate; it will
 #    refuse with E21 and print a paste-ready version array. Before pasting it,
@@ -49,14 +55,14 @@ node scripts/migration-rehearsal/check-migration-safety.mjs --target=institute-p
 
 # 4. Read-only repaired-history and push checks. The dry run goes through the
 #    same wrapper so it uses the same target definition as the real push.
-supabase migration list --linked
+supabase migration list --db-url "$DB_URL"
 export GUARDED_PUSH_EXPECTED_GIT_SHA="$(git rev-parse HEAD)"
 bash scripts/migration-rehearsal/guarded-db-push.sh --target=institute-production --dry-run
 
 # 5. STOP. The list must show exactly 001-014 on both sides. The dry run must list
 #    exactly the pending set you expect, in order. The historical run-002
-#    rehearsal proves 015-039. Canonical TEST verification proves 040-045.
-#    Capture both outputs and both evidence sets before the real push.
+#    host rehearsal proves 015-047. Capture both outputs and the complete
+#    001-047 rehearsal evidence before the real push.
 #
 #    The line below is the ONLY sanctioned production push. It re-runs the
 #    safety gate against this same connection and aborts on a non-zero exit; do

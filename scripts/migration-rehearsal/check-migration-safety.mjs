@@ -250,12 +250,13 @@ const KNOWN_ARGS = new Set([
   "target",
   "timeout-ms",
   "test-mode",
+  "identity-only",
   "emit-fingerprint",
   "verify-fingerprint",
   "verify-applied",
   ...PATH_OVERRIDE_ARGS,
 ]);
-const FLAG_ARGS = new Set(["test-mode"]);
+const FLAG_ARGS = new Set(["test-mode", "identity-only"]);
 const REQUIRED_PG_ENV = ["PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD"];
 const SCHEME_RANK = { legacy: 0, timestamp: 1 };
 // Supabase project refs are exactly 20 lowercase letters.
@@ -887,6 +888,16 @@ function assertLocalContentUnchanged(fingerprint, local) {
 function main() {
   const args = parseArguments(process.argv.slice(2));
 
+  if (
+    args["identity-only"] &&
+    (args["emit-fingerprint"] || args["verify-fingerprint"] || args["verify-applied"])
+  ) {
+    refuse("E01", [
+      "--identity-only cannot be combined with fingerprint emission or verification modes.",
+      "Identity-only is a read-only preflight for the history-repair sequence, not a push approval.",
+    ]);
+  }
+
   const target = args.target;
   if (!target) {
     refuse("E02", [
@@ -940,7 +951,9 @@ function main() {
     }
   }
 
-  const mode = args["verify-applied"]
+  const mode = args["identity-only"]
+    ? "identity-only"
+    : args["verify-applied"]
     ? "verify-applied"
     : args["verify-fingerprint"]
       ? "verify-fingerprint"
@@ -960,6 +973,19 @@ function main() {
   const baseline = loadBaseline(baselinePath, repoRoot, target, testMode);
   console.log(`Declared identity:    ${assertDeclaredIdentity(baseline, target)}`);
   console.log(`Live identity:        ${assertLiveIdentity(baseline, target, timeoutMs)}`);
+
+  // History repair has to establish the same three-part target binding as a
+  // push before it changes schema_migrations. It cannot run the full safety
+  // gate yet because the repair deliberately creates placeholder rows that
+  // are acknowledged only in the next reviewed commit. This mode performs
+  // only read-only identity checks and returns before reading migration
+  // history, giving the repair sequence a fail-closed pre-write admission
+  // check without weakening the full push gate.
+  if (mode === "identity-only") {
+    console.log("");
+    console.log("OK: declared project, database, and live cluster identity all match.");
+    return;
+  }
 
   // --- post-push reconciliation mode ---------------------------------------
   if (mode === "verify-applied") {

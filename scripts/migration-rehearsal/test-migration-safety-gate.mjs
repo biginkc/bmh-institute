@@ -543,6 +543,64 @@ try {
     1,
     ["REFUSING (E28)", "not the cluster this target was reviewed against"],
   );
+  {
+    const before = psqlScalar(
+      "select string_agg(version, ',' order by version) from supabase_migrations.schema_migrations;",
+    );
+    const run = runGate({
+      files: ["001_a.sql"],
+      baseline: {
+        targets: {
+          "local-rehearsal": {
+            ...UNBOUND_TARGET,
+            db_system_identifier: "1234567890123456789",
+          },
+        },
+      },
+      extraArgs: ["--identity-only"],
+    });
+    const after = psqlScalar(
+      "select string_agg(version, ',' order by version) from supabase_migrations.schema_migrations;",
+    );
+    check(
+      "identity-only preflight refuses a mismatched cluster without changing migration history",
+      {
+        status: run.status === 1 && before === after ? 0 : 1,
+        out: `${run.out}\nbefore=${before}\nafter=${after}`,
+      },
+      0,
+      ["REFUSING (E28)", "not the cluster this target was reviewed against"],
+    );
+  }
+
+  setHistory(null);
+  check(
+    "identity-only preflight returns after identity checks and does not require migration history",
+    runGate({
+      files: ["001_a.sql"],
+      baseline: {
+        targets: {
+          "local-rehearsal": {
+            ...UNBOUND_TARGET,
+            db_system_identifier: systemIdentifier,
+          },
+        },
+      },
+      extraArgs: ["--identity-only"],
+    }),
+    0,
+    ["Mode:                 identity-only", "live cluster identity all match"],
+  );
+  check(
+    "identity-only cannot masquerade as a fingerprint-producing push approval",
+    runGate({
+      files: ["001_a.sql"],
+      extraArgs: ["--identity-only", `--emit-fingerprint=${join(workRoot, "must-not-exist.json")}`],
+    }),
+    1,
+    ["REFUSING (E01)", "cannot be combined"],
+  );
+  setHistory([["001", false]]);
 
   // ==== round-3 P1-1 and P1-4: safe by default ============================
 

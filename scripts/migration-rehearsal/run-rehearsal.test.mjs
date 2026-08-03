@@ -58,19 +58,48 @@ test("the host harness uses C locale, proves both history states, and dumps sche
 
 test("the printed production sequence gates push behind repair and dry run", () => {
   const commands = read("print-production-repair-commands.sh");
-  const applyNumbered = commands.indexOf("--status applied --linked --yes");
-  const removeLegacy = commands.indexOf("--status reverted --linked --yes");
-  const gate = commands.indexOf("check-migration-safety.mjs --target=institute-production");
+  const identity = commands.indexOf("check-migration-safety.mjs --target=institute-production --identity-only");
+  const applyNumbered = commands.indexOf('--status applied --db-url "$DB_URL" --yes');
+  const removeLegacy = commands.indexOf('--status reverted --db-url "$DB_URL" --yes');
+  const gate = commands.indexOf(
+    "check-migration-safety.mjs --target=institute-production\n",
+    removeLegacy,
+  );
   const dryRun = commands.indexOf("guarded-db-push.sh --target=institute-production --dry-run");
   const push = commands.indexOf(
     "guarded-db-push.sh --target=institute-production\n",
     dryRun,
   );
-  assert.ok(applyNumbered >= 0);
+  assert.ok(identity >= 0);
+  assert.ok(applyNumbered > identity);
   assert.ok(removeLegacy > applyNumbered);
   assert.ok(gate > removeLegacy);
   assert.ok(dryRun > gate);
   assert.ok(push > dryRun);
+});
+
+test("the production repair sequence binds every history operation to the verified PG target", () => {
+  const commands = read("print-production-repair-commands.sh");
+  const executable = commands
+    .split("\n")
+    .map((line) => line.split("#")[0].trim())
+    .filter(Boolean)
+    .join("\n");
+  assert.match(executable, /DB_URL="postgresql:\/\/\$\{PGUSER\}@\$\{PGHOST\}:\$\{PGPORT\}\/\$\{PGDATABASE\}"/);
+  assert.match(executable, /export SUPABASE_DB_PASSWORD="\$PGPASSWORD"/);
+  assert.doesNotMatch(executable, /--linked/);
+  for (const line of executable.split("\n").filter((line) => /^supabase migration (?:list|repair)/.test(line))) {
+    assert.match(line, /--db-url "\$DB_URL"/, `unbound history operation: ${line}`);
+  }
+});
+
+test("the production checklist agrees that the host rehearsal proves through 047", () => {
+  const commands = read("print-production-repair-commands.sh");
+  const readme = read("README.md");
+  assert.match(commands, /host rehearsal proves 015-047/);
+  assert.match(readme, /historical migration stack through 047/);
+  assert.match(readme, /history-final\.txt`, exactly 001 through 047/);
+  assert.doesNotMatch(readme, /does not prove migrations 040 and later/);
 });
 
 test("the printed production sequence never prints an ungated db push", () => {
