@@ -293,10 +293,16 @@ test("a required PostgreSQL check executes the migration safety wrapper harness"
     /node --test scripts\/migration-rehearsal\/run-rehearsal\.test\.mjs/,
     "the workflow and trigger contract must execute in that required context",
   );
+  const triggerBlock = topLevelBlock(workflow, "on");
   assert.match(
-    topLevelBlock(workflow, "on"),
-    /^\s*-\s+"scripts\/migration-rehearsal\/\*\*"\s*$/m,
-    "changes to the migration wrapper, gate, baseline, or harness must trigger the required PostgreSQL checks",
+    triggerBlock,
+    /^\s*pull_request:\s*\{\}\s*$/m,
+    "every PR head must emit the required PostgreSQL check contexts",
+  );
+  assert.doesNotMatch(
+    triggerBlock,
+    /^\s+paths:\s*$/m,
+    "a top-level path filter would leave required checks pending forever",
   );
 });
 
