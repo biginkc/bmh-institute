@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { Avatar } from "@/components/bmh-ds/avatar";
 import { Button } from "@/components/bmh-ds/button";
 import { Logo } from "@/components/bmh-ds/logo";
+import { resolveDashboardDisplayName } from "@/lib/auth/display-name";
 import { getRequestAuthContext } from "@/lib/auth/request-context";
 
 import { SidebarNav } from "./sidebar-nav";
@@ -40,7 +41,10 @@ export default async function DashboardLayout({
     : { count: 0 };
   const pendingSubmissions = pendingResult.count ?? 0;
 
-  const displayName = profile?.full_name || user.email || "BMH Institute user";
+  const displayName = resolveDashboardDisplayName(
+    profile?.full_name,
+    user.email,
+  );
   const roleLabel = profile?.system_role ?? "learner";
 
   return (

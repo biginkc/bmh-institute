@@ -45,6 +45,12 @@ describe("DashboardLayout sibling shell contract", () => {
     expect(layoutSource).toContain("roleLabel");
   });
 
+  it("formats profile names through the dashboard identity resolver", () => {
+    expect(layoutSource).toContain("resolveDashboardDisplayName(");
+    expect(layoutSource).toContain("profile?.full_name");
+    expect(layoutSource).toContain("user.email");
+  });
+
   it("keeps a compact lesson search reachable below the small breakpoint", () => {
     expect(layoutSource).toContain('instanceId="mobile"');
     expect(layoutSource).toContain("compact");
