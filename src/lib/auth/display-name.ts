@@ -1,6 +1,6 @@
 export function formatDisplayName(name: string): string {
   return name.replace(
-    /(^|[\s'-])(\p{L})/gu,
+    /(^|[\s'’\-])(\p{L})/gu,
     (_, boundary: string, letter: string) => {
       const capital = letter.toLocaleUpperCase();
       return `${boundary}${[...capital].length === 1 ? capital : letter}`;

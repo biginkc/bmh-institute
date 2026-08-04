@@ -18,6 +18,10 @@ describe("formatDisplayName", () => {
     expect(formatDisplayName("McDonald O'Neil")).toBe("McDonald O'Neil");
   });
 
+  it("capitalizes after a typographic apostrophe", () => {
+    expect(formatDisplayName("mel o’neil")).toBe("Mel O’Neil");
+  });
+
   it("does not expand one initial letter into multiple characters", () => {
     expect(formatDisplayName("ßara smith")).toBe("ßara Smith");
   });
@@ -29,6 +33,12 @@ describe("formatDisplayName", () => {
   it("does not alter an email fallback", () => {
     expect(resolveDashboardDisplayName(null, "mel@example.com")).toBe(
       "mel@example.com",
+    );
+  });
+
+  it("formats a stored profile name before considering fallbacks", () => {
+    expect(resolveDashboardDisplayName("mel smith", "mel@example.com")).toBe(
+      "Mel Smith",
     );
   });
 
