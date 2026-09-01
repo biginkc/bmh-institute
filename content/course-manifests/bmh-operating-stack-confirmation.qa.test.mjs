@@ -15,7 +15,7 @@ import {
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(import.meta.dirname, "../..");
-const CURRENT_TIME = new Date("2026-08-03T00:00:00-05:00");
+const CURRENT_TIME = new Date("2026-09-02T00:00:00-05:00");
 
 async function loadJson(name) {
   return JSON.parse(await readFile(new URL(name, import.meta.url), "utf8"));
@@ -85,7 +85,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     validateStackConfirmation(
       manifest,
       confirmation,
-      new Date("2026-08-10T00:00:00-05:00"),
+      new Date("2026-09-09T00:00:00-05:00"),
     ).join(" "),
     /expired/,
   );
@@ -116,6 +116,20 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   assert.match(
     validateStackConfirmation(manifest, badEvidence, CURRENT_TIME).join(" "),
     /source evidence checksum/,
+  );
+
+  const noDrift = clone();
+  delete noDrift.known_content_drift;
+  assert.match(
+    validateStackConfirmation(manifest, noDrift, CURRENT_TIME).join(" "),
+    /known_content_drift/,
+  );
+
+  const emptyDriftEntry = clone();
+  emptyDriftEntry.known_content_drift[0].remediation = "  ";
+  assert.match(
+    validateStackConfirmation(manifest, emptyDriftEntry, CURRENT_TIME).join(" "),
+    /known_content_drift/,
   );
 
   const missingTrigger = clone();
@@ -149,7 +163,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   );
 
   const futureReverification = clone();
-  futureReverification.reverification.reverified_at = "2026-08-12T00:00:00-05:00";
+  futureReverification.reverification.reverified_at = "2026-09-11T00:00:00-05:00";
   assert.match(
     validateStackConfirmation(manifest, futureReverification, CURRENT_TIME).join(" "),
     /genuine reverification record/,

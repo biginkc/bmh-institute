@@ -242,7 +242,7 @@ export function validateStackConfirmation(
   const boundaries = confirmation.scope?.system_boundaries;
   if (
     employee?.outbound_voice !== "DialPad" ||
-    employee?.outbound_text !== "DialPad after manager approval" ||
+    employee?.outbound_text !== "Sandra after manager approval" ||
     employee?.seller_email !== "Gmail after manager approval"
   ) {
     issues.push("employee manual workflow scope is incomplete or changed");
@@ -254,6 +254,28 @@ export function validateStackConfirmation(
       "not employee-ready; Jarrad-only until Phase 2 exit"
   ) {
     issues.push("Sandra/Jitter provider boundaries are incomplete or changed");
+  }
+
+  // The employee workflow scope above states what is TRUE today. The course
+  // content has not always caught up -- the 2026-09-01 seller-texts-move-to-
+  // Sandra correction left released quiz answers and an approved video cut
+  // still teaching the old DialPad path. Rather than let the confirmation
+  // quietly assert a stack the course does not teach, every drifted surface
+  // must be listed with a remediation, so the gap stays visible in review
+  // instead of being resolved by weakening the scope check above.
+  const drift = confirmation.known_content_drift;
+  if (
+    !Array.isArray(drift) ||
+    drift.some(
+      (entry) =>
+        !entry?.surface?.trim() ||
+        !entry?.detail?.trim() ||
+        !entry?.remediation?.trim(),
+    )
+  ) {
+    issues.push(
+      "known_content_drift must list every drifted surface with a detail and a remediation",
+    );
   }
 
   const evidenceByPath = new Map(
