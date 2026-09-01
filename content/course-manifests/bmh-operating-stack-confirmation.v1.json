@@ -204,6 +204,16 @@
       "surface": "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
       "detail": "The archived 2026-07-21 legacy release, which is the executable rollback artifact for the released quiz, preserves the superseded DialPad-texting answers.",
       "remediation": "Retained unchanged on purpose. It is the rollback target for what was actually released, so editing it would make the rollback path diverge from the release it restores."
+    },
+    {
+      "surface": "docs/course-production/DIALPAD-STACK-RECONCILIATION.md",
+      "detail": "The 2026-07-16 decision record states that employees send manager-approved seller texts through DialPad, and that no learner statement was contradicted. Both claims are now false.",
+      "remediation": "Superseded in place with a dated banner pointing at this confirmation as authoritative. The original passage is retained below the banner as the record of what was decided at the time."
+    },
+    {
+      "surface": "docs/course-production/EXECUTION-LEDGER.md",
+      "detail": "The 2026-07-16 ledger entry states that DialPad remains the employee's manual outbound voice and manager-approved text tool. The text half is now false.",
+      "remediation": "Superseded in place with a dated banner pointing at this confirmation as authoritative. The original passage is retained below the banner as the record of what was decided at the time."
     }
   ]
 }

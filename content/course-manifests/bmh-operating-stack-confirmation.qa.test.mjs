@@ -292,7 +292,29 @@ test("every tracked file teaching the superseded DialPad-texting workflow is dis
     .split("\0")
     .filter(Boolean);
 
-  const PATTERN = /through dialpad or gmail|dialpad for texts|sending texts|dialpad or gmail/i;
+  // Phrasings that ASSERT DialPad carries seller texts. Deliberately not a
+  // proximity match on "dialpad" near "text": that also flags scene-generation
+  // prompts listing tool logos and quiz DISTRACTORS, which are wrong answers on
+  // purpose and are correct as-is. Every phrasing here was found in the repo;
+  // "manager-approved text tool" was added after the round-4 review found the
+  // execution ledger asserting it in wording the earlier pattern missed.
+  const PATTERN = new RegExp(
+    [
+      "through dialpad or gmail",
+      "dialpad for texts",
+      "sending texts",
+      "dialpad or gmail",
+      "dialpad and gmail",
+      "manager-approved text tool",
+      "texts through dialpad",
+      "approved texts to dialpad",
+      "approved texts use dialpad",
+      "text tool",
+      "dialpad[^.]{0,40}\\bsms\\b",
+      "\\bsms\\b[^.]{0,40}dialpad",
+    ].join("|"),
+    "i",
+  );
   const offenders = [];
   for (const file of tracked) {
     let text;

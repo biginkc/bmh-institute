@@ -59,6 +59,9 @@ const REQUIRED_STACK_DRIFT_SURFACES = new Set([
   "docs/course-production/scripts/gen_audio_18B.py",
   "course-assets/transcripts/video-slot-18-mission-control.md",
   "course-assets/scenes/module-18-lesson18B/_logs",
+  // Decision records that assert the superseded workflow, superseded in place
+  "docs/course-production/DIALPAD-STACK-RECONCILIATION.md",
+  "docs/course-production/EXECUTION-LEDGER.md",
   // Historical record, retained on purpose rather than corrected
   "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
   "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",

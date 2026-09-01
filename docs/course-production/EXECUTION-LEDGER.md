@@ -78,6 +78,11 @@ in the latest reconciliation entry.
 
 ### 2026-07-16 DialPad stack reconciliation
 
+> **Superseded 2026-09-01:** seller texts now go through Sandra. DialPad remains
+> the outbound voice tool only. The entry below is retained as the record of what
+> was reconciled on 2026-07-16; see `known_content_drift` in
+> `content/course-manifests/bmh-operating-stack-confirmation.v1.json`.
+
 - The newest vault evidence confirms DialPad remains the employee's manual
   outbound voice and manager-approved text tool. The evidence does not conflate
   that workflow with Sandra's current Sendillo provider or Jitter's Telnyx
