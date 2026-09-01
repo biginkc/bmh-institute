@@ -103,6 +103,24 @@ describe("GET internal learner quiz summary", () => {
     expect(response.headers.get("cache-control")).toBe("private, no-store");
   });
 
+  it("treats a literal asterisk as email data rather than a wildcard", async () => {
+    mocks.rpc.mockResolvedValue({
+      data: [summaryRow({ email: null, profile_match_count: 0 })],
+      error: null,
+    });
+
+    const response = await GET(request(), context("*"));
+
+    expect(response.status).toBe(404);
+    expect(mocks.rpc).toHaveBeenCalledWith(
+      "fn_intranet_learner_quiz_summary_v1",
+      {
+        p_email: "*",
+        p_course_import_id: "bmh-employee-training-v1",
+      },
+    );
+  });
+
   it("fails closed when the profile or catalog identity is ambiguous", async () => {
     for (const row of [
       summaryRow({ profile_match_count: 2 }),

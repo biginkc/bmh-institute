@@ -20,6 +20,16 @@ describe("isPublicPath", () => {
         "/api/internal/intranet/learners/learner%40example.test/quiz-summary",
       ),
     ).toBe(true);
+    expect(
+      isPublicPath(
+        "/api/internal/intranet/learners/learner%40example.test/quiz-summary/export",
+      ),
+    ).toBe(false);
+    expect(
+      isPublicPath(
+        "/api/internal/intranet/learners/learner%40example.test/profile",
+      ),
+    ).toBe(false);
     expect(isPublicPath("/api/internal/other-service")).toBe(false);
   });
 });

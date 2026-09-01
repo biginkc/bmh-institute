@@ -39,35 +39,41 @@ as $$
            case when count(*) = 1 then min(course.id::text)::uuid end as course_id
     from canonical_courses course
   ),
-  quiz_lessons as (
-    select lesson.id as lesson_id,
-           lesson.quiz_id,
-           lesson.sort_order as lesson_order,
-           module.id as module_id,
+  course_modules as (
+    select module.id as module_id,
            module.sort_order as module_order
-    from public.lessons lesson
-    join public.modules module on module.id = lesson.module_id
+    from public.modules module
     cross join course_state
     where course_state.course_count = 1
       and module.course_id = course_state.course_id
-      and lesson.lesson_type = 'quiz'
-      and lesson.quiz_id is not null
-      and lesson.is_required_for_completion = true
   ),
   top_module_order as (
-    select max(quiz_lesson.module_order) as module_order
-    from quiz_lessons quiz_lesson
+    select max(course_module.module_order) as module_order
+    from course_modules course_module
   ),
   top_modules as (
-    select distinct quiz_lesson.module_id
-    from quiz_lessons quiz_lesson
+    select course_module.module_id
+    from course_modules course_module
     cross join top_module_order
-    where quiz_lesson.module_order = top_module_order.module_order
+    where course_module.module_order = top_module_order.module_order
   ),
   top_module_state as (
     select count(*)::bigint as top_module_count,
            case when count(*) = 1 then min(top_module.module_id::text)::uuid end as module_id
     from top_modules top_module
+  ),
+  quiz_lessons as (
+    select lesson.id as lesson_id,
+           lesson.quiz_id,
+           lesson.sort_order as lesson_order,
+           lesson.module_id
+    from public.lessons lesson
+    cross join top_module_state
+    where top_module_state.top_module_count = 1
+      and lesson.module_id = top_module_state.module_id
+      and lesson.lesson_type = 'quiz'
+      and lesson.quiz_id is not null
+      and lesson.is_required_for_completion = true
   ),
   top_lesson_order as (
     select max(quiz_lesson.lesson_order) as lesson_order
