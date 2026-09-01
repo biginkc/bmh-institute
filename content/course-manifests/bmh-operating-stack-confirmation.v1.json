@@ -1,20 +1,20 @@
 {
   "schema_version": "bmh-operating-stack-confirmation/v1",
-  "confirmation_id": "bmh-employee-workflow-2026-08-02",
+  "confirmation_id": "bmh-employee-workflow-2026-09-01",
   "status": "confirmed",
-  "confirmed_at": "2026-08-02T23:56:00-05:00",
-  "expires_at": "2026-08-09T23:56:00-05:00",
+  "confirmed_at": "2026-09-01T11:46:10-05:00",
+  "expires_at": "2026-09-08T11:46:10-05:00",
   "decision": "retain-dialpad-for-employee-manual-workflow",
   "reverification": {
-    "reverified_at": "2026-08-02T23:56:00-05:00",
-    "actor": "Codex (automated, report-to-fix release)",
-    "method": "Recomputed SHA-256 for all three canonical BMH-OS source files from their current on-disk bytes. The training-course decision and locked transcript remain byte-identical. _Active.md changed as the four-app program advanced, so its recorded hash and observed date were refreshed only after directly confirming it still identifies Sendillo for Sandra, Telnyx for Jitter, and Jarrad-only Jitter operation until the Phase 2 exit. The current sources therefore still support the scoped DialPad employee workflow decision.",
+    "reverified_at": "2026-09-01T11:46:10-05:00",
+    "actor": "Claude (Fable) under Jarrad's direct 2026-09-01 confirmation",
+    "method": "Recomputed SHA-256 for all three canonical BMH-OS source files from their current on-disk bytes. 'projects/BMH Training Course.md' and the locked master transcript are byte-identical to the previous window. '_Active.md' was edited today to record Jarrad's 2026-09-01 correction that seller texts now run through Sandra rather than DialPad, so its hash and observed date were refreshed after re-reading it and directly confirming it still identifies Sendillo as Sandra's internal messaging provider, Telnyx as Jitter's carrier, and Jitter as parked and Jarrad-only until the Phase 2 exit. Manifest DialPad reference counts and digests were recomputed with the repository's own collectDialPadReferences and dialPadReferenceSha256 helpers against the unmodified manifests, and every audited asset checksum was re-verified against the manifest and, where the file is checked in, against its bytes on disk.",
     "source_hashes_matched": true
   },
   "scope": {
     "employee_manual_workflow": {
       "outbound_voice": "DialPad",
-      "outbound_text": "DialPad after manager approval",
+      "outbound_text": "Sandra after manager approval",
       "seller_email": "Gmail after manager approval"
     },
     "system_boundaries": {
@@ -32,18 +32,18 @@
     },
     {
       "vault_path": "_Active.md",
-      "observed_updated": "2026-07-30",
-      "sha256": "a8043d8dcf2384ba0d422ea3d490efe0d6238550f4ee70307ab61c10f33ec70f",
-      "evidence": "Sandra's current internal messaging path is Sendillo. Jitter's active carrier is Telnyx, but Jarrad remains the only operator until the Phase 2 exit and VA authorization decision."
+      "observed_updated": "2026-09-01",
+      "sha256": "b647907a3c508391173110b33c2ae22f232c16b99edbe6ba37e7619e6ac8bdaa",
+      "evidence": "Records Jarrad's 2026-09-01 correction that seller texts now go through Sandra while DialPad remains the outbound voice system and Gmail the seller email path. Also confirms Sandra's internal messaging path is Sendillo and that Jitter is parked, with Telnyx as its carrier and Jarrad as its only operator until the Phase 2 exit."
     },
     {
       "vault_path": "BMH Training Course/Thinkific/_master-transcripts.md",
       "observed_updated": "2026-07-12",
       "sha256": "825c3d29642700325e30481c682d77a8702218aed868c000fc5b3c2d5157a0f9",
-      "evidence": "The locked employee transcript assigns homeowner calls to DialPad, approved texts to DialPad, approved emails to Gmail, and CRM records to Sandra."
+      "evidence": "The locked employee transcript assigns homeowner calls to DialPad, approved emails to Gmail, and CRM records to Sandra. Its DialPad-texting instruction is superseded by the 2026-09-01 correction and is recorded below as known content drift."
     }
   ],
-  "source_evidence_sha256": "026dd4111045adad892c4c82232b9c131d3c40180402e63d3a78e5b8053cc2c7",
+  "source_evidence_sha256": "de3e4f07b43c7d921d14afd532c6d805a1e90c7310c410a9c34608a9e5b0e759",
   "manifest_snapshots": [
     {
       "import_id": "bmh-employee-training-v1",
@@ -76,14 +76,14 @@
       "local_path": "course-assets/review-lesson18B/LESSON-18B-v7.mp4",
       "checksum_sha256": "aaba86083cc1be1d0da7e334da7f473165f81fd4c916115749a93a8bf3e05d19",
       "dialpad_reference_count": null,
-      "audit_result": "approved cut agrees with the confirmed employee workflow"
+      "audit_result": "Approved cut retained unchanged; its spoken seller-text instruction is superseded by the 2026-09-01 correction and is listed under known_content_drift pending a re-record."
     },
     {
       "source_key": "caption-video-slot-18-mission-control",
       "local_path": "course-assets/captions/video-slot-18-mission-control.vtt",
       "checksum_sha256": "7ed0669b3f36c60209a44793560fcd27a8f91f3cafad2de82169637a3e27e15f",
       "dialpad_reference_count": 2,
-      "audit_result": "references distinguish approved DialPad texts and calls from Gmail email and Sandra CRM records"
+      "audit_result": "Two DialPad references: one describes outbound calls and remains accurate; the line at 00:01:12 assigning seller texts to DialPad is superseded by the 2026-09-01 correction and is listed under known_content_drift."
     },
     {
       "source_key": "guide-slot-03",
@@ -108,5 +108,112 @@
     "jitter_employee_access_authorized",
     "course_dialpad_content_changed",
     "approved_video_cut_or_derivative_changed"
+  ],
+  "known_content_drift": [
+    {
+      "surface": "quiz-slot-18 question-r-slot-module-18-025",
+      "detail": "The correct answer is 'DialPad or Gmail' for sending an approved seller message. It should be 'Sandra or Gmail'.",
+      "remediation": "Correct via the released-quiz revision path (npm run course:quizzes:revise), together with the lesson-18 re-record."
+    },
+    {
+      "surface": "quiz-slot-18 question-r-slot-module-18-035",
+      "detail": "The correct answer gives DialPad's role as 'Placing calls and sending texts.' Texting is no longer DialPad's role.",
+      "remediation": "Correct via the released-quiz revision path (npm run course:quizzes:revise), together with the lesson-18 re-record."
+    },
+    {
+      "surface": "course-assets/review-lesson18B/LESSON-18B-v7.mp4 at 00:01:12",
+      "detail": "The approved cut says aloud \"Once it's approved, you send it through Dialpad or Gmail.\"",
+      "remediation": "Re-record the lesson-18 segment; no text edit can correct spoken content."
+    },
+    {
+      "surface": "course-assets/captions/video-slot-18-mission-control.vtt at 00:01:12",
+      "detail": "The learner-facing caption carries the same superseded line as the approved cut. Its checksum is bound to the audited asset, so it cannot be corrected independently of the re-record.",
+      "remediation": "Re-record the lesson-18 segment; no text edit can correct spoken content."
+    },
+    {
+      "surface": "BMH-OS vault: BMH Training Course/Thinkific/_master-transcripts.md line 2397",
+      "detail": "The locked master transcript instructs the learner to send approved seller messages through DialPad or Gmail. It is hashed source evidence for this confirmation, so correcting it re-dates the evidence.",
+      "remediation": "Correct the transcript in the same pass as the re-record, then refresh this confirmation's source evidence hashes."
+    },
+    {
+      "surface": "BMH-OS vault: BMH Training Course/Thinkific/_flashcards-by-slot/module-18-flashcards.json",
+      "detail": "Cards 24 and 34 are the verbatim origin of both stale quiz answers ('DialPad or Gmail' and 'Placing calls and sending texts.'). Every downstream representation is generated from these backs.",
+      "remediation": "Correct upstream of the released-quiz revision: the corrected answer must originate here, then flow through assemble-question-bank and the revision path."
+    },
+    {
+      "surface": "BMH-OS vault: BMH Training Course/Thinkific/_flashcards-by-slot/module-18-flashcards.md",
+      "detail": "The human-readable twin of the flashcard JSON, carrying the same two superseded answers.",
+      "remediation": "Correct upstream of the released-quiz revision: the corrected answer must originate here, then flow through assemble-question-bank and the revision path."
+    },
+    {
+      "surface": "content/quiz-generation/source-ledger.v1.json",
+      "detail": "The selection ledger carries the superseded flashcard backs as the chosen source records for both questions.",
+      "remediation": "Correct upstream of the released-quiz revision: the corrected answer must originate here, then flow through assemble-question-bank and the revision path."
+    },
+    {
+      "surface": "content/quiz-generation/question-bank.v1.json",
+      "detail": "The deterministic bank carries both superseded answers with correct_answer_source 'back_verbatim'. Regenerating it from corrected flashcards, or supplying a POLICY_SAFE_OVERRIDES entry, is what actually changes the answers.",
+      "remediation": "Regenerate with node scripts/quiz-rebuild/assemble-question-bank.mjs --write once the source is corrected, then run the released-quiz revision."
+    },
+    {
+      "surface": "docs/course-production/quiz-content-review.v1.md",
+      "detail": "The approved content-review packet records both superseded answers as reviewed and approved.",
+      "remediation": "Re-approve with the corrected answers as part of the released-quiz revision; the packet records what was approved, so it cannot be edited ahead of the revision itself."
+    },
+    {
+      "surface": "docs/course-production/quiz-content-review.quizbank.v1.md",
+      "detail": "The quiz-bank review packet records the same two superseded answers as approved.",
+      "remediation": "Re-approve with the corrected answers as part of the released-quiz revision; the packet records what was approved, so it cannot be edited ahead of the revision itself."
+    },
+    {
+      "surface": "content/quiz-generation/reports/samples.v1.md",
+      "detail": "The generated sample report reproduces both superseded answers as representative output.",
+      "remediation": "Regenerate the reports after the bank is corrected; no independent edit is meaningful."
+    },
+    {
+      "surface": "docs/course-production/shotlists/lesson-18B-script-clean.txt",
+      "detail": "The production script still contains the superseded seller-text line and would reproduce it on any re-generation.",
+      "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
+    },
+    {
+      "surface": "docs/course-production/shotlists/module-18-lesson18B-scenecards.md",
+      "detail": "The scene cards still contain the superseded seller-text line.",
+      "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
+    },
+    {
+      "surface": "docs/course-production/scripts/gen_audio_18B.py",
+      "detail": "The audio generator's narration text still contains the superseded seller-text line and would regenerate the wrong audio.",
+      "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
+    },
+    {
+      "surface": "course-assets/transcripts/video-slot-18-mission-control.md",
+      "detail": "The approved-video QA transcript repeats the superseded instruction to send an approved seller message through Dialpad or Gmail. It is the text the caption and cut are checked against.",
+      "remediation": "Re-record the lesson-18 segment; the transcript is regenerated from the corrected cut rather than edited ahead of it."
+    },
+    {
+      "surface": "course-assets/scenes/module-18-lesson18B/_logs",
+      "detail": "Three scene-generation logs (b03 approval-flow, b07 dual-handoff, b08 response-loop) embed the superseded line as the prompt text they were generated from.",
+      "remediation": "Regenerated as a by-product of the re-record; they are generation logs, not learner-facing, and are not corrected on their own."
+    },
+    {
+      "surface": "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
+      "detail": "The archived 2026-07-26 release target contains both superseded answers.",
+      "remediation": "Retained unchanged on purpose. It is the historical record of what was actually released on that date; editing it would falsify the archive."
+    },
+    {
+      "surface": "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
+      "detail": "The archived 2026-07-21 legacy release, which is the executable rollback artifact for the released quiz, preserves the superseded DialPad-texting answers.",
+      "remediation": "Retained unchanged on purpose. It is the rollback target for what was actually released, so editing it would make the rollback path diverge from the release it restores."
+    },
+    {
+      "surface": "docs/course-production/DIALPAD-STACK-RECONCILIATION.md",
+      "detail": "The 2026-07-16 decision record states that employees send manager-approved seller texts through DialPad, and that no learner statement was contradicted. Both claims are now false.",
+      "remediation": "Superseded in place with a dated banner pointing at this confirmation as authoritative. The original passage is retained below the banner as the record of what was decided at the time."
+    },
+    {
+      "surface": "docs/course-production/EXECUTION-LEDGER.md",
+      "detail": "The 2026-07-16 ledger entry states that DialPad remains the employee's manual outbound voice and manager-approved text tool. The text half is now false.",
+      "remediation": "Superseded in place with a dated banner pointing at this confirmation as authoritative. The original passage is retained below the banner as the record of what was decided at the time."
+    }
   ]
 }

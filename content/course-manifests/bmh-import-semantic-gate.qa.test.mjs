@@ -10,7 +10,7 @@ import { loadManifest } from "../../scripts/course-content/validate-manifest.mjs
 
 const FULL_URL = new URL("./bmh-employee-training.v1.json", import.meta.url);
 const CANARY_URL = new URL("./bmh-employee-training-canary.v1.json", import.meta.url);
-const CURRENT_TIME = new Date("2026-08-03T00:00:00-05:00");
+const CURRENT_TIME = new Date("2026-09-02T00:00:00-05:00");
 
 test("draft validation accepts the approved release without requiring deferred Closer Lab scenarios", async () => {
   const manifest = await loadManifest(FULL_URL);
@@ -87,11 +87,15 @@ test("an expired operating-stack confirmation remains a canary publication block
   const canary = await loadManifest(CANARY_URL);
   const report = await validateBmhImportSemanticGate({
     manifest: canary,
-    now: new Date("2026-08-02T12:00:00-05:00"),
+    // Must be AFTER the checked-in confirmation expires. A time before
+    // confirmed_at also produces a blocker, but for being future-dated -- which
+    // would let this test pass without ever exercising the expiry path.
+    now: new Date("2026-09-20T12:00:00-05:00"),
   });
   assert.deepEqual(report.errors, []);
   assert.ok(report.publicationBlockers.some((blocker) =>
-    blocker.includes("DialPad references require a valid current-stack confirmation"),
+    blocker.includes("DialPad references require a valid current-stack confirmation")
+    && /expired/.test(blocker),
   ));
   assert.throws(
     () => assertBmhImportSemanticGate(report, { enforcePublicationBlockers: true }),

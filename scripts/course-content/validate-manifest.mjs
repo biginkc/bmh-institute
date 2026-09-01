@@ -31,6 +31,42 @@ const CAREER_GROWTH_GROUNDING = new Map([
   ["current role", /\b(?:current (?:written )?role|role plan|role expectations|assigned responsibilities|manager|documented|ownership)\b/i],
 ]);
 const STACK_CONFIRMATION_SCHEMA = "bmh-operating-stack-confirmation/v1";
+// Every canonical representation that still teaches the superseded
+// DialPad-texting workflow, as of the 2026-09-01 correction. A surface leaves
+// this list only when it has actually been corrected -- and correcting it
+// changes bytes the confirmation already checksums, so the confirmation must be
+// refreshed in the same pass. Matching is EXACT: a drift entry whose surface
+// merely contains one of these strings does not satisfy it.
+const REQUIRED_STACK_DRIFT_SURFACES = new Set([
+  // Learner-facing, released
+  "quiz-slot-18 question-r-slot-module-18-025",
+  "quiz-slot-18 question-r-slot-module-18-035",
+  "course-assets/review-lesson18B/LESSON-18B-v7.mp4 at 00:01:12",
+  "course-assets/captions/video-slot-18-mission-control.vtt at 00:01:12",
+  // Authoritative sources the released content is generated from
+  "BMH-OS vault: BMH Training Course/Thinkific/_master-transcripts.md line 2397",
+  "BMH-OS vault: BMH Training Course/Thinkific/_flashcards-by-slot/module-18-flashcards.json",
+  "BMH-OS vault: BMH Training Course/Thinkific/_flashcards-by-slot/module-18-flashcards.md",
+  "content/quiz-generation/source-ledger.v1.json",
+  "content/quiz-generation/question-bank.v1.json",
+  // Review and reporting packets that record the answers as approved
+  "docs/course-production/quiz-content-review.v1.md",
+  "docs/course-production/quiz-content-review.quizbank.v1.md",
+  "content/quiz-generation/reports/samples.v1.md",
+  // Production sources that would regenerate the superseded line
+  "docs/course-production/shotlists/lesson-18B-script-clean.txt",
+  "docs/course-production/shotlists/module-18-lesson18B-scenecards.md",
+  "docs/course-production/scripts/gen_audio_18B.py",
+  "course-assets/transcripts/video-slot-18-mission-control.md",
+  "course-assets/scenes/module-18-lesson18B/_logs",
+  // Decision records that assert the superseded workflow, superseded in place
+  "docs/course-production/DIALPAD-STACK-RECONCILIATION.md",
+  "docs/course-production/EXECUTION-LEDGER.md",
+  // Historical record, retained on purpose rather than corrected
+  "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
+  "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
+]);
+
 const REQUIRED_STACK_EVIDENCE = new Set([
   "projects/BMH Training Course.md",
   "_Active.md",
@@ -187,6 +223,31 @@ function loadReferencedQuizBank(reference, errors) {
   return bankErrors.length === 0 ? bank : null;
 }
 
+// A question still teaches the superseded workflow when its CORRECT answer ties
+// DialPad to sending a message rather than to placing a call. Distractors that
+// name DialPad texting are fine -- as wrong answers they are now more correct
+// than before, not less.
+export function detectStaleTextingQuestions(manifest) {
+  const stale = [];
+  for (const lesson of allLessons(manifest)) {
+    for (const question of lesson.quiz?.questions ?? []) {
+      const correct = [
+        question.question_text,
+        question.explanation,
+        ...(question.options ?? [])
+          .filter((option) => option.is_correct)
+          .map((option) => option.option_text),
+      ]
+        .filter(Boolean)
+        .join(" ");
+      if (/dialpad/i.test(correct) && /\b(text|texts|texting|message|messages|send|sends|sending|sent)\b/i.test(correct)) {
+        stale.push(question.source_key);
+      }
+    }
+  }
+  return stale;
+}
+
 export function validateStackConfirmation(
   manifest,
   confirmation,
@@ -242,7 +303,7 @@ export function validateStackConfirmation(
   const boundaries = confirmation.scope?.system_boundaries;
   if (
     employee?.outbound_voice !== "DialPad" ||
-    employee?.outbound_text !== "DialPad after manager approval" ||
+    employee?.outbound_text !== "Sandra after manager approval" ||
     employee?.seller_email !== "Gmail after manager approval"
   ) {
     issues.push("employee manual workflow scope is incomplete or changed");
@@ -254,6 +315,59 @@ export function validateStackConfirmation(
       "not employee-ready; Jarrad-only until Phase 2 exit"
   ) {
     issues.push("Sandra/Jitter provider boundaries are incomplete or changed");
+  }
+
+  // The employee workflow scope above states what is TRUE today. The course
+  // content has not always caught up -- the 2026-09-01 seller-texts-move-to-
+  // Sandra correction left released quiz answers, an approved video cut, and
+  // the production scripts behind it still teaching the old DialPad path.
+  // Rather than let the confirmation quietly assert a stack the course does
+  // not teach, every drifted surface must be listed with a remediation.
+  //
+  // A hand-written list is not enough on its own: an author could satisfy it
+  // with an empty array or with entries that name nothing real. So the set of
+  // manifest questions that still teach DialPad texting is DETECTED from the
+  // manifest itself, and every detected source_key must appear in the list.
+  // Surfaces that live outside the manifest -- the approved cut, its caption,
+  // the locked transcript, the generation scripts -- cannot be detected here
+  // and are covered by the shape requirement plus review.
+  const drift = confirmation.known_content_drift;
+  if (
+    !Array.isArray(drift) ||
+    drift.length === 0 ||
+    drift.some(
+      (entry) =>
+        !entry?.surface?.trim() ||
+        // A surface alone proves nothing. The detail must say what is wrong and
+        // the remediation how it gets fixed, so placeholder values like "x" are
+        // rejected rather than counted as disclosure.
+        (entry?.detail?.trim()?.length ?? 0) < 40 ||
+        (entry?.remediation?.trim()?.length ?? 0) < 40 ||
+        entry.detail.trim() === entry.remediation.trim(),
+    )
+  ) {
+    issues.push(
+      "known_content_drift must list every drifted surface with a detail and a remediation",
+    );
+  } else {
+    const surfaces = drift.map((entry) => entry.surface.trim());
+    const surfaceSet = new Set(surfaces);
+    if (surfaceSet.size !== surfaces.length) {
+      issues.push("known_content_drift lists the same surface more than once");
+    }
+    // Exact match, not substring: otherwise any string mentioning the id passes.
+    for (const required of REQUIRED_STACK_DRIFT_SURFACES) {
+      if (!surfaceSet.has(required)) {
+        issues.push(`known_content_drift does not cover drifted surface ${required}`);
+      }
+    }
+    // Belt and braces: if a stale question is detected in the manifest that the
+    // constant above does not already name, it must still be listed exactly.
+    for (const sourceKey of detectStaleTextingQuestions(manifest)) {
+      if (!surfaceSet.has(`quiz-slot-18 ${sourceKey}`)) {
+        issues.push(`known_content_drift does not cover stale texting question ${sourceKey}`);
+      }
+    }
   }
 
   const evidenceByPath = new Map(

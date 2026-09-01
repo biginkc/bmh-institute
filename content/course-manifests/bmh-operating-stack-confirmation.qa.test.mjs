@@ -15,7 +15,7 @@ import {
 
 const execFileAsync = promisify(execFile);
 const ROOT = resolve(import.meta.dirname, "../..");
-const CURRENT_TIME = new Date("2026-08-03T00:00:00-05:00");
+const CURRENT_TIME = new Date("2026-09-02T00:00:00-05:00");
 
 async function loadJson(name) {
   return JSON.parse(await readFile(new URL(name, import.meta.url), "utf8"));
@@ -85,7 +85,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     validateStackConfirmation(
       manifest,
       confirmation,
-      new Date("2026-08-10T00:00:00-05:00"),
+      new Date("2026-09-09T00:00:00-05:00"),
     ).join(" "),
     /expired/,
   );
@@ -116,6 +116,96 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   assert.match(
     validateStackConfirmation(manifest, badEvidence, CURRENT_TIME).join(" "),
     /source evidence checksum/,
+  );
+
+  const noDrift = clone();
+  delete noDrift.known_content_drift;
+  assert.match(
+    validateStackConfirmation(manifest, noDrift, CURRENT_TIME).join(" "),
+    /known_content_drift/,
+  );
+
+  const emptyDriftEntry = clone();
+  emptyDriftEntry.known_content_drift[0].remediation = "  ";
+  assert.match(
+    validateStackConfirmation(manifest, emptyDriftEntry, CURRENT_TIME).join(" "),
+    /known_content_drift/,
+  );
+
+  // Placeholder metadata is not disclosure: naming the right surface with a
+  // detail of "x" tells a reviewer nothing about what is wrong.
+  const placeholderDetail = clone();
+  placeholderDetail.known_content_drift[0].detail = "x";
+  assert.match(
+    validateStackConfirmation(manifest, placeholderDetail, CURRENT_TIME).join(" "),
+    /known_content_drift must list/,
+  );
+
+  const placeholderRemediation = clone();
+  placeholderRemediation.known_content_drift[0].remediation = "y";
+  assert.match(
+    validateStackConfirmation(manifest, placeholderRemediation, CURRENT_TIME).join(" "),
+    /known_content_drift must list/,
+  );
+
+  const echoedRemediation = clone();
+  echoedRemediation.known_content_drift[0].remediation =
+    echoedRemediation.known_content_drift[0].detail;
+  assert.match(
+    validateStackConfirmation(manifest, echoedRemediation, CURRENT_TIME).join(" "),
+    /known_content_drift must list/,
+  );
+
+  const emptyDriftList = clone();
+  emptyDriftList.known_content_drift = [];
+  assert.match(
+    validateStackConfirmation(manifest, emptyDriftList, CURRENT_TIME).join(" "),
+    /known_content_drift/,
+  );
+
+  // A well-formed list that names nothing real must not satisfy the guard.
+  const garbageDrift = clone();
+  garbageDrift.known_content_drift = [
+    {
+      surface: "something",
+      detail: "A detail long enough to clear the placeholder-metadata guard so that this case exercises surface coverage.",
+      remediation: "A remediation long enough to clear the placeholder-metadata guard and reach the surface coverage check.",
+    },
+  ];
+  const garbageIssues = validateStackConfirmation(manifest, garbageDrift, CURRENT_TIME).join(" ");
+  assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-025/);
+  assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-035/);
+
+  // Matching must be EXACT. A surface that merely CONTAINS a required
+  // identifier -- the earlier substring behaviour -- must not satisfy it.
+  const substringDrift = clone();
+  substringDrift.known_content_drift = substringDrift.known_content_drift.map((entry) => ({
+    ...entry,
+    surface: `see notes about ${entry.surface} somewhere`,
+  }));
+  const substringIssues = validateStackConfirmation(manifest, substringDrift, CURRENT_TIME).join(" ");
+  assert.match(substringIssues, /does not cover drifted surface quiz-slot-18 question-r-slot-module-18-025/);
+  assert.match(substringIssues, /does not cover stale texting question question-r-slot-module-18-035/);
+
+  // EVERY required surface must be individually enforced, including the ones
+  // that live outside the manifest and cannot be auto-detected.
+  for (const required of clone().known_content_drift.map((entry) => entry.surface)) {
+    const dropped = clone();
+    dropped.known_content_drift = dropped.known_content_drift.filter(
+      (entry) => entry.surface !== required,
+    );
+    assert.match(
+      validateStackConfirmation(manifest, dropped, CURRENT_TIME).join(" "),
+      /does not cover (drifted surface|stale texting question)/,
+      `dropping ${required} must be rejected`,
+    );
+  }
+
+  const duplicateSurface = clone();
+  duplicateSurface.known_content_drift.push({ ...duplicateSurface.known_content_drift[0] });
+  assert.match(
+    validateStackConfirmation(manifest, duplicateSurface, CURRENT_TIME).join(" "),
+    /same surface more than once/,
   );
 
   const missingTrigger = clone();
@@ -149,7 +239,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   );
 
   const futureReverification = clone();
-  futureReverification.reverification.reverified_at = "2026-08-12T00:00:00-05:00";
+  futureReverification.reverification.reverified_at = "2026-09-11T00:00:00-05:00";
   assert.match(
     validateStackConfirmation(manifest, futureReverification, CURRENT_TIME).join(" "),
     /genuine reverification record/,
@@ -188,4 +278,78 @@ test("audited captions and guides match their recorded checksums and counts", as
       );
     }
   }
+});
+
+// The drift inventory was wrong twice by hand, both times because a repo-wide
+// grep silently skipped files. This sweeps the TRACKED file list instead, so a
+// new copy of the superseded workflow cannot enter the repo undisclosed.
+test("every tracked file teaching the superseded DialPad-texting workflow is disclosed", async () => {
+  const confirmation = await loadJson("./bmh-operating-stack-confirmation.v1.json");
+  const tracked = (await execFileAsync("git", ["ls-files", "-z"], {
+    cwd: ROOT,
+    maxBuffer: 64 * 1024 * 1024,
+  })).stdout
+    .split("\0")
+    .filter(Boolean);
+
+  // Phrasings that ASSERT DialPad carries seller texts. Deliberately not a
+  // proximity match on "dialpad" near "text": that also flags scene-generation
+  // prompts listing tool logos and quiz DISTRACTORS, which are wrong answers on
+  // purpose and are correct as-is. Every phrasing here was found in the repo;
+  // "manager-approved text tool" was added after the round-4 review found the
+  // execution ledger asserting it in wording the earlier pattern missed.
+  const PATTERN = new RegExp(
+    [
+      "through dialpad or gmail",
+      "dialpad for texts",
+      "sending texts",
+      "dialpad or gmail",
+      "dialpad and gmail",
+      "manager-approved text tool",
+      "texts through dialpad",
+      "approved texts to dialpad",
+      "approved texts use dialpad",
+      "text tool",
+      "dialpad[^.]{0,40}\\bsms\\b",
+      "\\bsms\\b[^.]{0,40}dialpad",
+    ].join("|"),
+    "i",
+  );
+  const offenders = [];
+  for (const file of tracked) {
+    let text;
+    try {
+      text = await readFile(resolve(ROOT, file), "utf8");
+    } catch {
+      continue; // unreadable or binary; the approved cut is disclosed explicitly
+    }
+    if (PATTERN.test(text)) offenders.push(file);
+  }
+
+  // These quote the superseded lines in order to disclose or test them.
+  const selfReferential = new Set([
+    "content/course-manifests/bmh-operating-stack-confirmation.v1.json",
+    "content/course-manifests/bmh-operating-stack-confirmation.qa.test.mjs",
+  ]);
+  const surfaces = confirmation.known_content_drift.map((entry) => entry.surface);
+  const isDisclosed = (file) =>
+    surfaces.some(
+      (surface) =>
+        surface === file ||
+        // "…/video-slot-18-mission-control.vtt at 00:01:12"
+        surface.startsWith(`${file} `) ||
+        // "course-assets/scenes/module-18-lesson18B/_logs" covers its log files
+        file.startsWith(`${surface}/`) ||
+        // a manifest is disclosed through the questions named inside it
+        (file.startsWith("content/course-manifests/") && surface.startsWith("quiz-slot-")),
+    );
+  const undisclosed = offenders
+    .filter((file) => !selfReferential.has(file))
+    .filter((file) => !isDisclosed(file));
+
+  assert.deepEqual(
+    undisclosed,
+    [],
+    `these tracked files teach the superseded workflow but are not in known_content_drift: ${undisclosed.join(", ")}`,
+  );
 });
