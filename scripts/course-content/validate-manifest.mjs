@@ -31,6 +31,37 @@ const CAREER_GROWTH_GROUNDING = new Map([
   ["current role", /\b(?:current (?:written )?role|role plan|role expectations|assigned responsibilities|manager|documented|ownership)\b/i],
 ]);
 const STACK_CONFIRMATION_SCHEMA = "bmh-operating-stack-confirmation/v1";
+// Every canonical representation that still teaches the superseded
+// DialPad-texting workflow, as of the 2026-09-01 correction. A surface leaves
+// this list only when it has actually been corrected -- and correcting it
+// changes bytes the confirmation already checksums, so the confirmation must be
+// refreshed in the same pass. Matching is EXACT: a drift entry whose surface
+// merely contains one of these strings does not satisfy it.
+const REQUIRED_STACK_DRIFT_SURFACES = new Set([
+  // Learner-facing, released
+  "quiz-slot-18 question-r-slot-module-18-025",
+  "quiz-slot-18 question-r-slot-module-18-035",
+  "course-assets/review-lesson18B/LESSON-18B-v7.mp4 at 00:01:12",
+  "course-assets/captions/video-slot-18-mission-control.vtt at 00:01:12",
+  // Authoritative sources the released content is generated from
+  "BMH-OS vault: BMH Training Course/Thinkific/_master-transcripts.md line 2397",
+  "BMH-OS vault: BMH Training Course/Thinkific/_flashcards-by-slot/module-18-flashcards.json",
+  "BMH-OS vault: BMH Training Course/Thinkific/_flashcards-by-slot/module-18-flashcards.md",
+  "content/quiz-generation/source-ledger.v1.json",
+  "content/quiz-generation/question-bank.v1.json",
+  // Review and reporting packets that record the answers as approved
+  "docs/course-production/quiz-content-review.v1.md",
+  "docs/course-production/quiz-content-review.quizbank.v1.md",
+  "content/quiz-generation/reports/samples.v1.md",
+  // Production sources that would regenerate the superseded line
+  "docs/course-production/shotlists/lesson-18B-script-clean.txt",
+  "docs/course-production/shotlists/module-18-lesson18B-scenecards.md",
+  "docs/course-production/scripts/gen_audio_18B.py",
+  "course-assets/scenes/module-18-lesson18B/_logs",
+  // Historical record, retained on purpose rather than corrected
+  "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
+]);
+
 const REQUIRED_STACK_EVIDENCE = new Set([
   "projects/BMH Training Course.md",
   "_Active.md",
@@ -311,11 +342,20 @@ export function validateStackConfirmation(
     );
   } else {
     const surfaces = drift.map((entry) => entry.surface.trim());
-    if (new Set(surfaces).size !== surfaces.length) {
+    const surfaceSet = new Set(surfaces);
+    if (surfaceSet.size !== surfaces.length) {
       issues.push("known_content_drift lists the same surface more than once");
     }
+    // Exact match, not substring: otherwise any string mentioning the id passes.
+    for (const required of REQUIRED_STACK_DRIFT_SURFACES) {
+      if (!surfaceSet.has(required)) {
+        issues.push(`known_content_drift does not cover drifted surface ${required}`);
+      }
+    }
+    // Belt and braces: if a stale question is detected in the manifest that the
+    // constant above does not already name, it must still be listed exactly.
     for (const sourceKey of detectStaleTextingQuestions(manifest)) {
-      if (!surfaces.some((surface) => surface.includes(sourceKey))) {
+      if (!surfaceSet.has(`quiz-slot-18 ${sourceKey}`)) {
         issues.push(`known_content_drift does not cover stale texting question ${sourceKey}`);
       }
     }

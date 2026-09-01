@@ -139,8 +139,7 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     /known_content_drift/,
   );
 
-  // A well-formed list that names nothing real must not satisfy the guard --
-  // the manifest's own stale questions are detected, not taken on trust.
+  // A well-formed list that names nothing real must not satisfy the guard.
   const garbageDrift = clone();
   garbageDrift.known_content_drift = [
     { surface: "something", detail: "something", remediation: "something" },
@@ -149,14 +148,30 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-025/);
   assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-035/);
 
-  const droppedOneSurface = clone();
-  droppedOneSurface.known_content_drift = droppedOneSurface.known_content_drift.filter(
-    (entry) => !entry.surface.includes("question-r-slot-module-18-035"),
-  );
-  assert.match(
-    validateStackConfirmation(manifest, droppedOneSurface, CURRENT_TIME).join(" "),
-    /does not cover stale texting question question-r-slot-module-18-035/,
-  );
+  // Matching must be EXACT. A surface that merely CONTAINS a required
+  // identifier -- the earlier substring behaviour -- must not satisfy it.
+  const substringDrift = clone();
+  substringDrift.known_content_drift = substringDrift.known_content_drift.map((entry) => ({
+    ...entry,
+    surface: `see notes about ${entry.surface} somewhere`,
+  }));
+  const substringIssues = validateStackConfirmation(manifest, substringDrift, CURRENT_TIME).join(" ");
+  assert.match(substringIssues, /does not cover drifted surface quiz-slot-18 question-r-slot-module-18-025/);
+  assert.match(substringIssues, /does not cover stale texting question question-r-slot-module-18-035/);
+
+  // EVERY required surface must be individually enforced, including the ones
+  // that live outside the manifest and cannot be auto-detected.
+  for (const required of clone().known_content_drift.map((entry) => entry.surface)) {
+    const dropped = clone();
+    dropped.known_content_drift = dropped.known_content_drift.filter(
+      (entry) => entry.surface !== required,
+    );
+    assert.match(
+      validateStackConfirmation(manifest, dropped, CURRENT_TIME).join(" "),
+      /does not cover (drifted surface|stale texting question)/,
+      `dropping ${required} must be rejected`,
+    );
+  }
 
   const duplicateSurface = clone();
   duplicateSurface.known_content_drift.push({ ...duplicateSurface.known_content_drift[0] });
