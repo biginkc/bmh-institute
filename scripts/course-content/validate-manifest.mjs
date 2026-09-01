@@ -57,9 +57,11 @@ const REQUIRED_STACK_DRIFT_SURFACES = new Set([
   "docs/course-production/shotlists/lesson-18B-script-clean.txt",
   "docs/course-production/shotlists/module-18-lesson18B-scenecards.md",
   "docs/course-production/scripts/gen_audio_18B.py",
+  "course-assets/transcripts/video-slot-18-mission-control.md",
   "course-assets/scenes/module-18-lesson18B/_logs",
   // Historical record, retained on purpose rather than corrected
   "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
+  "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
 ]);
 
 const REQUIRED_STACK_EVIDENCE = new Set([
@@ -333,8 +335,12 @@ export function validateStackConfirmation(
     drift.some(
       (entry) =>
         !entry?.surface?.trim() ||
-        !entry?.detail?.trim() ||
-        !entry?.remediation?.trim(),
+        // A surface alone proves nothing. The detail must say what is wrong and
+        // the remediation how it gets fixed, so placeholder values like "x" are
+        // rejected rather than counted as disclosure.
+        (entry?.detail?.trim()?.length ?? 0) < 40 ||
+        (entry?.remediation?.trim()?.length ?? 0) < 40 ||
+        entry.detail.trim() === entry.remediation.trim(),
     )
   ) {
     issues.push(

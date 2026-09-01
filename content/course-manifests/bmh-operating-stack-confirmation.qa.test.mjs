@@ -132,6 +132,30 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     /known_content_drift/,
   );
 
+  // Placeholder metadata is not disclosure: naming the right surface with a
+  // detail of "x" tells a reviewer nothing about what is wrong.
+  const placeholderDetail = clone();
+  placeholderDetail.known_content_drift[0].detail = "x";
+  assert.match(
+    validateStackConfirmation(manifest, placeholderDetail, CURRENT_TIME).join(" "),
+    /known_content_drift must list/,
+  );
+
+  const placeholderRemediation = clone();
+  placeholderRemediation.known_content_drift[0].remediation = "y";
+  assert.match(
+    validateStackConfirmation(manifest, placeholderRemediation, CURRENT_TIME).join(" "),
+    /known_content_drift must list/,
+  );
+
+  const echoedRemediation = clone();
+  echoedRemediation.known_content_drift[0].remediation =
+    echoedRemediation.known_content_drift[0].detail;
+  assert.match(
+    validateStackConfirmation(manifest, echoedRemediation, CURRENT_TIME).join(" "),
+    /known_content_drift must list/,
+  );
+
   const emptyDriftList = clone();
   emptyDriftList.known_content_drift = [];
   assert.match(
@@ -142,7 +166,11 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
   // A well-formed list that names nothing real must not satisfy the guard.
   const garbageDrift = clone();
   garbageDrift.known_content_drift = [
-    { surface: "something", detail: "something", remediation: "something" },
+    {
+      surface: "something",
+      detail: "A detail long enough to clear the placeholder-metadata guard so that this case exercises surface coverage.",
+      remediation: "A remediation long enough to clear the placeholder-metadata guard and reach the surface coverage check.",
+    },
   ];
   const garbageIssues = validateStackConfirmation(manifest, garbageDrift, CURRENT_TIME).join(" ");
   assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-025/);
@@ -250,4 +278,56 @@ test("audited captions and guides match their recorded checksums and counts", as
       );
     }
   }
+});
+
+// The drift inventory was wrong twice by hand, both times because a repo-wide
+// grep silently skipped files. This sweeps the TRACKED file list instead, so a
+// new copy of the superseded workflow cannot enter the repo undisclosed.
+test("every tracked file teaching the superseded DialPad-texting workflow is disclosed", async () => {
+  const confirmation = await loadJson("./bmh-operating-stack-confirmation.v1.json");
+  const tracked = (await execFileAsync("git", ["ls-files", "-z"], {
+    cwd: ROOT,
+    maxBuffer: 64 * 1024 * 1024,
+  })).stdout
+    .split("\0")
+    .filter(Boolean);
+
+  const PATTERN = /through dialpad or gmail|dialpad for texts|sending texts|dialpad or gmail/i;
+  const offenders = [];
+  for (const file of tracked) {
+    let text;
+    try {
+      text = await readFile(resolve(ROOT, file), "utf8");
+    } catch {
+      continue; // unreadable or binary; the approved cut is disclosed explicitly
+    }
+    if (PATTERN.test(text)) offenders.push(file);
+  }
+
+  // These quote the superseded lines in order to disclose or test them.
+  const selfReferential = new Set([
+    "content/course-manifests/bmh-operating-stack-confirmation.v1.json",
+    "content/course-manifests/bmh-operating-stack-confirmation.qa.test.mjs",
+  ]);
+  const surfaces = confirmation.known_content_drift.map((entry) => entry.surface);
+  const isDisclosed = (file) =>
+    surfaces.some(
+      (surface) =>
+        surface === file ||
+        // "…/video-slot-18-mission-control.vtt at 00:01:12"
+        surface.startsWith(`${file} `) ||
+        // "course-assets/scenes/module-18-lesson18B/_logs" covers its log files
+        file.startsWith(`${surface}/`) ||
+        // a manifest is disclosed through the questions named inside it
+        (file.startsWith("content/course-manifests/") && surface.startsWith("quiz-slot-")),
+    );
+  const undisclosed = offenders
+    .filter((file) => !selfReferential.has(file))
+    .filter((file) => !isDisclosed(file));
+
+  assert.deepEqual(
+    undisclosed,
+    [],
+    `these tracked files teach the superseded workflow but are not in known_content_drift: ${undisclosed.join(", ")}`,
+  );
 });

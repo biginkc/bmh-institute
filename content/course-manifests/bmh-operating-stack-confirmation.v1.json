@@ -186,6 +186,11 @@
       "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
     },
     {
+      "surface": "course-assets/transcripts/video-slot-18-mission-control.md",
+      "detail": "The approved-video QA transcript repeats the superseded instruction to send an approved seller message through Dialpad or Gmail. It is the text the caption and cut are checked against.",
+      "remediation": "Re-record the lesson-18 segment; the transcript is regenerated from the corrected cut rather than edited ahead of it."
+    },
+    {
       "surface": "course-assets/scenes/module-18-lesson18B/_logs",
       "detail": "Three scene-generation logs (b03 approval-flow, b07 dual-handoff, b08 response-loop) embed the superseded line as the prompt text they were generated from.",
       "remediation": "Regenerated as a by-product of the re-record; they are generation logs, not learner-facing, and are not corrected on their own."
@@ -194,6 +199,11 @@
       "surface": "content/course-manifests/archive/bmh-employee-training.released-content-block-revision-target-20260726.v1.json",
       "detail": "The archived 2026-07-26 release target contains both superseded answers.",
       "remediation": "Retained unchanged on purpose. It is the historical record of what was actually released on that date; editing it would falsify the archive."
+    },
+    {
+      "surface": "content/course-manifests/archive/bmh-employee-training.legacy-release-20260721.v1.json",
+      "detail": "The archived 2026-07-21 legacy release, which is the executable rollback artifact for the released quiz, preserves the superseded DialPad-texting answers.",
+      "remediation": "Retained unchanged on purpose. It is the rollback target for what was actually released, so editing it would make the rollback path diverge from the release it restores."
     }
   ]
 }
