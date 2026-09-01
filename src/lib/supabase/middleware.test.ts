@@ -13,4 +13,13 @@ describe("isPublicPath", () => {
     expect(isPublicPath("/login")).toBe(true);
     expect(isPublicPath("/api/webhooks/course")).toBe(true);
   });
+
+  it("lets bearer-authenticated intranet routes reach their own guard", () => {
+    expect(
+      isPublicPath(
+        "/api/internal/intranet/learners/learner%40example.test/quiz-summary",
+      ),
+    ).toBe(true);
+    expect(isPublicPath("/api/internal/other-service")).toBe(false);
+  });
 });
