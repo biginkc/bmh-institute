@@ -132,6 +132,39 @@ test("confirmation fails closed when missing, stale, scoped incorrectly, or mism
     /known_content_drift/,
   );
 
+  const emptyDriftList = clone();
+  emptyDriftList.known_content_drift = [];
+  assert.match(
+    validateStackConfirmation(manifest, emptyDriftList, CURRENT_TIME).join(" "),
+    /known_content_drift/,
+  );
+
+  // A well-formed list that names nothing real must not satisfy the guard --
+  // the manifest's own stale questions are detected, not taken on trust.
+  const garbageDrift = clone();
+  garbageDrift.known_content_drift = [
+    { surface: "something", detail: "something", remediation: "something" },
+  ];
+  const garbageIssues = validateStackConfirmation(manifest, garbageDrift, CURRENT_TIME).join(" ");
+  assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-025/);
+  assert.match(garbageIssues, /does not cover stale texting question question-r-slot-module-18-035/);
+
+  const droppedOneSurface = clone();
+  droppedOneSurface.known_content_drift = droppedOneSurface.known_content_drift.filter(
+    (entry) => !entry.surface.includes("question-r-slot-module-18-035"),
+  );
+  assert.match(
+    validateStackConfirmation(manifest, droppedOneSurface, CURRENT_TIME).join(" "),
+    /does not cover stale texting question question-r-slot-module-18-035/,
+  );
+
+  const duplicateSurface = clone();
+  duplicateSurface.known_content_drift.push({ ...duplicateSurface.known_content_drift[0] });
+  assert.match(
+    validateStackConfirmation(manifest, duplicateSurface, CURRENT_TIME).join(" "),
+    /same surface more than once/,
+  );
+
   const missingTrigger = clone();
   missingTrigger.recheck_triggers = missingTrigger.recheck_triggers.filter(
     (trigger) => trigger !== "before_publication",

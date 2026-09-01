@@ -187,6 +187,31 @@ function loadReferencedQuizBank(reference, errors) {
   return bankErrors.length === 0 ? bank : null;
 }
 
+// A question still teaches the superseded workflow when its CORRECT answer ties
+// DialPad to sending a message rather than to placing a call. Distractors that
+// name DialPad texting are fine -- as wrong answers they are now more correct
+// than before, not less.
+export function detectStaleTextingQuestions(manifest) {
+  const stale = [];
+  for (const lesson of allLessons(manifest)) {
+    for (const question of lesson.quiz?.questions ?? []) {
+      const correct = [
+        question.question_text,
+        question.explanation,
+        ...(question.options ?? [])
+          .filter((option) => option.is_correct)
+          .map((option) => option.option_text),
+      ]
+        .filter(Boolean)
+        .join(" ");
+      if (/dialpad/i.test(correct) && /\b(text|texts|texting|message|messages|send|sends|sending|sent)\b/i.test(correct)) {
+        stale.push(question.source_key);
+      }
+    }
+  }
+  return stale;
+}
+
 export function validateStackConfirmation(
   manifest,
   confirmation,
@@ -258,14 +283,22 @@ export function validateStackConfirmation(
 
   // The employee workflow scope above states what is TRUE today. The course
   // content has not always caught up -- the 2026-09-01 seller-texts-move-to-
-  // Sandra correction left released quiz answers and an approved video cut
-  // still teaching the old DialPad path. Rather than let the confirmation
-  // quietly assert a stack the course does not teach, every drifted surface
-  // must be listed with a remediation, so the gap stays visible in review
-  // instead of being resolved by weakening the scope check above.
+  // Sandra correction left released quiz answers, an approved video cut, and
+  // the production scripts behind it still teaching the old DialPad path.
+  // Rather than let the confirmation quietly assert a stack the course does
+  // not teach, every drifted surface must be listed with a remediation.
+  //
+  // A hand-written list is not enough on its own: an author could satisfy it
+  // with an empty array or with entries that name nothing real. So the set of
+  // manifest questions that still teach DialPad texting is DETECTED from the
+  // manifest itself, and every detected source_key must appear in the list.
+  // Surfaces that live outside the manifest -- the approved cut, its caption,
+  // the locked transcript, the generation scripts -- cannot be detected here
+  // and are covered by the shape requirement plus review.
   const drift = confirmation.known_content_drift;
   if (
     !Array.isArray(drift) ||
+    drift.length === 0 ||
     drift.some(
       (entry) =>
         !entry?.surface?.trim() ||
@@ -276,6 +309,16 @@ export function validateStackConfirmation(
     issues.push(
       "known_content_drift must list every drifted surface with a detail and a remediation",
     );
+  } else {
+    const surfaces = drift.map((entry) => entry.surface.trim());
+    if (new Set(surfaces).size !== surfaces.length) {
+      issues.push("known_content_drift lists the same surface more than once");
+    }
+    for (const sourceKey of detectStaleTextingQuestions(manifest)) {
+      if (!surfaces.some((surface) => surface.includes(sourceKey))) {
+        issues.push(`known_content_drift does not cover stale texting question ${sourceKey}`);
+      }
+    }
   }
 
   const evidenceByPath = new Map(

@@ -1,5 +1,24 @@
 # DialPad operating-stack reconciliation
 
+> **SUPERSEDED IN PART — 2026-09-01.** Jarrad confirmed that seller **texts now
+> go through Sandra**, not DialPad. DialPad remains the outbound **voice** system
+> for homeowner calls and their recording and coaching metrics; seller **email**
+> stays Gmail after manager approval; Sandra still runs on Sendillo; Jitter is
+> still parked and Jarrad-only.
+>
+> The "Decision" and "Learner-content audit" sections below were written on
+> 2026-07-16, when DialPad texting was still correct. They are retained as the
+> record of what was decided then. Every statement in them that assigns seller
+> **texts** to DialPad is now false, and the learner-content audit's conclusion
+> that "no statement was contradicted" no longer holds.
+>
+> The current, authoritative record is
+> `content/course-manifests/bmh-operating-stack-confirmation.v1.json`, whose
+> `known_content_drift` field enumerates every surface that still teaches the
+> superseded path and how each one gets corrected. Two of them are a released
+> quiz and an approved video cut, so they are corrected through the released-quiz
+> revision path and a re-record, not by editing this document.
+
 Status: confirmed for the employee manual workflow on 2026-07-16. The
 confirmation expires at `2026-07-23T17:06:57-05:00` and never replaces the
 mandatory immediate prepublication stack check.

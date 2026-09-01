@@ -112,18 +112,43 @@
   "known_content_drift": [
     {
       "surface": "quiz-slot-18 question-r-slot-module-18-025",
-      "detail": "Teaches that an approved seller message is sent through 'DialPad or Gmail'. The correct answer is now 'Sandra or Gmail'.",
+      "detail": "The correct answer is 'DialPad or Gmail' for sending an approved seller message. It should be 'Sandra or Gmail'.",
       "remediation": "Correct via the released-quiz revision path (npm run course:quizzes:revise), together with the lesson-18 re-record."
     },
     {
       "surface": "quiz-slot-18 question-r-slot-module-18-035",
-      "detail": "Gives DialPad's role as 'Placing calls and sending texts.' Texting is no longer DialPad's role.",
+      "detail": "The correct answer gives DialPad's role as 'Placing calls and sending texts.' Texting is no longer DialPad's role.",
       "remediation": "Correct via the released-quiz revision path (npm run course:quizzes:revise), together with the lesson-18 re-record."
     },
     {
       "surface": "course-assets/review-lesson18B/LESSON-18B-v7.mp4 at 00:01:12",
-      "detail": "The approved cut says aloud 'Once it's approved, you send it through Dialpad or Gmail.'",
+      "detail": "The approved cut says aloud \"Once it's approved, you send it through Dialpad or Gmail.\"",
       "remediation": "Re-record the lesson-18 segment; no text edit can correct spoken content."
+    },
+    {
+      "surface": "course-assets/captions/video-slot-18-mission-control.vtt at 00:01:12",
+      "detail": "The learner-facing caption carries the same superseded line as the approved cut. Its checksum is bound to the audited asset, so it cannot be corrected independently of the re-record.",
+      "remediation": "Re-record the lesson-18 segment; no text edit can correct spoken content."
+    },
+    {
+      "surface": "BMH-OS vault: BMH Training Course/Thinkific/_master-transcripts.md line 2397",
+      "detail": "The locked master transcript instructs the learner to send approved seller messages through DialPad or Gmail. It is hashed source evidence for this confirmation, so correcting it re-dates the evidence.",
+      "remediation": "Correct the transcript in the same pass as the re-record, then refresh this confirmation's source evidence hashes."
+    },
+    {
+      "surface": "docs/course-production/shotlists/lesson-18B-script-clean.txt",
+      "detail": "The production script still contains the superseded seller-text line and would reproduce it on any re-generation.",
+      "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
+    },
+    {
+      "surface": "docs/course-production/shotlists/module-18-lesson18B-scenecards.md",
+      "detail": "The scene cards still contain the superseded seller-text line.",
+      "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
+    },
+    {
+      "surface": "docs/course-production/scripts/gen_audio_18B.py",
+      "detail": "The audio generator's narration text still contains the superseded seller-text line and would regenerate the wrong audio.",
+      "remediation": "Update alongside the lesson-18 re-record so a regeneration cannot reintroduce the superseded line."
     }
   ]
 }
