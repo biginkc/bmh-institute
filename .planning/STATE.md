@@ -4,8 +4,8 @@ milestone: v1.1
 milestone_name: Internal Pilot Operations
 status: shipped
 stopped_at: Six remaining lesson thumbnails generated as drafts; individual approval remains before production promotion
-last_updated: "2026-07-20T04:50:00-05:00"
-last_activity: 2026-07-20
+last_updated: "2026-09-01T01:49:09-05:00"
+last_activity: 2026-09-01
 progress:
   total_phases: 4
   completed_phases: 4
@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-04-30)
 Phase: Complete
 Plan: Complete
 Status: v1.1 shipped; post-ship QA and workflow cleanup complete
-Last activity: 2026-07-20 - Packaged 15 approved thumbnail redesigns, 6 generated drafts awaiting individual approval, and 4 no-thumbnail-required assignment states into a checksum-bound review board. Production promotion remains intentionally blocked until the drafts are approved.
+Last activity: 2026-09-01 - Added a service-authenticated read-only learner quiz-summary API for the BMH me onboarding gate. The work is intentionally held in an unmerged PR and the production service token remains unprovisioned.
 
 ## Performance Metrics
 
@@ -138,6 +138,7 @@ Recent decisions affecting current work:
 | 260716-2ms | DSF-05 course page and lesson viewer reskin | 2026-07-16 | 49f340f | Verified | [260716-2ms-dsf-05-course-page-and-lesson-viewer-des](./quick/260716-2ms-dsf-05-course-page-and-lesson-viewer-des/) |
 | 260720-tmb | Approved thumbnail redesign review package | 2026-07-20 | 69ba1a9 | Verified | [20260720-approved-thumbnail-review](./quick/20260720-approved-thumbnail-review/) |
 | 260729-j49 | Remove Institute account lifecycle controls | 2026-07-29 | 9fdd618 | Blocked on role sync | [260729-j49-lane-c-remove-institute-account-lifecycl](./quick/260729-j49-lane-c-remove-institute-account-lifecycl/) |
+| 260901-21f | Internal intranet learner quiz-summary API | 2026-09-01 | 1562413a | Verified, PR only | [260901-21f-build-the-read-only-intranet-learner-qui](./quick/260901-21f-build-the-read-only-intranet-learner-qui/) |
 
 ## Deferred Items
 

@@ -8,6 +8,9 @@ export function isDesignSystemPath(path: string) {
   return path === "/design-system" || path.startsWith("/design-system/");
 }
 
+const INTRANET_QUIZ_SUMMARY_PATH =
+  /^\/api\/internal\/intranet\/learners\/[^/]+\/quiz-summary$/;
+
 export function isPublicPath(path: string) {
   return (
     path.startsWith("/login") ||
@@ -16,7 +19,8 @@ export function isPublicPath(path: string) {
     path.startsWith("/invite") ||
     path.startsWith("/auth") ||
     path.startsWith("/api/webhooks") ||
-    path.startsWith("/api/cron")
+    path.startsWith("/api/cron") ||
+    INTRANET_QUIZ_SUMMARY_PATH.test(path)
   );
 }
 

@@ -1609,6 +1609,17 @@ export type Database = {
           user_id: string
         }[]
       }
+      fn_intranet_learner_quiz_summary_v1: {
+        Args: { p_course_import_id: string; p_email: string }
+        Returns: {
+          attempts: number
+          best_final_quiz_score: number | null
+          catalog_valid: boolean
+          email: string | null
+          last_attempt_at: string | null
+          profile_match_count: number
+        }[]
+      }
       fn_apply_course_import: {
         Args: { p_import_id: string; p_operations: Json }
         Returns: Json
