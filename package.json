@@ -21,6 +21,7 @@
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:hugo-access:postgres": "node scripts/test-hugo-access-postgres.mjs",
     "test:hugo-access:postgres:upgrade": "node scripts/test-hugo-access-postgres.mjs --upgrade-rehearsal",
+    "test:admin-deletion-reharden:postgres": "node scripts/test-admin-deletion-reharden-postgres.mjs",
     "test:hugo-hardening:roundtrip": "node scripts/hugo-hardening-rollback/run-roundtrip.mjs",
     "test:migration-gate:postgres": "node scripts/migration-rehearsal/test-migration-safety-gate.mjs",
     "verify:migrate-prod-ref-guard": "bash scripts/assert-ref-is-main-or-ancestor.test.sh",
